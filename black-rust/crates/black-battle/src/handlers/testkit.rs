@@ -129,6 +129,22 @@ impl FlowHost for TestHost {
         self.log.extend([0x10B, x]);
         mix(self.wseed, 0x82B8 ^ x) & 1 != 0
     }
+    fn fun_021c83d4(&mut self) -> bool {
+        self.log.push(0x10C);
+        mix(self.wseed, 0x83D4) & 1 != 0
+    }
+    fn ability_uncopyable(&mut self, ability: u32) -> bool {
+        self.log.extend([0x10D, ability]);
+        mix(ability, 0xC944).is_multiple_of(4)
+    }
+    fn rule(&mut self) -> u32 {
+        self.log.push(0x10E);
+        mix(self.wseed, 0x815C) % 4
+    }
+    fn positions_adjacent(&mut self, a: u32, b: u32) -> bool {
+        self.log.extend([0x10F, a, b]);
+        mix(a ^ (b << 8), 0x9A6C) & 1 != 0
+    }
     fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool {
         self.log.extend([0x107, poke_id]);
         *out = mix(poke_id, 0x804C);

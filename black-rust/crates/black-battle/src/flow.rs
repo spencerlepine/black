@@ -44,6 +44,15 @@ pub trait FlowHost: BppEnv {
     fn move_flag(&mut self, mv: u32, flag: u32) -> bool;
     /// C: `FUN_overlay_d_93__021c82b8(wk, x)` (tail call into the battle main module).
     fn fun_021c82b8(&mut self, x: u32) -> bool;
+    /// C: `FUN_overlay_d_93__021c83d4(wk)` (-> `021bc2b0`).
+    fn fun_021c83d4(&mut self) -> bool;
+    /// C: `FUN_0689C944(ability)` via the ARM thunks at 0x021DA2D0 / 0x021DA2E0: the ability
+    /// cannot be copied (Trace).
+    fn ability_uncopyable(&mut self, ability: u32) -> bool;
+    /// C: `FUN_overlay_d_93__021c815c(wk)`: the battle rule (2 = triple).
+    fn rule(&mut self) -> u32;
+    /// C: `FUN_overlay_d_93__021b9a6c(pos_a, pos_b)`: positions are adjacent (triples).
+    fn positions_adjacent(&mut self, a: u32, b: u32) -> bool;
     /// C: `FUN_overlay_d_93__021c804c(wk, poke_id, &out)`: finds the Pokemon's queued action;
     /// writes it to `out` and returns whether found.
     fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool;
@@ -128,6 +137,20 @@ impl<H: FlowHost> Battle<H> {
             i += 1;
         }
         false
+    }
+
+    /// C: `FUN_overlay_d_93__021d7dc0(sick, mon, &out)` for Pokemon `poke_id`: the
+    /// duration for a newly inflicted condition (sleep and confusion roll the RNG).
+    pub fn make_sick_cont(&mut self, sick: u32, poke_id: u32) -> crate::sick_cont::SickCont {
+        use crate::sick_cont::SickCont;
+        if (sick as i32) < 6 {
+            return self.calc.make_default_sick_cont(sick);
+        }
+        match sick {
+            6 => SickCont::turn(self.calc.rand_range(2, 5) as u8 as u32),
+            7 => SickCont::poke(self.mon(poke_id).poke_id() as u32),
+            _ => SickCont::permanent(),
+        }
     }
 
     /// C: `FUN_overlay_d_93__021d7b74` on Pokemon `poke_id`: max HP / `div`, at least 1.

@@ -1049,6 +1049,311 @@ pub fn h_021d9b40<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     b.host.handex_pop(id);
 }
 
+/// HANDEX work type 0xC: inflict a condition (+4 condition, +8 cont, +0xC flag, +0xF target).
+const HANDEX_ADD_SICK: u32 = 0xC;
+/// HANDEX work type 0x14: change type (+4 type pair, +6 Pokemon).
+const HANDEX_CHANGE_TYPE: u32 = 0x14;
+/// HANDEX work type 0x1F: change ability (+4 ability, +6 Pokemon, +8 flag, +0xC string).
+const HANDEX_CHANGE_ABILITY: u32 = 0x1F;
+
+/// 0x021D9BA4: sets var 0x41 for the defender.
+pub fn h_021d9ba4<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 4, me) {
+        b.rewrite_var(0x41, 1);
+    }
+}
+
+/// 0x021D9BC8: Super Luck: critical-hit stage (var 0x2C, u8) +1.
+pub fn h_021d9bc8<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 3, me) {
+        let v = (b.var(0x2C) as u32).wrapping_add(1) as u8;
+        b.rewrite_var(0x2C, v as i32);
+    }
+}
+
+/// 0x021D9BF8: Anger Point: a critical hit (var 0x45) maxes Attack (message 0x1E1).
+pub fn h_021d9bf8<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) || b.var(0x46) != 0 || b.var(0x45) == 0 {
+        return;
+    }
+    if b.mon(me as u32).stage_headroom(1) <= 0 {
+        return;
+    }
+    let id = b.host.handex_push(hx::RANK_EFFECT, me as u32);
+    let room = b.mon(me as u32).stage_headroom(1);
+    let buf = b.host.handex(id);
+    buf.put_u32(4, 1);
+    buf.put_u8(0xC, room as u8);
+    buf.put_u8(0xE, 1);
+    buf.put_u8(0xF, 1);
+    buf.put_u8(0x10, me);
+    buf.put_u8(0xD, 1);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | (1 << 23));
+    str_param_setup(buf, 0x18, 2, 0x1E1);
+    str_param_add_arg(buf, 0x18, me as u32);
+    b.host.handex_pop(id);
+}
+
+/// Unlabeled helper at 0x021D9E08: on a contact move (move flag 0) against this Pokemon,
+/// `percent`% chance to inflict `sick` with `cont` on the attacker.
+fn contact_status<H: FlowHost>(b: &mut Battle<H>, me: u8, sick: u32, cont: u32, percent: u8) {
+    if !is_me(b, 4, me) || b.var(0x46) != 0 {
+        return;
+    }
+    let mv = b.var(0x12) as u16 as u32;
+    if !b.host.move_flag(mv, 0) || !b.roll_percent_or_forced(percent as u32) {
+        return;
+    }
+    let id = b.host.handex_push(HANDEX_ADD_SICK, me as u32);
+    let attacker = b.var(3) as u8;
+    let buf = b.host.handex(id);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | HANDEX_HEADER_POPUP_MSG);
+    buf.put_u32(4, sick);
+    buf.put_u32(8, cont);
+    buf.put_u8(0xC, 0);
+    buf.put_u8(0xF, attacker);
+    b.host.handex_pop(id);
+}
+
+/// 0x021D9C8C: Poison Point.
+pub fn h_021d9c8c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    let c = b.calc.make_default_sick_cont(5).0;
+    contact_status(b, me, 5, c, 30);
+}
+/// 0x021D9CBC: Static.
+pub fn h_021d9cbc<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    let c = b.calc.make_default_sick_cont(1).0;
+    contact_status(b, me, 1, c, 30);
+}
+/// 0x021D9CEC: Flame Body.
+pub fn h_021d9cec<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    let c = b.calc.make_default_sick_cont(4).0;
+    contact_status(b, me, 4, c, 30);
+}
+
+/// 0x021D9D1C: Cute Charm: contact from the opposite gender may attract (condition 7).
+pub fn h_021d9d1c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) || b.var(0x46) != 0 || b.host.fun_021c83d4() {
+        return;
+    }
+    let attacker = b.var(3) as u8 as u32;
+    let mine = b.mon_get(me as u32, value::FA_BYTE) as u8;
+    let theirs = b.mon_get(attacker, value::FA_BYTE) as u8;
+    if mine == 2 || theirs == 2 || mine == theirs {
+        return;
+    }
+    let c = b.make_sick_cont(7, me as u32).0;
+    contact_status(b, me, 7, c, 30);
+}
+
+/// 0x021D9DB0: Effect Spore: 30% split as poison (rand > 20), paralysis (> 10), else sleep.
+pub fn h_021d9db0<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) || b.var(0x46) != 0 {
+        return;
+    }
+    let r = b.calc.rand(30);
+    let sick = if r > 20 {
+        5
+    } else if r > 10 {
+        1
+    } else {
+        2
+    };
+    let c = b.calc.make_default_sick_cont(sick).0;
+    contact_status(b, me, sick, c, 30);
+}
+
+/// 0x021D9E80: Rough Skin: contact costs the attacker 1/8 HP (message 0x1AE).
+pub fn h_021d9e80<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) || b.var(0x46) != 0 {
+        return;
+    }
+    let mv = b.var(0x12) as u16 as u32;
+    if !b.host.move_flag(mv, 0) {
+        return;
+    }
+    let attacker = b.var(3) as u8;
+    if b.mon_get(attacker as u32, value::HP) == 0 {
+        return;
+    }
+    let id = b.host.handex_push(HANDEX_DAMAGE, me as u32);
+    let h = b.host.handex(id).get_u32(0);
+    b.host.handex(id).put_u32(0, h | HANDEX_HEADER_POPUP_MSG);
+    b.host.handex(id).put_u8(6, attacker);
+    let amount = b.max_hp_div_min1(attacker as u32, 8);
+    let buf = b.host.handex(id);
+    buf.put_u16(4, amount as u16);
+    str_param_setup(buf, 0xC, 2, 0x1AE);
+    str_param_add_arg(buf, 0xC, attacker as u32);
+    b.host.handex_pop(id);
+}
+
+/// 0x021D9F1C: Aftermath: fainting to contact costs the attacker 1/4 HP (message 0x192).
+pub fn h_021d9f1c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) || b.mon_get(me as u32, value::HP) != 0 {
+        return;
+    }
+    let mv = b.var(0x12) as u16 as u32;
+    if !b.host.move_flag(mv, 0) {
+        return;
+    }
+    let attacker = b.var(3) as u8;
+    let id = b.host.handex_push(HANDEX_DAMAGE, me as u32);
+    let h = b.host.handex(id).get_u32(0);
+    b.host.handex(id).put_u32(0, h | HANDEX_HEADER_POPUP_MSG);
+    b.host.handex(id).put_u8(6, attacker);
+    let amount = b.max_hp_div_min1(attacker as u32, 4);
+    let buf = b.host.handex(id);
+    buf.put_u16(4, amount as u16);
+    let f7 = buf[7];
+    buf.put_u8(7, (f7 & !1) | 1);
+    str_param_setup(buf, 0xC, 2, 0x192);
+    str_param_add_arg(buf, 0xC, attacker as u32);
+    b.host.handex_pop(id);
+}
+
+/// 0x021D9FC4: Color Change: becomes the type of the move that hit it.
+pub fn h_021d9fc4<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !b.is_event_target(me as u32) || b.host.fun_021c83d4() {
+        return;
+    }
+    if b.mon_get(me as u32, value::HP) == 0 {
+        return;
+    }
+    let ty = b.var(0x16) as u8;
+    if ty == 17 || b.mon(me as u32).has_type(ty as u32) {
+        return;
+    }
+    b.host.handex_push_pop(hx::ABILITY_POPUP_IN, me as u32);
+    let id = b.host.handex_push(HANDEX_CHANGE_TYPE, me as u32);
+    let buf = b.host.handex(id);
+    buf.put_u16(4, crate::poke_type::make_mono_pair(ty));
+    buf.put_u8(6, me);
+    b.host.handex_pop(id);
+    b.host.handex_push_pop(hx::ABILITY_POPUP_OUT, me as u32);
+}
+
+/// 0x021DA04C: Synchronize: passes poison, paralysis or burn back to its source.
+pub fn h_021da04c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) {
+        return;
+    }
+    let sick = b.var(0x1D) as u32;
+    if sick != 5 && sick != 1 && sick != 4 {
+        return;
+    }
+    let src = b.var(3) as u8;
+    if src == 31 || src == me {
+        return;
+    }
+    let cont = b.var(0x1E) as u32;
+    b.host.handex_push_pop(hx::ABILITY_POPUP_IN, me as u32);
+    let id = b.host.handex_push(HANDEX_ADD_SICK, me as u32);
+    b.host.handex(id).put_u8(0xF, src);
+    b.host.handex(id).put_u32(4, sick);
+    let c = if sick == 5 && crate::sick_cont::SickCont(cont).is_badly_poisoned() {
+        cont
+    } else {
+        b.make_sick_cont(sick, me as u32).0
+    };
+    let buf = b.host.handex(id);
+    buf.put_u32(8, c);
+    buf.put_u8(0xC, 1);
+    b.host.handex_pop(id);
+    b.host.handex_push_pop(hx::ABILITY_POPUP_OUT, me as u32);
+}
+
+/// 0x021DA0FC: sets var 0x41 for the attacker.
+pub fn h_021da0fc<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 3, me) {
+        b.rewrite_var(0x41, 1);
+    }
+}
+
+/// 0x021DA120: sets var 0x16 (move type) to 0 (Normal).
+pub fn h_021da120<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) {
+        b.rewrite_var(0x16, 0);
+    }
+}
+
+/// 0x021DA150: Trace: copies a random opponent's ability on entry, or later the ability of
+/// an adjacent opponent that enters (work word 0 = nothing was traceable).
+pub fn h_021da150<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    let entering = b.var(2) as u8;
+    let mut ability = 0u32;
+    let mut src = 31u32;
+    if entering == me {
+        let pos = b.host.poke_pos(me as u32);
+        let mut ids = [0u8; 8];
+        let n = b.host.expand_poke_ids((0x100 | pos) & 0xFFFF, &mut ids);
+        let mut cands = [0u8; 8];
+        let mut count = 0u8;
+        let mut i = 0u8;
+        while (i as u32) < n {
+            let a = b.mon_get(ids[i as usize] as u32, value::ABILITY_RAW) as u16;
+            if !b.host.ability_uncopyable(a as u32) {
+                cands[count as usize] = ids[i as usize];
+                count = count.wrapping_add(1);
+            }
+            i = i.wrapping_add(1);
+        }
+        if count == 0 {
+            work(sys, f)[0] = 1;
+        } else {
+            let k = if count == 1 {
+                0
+            } else {
+                b.calc.rand(count as u32)
+            };
+            let id = cands[k as u8 as usize] as u32;
+            ability = b.mon_get(id, value::ABILITY_RAW);
+            src = b.mon(id).poke_id() as u32;
+        }
+    } else if !same_side(entering as u32, me as u32) && work(sys, f)[0] == 1 {
+        let other = b.host.poke_pos_in_battle(entering as u32);
+        let mine = b.host.poke_pos(me as u32);
+        if other != 6 && (b.host.rule() != 2 || b.host.positions_adjacent(mine, other)) {
+            let a = b.mon_get(entering as u32, value::ABILITY_RAW);
+            if !b.host.ability_uncopyable(a & 0xFFFF) {
+                ability = a;
+                src = entering as u32;
+            }
+        }
+    }
+    if ability == 0 || me == 31 {
+        return;
+    }
+    let id = b.host.handex_push(HANDEX_CHANGE_ABILITY, me as u32);
+    let buf = b.host.handex(id);
+    buf.put_u8(6, me);
+    buf.put_u16(4, ability as u16);
+    buf.put_u8(8, 1);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | (1 << 23));
+    str_param_setup(buf, 0xC, 2, 0x17D);
+    str_param_add_arg(buf, 0xC, src);
+    let a = u16::from_le_bytes([buf[4], buf[5]]) as u32;
+    str_param_add_arg(buf, 0xC, a);
+    b.host.handex_pop(id);
+}
+
+/// 0x021DA2F0: Natural Cure: cures major statuses when switching out.
+pub fn h_021da2f0<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) {
+        return;
+    }
+    let id = b.host.handex_push(HANDEX_CURE_SICK, me as u32);
+    let buf = b.host.handex(id);
+    buf.put_u32(4, SICK_ALL_MAJOR);
+    buf.put_u8(0x14, 1);
+    buf.put_u8(8, me);
+    buf.put_u8(0x15, 1);
+    b.host.handex_pop(id);
+}
+
 /// Original addresses of the ported handlers (also the differential test order).
 pub const PORTED: &[u32] = &[
     0x021D85F4, 0x021D8684, 0x021D86A8, 0x021D86FC, 0x021D8734, 0x021D8760, 0x021D8794, 0x021D87C8,
@@ -1063,7 +1368,9 @@ pub const PORTED: &[u32] = &[
     0x021D956C, 0x021D957C, 0x021D9598, 0x021D95AC, 0x021D95BC, 0x021D95CC, 0x021D96CC, 0x021D9744,
     0x021D9760, 0x021D977C, 0x021D9798, 0x021D97EC, 0x021D9830, 0x021D9848, 0x021D9864, 0x021D98DC,
     0x021D9934, 0x021D9978, 0x021D99A4, 0x021D99C8, 0x021D99E0, 0x021D99F8, 0x021D9A24, 0x021D9A44,
-    0x021D9A68, 0x021D9ADC, 0x021D9B40,
+    0x021D9A68, 0x021D9ADC, 0x021D9B40, 0x021D9BA4, 0x021D9BC8, 0x021D9BF8, 0x021D9C8C, 0x021D9CBC,
+    0x021D9CEC, 0x021D9D1C, 0x021D9DB0, 0x021D9E80, 0x021D9F1C, 0x021D9FC4, 0x021DA04C, 0x021DA0FC,
+    0x021DA120, 0x021DA150, 0x021DA2F0,
 ];
 
 /// Ported ability handlers by original address.
@@ -1168,6 +1475,22 @@ pub fn handler<H: FlowHost>(addr: u32) -> Option<crate::flow::Handler<H>> {
         0x021D9A68 => h_021d9a68::<H>,
         0x021D9ADC => h_021d9adc::<H>,
         0x021D9B40 => h_021d9b40::<H>,
+        0x021D9BA4 => h_021d9ba4::<H>,
+        0x021D9BC8 => h_021d9bc8::<H>,
+        0x021D9BF8 => h_021d9bf8::<H>,
+        0x021D9C8C => h_021d9c8c::<H>,
+        0x021D9CBC => h_021d9cbc::<H>,
+        0x021D9CEC => h_021d9cec::<H>,
+        0x021D9D1C => h_021d9d1c::<H>,
+        0x021D9DB0 => h_021d9db0::<H>,
+        0x021D9E80 => h_021d9e80::<H>,
+        0x021D9F1C => h_021d9f1c::<H>,
+        0x021D9FC4 => h_021d9fc4::<H>,
+        0x021DA04C => h_021da04c::<H>,
+        0x021DA0FC => h_021da0fc::<H>,
+        0x021DA120 => h_021da120::<H>,
+        0x021DA150 => h_021da150::<H>,
+        0x021DA2F0 => h_021da2f0::<H>,
         _ => return None,
     })
 }
