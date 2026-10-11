@@ -1,0 +1,180 @@
+# asm/battle_pokeparam.s
+
+`x` ported+verified, `~` ported (unverified), `-` stubbed/skipped (see note).
+
+- [x] `FUN_021D4D5C` → `black_battle::battle_mon::BattleMon::free`
+- [ ] `FUN_overlay_d_93__021d4d64`
+- [x] `FUN_overlay_d_93__021d4d84` → `black_battle::battle_mon::BattleMon::new`
+- [x] `FUN_overlay_d_93__021d4efc` → `black_battle::battle_mon::BattleMon::reload_from_party`
+- [x] `FUN_overlay_d_93__021d4f84` → `black_battle::battle_mon::BattleMon::moves_load`
+- [x] `FUN_overlay_d_93__021d505c` → `black_battle::battle_mon::BattleMon::moves_store`
+- [x] `FUN_overlay_d_93__021d50b4` → `black_battle::battle_mon::BattleMon::moves_reload`
+- [x] `FUN_overlay_d_93__021d5150` → `black_battle::battle_mon::BattleMon::moves_restore`
+- [x] `FUN_overlay_d_93__021d51cc` → `black_battle::battle_mon::BattleMon::move_clear_used`
+- [x] `FUN_overlay_d_93__021d51dc` → `black_battle::battle_mon::BattleMon::move_replace`
+- [x] `FUN_overlay_d_93__021d5208` → `black_battle::battle_mon::move_half_load`
+- [x] `FUN_overlay_d_93__021d5244` → `black_battle::battle_mon::BattleMon::move_load_from_party`
+- [x] `FUN_overlay_d_93__021d52b4` → `black_battle::battle_mon::BattleMon::reload_types_and_stats`
+- [x] `FUN_overlay_d_93__021d533c` → `black_battle::battle_mon::BattleMon::undo_transform`
+- [x] `FUN_overlay_d_93__021d5364` → `black_battle::battle_mon::BattleMon::reset_switch_state`
+- [x] `FUN_overlay_d_93__021d539c` → `black_battle::battle_mon::BattleMon::clear_157`
+- [x] `FUN_021D53B8` → `black_battle::battle_mon::BattleMon::free`
+- [x] `FUN_overlay_d_93__021d53c0` → `black_battle::battle_mon::stages_reset`
+- [x] `LAB_overlay_d_93__021d53c8` → `black_battle::battle_mon::stages_reset`
+- [x] `LAB_overlay_d_93__021d53dc` → `black_battle::battle_mon::stages_clear_negative`
+- [x] `FUN_overlay_d_93__021d5440` → `black_battle::hooks::poke_id`
+- [x] `FUN_overlay_d_93__021d5444` → `black_battle::hooks::species`
+- [x] `FUN_overlay_d_93__021d5448` → `black_battle::battle_mon::BattleMon::move_count`
+- [x] `FUN_overlay_d_93__021d5450` → `black_battle::battle_mon::BattleMon::orig_move_count`
+- [x] `FUN_overlay_d_93__021d5478` → `black_battle::battle_mon::BattleMon::used_move_count`
+- [x] `FUN_overlay_d_93__021d54b4` → `black_battle::battle_mon::BattleMon::distinct_moves_used`
+- [x] `FUN_overlay_d_93__021d54c0` → `black_battle::battle_mon::BattleMon::move_id`
+- [x] `FUN_overlay_d_93__021d54f4` → `black_battle::battle_mon::BattleMon::copy_moves_to`
+- [x] `FUN_overlay_d_93__021d5528` → `black_battle::battle_mon::BattleMon::move_info`
+- [x] `FUN_overlay_d_93__021d554c` → `black_battle::battle_mon::BattleMon::move_pp_missing`
+- [x] `FUN_overlay_d_93__021d5584` → `black_battle::battle_mon::BattleMon::move_pp`
+- [x] `FUN_overlay_d_93__021d55a0` → `black_battle::battle_mon::BattleMon::move_pp_of`
+- [x] `FUN_overlay_d_93__021d55d8` → `black_battle::battle_mon::BattleMon::move_pp_full`
+- [x] `FUN_overlay_d_93__021d5608` → `black_battle::battle_mon::BattleMon::move_spend_pp`
+- [x] `FUN_overlay_d_93__021d5640` → `black_battle::battle_mon::BattleMon::move_spend_orig_pp`
+- [x] `FUN_overlay_d_93__021d5674` → `black_battle::battle_mon::BattleMon::move_restore_pp`
+- [x] `FUN_overlay_d_93__021d56a0` → `black_battle::battle_mon::BattleMon::move_restore_orig_pp`
+- [x] `FUN_overlay_d_93__021d56cc` → `black_battle::battle_mon::BattleMon::move_mark_used`
+- [x] `FUN_overlay_d_93__021d5734` → `black_battle::battle_mon::BattleMon::move_replace`
+- [x] `FUN_overlay_d_93__021d5750` → `black_battle::battle_mon::BattleMon::knows_move`
+- [x] `FUN_overlay_d_93__021d5778` → `black_battle::battle_mon::BattleMon::move_slot_of`
+- [x] `FUN_overlay_d_93__021d57a8` → `black_battle::battle_mon::BattleMon::types`
+- [x] `FUN_overlay_d_93__021d57fc` → `black_battle::battle_mon::BattleMon::type_pair`
+- [x] `FUN_overlay_d_93__021d5814` → `black_battle::hooks::has_type`
+- [x] `BattleMon_GetPokemon` → `black_battle::battle_mon::BattleMon::get_pokemon`
+- [x] `BattleMon_SetIllusionMon` → `black_battle::battle_mon::BattleMon::set_illusion_mon`
+- [x] `BattleMon_ClearIllusionMon` → `black_battle::battle_mon::BattleMon::clear_illusion_mon`
+- [x] `BattleMon_GetVisibleMon` → `black_battle::battle_mon::BattleMon::visible_mon`
+- [x] `FUN_overlay_d_93__021d587c` → `black_battle::battle_mon::BattleMon::remap_value_id`
+- [x] `FUN_overlay_d_93__021d58a8` → `black_battle::battle_mon::BattleMon::get_unstaged`
+- [x] `FUN_overlay_d_93__021d590c` → `black_battle::battle_mon::BattleMon::read_party_stats`
+- [x] `FUN_overlay_d_93__021d5970` → `black_battle::battle_mon::BattleMon::set_stat`
+- [x] `BattleMon_Get` → `black_battle::hooks::get`
+- [x] `FUN_overlay_d_93__021d5ad8` → `black_battle::battle_mon::BattleMon::get_for_crit`
+- [x] `FUN_overlay_d_93__021d5b40` → `black_battle::battle_mon::BattleMon::held_item`
+- [x] `FUN_overlay_d_93__021d5b44` → `black_battle::battle_mon::BattleMon::held_item`
+- [x] `FUN_overlay_d_93__021d5b48` → `black_battle::battle_mon::BattleMon::is_full_hp`
+- [x] `FUN_overlay_d_93__021d5b68` → `black_battle::battle_mon::BattleMon::is_fainted`
+- [x] `FUN_overlay_d_93__021d5b7c` → `black_battle::battle_mon::BattleMon::is_alive`
+- [x] `FUN_overlay_d_93__021d5bb0` → `black_battle::battle_mon::BattleMon::flag_a`
+- [x] `FUN_overlay_d_93__021d5bdc` → `black_battle::battle_mon::BattleMon::flag_b`
+- [x] `FUN_overlay_d_93__021d5c08` → `black_battle::battle_mon::BattleMon::first_flag_b_3546`
+- [x] `FUN_overlay_d_93__021d5c30` → `black_battle::battle_mon::BattleMon::any_flag_b_3546`
+- [x] `FUN_overlay_d_93__021d5c44` → `black_battle::battle_mon::BattleMon::hp_percent_fx`
+- [x] `FUN_overlay_d_93__021d5cb4` → `black_battle::battle_mon::stage_offset`
+- [x] `FUN_overlay_d_93__021d5d14` → `black_battle::battle_mon::BattleMon::can_change_stage`
+- [x] `FUN_overlay_d_93__021d5d68` → `black_battle::battle_mon::BattleMon::has_negative_stage`
+- [x] `FUN_overlay_d_93__021d5dc0` → `black_battle::battle_mon::BattleMon::raise_stage`
+- [x] `FUN_overlay_d_93__021d5e38` → `black_battle::battle_mon::BattleMon::lower_stage`
+- [x] `FUN_overlay_d_93__021d5ea8` → `black_battle::battle_mon::BattleMon::set_stage`
+- [x] `FUN_overlay_d_93__021d5efc` → `black_battle::battle_mon::BattleMon::clear_negative_stages`
+- [x] `FUN_overlay_d_93__021d5f08` → `black_battle::battle_mon::BattleMon::reset_stages`
+- [x] `FUN_overlay_d_93__021d5f14` → `black_battle::battle_mon::BattleMon::crit_stage`
+- [x] `FUN_overlay_d_93__021d5f38` → `black_battle::battle_mon::BattleMon::add_crit_boost`
+- [x] `FUN_overlay_d_93__021d5f90` → `black_battle::battle_mon::BattleMon::damage`
+- [x] `FUN_overlay_d_93__021d5fa4` → `black_battle::battle_mon::BattleMon::heal`
+- [x] `FUN_overlay_d_93__021d5fb8` → `black_battle::battle_mon::BattleMon::faint`
+- [x] `FUN_overlay_d_93__021d5fc0` → `black_battle::battle_mon::BattleMon::set_flag_a`
+- [x] `FUN_overlay_d_93__021d5fe4` → `black_battle::battle_mon::BattleMon::set_flag_b`
+- [x] `FUN_overlay_d_93__021d6008` → `black_battle::battle_mon::BattleMon::clear_flag_b`
+- [x] `FUN_overlay_d_93__021d6034` → `black_battle::battle_mon::BattleMon::set_sick`
+- [x] `FUN_overlay_d_93__021d6064` → `black_battle::battle_mon::BattleMon::tick_sick`
+- [x] `FUN_overlay_d_93__021d6130` → `black_battle::battle_mon::BattleMon::tick_sleep`
+- [x] `FUN_overlay_d_93__021d61a8` → `black_battle::battle_mon::BattleMon::tick_confusion`
+- [x] `FUN_overlay_d_93__021d61f0` → `black_battle::battle_mon::BattleMon::cure_major_status`
+- [x] `FUN_overlay_d_93__021d621c` → `black_battle::battle_mon::BattleMon::on_sick_cured`
+- [x] `FUN_overlay_d_93__021d6238` → `black_battle::battle_mon::BattleMon::cure_sick`
+- [x] `FUN_overlay_d_93__021d6264` → `black_battle::battle_mon::BattleMon::cure_sicks_linked_to`
+- [x] `FUN_overlay_d_93__021d62a8` → `black_battle::battle_mon::BattleMon::major_status`
+- [x] `FUN_overlay_d_93__021d62c4` → `black_battle::battle_mon::BattleMon::has_sick`
+- [x] `FUN_overlay_d_93__021d62d8` → `black_battle::battle_mon::BattleMon::sick_param`
+- [x] `FUN_overlay_d_93__021d6314` → `black_battle::battle_mon::BattleMon::get_sick_cont`
+- [x] `FUN_overlay_d_93__021d631c` → `black_battle::battle_mon::BattleMon::sick_turns`
+- [x] `FUN_overlay_d_93__021d6324` → `black_battle::battle_mon::BattleMon::sick_damage`
+- [x] `FUN_overlay_d_93__021d63b8` → `black_battle::battle_mon::BattleMon::clear_sicks`
+- [x] `FUN_overlay_d_93__021d63ec` → `black_battle::battle_mon::BattleMon::set_148`
+- [x] `FUN_overlay_d_93__021d6408` → `black_battle::battle_mon::BattleMon::on_turn_start`
+- [x] `FUN_overlay_d_93__021d6440` → `black_battle::battle_mon::BattleMon::clear_flag_a`
+- [x] `FUN_overlay_d_93__021d646c` → `black_battle::battle_mon::BattleMon::reset_on_switch_out`
+- [x] `FUN_overlay_d_93__021d64f0` → `black_battle::battle_mon::BattleMon::reset_on_battle_end`
+- [x] `FUN_overlay_d_93__021d6580` → `black_battle::battle_mon::BattleMon::reset_on_replace`
+- [x] `FUN_overlay_d_93__021d65c8` → `black_battle::battle_mon::BattleMon::copy_passable_state`
+- [x] `FUN_021D66A0` → `black_battle::battle_mon::sick_is_passable`
+- [x] `thunk_EXT_FUN_0689c868` → `black_battle::battle_mon::sick_is_passable`
+- [x] `FUN_overlay_d_93__021d66b0` → `black_battle::battle_mon::BattleMon::set_type_pair`
+- [x] `FUN_overlay_d_93__021d66d0` → `black_battle::battle_mon::BattleMon::set_ability`
+- [x] `FUN_overlay_d_93__021d66d8` → `black_battle::battle_mon::BattleMon::change_form`
+- [x] `FUN_overlay_d_93__021d6730` → `black_battle::battle_mon::BattleMon::set_u14`
+- [x] `FUN_overlay_d_93__021d6738` → `black_battle::battle_mon::BattleMon::set_u14`
+- [x] `FUN_overlay_d_93__021d6744` → `black_battle::battle_mon::BattleMon::record_move`
+- [x] `FUN_overlay_d_93__021d67a8` → `black_battle::battle_mon::BattleMon::last_move`
+- [x] `FUN_overlay_d_93__021d67b8` → `black_battle::battle_mon::BattleMon::last_move_orig`
+- [x] `FUN_overlay_d_93__021d67c4` → `black_battle::battle_mon::BattleMon::last_move_target`
+- [x] `FUN_overlay_d_93__021d67d0` → `black_battle::battle_mon::BattleMon::flag_1b_bit7`
+- [x] `FUN_overlay_d_93__021d67d8` → `black_battle::battle_mon::BattleMon::set_weight`
+- [x] `FUN_overlay_d_93__021d67e8` → `black_battle::battle_mon::BattleMon::weight`
+- [x] `FUN_overlay_d_93__021d67f4` → `black_battle::battle_mon::BattleMon::clear_history`
+- [x] `FUN_overlay_d_93__021d6824` → `black_battle::battle_mon::BattleMon::advance_history`
+- [x] `FUN_overlay_d_93__021d6848` → `black_battle::battle_mon::BattleMon::push_history`
+- [x] `FUN_overlay_d_93__021d6920` → `black_battle::battle_mon::BattleMon::history_count`
+- [x] `FUN_overlay_d_93__021d6940` → `black_battle::battle_mon::BattleMon::history_record`
+- [x] `FUN_overlay_d_93__021d69a0` → `black_battle::battle_mon::BattleMon::set_u8_157`
+- [x] `FUN_overlay_d_93__021d69ac` → `black_battle::battle_mon::BattleMon::set_u8_157`
+- [x] `FUN_overlay_d_93__021d69b8` → `black_battle::battle_mon::BattleMon::gain_exp`
+- [x] `FUN_overlay_d_93__021d6b6c` → `black_battle::battle_mon::BattleMon::exp_for_max_level`
+- [x] `FUN_overlay_d_93__021d6b84` → `black_battle::battle_mon::BattleMon::store_to_party`
+- [x] `FUN_overlay_d_93__021d6bfc` → `black_battle::battle_mon::BattleMon::refresh_from_party`
+- [x] `FUN_overlay_d_93__021d6c24` → `black_battle::battle_mon::BattleMon::is_illusion_active`
+- [x] `FUN_overlay_d_93__021d6c2c` → `black_battle::battle_mon::BattleMon::clear_illusion_mon`
+- [x] `FUN_overlay_d_93__021d6c3c` → `black_battle::battle_mon::BattleMon::set_pokemon`
+- [x] `FUN_overlay_d_93__021d6c50` → `black_battle::battle_mon::BattleMon::transform_into`
+- [x] `FUN_overlay_d_93__021d6d54` → `black_battle::battle_mon::BattleMon::is_transformed`
+- [x] `FUN_overlay_d_93__021d6d5c` → `black_battle::battle_mon::BattleMon::make_substitute`
+- [x] `FUN_overlay_d_93__021d6d70` → `black_battle::battle_mon::BattleMon::set_substitute_hp`
+- [x] `FUN_overlay_d_93__021d6d7c` → `black_battle::battle_mon::BattleMon::has_substitute`
+- [x] `FUN_overlay_d_93__021d6d90` → `black_battle::battle_mon::BattleMon::substitute_hp`
+- [x] `FUN_overlay_d_93__021d6d9c` → `black_battle::battle_mon::BattleMon::hit_substitute`
+- [x] `FUN_overlay_d_93__021d6dc4` → `black_battle::battle_mon::BattleMon::clear_faced`
+- [x] `FUN_overlay_d_93__021d6dcc` → `black_battle::battle_mon::BattleMon::add_faced`
+- [x] `FUN_overlay_d_93__021d6e04` → `black_battle::battle_mon::BattleMon::faced_count`
+- [x] `FUN_overlay_d_93__021d6e0c` → `black_battle::battle_mon::BattleMon::faced`
+- [x] `FUN_overlay_d_93__021d6e24` → `black_battle::battle_mon::BattleMon::set_pp_0x98`
+- [x] `FUN_overlay_d_93__021d6e40` → `black_battle::battle_mon::BattleMon::set_1f6`
+- [x] `FUN_overlay_d_93__021d6e74` → `black_battle::battle_mon::BattleMon::has_1f6`
+- [x] `FUN_overlay_d_93__021d6e88` → `black_battle::battle_mon::BattleMon::clear_1f6`
+- [ ] `FUN_overlay_d_93__021d6eac`
+- [ ] `FUN_overlay_d_93__021d6ee8`
+- [ ] `FUN_overlay_d_93__021d6f08`
+- [ ] `FUN_overlay_d_93__021d6f0c`
+- [ ] `FUN_overlay_d_93__021d701c`
+- [ ] `FUN_overlay_d_93__021d7040`
+- [ ] `FUN_overlay_d_93__021d70a8`
+- [ ] `FUN_overlay_d_93__021d70ac`
+- [ ] `FUN_overlay_d_93__021d70b4`
+- [ ] `FUN_overlay_d_93__021d70bc`
+- [ ] `FUN_overlay_d_93__021d70c8`
+- [ ] `FUN_overlay_d_93__021d70dc`
+- [ ] `FUN_overlay_d_93__021d70e4`
+- [ ] `FUN_overlay_d_93__021d70f0`
+- [ ] `FUN_overlay_d_93__021d70fc`
+- [ ] `FUN_overlay_d_93__021d7108`
+- [ ] `FUN_overlay_d_93__021d713c`
+- [ ] `FUN_overlay_d_93__021d7240`
+- [ ] `FUN_overlay_d_93__021d7320`
+- [ ] `FUN_overlay_d_93__021d7324`
+- [ ] `FUN_overlay_d_93__021d732c`
+- [ ] `FUN_overlay_d_93__021d7360`
+- [ ] `FUN_overlay_d_93__021d7394`
+- [ ] `FUN_overlay_d_93__021d73d4`
+- [ ] `FUN_overlay_d_93__021d7404`
+- [ ] `FUN_overlay_d_93__021d7438`
+- [ ] `FUN_overlay_d_93__021d7474`
+- [ ] `FUN_overlay_d_93__021d7494`
+- [ ] `FUN_overlay_d_93__021d74bc`
+- [ ] `FUN_overlay_d_93__021d74c8`
+- [ ] `FUN_overlay_d_93__021d74e4`

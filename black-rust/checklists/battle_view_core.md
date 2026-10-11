@@ -1,0 +1,82 @@
+# asm/battle_view_core.s
+
+`x` ported+verified, `~` ported (unverified), `-` stubbed/skipped (see note).
+
+- [ ] `FUN_overlay_d_93__021e02dc`
+- [ ] `FUN_overlay_d_93__021e0354`
+- [ ] `FUN_overlay_d_93__021e0394`
+- [ ] `FUN_overlay_d_93__021e03d8`
+- [ ] `FUN_overlay_d_93__021e03e8`
+- [ ] `FUN_overlay_d_93__021e03f8`
+- [ ] `FUN_overlay_d_93__021e0434`
+- [ ] `FUN_overlay_d_93__021e0468`
+- [ ] `FUN_overlay_d_93__021e0944`
+- [ ] `FUN_overlay_d_93__021e0e28`
+- [ ] `FUN_overlay_d_93__021e1354`
+- [ ] `FUN_overlay_d_93__021e17dc`
+- [ ] `FUN_overlay_d_93__021e19f8`
+- [ ] `FUN_overlay_d_93__021e1a2c`
+- [ ] `FUN_overlay_d_93__021e1aa4`
+- [ ] `FUN_overlay_d_93__021e1ae4`
+- [ ] `FUN_overlay_d_93__021e1f18`
+- [ ] `FUN_overlay_d_93__021e1f44`
+- [ ] `FUN_overlay_d_93__021e1f70`
+- [ ] `FUN_overlay_d_93__021e2268`
+- [ ] `FUN_overlay_d_93__021e231c`
+- [ ] `FUN_overlay_d_93__021e2678`
+- [ ] `FUN_overlay_d_93__021e269c`
+- [ ] `FUN_overlay_d_93__021e26c8`
+- [ ] `FUN_overlay_d_93__021e2700`
+- [ ] `FUN_overlay_d_93__021e357c`
+- [ ] `FUN_overlay_d_93__021e3648`
+- [ ] `FUN_overlay_d_93__021e3af0`
+- [ ] `FUN_overlay_d_93__021e3dcc`
+- [ ] `FUN_overlay_d_93__021e3e84`
+- [ ] `FUN_overlay_d_93__021e3f08`
+- [ ] `FUN_overlay_d_93__021e5eb8`
+- [ ] `FUN_overlay_d_93__021e60a8`
+- [ ] `FUN_overlay_d_93__021e80c0`
+- [ ] `FUN_overlay_d_93__021e8104`
+- [ ] `FUN_overlay_d_93__021e8638`
+- [ ] `FUN_021E867C`
+- [ ] `thunk_EXT_FUN_0689c980`
+- [ ] `FUN_021E868C`
+- [ ] `thunk_EXT_FUN_0689c990`
+- [ ] `FUN_overlay_d_93__021e869c`
+- [ ] `FUN_overlay_d_93__021e86c8`
+- [ ] `FUN_overlay_d_93__021e86e8`
+- [ ] `FUN_overlay_d_93__021e8744`
+- [ ] `FUN_overlay_d_93__021e8798`
+- [ ] `FUN_overlay_d_93__021e8860`
+- [ ] `FUN_overlay_d_93__021e88cc`
+- [ ] `FUN_overlay_d_93__021e88f8`
+- [x] `FUN_overlay_d_93__021e8918` → `black_battle::sick_cont::SickCont::none`
+- [x] `FUN_overlay_d_93__021e8928` → `black_battle::sick_cont::SickCont::is_none`
+- [x] `FUN_overlay_d_93__021e8940` → `black_battle::sick_cont::SickCont::turn`
+- [x] `FUN_overlay_d_93__021e896c` → `black_battle::sick_cont::SickCont::turn_param`
+- [x] `FUN_overlay_d_93__021e899c` → `black_battle::sick_cont::SickCont::poke`
+- [x] `FUN_overlay_d_93__021e89c0` → `black_battle::sick_cont::SickCont::permanent`
+- [x] `FUN_overlay_d_93__021e89d4` → `black_battle::sick_cont::SickCont::permanent_param`
+- [x] `FUN_overlay_d_93__021e89f8` → `black_battle::sick_cont::SickCont::permanent_count`
+- [x] `FUN_overlay_d_93__021e8a28` → `black_battle::sick_cont::SickCont::poke_turn`
+- [x] `FUN_overlay_d_93__021e8a58` → `black_battle::sick_cont::SickCont::badly_poisoned`
+- [x] `FUN_overlay_d_93__021e8a78` → `black_battle::sick_cont::SickCont::is_badly_poisoned`
+- [x] `FUN_overlay_d_93__021e8a98` → `black_battle::sick_cont::SickCont::linked_poke_id`
+- [x] `FUN_overlay_d_93__021e8ac8` → `black_battle::sick_cont::SickCont::set_linked_poke_id`
+- [x] `FUN_overlay_d_93__021e8afc` → `black_battle::sick_cont::SickCont::turns`
+- [x] `FUN_overlay_d_93__021e8b80` → `black_battle::sick_cont::SickCont::param_any`
+- [x] `FUN_overlay_d_93__021e8ce0` → `black_battle::poke_type::make_pair`
+- [x] `FUN_overlay_d_93__021e8cf0` → `black_battle::poke_type::make_mono_pair`
+- [x] `FUN_overlay_d_93__021e8cfc` → `black_battle::poke_type::pair_type1`
+- [x] `FUN_overlay_d_93__021e8d04` → `black_battle::poke_type::pair_type2`
+- [x] `FUN_overlay_d_93__021e8d0c` → `black_battle::poke_type::split_pair`
+- [x] `FUN_overlay_d_93__021e8d24` → `black_battle::poke_type::pair_has_type`
+- [ ] `FUN_overlay_d_93__021e8d48`
+- [x] `FUN_overlay_d_93__021e8da8` → `black_battle::poke_type::pair_is_mono`
+- [ ] `FUN_overlay_d_93__021e8dc4`
+- [ ] `FUN_overlay_d_93__021e8df8`
+- [ ] `FUN_overlay_d_93__021e8e28`
+- [ ] `FUN_overlay_d_93__021e8e38`
+- [ ] `FUN_overlay_d_93__021e8f08`
+- [ ] `FUN_overlay_d_93__021e8f20`
+- [ ] `FUN_021E9024`

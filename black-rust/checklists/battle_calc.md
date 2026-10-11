@@ -1,0 +1,173 @@
+# asm/battle_calc.s
+
+`x` ported+verified, `~` ported (unverified), `-` stubbed/skipped (see note).
+
+- [x] `FUN_overlay_d_93__021d74f8` → `black_battle::event_var::EventVarStack::push`
+- [x] `FUN_overlay_d_93__021d7540` → `black_battle::event_var::EventVarStack::pop`
+- [x] `FUN_overlay_d_93__021d75a8` → `black_battle::event_var::EventVarStack::set_value`
+- [x] `FUN_overlay_d_93__021d75ec` → `black_battle::event_var::EventVarStack::set_const_value`
+- [x] `FUN_overlay_d_93__021d7630` → `black_battle::event_var::EventVarStack::set_rewrite_once_value`
+- [x] `FUN_overlay_d_93__021d7674` → `black_battle::event_var::EventVarStack::set_mul_value`
+- [x] `FUN_overlay_d_93__021d76bc` → `black_battle::event_var::EventVarStack::rewrite_value`
+- [x] `FUN_overlay_d_93__021d7704` → `black_battle::event_var::EventVarStack::mul_value`
+- [x] `FUN_overlay_d_93__021d775c` → `black_battle::event_var::EventVarStack::get_value`
+- [x] `FUN_overlay_d_93__021d77c4` → `black_battle::event_var::EventVarStack::slot_for_set`
+- [x] `FUN_overlay_d_93__021d77e8` → `black_battle::event_var::EventVarStack::find`
+- [x] `FUN_overlay_d_93__021d780c` → `black_battle::event_var::EventVarStack::clamp`
+- [~] `FUN_overlay_d_93__021d7840` — unit-tested only (heap alloc via trait)
+- [~] `FUN_overlay_d_93__021d787c` — unit-tested only (state setter)
+- [~] `FUN_overlay_d_93__021d7894` — unit-tested only (heap free via trait)
+- [x] `FUN_overlay_d_93__021d78ac` → `black_battle::calc::BattleCalc::rand`
+- [x] `FUN_overlay_d_93__021d78e4` → `black_battle::calc::apply_stat_stage`
+- [x] `FUN_overlay_d_93__021d7908` → `black_battle::calc::apply_accuracy_stage`
+- [x] `FUN_overlay_d_93__021d7930` → `black_battle::calc::BattleCalc::roll_critical`
+- [x] `FUN_overlay_d_93__021d794c` → `black_battle::calc::type_effectiveness`
+- [x] `FUN_overlay_d_93__021d799c` → `black_battle::calc::type_effectiveness_vs_pair`
+- [x] `FUN_overlay_d_93__021d79e8` → `black_battle::calc::combine_effectiveness`
+- [x] `CalcBaseDamage` → `black_battle::calc::calc_base_damage`
+- [x] `ApplyTypeEffectiveness` → `black_battle::calc::apply_type_effectiveness`
+- [x] `FUN_overlay_d_93__021d7a9c` → `black_battle::calc::resisting_types`
+- [x] `GetTypeEffectivenessClass` → `black_battle::calc::effectiveness_class`
+- [x] `FUN_overlay_d_93__021d7af0` → `black_battle::calc::BattleCalc::roll_percent`
+- [x] `FUN_overlay_d_93__021d7b10` → `black_battle::calc::fx_mul`
+- [x] `FUN_overlay_d_93__021d7b2c` → `black_battle::calc::fx_mul_min1`
+- [x] `FUN_overlay_d_93__021d7b3c` → `black_battle::calc::percent_mul`
+- [x] `FUN_overlay_d_93__021d7b60` → `black_battle::calc::max_hp_div`
+- [x] `FUN_overlay_d_93__021d7b74` → `black_battle::calc::max_hp_div_min1`
+- [x] `FUN_overlay_d_93__021d7b8c` → `black_battle::calc::BattleCalc::rand_range`
+- [x] `FUN_overlay_d_93__021d7ba4` → `black_battle::calc::BattleCalc::roll_hit_count`
+- [x] `FUN_overlay_d_93__021d7bd4` → `black_battle::calc::weather_residual_damage`
+- [x] `FUN_overlay_d_93__021d7c38` → `black_battle::calc::weather_power_modifier`
+- [x] `FUN_overlay_d_93__021d7c70` → `black_battle::calc::BattleCalc::make_move_sick_cont`
+- [x] `FUN_overlay_d_93__021d7d18` → `black_battle::calc::BattleCalc::make_default_sick_cont`
+- [ ] `FUN_overlay_d_93__021d7d6c`
+- [x] `FUN_overlay_d_93__021d7dc0` → `black_battle::calc::BattleCalc::make_sick_cont`
+- [ ] `FUN_overlay_d_93__021d7e10` — ARM overlay call (0x0689C9E4), todo
+- [ ] `FUN_021D7E34`
+- [ ] `thunk_EXT_FUN_0689c9e4`
+- [x] `FUN_overlay_d_93__021d7eb4` → `black_battle::calc::exp_yield`
+- [x] `FUN_overlay_d_93__021d7ef0` → `black_battle::calc::is_not_0_or_3`
+- [x] `FUN_overlay_d_93__021d7f00` → `black_battle::calc::fun_021d7f00`
+- [x] `FUN_overlay_d_93__021d7f2c` → `black_battle::calc::fun_021d7f2c`
+- [x] `FUN_overlay_d_93__021d7f38` → `black_battle::calc::fun_021d7f38`
+- [x] `FUN_overlay_d_93__021d7f4c` → `black_battle::calc::fun_021d7f4c`
+- [x] `FUN_overlay_d_93__021d7f60` → `black_battle::calc::fun_021d7f60`
+- [ ] `FUN_overlay_d_93__021d7f88` — undecompiled ARM9 item calls, todo
+- [ ] `FUN_overlay_d_93__021d7fbc` — undecompiled ARM9 item calls, todo
+- [x] `FUN_overlay_d_93__021d7ff8` → `black_battle::calc::prize_money`
+- [~] `FUN_overlay_d_93__021d804c` — unit-tested only (state setter)
+- [ ] `FUN_overlay_d_93__021d8058` — empty function
+- [ ] `FUN_overlay_d_93__021d805c` — tail call FUN_02020FE4, todo
+- [x] `FUN_overlay_d_93__021d806c` → `black_battle::calc::pack_5bit_x6`
+- [x] `FUN_overlay_d_93__021d8090` → `black_battle::calc::unpack_5bit_x6`
+- [x] `FUN_overlay_d_93__021d80a8` → `black_battle::calc::fun_021d80a8`
+- [ ] `FUN_overlay_d_93__021d80bc`
+- [ ] `FUN_overlay_d_93__021d81f8`
+- [ ] `FUN_overlay_d_93__021d8230`
+- [ ] `FUN_overlay_d_93__021d8244`
+- [ ] `FUN_overlay_d_93__021d826c`
+- [ ] `FUN_overlay_d_93__021d8270`
+- [ ] `FUN_overlay_d_93__021d82d0`
+- [ ] `FUN_overlay_d_93__021d82fc`
+- [ ] `FUN_overlay_d_93__021d832c`
+- [ ] `FUN_overlay_d_93__021d8340`
+- [ ] `FUN_overlay_d_93__021d8358`
+- [ ] `FUN_overlay_d_93__021d8394`
+- [ ] `FUN_overlay_d_93__021d83c4`
+- [ ] `FUN_overlay_d_93__021d83e0`
+- [ ] `FUN_overlay_d_93__021d83fc`
+- [ ] `FUN_overlay_d_93__021d8414`
+- [ ] `FUN_overlay_d_93__021d8434`
+- [ ] `FUN_overlay_d_93__021d8444`
+- [ ] `FUN_overlay_d_93__021d8454`
+- [x] `FUN_overlay_d_93__021d845c` → `black_core::battle_common::BattleEntry::init_unk3`
+- [x] `FUN_overlay_d_93__021d8470` → `black_core::battle_common::BattleEntry::init_end`
+- [ ] `FUN_overlay_d_93__021d8484`
+- [ ] `FUN_overlay_d_93__021d84f0`
+- [ ] `FUN_overlay_d_93__021d84f8`
+- [ ] `FUN_overlay_d_93__021d8510`
+- [ ] `FUN_overlay_d_93__021d8538`
+- [ ] `FUN_overlay_d_93__021d8548`
+- [ ] `FUN_overlay_d_93__021d8564`
+- [ ] `FUN_overlay_d_93__021d85b0`
+- [ ] `FUN_overlay_d_93__021d85c0`
+- [ ] `FUN_overlay_d_93__021d8964`
+- [ ] `FUN_overlay_d_93__021d8974`
+- [ ] `FUN_overlay_d_93__021d89b8`
+- [ ] `FUN_overlay_d_93__021d8e00`
+- [ ] `FUN_overlay_d_93__021d8e7c`
+- [ ] `FUN_overlay_d_93__021d8f84`
+- [ ] `FUN_overlay_d_93__021d8fcc`
+- [ ] `FUN_overlay_d_93__021d901c`
+- [ ] `FUN_overlay_d_93__021d9558`
+- [ ] `FUN_overlay_d_93__021d9670`
+- [ ] `FUN_overlay_d_93__021d96cc`
+- [ ] `FUN_overlay_d_93__021d96dc`
+- [ ] `FUN_overlay_d_93__021d96fc`
+- [ ] `FUN_overlay_d_93__021da5bc`
+- [ ] `FUN_overlay_d_93__021da8dc`
+- [ ] `FUN_overlay_d_93__021db254`
+- [ ] `FUN_overlay_d_93__021db274`
+- [ ] `FUN_overlay_d_93__021db298`
+- [ ] `FUN_overlay_d_93__021db2b8`
+- [ ] `FUN_overlay_d_93__021db2c8`
+- [ ] `FUN_overlay_d_93__021db2f8`
+- [ ] `FUN_overlay_d_93__021db318`
+- [ ] `FUN_overlay_d_93__021db374`
+- [ ] `FUN_overlay_d_93__021db4e8`
+- [ ] `FUN_021DB550`
+- [ ] `thunk_EXT_FUN_0689c8ec`
+- [ ] `FUN_overlay_d_93__021db6e4`
+- [ ] `FUN_overlay_d_93__021db6fc`
+- [ ] `FUN_overlay_d_93__021dbd9c`
+- [ ] `FUN_021DBE50`
+- [ ] `thunk_EXT_FUN_0689c8cc`
+- [ ] `FUN_overlay_d_93__021dc564`
+- [ ] `FUN_overlay_d_93__021dcc80`
+- [ ] `LAB_overlay_d_93__021dcd10`
+- [ ] `FUN_overlay_d_93__021dce18`
+- [ ] `FUN_overlay_d_93__021dce48`
+- [ ] `FUN_overlay_d_93__021dcec4`
+- [ ] `FUN_overlay_d_93__021dcf24`
+- [ ] `FUN_overlay_d_93__021dcf5c`
+- [ ] `FUN_overlay_d_93__021dcf78`
+- [ ] `thunk_FUN_overlay_d_93__021d7040`
+- [ ] `FUN_overlay_d_93__021dcfa4`
+- [ ] `FUN_overlay_d_93__021dcfb4`
+- [ ] `FUN_overlay_d_93__021dcfd0`
+- [ ] `FUN_overlay_d_93__021dcff8`
+- [ ] `FUN_overlay_d_93__021dd008`
+- [ ] `FUN_overlay_d_93__021dd044`
+- [ ] `FUN_overlay_d_93__021dd26c`
+- [ ] `FUN_overlay_d_93__021dd2a4`
+- [ ] `FUN_overlay_d_93__021dd2f8`
+- [ ] `FUN_overlay_d_93__021dd320`
+- [ ] `FUN_overlay_d_93__021dd338`
+- [ ] `FUN_overlay_d_93__021dd368`
+- [ ] `FUN_overlay_d_93__021dd39c`
+- [ ] `FUN_overlay_d_93__021dd70c`
+- [ ] `FUN_overlay_d_93__021dd744`
+- [ ] `FUN_overlay_d_93__021dd77c`
+- [ ] `FUN_overlay_d_93__021dd7b8`
+- [ ] `FUN_overlay_d_93__021ddd8c`
+- [ ] `FUN_overlay_d_93__021dddc4`
+- [ ] `FUN_overlay_d_93__021dddfc`
+- [ ] `FUN_overlay_d_93__021dde30`
+- [ ] `FUN_overlay_d_93__021dde74`
+- [ ] `FUN_overlay_d_93__021ddea4`
+- [ ] `FUN_overlay_d_93__021ddfdc`
+- [ ] `FUN_overlay_d_93__021de000`
+- [ ] `FUN_overlay_d_93__021de024`
+- [ ] `FUN_overlay_d_93__021de058`
+- [ ] `FUN_overlay_d_93__021de0c0`
+- [ ] `FUN_overlay_d_93__021de270`
+- [ ] `FUN_overlay_d_93__021de2a0`
+- [ ] `FUN_overlay_d_93__021de300`
+- [ ] `FUN_overlay_d_93__021deb5c`
+- [ ] `FUN_overlay_d_93__021deea4`
+- [ ] `FUN_overlay_d_93__021def48`
+- [ ] `FUN_overlay_d_93__021df1b0`
+- [ ] `FUN_overlay_d_93__021df4e0`
+- [ ] `FUN_overlay_d_93__021df5f4`
+- [ ] `FUN_overlay_d_93__021df7f4`
+- [ ] `FUN_overlay_d_93__021df93c`

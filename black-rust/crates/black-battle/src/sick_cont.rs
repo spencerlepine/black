@@ -81,6 +81,104 @@ impl SickCont {
         self.kind() == KIND_PERMANENT && self.slot() == 0xF
     }
 
+    /// C: `FUN_overlay_d_93__021e8918`
+    pub fn none() -> Self {
+        SickCont::NONE
+    }
+
+    /// C: `FUN_overlay_d_93__021e8928`: kind is 0.
+    pub fn is_none(self) -> bool {
+        self.kind() == KIND_NONE
+    }
+
+    /// C: `FUN_overlay_d_93__021e8a98`: linked Pokemon ID (kinds 3 and 4), else 0x1F.
+    pub fn linked_poke_id(self) -> u32 {
+        match self.kind() {
+            KIND_POKE => self.slot(),
+            KIND_POKE_TURN => (self.0 >> 9) & 0x3F,
+            _ => 0x1F,
+        }
+    }
+
+    /// C: `FUN_overlay_d_93__021e8ac8`: replaces the linked Pokemon ID (kinds 3 and 4).
+    pub fn set_linked_poke_id(&mut self, id: u32) {
+        match self.kind() {
+            KIND_POKE => self.0 = (self.0 & 0xFFFF_FE07) | slot(id),
+            KIND_POKE_TURN => self.0 = (self.0 & 0xFFFF_81FF) | ((id & 0x3F) << 9),
+            _ => {}
+        }
+    }
+
+    /// C: `FUN_overlay_d_93__021e8afc`: turn limit (kinds 2 and 4), else 0.
+    pub fn turns(self) -> u32 {
+        match self.kind() {
+            KIND_TURN | KIND_POKE_TURN => self.slot(),
+            _ => 0,
+        }
+    }
+
+    /// C: `FUN_overlay_d_93__021e8b80`: the `u16` parameter (bits 9-24 for kinds 1-3, bits
+    /// 15-30 for kind 4), else 0.
+    pub fn param_any(self) -> u16 {
+        match self.kind() {
+            KIND_PERMANENT | KIND_TURN | KIND_POKE => (self.0 >> 9) as u16,
+            KIND_POKE_TURN => (self.0 >> 15) as u16,
+            _ => 0,
+        }
+    }
+
+    /// C: unlabeled routine at `0x021E8B28`: sets the parameter of [`Self::param_any`].
+    pub fn set_param_any(&mut self, p: u32) {
+        match self.kind() {
+            KIND_PERMANENT | KIND_POKE | KIND_TURN => {
+                self.0 = (self.0 & 0xFE00_01FF) | ((p << 16) >> 7)
+            }
+            KIND_POKE_TURN => self.0 = (self.0 & 0x8000_7FFF) | ((p << 16) >> 1),
+            _ => {}
+        }
+    }
+
+    /// C: unlabeled routine at `0x021E8BD0`: sets a flag bit (bit 25 for kinds 1-3, bit 31
+    /// for kind 4).
+    pub fn set_flag(&mut self, f: u32) {
+        match self.kind() {
+            KIND_PERMANENT | KIND_POKE | KIND_TURN => {
+                self.0 = (self.0 & 0xFDFF_FFFF) | ((f << 31) >> 6)
+            }
+            KIND_POKE_TURN => self.0 = (self.0 & 0x7FFF_FFFF) | (f << 31),
+            _ => {}
+        }
+    }
+
+    /// C: unlabeled routine at `0x021E8C24`: the flag bit of [`Self::set_flag`].
+    pub fn flag(self) -> u32 {
+        match self.kind() {
+            KIND_PERMANENT | KIND_POKE | KIND_TURN => (self.0 >> 25) & 1,
+            KIND_POKE_TURN => self.0 >> 31,
+            _ => 0,
+        }
+    }
+
+    /// C: unlabeled routine at `0x021E8C50`: adds to the turn limit if it is below 8.
+    pub fn add_turns(&mut self, n: u32) {
+        if self.kind() == KIND_TURN && self.slot() < 8 {
+            self.0 = (self.0 & 0xFFFF_FE07) | slot(self.slot().wrapping_add(n));
+        }
+        if self.kind() == KIND_POKE_TURN && self.slot() < 8 {
+            self.0 = (self.0 & 0xFFFF_FE07) | slot(self.slot().wrapping_add(n));
+        }
+    }
+
+    /// C: unlabeled routine at `0x021E8C9C`: sets the turn limit if it is below 8.
+    pub fn set_turns(&mut self, n: u32) {
+        if self.kind() == KIND_TURN && self.slot() < 8 {
+            self.0 = (self.0 & 0xFFFF_FE07) | slot(n);
+        }
+        if self.kind() == KIND_POKE_TURN && self.slot() < 8 {
+            self.0 = (self.0 & 0xFFFF_FE07) | slot(n);
+        }
+    }
+
     /// Bits 0-2.
     pub fn kind(self) -> u32 {
         self.0 & KIND_MASK
