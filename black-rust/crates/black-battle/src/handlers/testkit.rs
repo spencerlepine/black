@@ -203,6 +203,8 @@ fn hash_battle(h: &mut Fnv, b: &mut Battle<TestHost>, sys: &EventSystem) {
     }
     let f = sys.factor(0);
     f.work.iter().for_each(|&w| h.w(w));
+    h.w(f.skip_check);
+    h.w(f.flags);
     h.w(b.calc.rng.x as u32);
     h.w((b.calc.rng.x >> 32) as u32);
     for v in b.host.log.drain(..) {

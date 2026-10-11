@@ -177,6 +177,7 @@ def run(addrs):
                 h.w(w)
             for w in words(e.rbytes(POOL + 0x1C, 0x1C)):
                 h.w(w)
+            h.w(e.r32(POOL + 0xC)); h.w(e.r32(POOL + 0x18))
             x = struct.unpack("<Q", e.rbytes(RNGCTX, 8))[0]
             h.w(x & M); h.w(x >> 32)
             for v in host.log:
@@ -196,6 +197,20 @@ def ported(module):
     return [int(x, 16) for x in re.findall(r"0x([0-9A-Fa-f]{8})", block)]
 
 
+def skips():
+    """Skip-check callbacks: (addr, rust mirror) called with random (ftype, event, sub, owner)."""
+    e = Emu()
+    h = Fnv()
+    r = Rng(0x5C1B)
+    for addr in [0x021DAEC4]:
+        for _ in range(500):
+            ftype, ev, sub, owner = r.next() % 8, r.next() % 0x90, r.next() % 200, r.next() % 24
+            if r.next() & 1:
+                sub = 106
+            h.w(e.call(addr, 0, 0, ftype, ev, stack_args=(sub, owner))[0])
+    return h.hex()
+
+
 if __name__ == "__main__":
     for mod in sys.argv[1:] or ["abilities"]:
-        print(mod, run(ported(mod)))
+        print(mod, skips() if mod == "skips" else run(ported(mod)))

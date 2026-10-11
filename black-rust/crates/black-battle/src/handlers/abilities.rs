@@ -1663,6 +1663,199 @@ pub fn h_021daac0<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     }
 }
 
+/// Unlabeled helper at 0x021DA96C: raises `stat` by `amount` if possible (with the ability
+/// pop-up), else reports no effect (message 210).
+fn boost_own_stat<H: FlowHost>(b: &mut Battle<H>, me: u8, stat: u32, amount: u32) {
+    if b.mon(me as u32).can_change_stage(stat, amount as i32) {
+        let id = b.host.handex_push(hx::RANK_EFFECT, me as u32);
+        let buf = b.host.handex(id);
+        buf.put_u8(0xF, 1);
+        buf.put_u8(0x10, me);
+        buf.put_u8(0xE, 1);
+        buf.put_u32(4, stat);
+        buf.put_u8(0xC, amount as u8);
+        let h = buf.get_u32(0);
+        buf.put_u32(0, h | (1 << 23));
+        b.host.handex_pop(id);
+    } else {
+        let id = b.host.handex_push(hx::MESSAGE, me as u32);
+        let buf = b.host.handex(id);
+        str_param_setup(buf, 4, 2, 210);
+        str_param_add_arg(buf, 4, me as u32);
+        let h = buf.get_u32(0);
+        buf.put_u32(0, h | HANDEX_HEADER_POPUP);
+        b.host.handex_pop(id);
+    }
+}
+
+fn message_with_popup_flag<H: FlowHost>(b: &mut Battle<H>, me: u8, str_id: u32, args: &[u32]) {
+    let id = b.host.handex_push(hx::MESSAGE, me as u32);
+    let buf = b.host.handex(id);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | HANDEX_HEADER_POPUP_MSG);
+    str_param_setup(buf, 4, 2, str_id);
+    for &a in args {
+        str_param_add_arg(buf, 4, a);
+    }
+    b.host.handex_pop(id);
+}
+
+/// 0x021DAAEC: Volt Absorb: Electric moves restore 1/4 HP.
+pub fn h_021daaec<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if absorbs(b, me, 12) {
+        absorb_heal(b, me, 4);
+    }
+}
+
+/// 0x021DAB24: Motor Drive: Electric moves raise Speed.
+pub fn h_021dab24<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if absorbs(b, me, 12) {
+        boost_own_stat(b, me, 5, 1);
+    }
+}
+
+/// 0x021DAB48: sets var 0x4B when var 0x15 is 7.
+pub fn h_021dab48<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 3, me) && b.var(0x15) == 7 {
+        b.rewrite_var(0x4B, 1);
+    }
+}
+
+/// 0x021DAB78: Soundproof: blocks sound moves (move flag 8).
+pub fn h_021dab78<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) {
+        return;
+    }
+    let mv = b.var(0x12) as u16 as u32;
+    if b.host.move_flag(mv, 8) && b.rewrite_var(0x40, 1) {
+        popup_message(b, me, 210, &[me as u32]);
+    }
+}
+
+/// 0x021DABF4: sets var 0x51 if unset, recording success in work word 0.
+pub fn h_021dabf4<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) && b.var(0x51) == 0 {
+        work(sys, f)[0] = b.rewrite_var(0x51, 1) as u32;
+    }
+}
+
+/// 0x021DAC1C: after 0x021DABF4 triggered, shows message 210.
+pub fn h_021dac1c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) && work(sys, f)[0] != 0 {
+        message_with_popup_flag(b, me, 210, &[me as u32]);
+        work(sys, f)[0] = 0;
+    }
+}
+
+/// 0x021DAC6C: clears work word 0.
+pub fn h_021dac6c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) {
+        work(sys, f)[0] = 0;
+    }
+}
+
+/// 0x021DAC90: Wonder Guard: only super-effective damaging moves (except Struggle) hit.
+pub fn h_021dac90<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) || is_me(b, 3, me) {
+        return;
+    }
+    let mv = b.var(0x12) as u16 as u32;
+    if !b.host.move_fun_0201c314(mv) || mv == 165 {
+        return;
+    }
+    if b.var(0x38) <= 3 && b.rewrite_var(0x40, 1) {
+        popup_message(b, me, 210, &[me as u32]);
+    }
+}
+
+/// 0x021DAD2C: two-step toggle: on the second call sets var 0x22 to 19 (work 1 = result).
+pub fn h_021dad2c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) {
+        return;
+    }
+    if work(sys, f)[0] != 0 {
+        work(sys, f)[1] = b.rewrite_var(0x22, 19) as u32;
+        work(sys, f)[0] = 0;
+    } else {
+        work(sys, f)[0] = 1;
+    }
+}
+
+/// 0x021DAD58: sets work word 0 when flag-A bit 0 is set.
+pub fn h_021dad58<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) && b.mon(me as u32).flag_a(0) {
+        work(sys, f)[0] = 1;
+    }
+}
+
+/// 0x021DAD84: shows message 0x1BD after 0x021DAD2C succeeded (work word 1).
+pub fn h_021dad84<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) && work(sys, f)[1] != 0 {
+        message_with_popup_flag(b, me, 0x1BD, &[me as u32]);
+        work(sys, f)[1] = 0;
+    }
+}
+
+/// 0x021DADD8: clears work word 0 when var 0x0C is 7.
+pub fn h_021dadd8<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) && b.var(0x0C) == 7 {
+        work(sys, f)[0] = 0;
+    }
+}
+
+/// 0x021DAE04: Damp: blocks Explosion (153) and Self-Destruct (120) via var 0x22 = 19.
+pub fn h_021dae04<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, _: u8) {
+    let mv = b.var(0x12) as u16 as u32;
+    work(sys, f)[0] = 0;
+    if (mv == 153 || mv == 120) && b.var(0x22) == 0 {
+        work(sys, f)[0] = b.rewrite_var(0x22, 19) as u32;
+        work(sys, f)[1] = mv;
+    }
+}
+
+/// 0x021DAE38: Damp message (0x389) naming the blocked Pokemon and move.
+pub fn h_021dae38<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if work(sys, f)[0] == 0 {
+        return;
+    }
+    let who = b.var(2) as u8 as u32;
+    let mv = work(sys, f)[1];
+    message_with_popup_flag(b, me, 0x389, &[who, mv]);
+    work(sys, f)[0] = 0;
+}
+
+/// Skip-check callback of [`h_021dae94`] (address of the original routine).
+pub const SKIP_CHECK_DAMP: u32 = 0x021D_AEC5;
+
+/// Unlabeled skip-check callback at 0x021DAEC4: disables ability 106 (Aftermath).
+pub fn skip_021daec4(ftype: u32, sub_id: u16) -> bool {
+    ftype == 4 && sub_id == 106
+}
+
+/// 0x021DAE94: Damp: installs the Aftermath-blocking skip check.
+pub fn h_021dae94<H: FlowHost>(sys: &mut EventSystem, f: FactorId, _: &mut Battle<H>, _: u8) {
+    sys.set_skip_check(f, SKIP_CHECK_DAMP);
+}
+
+/// 0x021DAEA4: removes the skip check.
+pub fn h_021daea4<H: FlowHost>(sys: &mut EventSystem, f: FactorId, _: &mut Battle<H>, _: u8) {
+    sys.clear_skip_check(f);
+}
+
+/// 0x021DAEAC: removes the skip check when this Pokemon leaves (var 2).
+pub fn h_021daeac<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) {
+        sys.clear_skip_check(f);
+    }
+}
+
+/// 0x021DAEE4: Flash Fire: Fire moves x1.5 once activated (flag-B bit 13).
+pub fn h_021daee4<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 3, me) && b.mon(me as u32).flag_b(13) && b.var(0x16) == 9 {
+        b.mul_var(0x35, 0x1800);
+    }
+}
+
 /// Original addresses of the ported handlers (also the differential test order).
 pub const PORTED: &[u32] = &[
     0x021D85F4, 0x021D8684, 0x021D86A8, 0x021D86FC, 0x021D8734, 0x021D8760, 0x021D8794, 0x021D87C8,
@@ -1681,7 +1874,9 @@ pub const PORTED: &[u32] = &[
     0x021D9CEC, 0x021D9D1C, 0x021D9DB0, 0x021D9E80, 0x021D9F1C, 0x021D9FC4, 0x021DA04C, 0x021DA0FC,
     0x021DA120, 0x021DA150, 0x021DA2F0, 0x021DA32C, 0x021DA3D8, 0x021DA528, 0x021DA624, 0x021DA6EC,
     0x021DA748, 0x021DA780, 0x021DA7DC, 0x021DA808, 0x021DA820, 0x021DA844, 0x021DA868, 0x021DA9E0,
-    0x021DAA70, 0x021DAA94, 0x021DAAC0,
+    0x021DAA70, 0x021DAA94, 0x021DAAC0, 0x021DAAEC, 0x021DAB24, 0x021DAB48, 0x021DAB78, 0x021DABF4,
+    0x021DAC1C, 0x021DAC6C, 0x021DAC90, 0x021DAD2C, 0x021DAD58, 0x021DAD84, 0x021DADD8, 0x021DAE04,
+    0x021DAE38, 0x021DAE94, 0x021DAEA4, 0x021DAEAC, 0x021DAEE4,
 ];
 
 /// Ported ability handlers by original address.
@@ -1818,6 +2013,24 @@ pub fn handler<H: FlowHost>(addr: u32) -> Option<crate::flow::Handler<H>> {
         0x021DAA70 => h_021daa70::<H>,
         0x021DAA94 => h_021daa94::<H>,
         0x021DAAC0 => h_021daac0::<H>,
+        0x021DAAEC => h_021daaec::<H>,
+        0x021DAB24 => h_021dab24::<H>,
+        0x021DAB48 => h_021dab48::<H>,
+        0x021DAB78 => h_021dab78::<H>,
+        0x021DABF4 => h_021dabf4::<H>,
+        0x021DAC1C => h_021dac1c::<H>,
+        0x021DAC6C => h_021dac6c::<H>,
+        0x021DAC90 => h_021dac90::<H>,
+        0x021DAD2C => h_021dad2c::<H>,
+        0x021DAD58 => h_021dad58::<H>,
+        0x021DAD84 => h_021dad84::<H>,
+        0x021DADD8 => h_021dadd8::<H>,
+        0x021DAE04 => h_021dae04::<H>,
+        0x021DAE38 => h_021dae38::<H>,
+        0x021DAE94 => h_021dae94::<H>,
+        0x021DAEA4 => h_021daea4::<H>,
+        0x021DAEAC => h_021daeac::<H>,
+        0x021DAEE4 => h_021daee4::<H>,
         _ => return None,
     })
 }
