@@ -9,62 +9,92 @@ Read this first in every session. Source: `../black-rom` (read-only). Checks (al
 | crate | covers | functions | verified |
 |---|---|---|---|
 | `black-core` | `src/battle_record.c`, `src/unk_02008574.c` (+ asm `BattleRecordBuilder_Load`) | 23 (+2 SDK shims) | differential vs host-compiled C |
-| `black-battle` | battle_calc.s 0x021D74F8-0x021D80BC, battle_view_core.s 0x021E8940-0x021E8DA8 | 68 | 64 vs original machine code, 4 unit-tested |
+| `black-battle` | battle_calc.s 0x021D74F8-0x021D80BC; **all of battle_pokeparam.s** (BTL_POKEPARAM + event factors); battle_view_core.s SickCont/type-pair helpers | see `checklists/` and `crates/black-battle/SYMBOLS.md` | all but 4 against the original machine code |
+| `black-battle-wasm` + `web/` | browser playground (`web/README.md`) | n/a | n/a |
 | `nds-rom`, `black-cli` | ROM tooling (not game logic) | n/a | real-ROM tests |
+
+Per-function progress lives in `checklists/<asm file>.md` (`x` verified, `~` unit-tested only).
+Regenerate with `python3 tools/mkchecklist.py asm/<file>.s` (new file) and
+`python3 tools/sync-docs.py` (ticks + `SYMBOLS.md` from `/// C:` doc comments).
+
+## Session workflow (resume here)
+
+1. `source ~/.cargo/env` (rustup toolchain; the shell may predate PATH changes).
+2. Read this file, then the checklist of the file in progress.
+3. Read asm (`../black-rom/asm/*.s`); for `.byte` code blocks use the full Thumb disassembly:
+   `arm-none-eabi-objdump -D -b binary -m arm -M force-thumb --adjust-vma=0x021b6100 ../black-rom/build/black.us/OVY_93.sbin`.
+4. Port to Rust with `/// C: \`SYMBOL\`` doc comments (unlabeled code: `unlabeled routine at \`0xADDR\``).
+5. Add a differential suite: Rust test + mirror in `tools/rom-diff/*.py`; run the Python side
+   (`/tmp/blk/venv/bin/python -I tools/rom-diff/<suite>.py`, venv: `pip install unicorn`) and paste
+   its hash only if the Rust test prints the same.
+6. Gate: fmt, clippy -D warnings, test, release build. `python3 tools/sync-docs.py`. Commit.
 
 ## Verification method
 
-- **Decompiled C** (`src/*.c`): compile the C on the host with shims, then compare fuzz hashes
-  (`black-core`).
+- **Decompiled C** (`src/*.c`): compile the C on the host with shims; compare fuzz hashes.
 - **Assembly only**: `tools/rom-diff` runs the original ARM9 + overlay 93 code from the decomp
-  build under Unicorn, with Python stubs for undecompiled callees. Each `*_matches_rom_fuzz`
-  test hashes the same generated inputs and must give the same FNV hash. See
-  `tools/rom-diff/README.md`.
-- rizin is for cross-checks only. Its ESIL emulation hung on Thumb/ARM interworking.
-- The decomp build products (`main.sbin`, `OVY_93.sbin`) match the retail ROM. Overlay 93
-  loads at 0x021B6100 and ARM9 at 0x02004000.
+  build under Unicorn with Python stubs for undecompiled callees. Stateful code is compared as
+  whole memory images (e.g. the 0x1F8-byte `BTL_POKEPARAM`) plus a log of every stubbed call.
+  Callbacks that must re-enter original code are assembled Thumb stubs (`Emu.load_thumb`).
+- rizin ESIL hung on interworking; not used.
 
 ## Asm reading notes
 
-- `thumb_func_end` markers often sit at the first branch. A function runs to the next
+- `thumb_func_end` markers often sit at the first branch; a function runs to the next
   `func_start`.
-- Thumb `add rX, pc` (hi-register form) reads PC as instruction + 4, **unaligned**. Jump tables
-  `add pc, r0` branch to instruction + 4 + offset.
-- Some code is stored as `.byte` blocks (e.g. `0x021D778C`, `0x021D7D78`, and the big gaps in
-  battle_calc.s after 0x021D85C0). Disassemble them with rizin on `OVY_93.sbin`, or hand-decode.
+- Thumb `add rX, pc` (hi-register form) reads PC as instruction + 4, **unaligned**; `add pc, r0`
+  jump tables branch to instruction + 4 + offset.
+- Much code is stored as `.byte` blocks: e.g. `0x021D778C`, and the battle **handler code**
+  (abilities/items/moves/effects) from 0x021D85E8 to ~0x021E6xxx (battle_calc.s and
+  battle_view_core.s). The decomp's split into those two files does not follow the real
+  source files.
 - Runtime helpers: `FUN_0209C2B0` = `_u32_div_f` (returns dividend on /0, remainder in r1),
-  `FUN_0209C0A4` = `_s32_div_f`, `FUN_0209C054` = `_ll_mul`.
-- Debug filename strings in each file's `.data` identify the original source file (table
-  below). The ARM9 table lives in `unk_0209CE10.s`.
+  `FUN_0209C0A4` = `_s32_div_f`, `FUN_0209C054` = `_ll_mul`, `FUN_0209B750` = int->double,
+  `0x0209B790` = uint->double, `FUN_02082D44` = `MI_CpuCopy8(src, dst, n)`,
+  `0x02082BCC` = `MI_CpuFill8`, `Heap_AllocDebug` = `0x02030734`, `Heap_Free` = `0x020307B0`.
+- Debug filename strings in each file's `.data` identify the original source (table below).
+
+## Battle handler registries (battle_calc rodata)
+
+| table | entries | contents |
+|---|---|---|
+| 0x021F0E74 | 0x9E | ability ID -> handler-table getter (156 standard `mov r1,#n; str r1,[r0]; ldr r0,=table; bx lr`, 2 custom: abilities 100, 143); 240 distinct ability handlers 0x021D85F4-0x021DCE9C; `021d8484` registers them as event factors (type 4) |
+| 0x021F05A0 | ~187 | (id, fn) pairs, code 0x021D88B9-0x021DCE19 (to identify) |
+| 0x021F0B94 | ~250 | code 0x021DAD2D-0x021DB249 (to identify) |
+| 0x021F136C | ~530 | code 0x021DF789-0x021E01A9 (likely item handlers) |
+| 0x021F240C | ~136 | code 0x021E2..-0x021E6165 (to identify) |
+| 0x021F2888 | ~132 | code 0x021E231D-0x021E4409 (to identify) |
+| 0x021F2D58 | ~91 | code 0x021E3B15-0x021E3E01 (to identify) |
+
+Handlers take `(factor, flow_work, poke_id, work)` and mostly call: event vars
+(`021d775c` get, `021d76bc` rewrite, `021d7704` mul), `021c7cf4` (battle Pokemon by ID),
+the HANDEX request API (`021c88a4` push work(type, poke) / `021c88c8` pop / `021c88b4`
+push+pop / `021c8838` string param setup / `021c8860`), and BattleMon accessors.
 
 ## Open questions / unverified
 
 - `_s32_div_f` division by zero (unused by ported callers).
-- `FUN_02034714` (called when the event-var stack overflows): presumably a diagnostic or assert.
-  Modelled as `Err(StackOverflow)`.
-- Inferred names, not semantics-verified: `bpp::{MAX_HP=0x0E, LEVEL=0x0F, FORM=0x13}`, weather
-  IDs (1 sun, 2 rain, 3 hail, 4 sand), condition IDs (1 par .. 7 attract), personal param 9 =
-  base EXP yield, prize-money table by badge count.
-- Unknown meaning: `calc::{is_not_0_or_3, fun_021d7f00, fun_021d7f2c, fun_021d7f38/4c/60,
-  fun_021d80a8}`, `BattleCalc::unk_00`, `calc` work buffer (0x460 bytes) contents.
-- battle_calc.s not yet ported in the ported range: `021d7e10` (ARM overlay call at 0x0689C9E4),
-  `021d7f88`/`021d7fbc` (ARM9 item/save calls), `021d805c`, `021d8058` (empty), and the
-  unreferenced duplicates at `0x021D7D78`.
-- 283 files have no subsystem yet (`?` below): 153 ARM9 `unk_*.s` files and overlays without
-  debug strings.
+- `FUN_02034714` (event-var stack overflow): presumably a diagnostic. Modelled as `Err`.
+- Inferred names, not semantics-verified: `BattleMon_Get` IDs, weather IDs (1 sun, 2 rain,
+  3 hail, 4 sand), condition IDs (1 par .. 7 attract, 9 nightmare, 0x10 gastro acid?, 0x13
+  embargo?, 0x18 roost?), ability 48 = Early Bird, species 492 = Shaymin, field effects 6/7
+  (Wonder Room/Magic Room?), factor types (4 ability, 5 item, 6 temporary).
+- Unknown meaning: several `fun_*` helpers in `calc`, `BattleMon` fields +0x146/+0x148/+0x157,
+  flag sets A/B bit meanings.
+- Deviation: `BattleMon::new` starts from zeroed memory (the original heap block is not
+  cleared); Transform's scratch globals 0x021F3B8C/0x021F3BC4 are not modelled.
 
 ## Next batch
 
-1. **battle_calc.s from 0x021D80BC** (110 labelled functions plus `.byte` code blocks): the
-   rest of `btl_calc.c`, i.e. the damage-flow and handler helpers that consume
-   `EventVarStack`. Add their callees in `battle_pokeparam.s` to the hooks first.
-2. **battle_pokeparam.s** (176 fns): `BattleMon_Get`, stat stages (`021d58a8` + `apply_stat_stage`),
-   `HasType` (`021d5814`). This turns the `BattleMon` trait into a real struct.
-3. **battle_field.s** (34 fns, `btl_field.c`): weather/field state.
-4. Map ARM9 `unk_*.s` files to `poke_tool.c`, `poke_personal.c`, `shinka_check.c`,
-   `waza_tool.c` (P2), `pokeparty.c`, `box_savedata.c` (P3), and `myitem_savedata.c` (P4) by
-   following callers of known functions (e.g. `FUN_02019C90` personal getter, `FUN_0202A3FC`).
-5. Then `battle_ungrouped.s` (`btl_server_flow.c`, 944 fns) for turn order and move execution.
+1. Generic handler harness (Rust trait `FlowHost` for the server-flow calls; Python stubs with
+   HANDEX push/pop scratch buffers), then port the **ability handlers** (0x021F0E74 registry)
+   ability by ability, plus `021d8484`/`021d8510`/`021d8538`/`021d8548`/`021d8564`.
+2. battle_calc.s labelled leftovers: targeting (`021d80bc`, `021d81f8`), action records
+   (`021d8230`..`021d8470`), `021d85b0`/`021d85c0`.
+3. Identify and port the other handler registries (items, moves, side/pos/field effects).
+4. battle_server.s / battle_ungrouped.s (`btl_server_flow.c`): HANDEX execution, turn flow.
+5. Map ARM9 `unk_*.s` to `poke_tool.c`, `poke_personal.c`, `shinka_check.c`, `waza_tool.c`
+   (P2), `pokeparty.c`, `box_savedata.c` (P3), `myitem_savedata.c` (P4).
 
 ## Files
 
