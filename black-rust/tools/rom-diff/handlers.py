@@ -41,6 +41,8 @@ class Host:
         st(0x021C7F68, self.expand)
         st(0x021C8288, self.weather)
         st(0x0201C1E8, self.category)
+        st(0x021C804C, self.find_action)
+        st(0x021C8010, self.pos_in_battle)
         st(0x021C7CF4, lambda em, wk, i, *a, sp: MONS_ADDR + 0x200 * i if i < NMONS else 0)
 
     def push(self, e, wk, ty, poke, *_, sp):
@@ -74,6 +76,21 @@ class Host:
     def category(self, e, mv, *_, sp):
         self.log += [0x106, mv]
         return mix(mv, 0xC1E8) % 3
+
+
+def _find_action(self, e, wk, poke, out, *_, sp):
+    self.log += [0x107, poke]
+    e.w32(out, mix(poke, 0x804C))
+    return mix(poke, 0x804D) & 1
+
+
+def _pos_in_battle(self, e, wk, poke, *_, sp):
+    self.log += [0x108, poke]
+    return mix(poke, 0x8010) % 7
+
+
+Host.find_action = _find_action
+Host.pos_in_battle = _pos_in_battle
 
 
 def value_for(r, me):

@@ -1,6 +1,7 @@
 #!/bin/sh
 # The CI gate: all four must pass before a commit.
 set -e
+. "$HOME/.cargo/env"
 cd "$(dirname "$0")/.."
 cargo fmt --all --check
 cargo clippy -q --workspace --all-targets -- -D warnings

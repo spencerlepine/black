@@ -36,8 +36,14 @@ pub trait FlowHost: BppEnv {
     fn expand_poke_ids(&mut self, code: u32, out: &mut [u8]) -> u32;
     /// C: `FUN_overlay_d_93__021c8288` (-> `021c2ab0`): the current weather.
     fn weather(&mut self) -> u32;
-    /// C: `FUN_0201C1E8(move)`: the move's damage category (1 = physical).
+    /// C: `FUN_0201C1E8(move)`: the move's damage category (1 = physical, 2 = special).
     fn move_category(&mut self, mv: u32) -> u32;
+    /// C: `FUN_overlay_d_93__021c804c(wk, poke_id, &out)`: finds the Pokemon's queued action;
+    /// writes it to `out` and returns whether found.
+    fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool;
+    /// C: `FUN_overlay_d_93__021c8010(wk, poke_id)`: the Pokemon's position, or 6 if it is not
+    /// in battle.
+    fn poke_pos_in_battle(&mut self, poke_id: u32) -> u32;
 }
 
 /// The battle state handlers operate on.
@@ -117,5 +123,27 @@ impl HandexBytes for [u8] {
     }
     fn get_u32(&self, o: usize) -> u32 {
         u32::from_le_bytes(self[o..o + 4].try_into().unwrap())
+    }
+}
+
+/// C: `FUN_overlay_d_93__021c8838(param, type, str_id)`: initialises a string parameter
+/// (`+0` str ID, `+2` type in bits 0-7, argument count in bits 8-14, flag in bit 15; `+4`
+/// up to eight `u32` arguments) at `buf[o..]`.
+pub fn str_param_setup(buf: &mut [u8], o: usize, ty: u32, str_id: u32) {
+    let h = u16::from_le_bytes([buf[o + 2], buf[o + 3]]);
+    let h = (h & !0xFF) | (ty as u8 as u16);
+    buf.put_u16(o + 2, h);
+    buf.put_u16(o, str_id as u16);
+    buf.put_u16(o + 2, h & 0x80FF);
+}
+
+/// C: `FUN_overlay_d_93__021c8860(param, arg)`: appends an argument (ignored past eight).
+pub fn str_param_add_arg(buf: &mut [u8], o: usize, arg: u32) {
+    let h = u16::from_le_bytes([buf[o + 2], buf[o + 3]]);
+    let n = ((h >> 8) & 0x7F) as usize;
+    if n < 8 {
+        let h = (h & 0x80FF) | ((((n + 1) as u16) & 0x7F) << 8);
+        buf.put_u16(o + 2, h);
+        buf.put_u32(o + 4 + 4 * n, arg);
     }
 }

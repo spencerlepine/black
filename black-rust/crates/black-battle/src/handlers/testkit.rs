@@ -117,6 +117,15 @@ impl FlowHost for TestHost {
         self.log.extend([0x106, mv]);
         mix(mv, 0xC1E8) % 3
     }
+    fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool {
+        self.log.extend([0x107, poke_id]);
+        *out = mix(poke_id, 0x804C);
+        mix(poke_id, 0x804D) & 1 != 0
+    }
+    fn poke_pos_in_battle(&mut self, poke_id: u32) -> u32 {
+        self.log.extend([0x108, poke_id]);
+        mix(poke_id, 0x8010) % 7
+    }
 }
 
 fn value_for(r: &mut Rng, me: u32) -> u32 {
