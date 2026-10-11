@@ -551,6 +551,224 @@ pub fn h_021d9154<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     }
 }
 
+/// 0x021D919C: Marvel Scale: with a major status, physical hits (var 0x1A == 1) x1.5 better.
+pub fn h_021d919c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) || b.mon(me as u32).major_status() == 0 {
+        return;
+    }
+    let _ = b.var(0x12);
+    if b.var(0x1A) == 1 {
+        b.mul_var(0x35, 0x1800);
+    }
+}
+
+/// 0x021D91E4: sets var 0x51 for the attacker.
+pub fn h_021d91e4<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 3, me) {
+        b.rewrite_var(0x51, 1);
+    }
+}
+
+/// Unlabeled helper at 0x021D928C: blocks condition `sick` (or any for 8) inflicted by
+/// another Pokemon's stat-lowering effect (var 0x20 < 0); records the result in work word 0.
+fn block_sick<H: FlowHost>(
+    sys: &mut EventSystem,
+    f: FactorId,
+    b: &mut Battle<H>,
+    me: u8,
+    sick: u32,
+) {
+    if !is_me(b, 2, me) || is_me(b, 3, me) {
+        return;
+    }
+    if sick != 8 && sick != b.var(0x1F) as u32 {
+        return;
+    }
+    if b.var(0x20) < 0 {
+        work(sys, f)[0] = b.rewrite_var(0x41, 1) as u32;
+    }
+}
+
+/// Unlabeled helper at 0x021D92CC: after a block (work word 0), shows message `str_id` with
+/// the ability pop-up unless var 0x19 repeats the last one (work word 1).
+fn block_message<H: FlowHost>(
+    sys: &mut EventSystem,
+    f: FactorId,
+    b: &mut Battle<H>,
+    me: u8,
+    str_id: u32,
+) {
+    if !is_me(b, 2, me) || work(sys, f)[0] == 0 {
+        return;
+    }
+    let v = b.var(0x19) as u32;
+    if v == 0 || work(sys, f)[1] != v {
+        b.host.handex_push_pop(hx::ABILITY_POPUP_IN, me as u32);
+        let id = b.host.handex_push(hx::MESSAGE, me as u32);
+        let buf = b.host.handex(id);
+        str_param_setup(buf, 4, 2, str_id);
+        str_param_add_arg(buf, 4, me as u32);
+        b.host.handex_pop(id);
+        b.host.handex_push_pop(hx::ABILITY_POPUP_OUT, me as u32);
+        work(sys, f)[1] = v;
+    }
+    work(sys, f)[0] = 0;
+}
+
+/// 0x021D9214: blocks condition 1.
+pub fn h_021d9214<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    block_sick(sys, f, b, me, 1);
+}
+/// 0x021D9224: message 201 after a block.
+pub fn h_021d9224<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    block_message(sys, f, b, me, 201);
+}
+/// 0x021D9240: blocks condition 6.
+pub fn h_021d9240<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    block_sick(sys, f, b, me, 6);
+}
+/// 0x021D9250: message 207 after a block.
+pub fn h_021d9250<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    block_message(sys, f, b, me, 207);
+}
+/// 0x021D926C: blocks every stat-lowering condition (8).
+pub fn h_021d926c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    block_sick(sys, f, b, me, 8);
+}
+/// 0x021D927C: message 198 after a block.
+pub fn h_021d927c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    block_message(sys, f, b, me, 198);
+}
+
+/// 0x021D9340: Simple: doubles stage changes (var 0x20).
+pub fn h_021d9340<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) {
+        let v = b.var(0x20);
+        b.rewrite_var(0x20, v.wrapping_shl(1));
+    }
+}
+
+/// 0x021D936C: Leaf Guard: in sun, blocks major statuses and condition 14 (yawn).
+pub fn h_021d936c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) || b.host.weather() != 1 {
+        return;
+    }
+    let sick = b.var(0x1D);
+    if sick < 6 || sick == 14 {
+        work(sys, f)[0] = b.rewrite_var(0x41, 1) as u32;
+    }
+}
+
+/// 0x021D93A8: in sun, sets var 0x41 for the Pokemon in var 2.
+pub fn h_021d93a8<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) && b.host.weather() == 1 {
+        b.rewrite_var(0x41, 1);
+    }
+}
+
+/// Unlabeled helper at 0x021D9648: blocks condition `sick` (var 0x1D) on this Pokemon.
+fn immune_to<H: FlowHost>(b: &mut Battle<H>, me: u8, sick: u32) -> bool {
+    if is_me(b, 4, me) && sick == b.var(0x1D) as u32 {
+        return b.rewrite_var(0x41, 1);
+    }
+    false
+}
+
+/// C: `FUN_overlay_d_93__021d9670`: after a block (work word 0 == 1), shows message `str_id`
+/// with the ability pop-up.
+fn immune_message<H: FlowHost>(
+    sys: &mut EventSystem,
+    f: FactorId,
+    b: &mut Battle<H>,
+    me: u8,
+    str_id: u16,
+) {
+    if !is_me(b, 4, me) || work(sys, f)[0] != 1 {
+        return;
+    }
+    b.host.handex_push_pop(hx::ABILITY_POPUP_IN, me as u32);
+    let id = b.host.handex_push(hx::MESSAGE, me as u32);
+    let buf = b.host.handex(id);
+    str_param_setup(buf, 4, 2, str_id as u32);
+    str_param_add_arg(buf, 4, me as u32);
+    b.host.handex_pop(id);
+    b.host.handex_push_pop(hx::ABILITY_POPUP_OUT, me as u32);
+    work(sys, f)[0] = 0;
+}
+
+/// C: `FUN_overlay_d_93__021d96cc`: [`immune_message`] with message 210.
+pub fn h_021d96cc<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    immune_message(sys, f, b, me, 210);
+}
+
+/// HANDEX work type 0xB: cure a condition (+4 condition, +8 Pokemon, +0x14 flag).
+const HANDEX_CURE_SICK: u32 = 0xB;
+
+/// C: `FUN_overlay_d_93__021d96fc`: cures `sick` if present, with the ability pop-up.
+fn cure_own<H: FlowHost>(b: &mut Battle<H>, me: u8, sick: u32) {
+    if !b.mon(me as u32).has_sick(sick) {
+        return;
+    }
+    b.host.handex_push_pop(hx::ABILITY_POPUP_IN, me as u32);
+    let id = b.host.handex_push(HANDEX_CURE_SICK, me as u32);
+    let buf = b.host.handex(id);
+    buf.put_u32(4, sick);
+    buf.put_u8(0x14, 1);
+    buf.put_u8(8, me);
+    b.host.handex_pop(id);
+    b.host.handex_push_pop(hx::ABILITY_POPUP_OUT, me as u32);
+}
+
+/// C: `FUN_overlay_d_93__021d96dc`: [`cure_own`] for the Pokemon in var 2.
+fn cure_own_on_entry<H: FlowHost>(b: &mut Battle<H>, me: u8, sick: u32) {
+    if is_me(b, 2, me) {
+        cure_own(b, me, sick);
+    }
+}
+
+/// 0x021D93D8: blocks condition 1 (paralysis): Limber.
+pub fn h_021d93d8<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    work(sys, f)[0] = immune_to(b, me, 1) as u32;
+}
+/// 0x021D93EC: cures condition 1 on entry.
+pub fn h_021d93ec<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    cure_own_on_entry(b, me, 1);
+}
+/// 0x021D93FC: cures condition 1.
+pub fn h_021d93fc<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    cure_own(b, me, 1);
+}
+/// 0x021D9418: blocks sleep (2) and yawn (14): Insomnia / Vital Spirit.
+pub fn h_021d9418<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    let r = immune_to(b, me, 2) as u32;
+    work(sys, f)[0] = r;
+    if r == 0 {
+        work(sys, f)[0] = immune_to(b, me, 14) as u32;
+    }
+}
+/// 0x021D9440: cures sleep on entry.
+pub fn h_021d9440<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    cure_own_on_entry(b, me, 2);
+}
+/// 0x021D9450: cures sleep.
+pub fn h_021d9450<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    cure_own(b, me, 2);
+}
+/// 0x021D9460: sets var 0x41 for the Pokemon in var 2.
+pub fn h_021d9460<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) {
+        b.rewrite_var(0x41, 1);
+    }
+}
+/// 0x021D9484: blocks freeze (3): Magma Armor.
+pub fn h_021d9484<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    work(sys, f)[0] = immune_to(b, me, 3) as u32;
+}
+/// 0x021D9498: cures freeze on entry.
+pub fn h_021d9498<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    cure_own_on_entry(b, me, 3);
+}
+
 /// Original addresses of the ported handlers (also the differential test order).
 pub const PORTED: &[u32] = &[
     0x021D85F4, 0x021D8684, 0x021D86A8, 0x021D86FC, 0x021D8734, 0x021D8760, 0x021D8794, 0x021D87C8,
@@ -558,7 +776,10 @@ pub const PORTED: &[u32] = &[
     0x021D8A3C, 0x021D8A64, 0x021D8A8C, 0x021D8AA8, 0x021D8AD0, 0x021D8B1C, 0x021D8B50, 0x021D8B84,
     0x021D8BB4, 0x021D8C0C, 0x021D8C3C, 0x021D8C58, 0x021D8C74, 0x021D8C90, 0x021D8CF4, 0x021D8D40,
     0x021D8E1C, 0x021D8E58, 0x021D8EDC, 0x021D8F1C, 0x021D8F54, 0x021D8F84, 0x021D8FCC, 0x021D901C,
-    0x021D9070, 0x021D90E8, 0x021D9118, 0x021D9154,
+    0x021D9070, 0x021D90E8, 0x021D9118, 0x021D9154, 0x021D919C, 0x021D91E4, 0x021D9214, 0x021D9224,
+    0x021D9240, 0x021D9250, 0x021D926C, 0x021D927C, 0x021D9340, 0x021D936C, 0x021D93A8, 0x021D93D8,
+    0x021D93EC, 0x021D93FC, 0x021D9418, 0x021D9440, 0x021D9450, 0x021D9460, 0x021D9484, 0x021D9498,
+    0x021D96CC,
 ];
 
 /// Ported ability handlers by original address.
@@ -608,6 +829,27 @@ pub fn handler<H: FlowHost>(addr: u32) -> Option<crate::flow::Handler<H>> {
         0x021D90E8 => h_021d90e8::<H>,
         0x021D9118 => h_021d9118::<H>,
         0x021D9154 => h_021d9154::<H>,
+        0x021D919C => h_021d919c::<H>,
+        0x021D91E4 => h_021d91e4::<H>,
+        0x021D9214 => h_021d9214::<H>,
+        0x021D9224 => h_021d9224::<H>,
+        0x021D9240 => h_021d9240::<H>,
+        0x021D9250 => h_021d9250::<H>,
+        0x021D926C => h_021d926c::<H>,
+        0x021D927C => h_021d927c::<H>,
+        0x021D9340 => h_021d9340::<H>,
+        0x021D936C => h_021d936c::<H>,
+        0x021D93A8 => h_021d93a8::<H>,
+        0x021D93D8 => h_021d93d8::<H>,
+        0x021D93EC => h_021d93ec::<H>,
+        0x021D93FC => h_021d93fc::<H>,
+        0x021D9418 => h_021d9418::<H>,
+        0x021D9440 => h_021d9440::<H>,
+        0x021D9450 => h_021d9450::<H>,
+        0x021D9460 => h_021d9460::<H>,
+        0x021D9484 => h_021d9484::<H>,
+        0x021D9498 => h_021d9498::<H>,
+        0x021D96CC => h_021d96cc::<H>,
         _ => return None,
     })
 }
