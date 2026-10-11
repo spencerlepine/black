@@ -114,8 +114,8 @@
 - [ ] `FUN_overlay_d_93__021db2f8`
 - [ ] `FUN_overlay_d_93__021db318`
 - [ ] `FUN_overlay_d_93__021db374`
-- [ ] `FUN_overlay_d_93__021db4e8`
-- [ ] `FUN_021DB550`
+- [x] `FUN_overlay_d_93__021db4e8` → `black_battle::handlers::abilities::redirect`
+- [x] `FUN_021DB550` → `black_battle::flow::move_unredirectable`
 - [ ] `thunk_EXT_FUN_0689c8ec`
 - [ ] `FUN_overlay_d_93__021db6e4`
 - [ ] `FUN_overlay_d_93__021db6fc`

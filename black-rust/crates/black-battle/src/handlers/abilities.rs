@@ -7,7 +7,9 @@
 use crate::battle_mon::value;
 use crate::calc::{effectiveness_class, fx_mul, max_i32, u32_div};
 use crate::event_factor::{EventSystem, FactorId};
-use crate::flow::{str_param_add_arg, str_param_setup, Battle, FlowHost, HandexBytes};
+use crate::flow::{
+    str_param_add_arg, str_param_set_extra, str_param_setup, Battle, FlowHost, HandexBytes,
+};
 use crate::main_util::same_side;
 
 /// HANDEX work types used below.
@@ -1856,6 +1858,255 @@ pub fn h_021daee4<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     }
 }
 
+/// HANDEX work type 0x17: set a flag-B bit (+4 bit, +8 Pokemon).
+const HANDEX_SET_FLAG_B: u32 = 0x17;
+/// HANDEX work type 0x18: clear a flag-B bit (+4 bit, +8 Pokemon).
+const HANDEX_CLEAR_FLAG_B: u32 = 0x18;
+/// Flag-B bit: Flash Fire is active.
+const FLAG_B_FLASH_FIRE: u32 = 13;
+
+/// 0x021DAF1C: Flash Fire: clears the boost when leaving.
+pub fn h_021daf1c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) || !b.mon(me as u32).flag_b(FLAG_B_FLASH_FIRE) {
+        return;
+    }
+    let id = b.host.handex_push(HANDEX_CLEAR_FLAG_B, me as u32);
+    b.host.handex(id).put_u8(8, me);
+    b.host.handex(id).put_u32(4, FLAG_B_FLASH_FIRE);
+    b.host.handex_pop(id);
+}
+
+fn plain_message<H: FlowHost>(b: &mut Battle<H>, me: u8, str_id: u32) {
+    let id = b.host.handex_push(hx::MESSAGE, me as u32);
+    let buf = b.host.handex(id);
+    str_param_setup(buf, 4, 2, str_id);
+    str_param_add_arg(buf, 4, me as u32);
+    b.host.handex_pop(id);
+}
+
+/// 0x021DAF58: Flash Fire: absorbs Fire moves and activates (message 0x1AB), or reports no
+/// effect if already active.
+pub fn h_021daf58<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !absorbs(b, me, 9) {
+        return;
+    }
+    b.host.handex_push_pop(hx::ABILITY_POPUP_IN, me as u32);
+    if !b.mon(me as u32).flag_b(FLAG_B_FLASH_FIRE) {
+        plain_message(b, me, 0x1AB);
+        let id = b.host.handex_push(HANDEX_SET_FLAG_B, me as u32);
+        b.host.handex(id).put_u8(8, me);
+        b.host.handex(id).put_u32(4, FLAG_B_FLASH_FIRE);
+        b.host.handex_pop(id);
+    } else {
+        plain_message(b, me, 210);
+    }
+    b.host.handex_push_pop(hx::ABILITY_POPUP_OUT, me as u32);
+}
+
+/// 0x021DB00C: Bad Dreams: sleeping foes lose 1/8 HP (message 0x1E4).
+pub fn h_021db00c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) {
+        return;
+    }
+    let mut shown = false;
+    let pos = b.host.poke_pos(me as u32);
+    let mut ids = [0u8; 8];
+    let n = b.host.expand_poke_ids((0x100 | pos) & 0xFFFF, &mut ids);
+    let mut i = 0u8;
+    while (i as u32) < n {
+        let id = ids[i as usize];
+        if b.mon(id as u32).has_sick(2) {
+            if !shown {
+                shown = true;
+                b.host.handex_push_pop(hx::ABILITY_POPUP_IN, me as u32);
+            }
+            let w = b.host.handex_push(HANDEX_DAMAGE, me as u32);
+            b.host.handex(w).put_u8(6, id);
+            let a = b.max_hp_div_min1(id as u32, 8);
+            let buf = b.host.handex(w);
+            buf.put_u16(4, a as u16);
+            str_param_setup(buf, 0xC, 2, 0x1E4);
+            str_param_add_arg(buf, 0xC, id as u32);
+            b.host.handex_pop(w);
+        }
+        i = i.wrapping_add(1);
+    }
+    if shown {
+        b.host.handex_push_pop(hx::ABILITY_POPUP_OUT, me as u32);
+    }
+}
+
+/// C: `FUN_overlay_d_93__021e889c`: when var 2 is an ally, sets var 0x51; returns whether it
+/// was written. (`021e8878` is the same without the result.)
+fn ally_sets_51<H: FlowHost>(b: &mut Battle<H>, me: u8) -> bool {
+    let who = b.var(2) as u8 as u32;
+    same_side(who, me as u32) && b.rewrite_var(0x51, 1)
+}
+
+/// 0x021DB0DC: sets var 0x51 when var 2 is an ally (`FUN_overlay_d_93__021e8878`).
+pub fn h_021db0dc<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    ally_sets_51(b, me);
+}
+
+/// 0x021DB0E4: like 0x021DB0DC, then shows message 72 (type 1) with extra value 0x56A.
+pub fn h_021db0e4<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !ally_sets_51(b, me) {
+        return;
+    }
+    let id = b.host.handex_push(hx::MESSAGE, me as u32);
+    let buf = b.host.handex(id);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | HANDEX_HEADER_POPUP_MSG);
+    str_param_setup(buf, 4, 1, 72);
+    str_param_set_extra(buf, 4, 0x56A);
+    b.host.handex_pop(id);
+}
+
+/// 0x021DB134: announces Turboblaze (163, 0x1F9), Teravolt (164, 0x1F6) or Mold Breaker
+/// (0x1BA) on entry.
+pub fn h_021db134<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) {
+        return;
+    }
+    let str_id = match sys.sub_id(f) {
+        163 => 0x1F9,
+        164 => 0x1F6,
+        _ => 0x1BA,
+    };
+    popup_message(b, me, str_id, &[me as u32]);
+}
+
+/// Skip-check callback of [`h_021db1d4`] (address of the original routine).
+pub const SKIP_CHECK_MOLD_BREAKER: u32 = 0x021D_B1A9;
+
+/// Unlabeled skip-check callback at 0x021DB1A8: disables breakable abilities.
+pub fn skip_021db1a8<H: FlowHost>(host: &mut H, ftype: u32, sub_id: u16) -> bool {
+    ftype == 4 && host.ability_breakable(sub_id as u32)
+}
+
+/// 0x021DB1D4: Mold Breaker: while attacking, installs the skip check (work word 0).
+pub fn h_021db1d4<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 3, me) && work(sys, f)[0] == 0 {
+        sys.set_skip_check(f, SKIP_CHECK_MOLD_BREAKER);
+        work(sys, f)[0] = 1;
+    }
+}
+
+/// 0x021DB200: Mold Breaker: removes the skip check.
+pub fn h_021db200<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) && work(sys, f)[0] == 1 {
+        sys.clear_skip_check(f);
+        work(sys, f)[0] = 0;
+    }
+}
+
+/// 0x021DB224: same as 0x021DB200 for another event.
+pub fn h_021db224<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    h_021db200(sys, f, b, me);
+}
+
+/// Species 351 (Castform).
+const SPECIES_CASTFORM: u16 = 0x15F;
+
+/// Unlabeled helper at 0x021DB318: Castform back to its normal form.
+fn forecast_reset<H: FlowHost>(b: &mut Battle<H>, me: u8) {
+    if b.mon(me as u32).species() != SPECIES_CASTFORM || b.mon_get(me as u32, value::FORM) == 0 {
+        return;
+    }
+    let id = b.host.handex_push(HANDEX_FORM_CHANGE, me as u32);
+    let buf = b.host.handex(id);
+    buf.put_u8(4, me);
+    buf.put_u8(5, 0);
+    str_param_setup(buf, 8, 2, 222);
+    str_param_add_arg(buf, 8, me as u32);
+    b.host.handex_pop(id);
+}
+
+/// Unlabeled helper at 0x021DB374: Castform takes the form of `weather` (sun 1, rain 2,
+/// hail 3, else 0).
+fn forecast_form<H: FlowHost>(b: &mut Battle<H>, me: u8, weather: u32) {
+    if b.mon(me as u32).species() != SPECIES_CASTFORM {
+        return;
+    }
+    let cur = b.mon_get(me as u32, value::FORM) as u8;
+    let form = if weather <= 3 { weather as u8 } else { 0 };
+    if form == cur {
+        return;
+    }
+    let id = b.host.handex_push(HANDEX_FORM_CHANGE, me as u32);
+    let buf = b.host.handex(id);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | HANDEX_HEADER_POPUP);
+    buf.put_u8(4, me);
+    buf.put_u8(5, form);
+    str_param_setup(buf, 8, 2, 222);
+    str_param_add_arg(buf, 8, me as u32);
+    b.host.handex_pop(id);
+}
+
+/// 0x021DB254: Forecast: adopts the weather form and marks the factor active.
+pub fn h_021db254<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    let w = b.host.weather();
+    forecast_form(b, me, w);
+    work(sys, f)[0] = 1;
+}
+
+/// 0x021DB274: Forecast on entry.
+pub fn h_021db274<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) {
+        h_021db254(sys, f, b, me);
+    }
+}
+
+/// 0x021DB298: Forecast on weather change.
+pub fn h_021db298<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if work(sys, f)[0] != 0 {
+        let w = b.host.weather();
+        forecast_form(b, me, w);
+    }
+}
+
+/// 0x021DB2B8: Forecast reset while active.
+pub fn h_021db2b8<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if work(sys, f)[0] != 0 {
+        forecast_reset(b, me);
+    }
+}
+
+/// 0x021DB2C8: Forecast reset when the ability changes away (var 0x10).
+pub fn h_021db2c8<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) && b.var(0x10) as u32 != sys.sub_id(f) as u32 {
+        forecast_reset(b, me);
+    }
+}
+
+/// 0x021DB2F8: Forecast reset for the Pokemon in var 2.
+pub fn h_021db2f8<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) {
+        forecast_reset(b, me);
+    }
+}
+
+/// C: `FUN_overlay_d_93__021db4e8`: draws another Pokemon's move of `ty` to this Pokemon
+/// (var 4 rewritten); true if the target changed.
+fn redirect<H: FlowHost>(b: &mut Battle<H>, me: u8, ty: u32) -> bool {
+    let attacker = b.var(3) as u8;
+    if attacker == me || ty != b.var(0x16) as u32 {
+        return false;
+    }
+    let mv = b.var(0x12) as u16 as u32;
+    if b.host.fun_021c8290(attacker as u32, me as u32, mv) || b.host.move_unredirectable(mv) {
+        return false;
+    }
+    let old = b.var(4) as u8;
+    b.rewrite_var(4, me as i32) && old != me
+}
+
+/// 0x021DB41C: Storm Drain: redirects Water moves (work word 0 = redirected).
+pub fn h_021db41c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    work(sys, f)[0] = redirect(b, me, 10) as u32;
+}
+
 /// Original addresses of the ported handlers (also the differential test order).
 pub const PORTED: &[u32] = &[
     0x021D85F4, 0x021D8684, 0x021D86A8, 0x021D86FC, 0x021D8734, 0x021D8760, 0x021D8794, 0x021D87C8,
@@ -1876,7 +2127,9 @@ pub const PORTED: &[u32] = &[
     0x021DA748, 0x021DA780, 0x021DA7DC, 0x021DA808, 0x021DA820, 0x021DA844, 0x021DA868, 0x021DA9E0,
     0x021DAA70, 0x021DAA94, 0x021DAAC0, 0x021DAAEC, 0x021DAB24, 0x021DAB48, 0x021DAB78, 0x021DABF4,
     0x021DAC1C, 0x021DAC6C, 0x021DAC90, 0x021DAD2C, 0x021DAD58, 0x021DAD84, 0x021DADD8, 0x021DAE04,
-    0x021DAE38, 0x021DAE94, 0x021DAEA4, 0x021DAEAC, 0x021DAEE4,
+    0x021DAE38, 0x021DAE94, 0x021DAEA4, 0x021DAEAC, 0x021DAEE4, 0x021DAF1C, 0x021DAF58, 0x021DB00C,
+    0x021DB0DC, 0x021DB0E4, 0x021DB134, 0x021DB1D4, 0x021DB200, 0x021DB224, 0x021DB254, 0x021DB274,
+    0x021DB298, 0x021DB2B8, 0x021DB2C8, 0x021DB2F8, 0x021DB41C,
 ];
 
 /// Ported ability handlers by original address.
@@ -2031,6 +2284,22 @@ pub fn handler<H: FlowHost>(addr: u32) -> Option<crate::flow::Handler<H>> {
         0x021DAEA4 => h_021daea4::<H>,
         0x021DAEAC => h_021daeac::<H>,
         0x021DAEE4 => h_021daee4::<H>,
+        0x021DAF1C => h_021daf1c::<H>,
+        0x021DAF58 => h_021daf58::<H>,
+        0x021DB00C => h_021db00c::<H>,
+        0x021DB0DC => h_021db0dc::<H>,
+        0x021DB0E4 => h_021db0e4::<H>,
+        0x021DB134 => h_021db134::<H>,
+        0x021DB1D4 => h_021db1d4::<H>,
+        0x021DB200 => h_021db200::<H>,
+        0x021DB224 => h_021db224::<H>,
+        0x021DB254 => h_021db254::<H>,
+        0x021DB274 => h_021db274::<H>,
+        0x021DB298 => h_021db298::<H>,
+        0x021DB2B8 => h_021db2b8::<H>,
+        0x021DB2C8 => h_021db2c8::<H>,
+        0x021DB2F8 => h_021db2f8::<H>,
+        0x021DB41C => h_021db41c::<H>,
         _ => return None,
     })
 }

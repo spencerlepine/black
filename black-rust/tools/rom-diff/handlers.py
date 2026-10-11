@@ -42,6 +42,9 @@ class Host:
         st(0x021C8288, self.weather)
         st(0x0201C1E8, self.category)
         st(0x021C804C, self.find_action)
+        st(0x0689C9B0, lambda em, ab, *a, sp: (self.log.extend([0x115, ab]), mix(ab, 0xC9B0) & 1)[1])
+        st(0x0689C8EC, lambda em, mv, *a, sp: (self.log.extend([0x116, mv]), int(mix(mv, 0xC8EC) % 4 == 0))[1])
+        st(0x021C8290, lambda em, wk, at, de, mv, sp: (self.log.extend([0x117, at, de, mv]), int(mix(at ^ (de << 8), mv ^ 0x8290) % 4 == 0))[1])
         st(0x021C7D54, self.opponents)
         st(0x0201C1D8, lambda em, mv, *a, sp: (self.log.extend([0x111, mv]), [0, 1, 1, 40, 60, 90, 120, 250][mix(mv, 0xC1D8) % 8])[1])
         st(0x0201C1BC, lambda em, mv, *a, sp: (self.log.extend([0x112, mv]), mix(mv, 0xC1BC) % 12)[1])
@@ -198,16 +201,21 @@ def ported(module):
 
 
 def skips():
-    """Skip-check callbacks: (addr, rust mirror) called with random (ftype, event, sub, owner)."""
+    """Skip-check callbacks called with random (ftype, event, sub, owner)."""
     e = Emu()
+    Env(e)
+    host = Host(e)
     h = Fnv()
     r = Rng(0x5C1B)
-    for addr in [0x021DAEC4]:
+    for addr in [0x021DAEC4, 0x021DB1A8]:
         for _ in range(500):
             ftype, ev, sub, owner = r.next() % 8, r.next() % 0x90, r.next() % 200, r.next() % 24
             if r.next() & 1:
                 sub = 106
             h.w(e.call(addr, 0, 0, ftype, ev, stack_args=(sub, owner))[0])
+            for v in host.log:
+                h.w(v)
+            host.log.clear()
     return h.hex()
 
 

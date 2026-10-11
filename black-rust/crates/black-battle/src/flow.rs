@@ -64,6 +64,12 @@ pub trait FlowHost: BppEnv {
     fn move_fun_0201c314(&mut self, mv: u32) -> bool;
     /// C: `FUN_0201C1C8(move)`: move type.
     fn move_type(&mut self, mv: u32) -> u32;
+    /// C: `FUN_0689C9B0(ability)` via the ARM thunk at 0x021DB1C4: Mold Breaker ignores it.
+    fn ability_breakable(&mut self, ability: u32) -> bool;
+    /// C: `FUN_0689C8EC(move)` via `FUN_021DB550`: the move cannot be redirected.
+    fn move_unredirectable(&mut self, mv: u32) -> bool;
+    /// C: `FUN_overlay_d_93__021c8290(wk, attacker, defender, move)`.
+    fn fun_021c8290(&mut self, attacker: u32, defender: u32, mv: u32) -> bool;
     /// C: `FUN_overlay_d_93__021c804c(wk, poke_id, &out)`: finds the Pokemon's queued action;
     /// writes it to `out` and returns whether found.
     fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool;
@@ -208,6 +214,16 @@ pub fn str_param_setup(buf: &mut [u8], o: usize, ty: u32, str_id: u32) {
     buf.put_u16(o + 2, h);
     buf.put_u16(o, str_id as u16);
     buf.put_u16(o + 2, h & 0x80FF);
+}
+
+/// C: `FUN_overlay_d_93__021c888c(param, value)`: stores an extra value at `+0x20` and sets
+/// flag bit 15 (ignored with eight arguments).
+pub fn str_param_set_extra(buf: &mut [u8], o: usize, value: u32) {
+    let h = u16::from_le_bytes([buf[o + 2], buf[o + 3]]);
+    if ((h >> 8) & 0x7F) < 8 {
+        buf.put_u32(o + 0x20, value);
+        buf.put_u16(o + 2, h | 0x8000);
+    }
 }
 
 /// C: `FUN_overlay_d_93__021c8860(param, arg)`: appends an argument (ignored past eight).

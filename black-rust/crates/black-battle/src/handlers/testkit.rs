@@ -169,6 +169,18 @@ impl FlowHost for TestHost {
         self.log.extend([0x114, mv]);
         mix(mv, 0xC1C8) % 18
     }
+    fn ability_breakable(&mut self, ability: u32) -> bool {
+        self.log.extend([0x115, ability]);
+        mix(ability, 0xC9B0) & 1 != 0
+    }
+    fn move_unredirectable(&mut self, mv: u32) -> bool {
+        self.log.extend([0x116, mv]);
+        mix(mv, 0xC8EC).is_multiple_of(4)
+    }
+    fn fun_021c8290(&mut self, attacker: u32, defender: u32, mv: u32) -> bool {
+        self.log.extend([0x117, attacker, defender, mv]);
+        mix(attacker ^ (defender << 8), mv ^ 0x8290).is_multiple_of(4)
+    }
     fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool {
         self.log.extend([0x107, poke_id]);
         *out = mix(poke_id, 0x804C);
