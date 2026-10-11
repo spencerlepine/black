@@ -67,6 +67,7 @@ pub fn pair_is_mono(pair: u16) -> bool {
 mod tests {
     use super::types::*;
     use super::*;
+    use crate::testutil::{Fnv, Rng};
 
     #[test]
     fn pair_roundtrip() {
@@ -78,5 +79,25 @@ mod tests {
         assert!(!pair_is_mono(p));
         assert!(pair_is_mono(make_mono_pair(FIRE)));
         assert_eq!(make_mono_pair(DARK), 0x1010);
+    }
+
+    /// Hashed against the original code run under an emulator (`tools/rom-diff`).
+    #[test]
+    fn matches_rom_fuzz() {
+        let mut h = Fnv::new();
+        let mut r = Rng::new(0x7E);
+        for _ in 0..3000 {
+            let a = r.next() as u8;
+            let b = (r.next() % 20) as u8;
+            let c = (r.next() % 20) as u8;
+            h.w(make_pair(a, b) as u32);
+            h.w(make_mono_pair(a) as u32);
+            let p = make_pair(b, c);
+            h.w(pair_type1(p) as u32);
+            h.w(pair_type2(p) as u32);
+            h.w(pair_has_type(p, a % 20) as u32);
+            h.w(pair_is_mono(p) as u32);
+        }
+        assert_eq!(h.hex(), "525001f51ea0442c");
     }
 }

@@ -99,6 +99,24 @@ def sick_cont():
     return h.hex()
 
 
+# ---- poke_type ------------------------------------------------------------------------------
+def poke_type():
+    h = Fnv()
+    r = Rng(0x7E)
+    for _ in range(3000):
+        a = r.next() & 0xFF
+        b = r.next() % 20
+        c = r.next() % 20
+        h.w(call(0x021E8CE0, a, b))
+        h.w(call(0x021E8CF0, a))
+        p = (b << 8) | c
+        h.w(call(0x021E8CFC, p))
+        h.w(call(0x021E8D04, p))
+        h.w(call(0x021E8D24, p, a % 20))
+        h.w(call(0x021E8DA8, p))
+    return h.hex()
+
+
 # ---- event_var ------------------------------------------------------------------------------
 def event_var():
     h = Fnv()
@@ -262,6 +280,6 @@ def hooks():
 
 
 if __name__ == "__main__":
-    which = sys.argv[1:] or ["sick_cont", "event_var", "pure", "rng", "hooks"]
+    which = sys.argv[1:] or ["poke_type", "sick_cont", "event_var", "pure", "rng", "hooks"]
     for name in which:
         print(name, globals()[name]())
