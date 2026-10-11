@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>black-battle playground</title>
+<style>
+  :root { --bg:#14161b; --card:#1d2028; --line:#2c303b; --fg:#e6e8ee; --dim:#9aa1b2; --acc:#7cc4ff; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.45 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+  header { padding:20px 28px 8px; }
+  h1 { margin:0; font-size:20px; }
+  header p { margin:4px 0 0; color:var(--dim); max-width:900px; }
+  main { display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:16px; padding:16px 28px 28px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; }
+  h2 { margin:0 0 4px; font-size:15px; }
+  .src { color:var(--dim); font-size:12px; margin:0 0 12px; font-family:ui-monospace, monospace; }
+  label { display:flex; justify-content:space-between; align-items:center; gap:10px; margin:6px 0; color:var(--dim); }
+  input, select, button { font:inherit; background:#11131a; color:var(--fg); border:1px solid var(--line); border-radius:6px; padding:4px 8px; }
+  input[type=number] { width:90px; }
+  button { cursor:pointer; border-color:#3a4a60; }
+  button:hover { border-color:var(--acc); }
+  .out { margin-top:12px; padding-top:10px; border-top:1px solid var(--line); }
+  .row { display:flex; justify-content:space-between; margin:3px 0; }
+  .row b { font-variant-numeric:tabular-nums; }
+  .big { font-size:22px; color:var(--acc); }
+  .note { color:var(--dim); font-size:12px; margin-top:10px; }
+  table { border-collapse:collapse; font-size:11px; margin-top:8px; }
+  td, th { width:19px; height:19px; text-align:center; padding:0; }
+  th { color:var(--dim); font-weight:normal; }
+  .e0 { background:#2a2a2a; color:#777 } .e2 { background:#5a2b2b } .e8 { background:#2b5a35 }
+  .bar { height:16px; background:var(--acc); border-radius:3px; }
+  #err { color:#ff8a8a; padding:0 28px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>black-battle playground</h1>
+  <p>Each panel calls functions ported from Pokémon Black's overlay 93 (<code>battle_calc.s</code>), running here as WebAssembly. Each result comes from a single ported function. The full damage pipeline (STAB, the 85–100% random roll, the crit multiplier, abilities, items) is not ported yet, so no final damage number is shown.</p>
+</header>
+<div id="err"></div>
+<main>
+  <section>
+    <h2>Type matchup</h2>
+    <p class="src">type_effectiveness_vs_pair · combine_effectiveness</p>
+    <label>Move type <select id="tAtk"></select></label>
+    <label>Defender type 1 <select id="tD1"></select></label>
+    <label>Defender type 2 <select id="tD2"></select></label>
+    <div class="out">
+      <div class="row"><span>Effectiveness</span><b id="effOut" class="big"></b></div>
+    </div>
+    <table id="chart"></table>
+    <p class="note">Rows are attacking types and columns are defending types. The chart is the game's own 17×17 table. Click a cell to load that matchup.</p>
+  </section>
+
+  <section>
+    <h2>Base damage</h2>
+    <p class="src">apply_stat_stage · CalcBaseDamage · ApplyTypeEffectiveness · weather_power_modifier</p>
+    <label>Level <input id="lvl" type="number" value="50" min="1" max="100"></label>
+    <label>Move power <input id="pow" type="number" value="80" min="1" max="250"></label>
+    <label>Attack stat <input id="atk" type="number" value="120" min="1" max="999"></label>
+    <label>Attack stage <input id="atkS" type="number" value="0" min="-6" max="6"></label>
+    <label>Defense stat <input id="def" type="number" value="100" min="1" max="999"></label>
+    <label>Defense stage <input id="defS" type="number" value="0" min="-6" max="6"></label>
+    <label>Weather <select id="wx">
+      <option value="0">none</option><option value="1">sun</option><option value="2">rain</option>
+      <option value="3">hail</option><option value="4">sandstorm</option></select></label>
+    <div class="out">
+      <div class="row"><span>Staged attack / defense</span><b id="staged"></b></div>
+      <div class="row"><span>CalcBaseDamage</span><b id="base" class="big"></b></div>
+      <div class="row"><span>ApplyTypeEffectiveness (matchup panel)</span><b id="typed"></b></div>
+      <div class="row"><span>Weather power modifier (move type)</span><b id="wxMod"></b></div>
+    </div>
+    <p class="note">Base damage = ((2·level/5 + 2) · power · attack / defense) / 50 + 2, in unsigned integer math with truncation, as in the original.</p>
+  </section>
+
+  <section>
+    <h2>RNG rolls</h2>
+    <p class="src">MATHRandContext32 · roll_critical · roll_hit_count · apply_accuracy_stage · roll_percent</p>
+    <label>Seed (hex, 64-bit) <input id="seed" value="0123456789ABCDEF" style="width:170px"></label>
+    <label>Trials <input id="trials" type="number" value="10000" min="1" max="1000000"></label>
+    <label>Crit stage <input id="critS" type="number" value="0" min="0" max="4"></label>
+    <label>Move accuracy / stage <span><input id="acc" type="number" value="70" min="1" max="100"> <input id="accS" type="number" value="0" min="-6" max="6" style="width:60px"></span></label>
+    <button id="roll">Roll</button>
+    <div class="out" id="rolls"></div>
+    <p class="note">Uses the Gen 5 64-bit LCG (x·0x5D588B656C078965 + 0x269EC3). The same seed always gives the same results.</p>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>

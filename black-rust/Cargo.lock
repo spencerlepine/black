@@ -66,6 +66,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "black-battle-wasm"
+version = "0.1.0"
+dependencies = [
+ "black-battle",
+]
+
+[[package]]
 name = "black-cli"
 version = "0.1.0"
 dependencies = [
