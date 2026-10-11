@@ -59,6 +59,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "black-battle"
+version = "0.1.0"
+dependencies = [
+ "black-core",
+]
+
+[[package]]
 name = "black-cli"
 version = "0.1.0"
 dependencies = [
