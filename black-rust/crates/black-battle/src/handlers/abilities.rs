@@ -25,7 +25,7 @@ mod hx {
 /// [`HANDEX_HEADER_POPUP`]).
 const HANDEX_HEADER_POPUP_MSG: u32 = 4 << 21;
 
-fn work<'a>(sys: &'a mut EventSystem, f: FactorId) -> &'a mut [u32; 7] {
+fn work(sys: &mut EventSystem, f: FactorId) -> &mut [u32; 7] {
     &mut sys.factor_mut(f).work
 }
 
