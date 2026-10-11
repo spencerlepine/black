@@ -6,6 +6,7 @@
 
 pub mod battle_mon;
 pub mod calc;
+pub mod event_factor;
 pub mod event_var;
 pub mod hooks;
 pub mod poke_type;

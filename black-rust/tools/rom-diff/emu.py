@@ -22,12 +22,16 @@ class Emu:
         uc.mem_write(0x021B6100, self.ovy)
         self.uc = uc
         self.stubs = {}
+        self.traces = {}
         uc.hook_add(UC_HOOK_CODE, self._hook)
 
     def _hook(self, uc, addr, size, _):
         if addr == RET:
             uc.emu_stop()
             return
+        tr = self.traces.get(addr)
+        if tr is not None:
+            tr(self, *[uc.reg_read(r) for r in REGS])
         fn = self.stubs.get(addr)
         if fn is not None:
             args = [uc.reg_read(r) for r in REGS]
@@ -38,6 +42,20 @@ class Emu:
             lr = uc.reg_read(UC_ARM_REG_LR)
             # Unicorn selects Thumb from bit 0 of the value written to PC (interworking return).
             uc.reg_write(UC_ARM_REG_PC, lr)
+
+    def trace(self, addr, fn):
+        """Observe `addr` without replacing it: fn(emu, r0, r1, r2, r3)."""
+        self.traces[addr & ~1] = fn
+
+    def load_thumb(self, addr, source):
+        """Assemble Thumb `source` with arm-none-eabi-as and load it at `addr`."""
+        import subprocess
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            open(f"{d}/a.s", "w").write(source)
+            subprocess.run(["arm-none-eabi-as", "-mthumb", "-march=armv5te", "-o", f"{d}/a.o", f"{d}/a.s"], check=True)
+            subprocess.run(["arm-none-eabi-objcopy", "-O", "binary", "-j", ".text", f"{d}/a.o", f"{d}/a.bin"], check=True)
+            self.uc.mem_write(addr, open(f"{d}/a.bin", "rb").read())
 
     def stub(self, addr, fn):
         self.stubs[addr & ~1] = fn

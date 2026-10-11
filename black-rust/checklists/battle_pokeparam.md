@@ -147,34 +147,34 @@
 - [x] `FUN_overlay_d_93__021d6e40` → `black_battle::battle_mon::BattleMon::set_1f6`
 - [x] `FUN_overlay_d_93__021d6e74` → `black_battle::battle_mon::BattleMon::has_1f6`
 - [x] `FUN_overlay_d_93__021d6e88` → `black_battle::battle_mon::BattleMon::clear_1f6`
-- [ ] `FUN_overlay_d_93__021d6eac`
-- [ ] `FUN_overlay_d_93__021d6ee8`
+- [x] `FUN_overlay_d_93__021d6eac` → `black_battle::event_factor::EventSystem::init`
+- [x] `FUN_overlay_d_93__021d6ee8` → `black_battle::event_factor::EventSystem::enable_all_moves`
 - [ ] `FUN_overlay_d_93__021d6f08`
-- [ ] `FUN_overlay_d_93__021d6f0c`
-- [ ] `FUN_overlay_d_93__021d701c`
-- [ ] `FUN_overlay_d_93__021d7040`
-- [ ] `FUN_overlay_d_93__021d70a8`
-- [ ] `FUN_overlay_d_93__021d70ac`
-- [ ] `FUN_overlay_d_93__021d70b4`
-- [ ] `FUN_overlay_d_93__021d70bc`
-- [ ] `FUN_overlay_d_93__021d70c8`
-- [ ] `FUN_overlay_d_93__021d70dc`
-- [ ] `FUN_overlay_d_93__021d70e4`
-- [ ] `FUN_overlay_d_93__021d70f0`
-- [ ] `FUN_overlay_d_93__021d70fc`
-- [ ] `FUN_overlay_d_93__021d7108`
-- [ ] `FUN_overlay_d_93__021d713c`
-- [ ] `FUN_overlay_d_93__021d7240`
-- [ ] `FUN_overlay_d_93__021d7320`
-- [ ] `FUN_overlay_d_93__021d7324`
-- [ ] `FUN_overlay_d_93__021d732c`
-- [ ] `FUN_overlay_d_93__021d7360`
-- [ ] `FUN_overlay_d_93__021d7394`
-- [ ] `FUN_overlay_d_93__021d73d4`
-- [ ] `FUN_overlay_d_93__021d7404`
-- [ ] `FUN_overlay_d_93__021d7438`
-- [ ] `FUN_overlay_d_93__021d7474`
-- [ ] `FUN_overlay_d_93__021d7494`
+- [x] `FUN_overlay_d_93__021d6f0c` → `black_battle::event_factor::EventSystem::add`
+- [x] `FUN_overlay_d_93__021d701c` → `black_battle::event_factor::EventSystem::remove_type6`
+- [x] `FUN_overlay_d_93__021d7040` → `black_battle::event_factor::EventSystem::remove`
+- [x] `FUN_overlay_d_93__021d70a8` → `black_battle::event_factor::EventSystem::sub_id`
+- [x] `FUN_overlay_d_93__021d70ac` → `black_battle::event_factor::EventSystem::poke_id`
+- [x] `FUN_overlay_d_93__021d70b4` → `black_battle::event_factor::EventSystem::work`
+- [x] `FUN_overlay_d_93__021d70bc` → `black_battle::event_factor::EventSystem::enable_event_0x73`
+- [x] `FUN_overlay_d_93__021d70c8` → `black_battle::event_factor::EventSystem::allow_reentry`
+- [x] `FUN_overlay_d_93__021d70dc` → `black_battle::event_factor::EventSystem::set_work`
+- [x] `FUN_overlay_d_93__021d70e4` → `black_battle::event_factor::EventSystem::dispatch_all`
+- [x] `FUN_overlay_d_93__021d70f0` → `black_battle::event_factor::EventSystem::dispatch_all_checked`
+- [x] `FUN_overlay_d_93__021d70fc` → `black_battle::event_factor::EventSystem::dispatch_type`
+- [x] `FUN_overlay_d_93__021d7108` → `black_battle::event_factor::EventSystem::dispatch`
+- [x] `FUN_overlay_d_93__021d713c` → `black_battle::event_factor::EventSystem::dispatch_level`
+- [x] `FUN_overlay_d_93__021d7240` → `black_battle::event_factor::EventSystem::should_skip`
+- [x] `FUN_overlay_d_93__021d7320` → `black_battle::event_factor::EventSystem::set_skip_check`
+- [x] `FUN_overlay_d_93__021d7324` → `black_battle::event_factor::EventSystem::set_skip_check`
+- [x] `FUN_overlay_d_93__021d732c` → `black_battle::event_factor::EventSystem::find`
+- [x] `FUN_overlay_d_93__021d7360` → `black_battle::event_factor::EventSystem::find_next`
+- [x] `FUN_overlay_d_93__021d7394` → `black_battle::event_factor::EventSystem::disable_moves_of`
+- [x] `FUN_overlay_d_93__021d73d4` → `black_battle::event_factor::EventSystem::enable_moves_of`
+- [x] `FUN_overlay_d_93__021d7404` → `black_battle::event_factor::EventSystem::disable`
+- [x] `FUN_overlay_d_93__021d7438` → `black_battle::event_factor::EventSystem::enable`
+- [x] `FUN_overlay_d_93__021d7474` → `black_battle::event_factor::EventSystem::alloc`
+- [x] `FUN_overlay_d_93__021d7494` → `black_battle::event_factor::EventSystem::release`
 - [ ] `FUN_overlay_d_93__021d74bc`
-- [ ] `FUN_overlay_d_93__021d74c8`
-- [ ] `FUN_overlay_d_93__021d74e4`
+- [x] `FUN_overlay_d_93__021d74c8` → `black_battle::event_factor::reset_event_vars`
+- [x] `FUN_overlay_d_93__021d74e4` → `black_battle::event_factor::reset_event_vars_if_used`
