@@ -42,6 +42,7 @@ class Host:
         st(0x021C8288, self.weather)
         st(0x0201C1E8, self.category)
         st(0x021C804C, self.find_action)
+        st(0x021C82B8, lambda em, wk, x, *a, sp: (self.log.extend([0x10B, x]), mix(self.wseed, 0x82B8 ^ x) & 1)[1])
         st(0x0201BD28, lambda em, mv, prm, *a, sp: (self.log.extend([0x109, mv, prm]), mix(mv, prm ^ 0xBD28) % 3)[1])
         st(0x0201BEB8, lambda em, mv, fl, *a, sp: (self.log.extend([0x10A, mv, fl]), mix(mv, fl ^ 0xBEB8) & 1)[1])
         st(0x021C8010, self.pos_in_battle)
@@ -133,7 +134,8 @@ def run(addrs):
             for i, lab in enumerate(LABELS):
                 s = i + 1
                 struct.pack_into("<H", ev, 4 + 2 * s, lab)
-                struct.pack_into("<I", ev, 0xC4 + 4 * s, value_for(r, me) & M)
+                v = value_for(r, me)
+                struct.pack_into("<I", ev, 0xC4 + 4 * s, (v % 8 if lab == 5 else v) & M)
                 k = [0, 1, 2, 3, 3, 3, 4, 0][r.next() % 8]
                 ev[0x544 + s] = k
                 if k == 3:

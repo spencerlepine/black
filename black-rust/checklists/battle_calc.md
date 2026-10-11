@@ -33,7 +33,7 @@
 - [x] `FUN_overlay_d_93__021d7b2c` → `black_battle::calc::fx_mul_min1`
 - [x] `FUN_overlay_d_93__021d7b3c` → `black_battle::calc::percent_mul`
 - [x] `FUN_overlay_d_93__021d7b60` → `black_battle::calc::max_hp_div`
-- [x] `FUN_overlay_d_93__021d7b74` → `black_battle::calc::max_hp_div_min1`
+- [x] `FUN_overlay_d_93__021d7b74` → `black_battle::flow::Battle::max_hp_div_min1`
 - [x] `FUN_overlay_d_93__021d7b8c` → `black_battle::calc::BattleCalc::rand_range`
 - [x] `FUN_overlay_d_93__021d7ba4` → `black_battle::calc::BattleCalc::roll_hit_count`
 - [x] `FUN_overlay_d_93__021d7bd4` → `black_battle::calc::weather_residual_damage`

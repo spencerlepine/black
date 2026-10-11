@@ -886,6 +886,169 @@ pub fn h_021d97ec<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     b.host.handex_pop(id);
 }
 
+/// HANDEX work type 5: restore HP (+4 amount, +6 Pokemon).
+const HANDEX_RECOVER_HP: u32 = 5;
+/// HANDEX work type 7: damage (+4 amount, +6 Pokemon).
+const HANDEX_DAMAGE: u32 = 7;
+/// "Every major status" for [`HANDEX_CURE_SICK`].
+const SICK_ALL_MAJOR: u32 = 36;
+
+/// 0x021D9830: sets var 0x41.
+pub fn h_021d9830<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, _: u8) {
+    b.rewrite_var(0x41, 1);
+}
+
+/// Unlabeled helper at 0x021D9880: in weather `kind` (var 0x39), restores 1/16 HP instead
+/// of taking weather damage (var 0x41).
+fn weather_heal<H: FlowHost>(b: &mut Battle<H>, me: u8, kind: u32) {
+    if kind != b.var(0x39) as u32 || !is_me(b, 2, me) {
+        return;
+    }
+    let id = b.host.handex_push(HANDEX_RECOVER_HP, me as u32);
+    let h = b.host.handex(id).get_u32(0);
+    b.host.handex(id).put_u32(0, h | HANDEX_HEADER_POPUP);
+    b.host.handex(id).put_u8(6, me);
+    let amount = b.max_hp_div_min1(me as u32, 16);
+    b.host.handex(id).put_u16(4, amount as u16);
+    b.host.handex_pop(id);
+    b.rewrite_var(0x41, 1);
+}
+
+/// 0x021D9848: Ice Body: heals in hail.
+pub fn h_021d9848<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    weather_heal(b, me, 3);
+}
+/// 0x021D9864: Rain Dish: heals in rain.
+pub fn h_021d9864<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    weather_heal(b, me, 2);
+}
+
+/// 0x021D98DC: Solar Power: loses 1/8 HP in sun (var 0x39 == 1).
+pub fn h_021d98dc<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) || b.var(0x39) != 1 {
+        return;
+    }
+    let amount = b.max_hp_div_min1(me as u32, 8);
+    b.host.handex_push_pop(hx::ABILITY_POPUP_IN, me as u32);
+    let id = b.host.handex_push(HANDEX_DAMAGE, me as u32);
+    b.host.handex(id).put_u8(6, me);
+    b.host.handex(id).put_u16(4, amount as u16);
+    b.host.handex_pop(id);
+    b.host.handex_push_pop(hx::ABILITY_POPUP_OUT, me as u32);
+}
+
+/// 0x021D9934: Solar Power: special moves x1.5 in sun.
+pub fn h_021d9934<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 3, me) || b.host.weather() != 1 {
+        return;
+    }
+    let mv = b.var(0x12) as u16 as u32;
+    if b.host.move_category(mv) == 2 {
+        b.mul_var(0x35, 0x1800);
+    }
+}
+
+/// 0x021D9978: sets var 0x41 against other Pokemon's effects except condition 8.
+pub fn h_021d9978<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 4, me) && !is_me(b, 3, me) && b.var(0x1D) != 8 {
+        b.rewrite_var(0x41, 1);
+    }
+}
+
+/// 0x021D99A4: sets var 0x41 against other Pokemon's effects.
+pub fn h_021d99a4<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 4, me) && !is_me(b, 3, me) {
+        b.rewrite_var(0x41, 1);
+    }
+}
+
+/// 0x021D99C8: sets var 0x41 for the defender.
+pub fn h_021d99c8<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 4, me) {
+        b.rewrite_var(0x41, 1);
+    }
+}
+
+/// 0x021D99E0: sets var 0x47 for the defender.
+pub fn h_021d99e0<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 4, me) {
+        b.rewrite_var(0x47, 1);
+    }
+}
+
+/// 0x021D99F8: sets var 0x47 when this Pokemon is the event's only target.
+pub fn h_021d99f8<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if b.is_event_target(me as u32) && b.var(5) == 1 {
+        b.rewrite_var(0x47, 1);
+    }
+}
+
+/// 0x021D9A24: doubles var 0x26 (truncated to 16 bits) for the attacker.
+pub fn h_021d9a24<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 3, me) {
+        let v = ((b.var(0x26) as u32) << 17) >> 16;
+        b.rewrite_var(0x26, v as i32);
+    }
+}
+
+/// 0x021D9A44: sets var 0x45 for the attacker.
+pub fn h_021d9a44<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 3, me) {
+        b.rewrite_var(0x45, 1);
+    }
+}
+
+/// 0x021D9A68: Hydration: cures major statuses in rain.
+pub fn h_021d9a68<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) || b.host.weather() != 2 || b.mon(me as u32).major_status() == 0 {
+        return;
+    }
+    b.host.handex_push_pop(hx::ABILITY_POPUP_IN, me as u32);
+    let id = b.host.handex_push(HANDEX_CURE_SICK, me as u32);
+    let buf = b.host.handex(id);
+    buf.put_u32(4, SICK_ALL_MAJOR);
+    buf.put_u8(8, me);
+    buf.put_u8(0x14, 1);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | (2 << 24));
+    b.host.handex_pop(id);
+    b.host.handex_push_pop(hx::ABILITY_POPUP_OUT, me as u32);
+}
+
+/// 0x021D9ADC: Shed Skin: 33% chance to cure major statuses.
+pub fn h_021d9adc<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) || b.mon(me as u32).major_status() == 0 {
+        return;
+    }
+    if !b.roll_percent_or_forced(33) {
+        return;
+    }
+    let id = b.host.handex_push(HANDEX_CURE_SICK, me as u32);
+    let buf = b.host.handex(id);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | HANDEX_HEADER_POPUP | (2 << 24));
+    buf.put_u32(4, SICK_ALL_MAJOR);
+    buf.put_u8(8, me);
+    buf.put_u8(0x14, 1);
+    b.host.handex_pop(id);
+}
+
+/// 0x021D9B40: Poison Heal: poison (var 0x1D == 5) restores 1/8 HP instead.
+pub fn h_021d9b40<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) || b.var(0x1D) != 5 {
+        return;
+    }
+    b.rewrite_var(0x32, 0);
+    let id = b.host.handex_push(HANDEX_RECOVER_HP, me as u32);
+    let amount = b.max_hp_div_min1(me as u32, 8);
+    let buf = b.host.handex(id);
+    buf.put_u16(4, amount as u16);
+    buf.put_u8(6, me);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | (8 << 20));
+    b.host.handex_pop(id);
+}
+
 /// Original addresses of the ported handlers (also the differential test order).
 pub const PORTED: &[u32] = &[
     0x021D85F4, 0x021D8684, 0x021D86A8, 0x021D86FC, 0x021D8734, 0x021D8760, 0x021D8794, 0x021D87C8,
@@ -898,7 +1061,9 @@ pub const PORTED: &[u32] = &[
     0x021D93EC, 0x021D93FC, 0x021D9418, 0x021D9440, 0x021D9450, 0x021D9460, 0x021D9484, 0x021D9498,
     0x021D94C4, 0x021D94D8, 0x021D94E8, 0x021D9504, 0x021D9518, 0x021D9528, 0x021D9544, 0x021D9558,
     0x021D956C, 0x021D957C, 0x021D9598, 0x021D95AC, 0x021D95BC, 0x021D95CC, 0x021D96CC, 0x021D9744,
-    0x021D9760, 0x021D977C, 0x021D9798, 0x021D97EC,
+    0x021D9760, 0x021D977C, 0x021D9798, 0x021D97EC, 0x021D9830, 0x021D9848, 0x021D9864, 0x021D98DC,
+    0x021D9934, 0x021D9978, 0x021D99A4, 0x021D99C8, 0x021D99E0, 0x021D99F8, 0x021D9A24, 0x021D9A44,
+    0x021D9A68, 0x021D9ADC, 0x021D9B40,
 ];
 
 /// Ported ability handlers by original address.
@@ -988,6 +1153,21 @@ pub fn handler<H: FlowHost>(addr: u32) -> Option<crate::flow::Handler<H>> {
         0x021D977C => h_021d977c::<H>,
         0x021D9798 => h_021d9798::<H>,
         0x021D97EC => h_021d97ec::<H>,
+        0x021D9830 => h_021d9830::<H>,
+        0x021D9848 => h_021d9848::<H>,
+        0x021D9864 => h_021d9864::<H>,
+        0x021D98DC => h_021d98dc::<H>,
+        0x021D9934 => h_021d9934::<H>,
+        0x021D9978 => h_021d9978::<H>,
+        0x021D99A4 => h_021d99a4::<H>,
+        0x021D99C8 => h_021d99c8::<H>,
+        0x021D99E0 => h_021d99e0::<H>,
+        0x021D99F8 => h_021d99f8::<H>,
+        0x021D9A24 => h_021d9a24::<H>,
+        0x021D9A44 => h_021d9a44::<H>,
+        0x021D9A68 => h_021d9a68::<H>,
+        0x021D9ADC => h_021d9adc::<H>,
+        0x021D9B40 => h_021d9b40::<H>,
         _ => return None,
     })
 }

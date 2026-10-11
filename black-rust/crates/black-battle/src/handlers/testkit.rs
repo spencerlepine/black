@@ -125,6 +125,10 @@ impl FlowHost for TestHost {
         self.log.extend([0x10A, mv, flag]);
         mix(mv, flag ^ 0xBEB8) & 1 != 0
     }
+    fn fun_021c82b8(&mut self, x: u32) -> bool {
+        self.log.extend([0x10B, x]);
+        mix(self.wseed, 0x82B8 ^ x) & 1 != 0
+    }
     fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool {
         self.log.extend([0x107, poke_id]);
         *out = mix(poke_id, 0x804C);
@@ -191,7 +195,9 @@ pub fn run_handler_suite(
             for (i, &lab) in LABELS.iter().enumerate() {
                 let s = i + 1;
                 vars.label[s] = lab;
-                vars.value[s] = value_for(&mut r, me) as i32;
+                let v = value_for(&mut r, me);
+                // Label 5 is a target count used as a loop bound.
+                vars.value[s] = if lab == 5 { v % 8 } else { v } as i32;
                 vars.kind[s] = [0, 1, 2, 3, 3, 3, 4, 0][(r.next() % 8) as usize];
                 if vars.kind[s] == 3 {
                     vars.value[s] = (0x100 + r.next() % 0x10000) as i32;

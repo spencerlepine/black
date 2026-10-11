@@ -42,6 +42,8 @@ pub trait FlowHost: BppEnv {
     fn move_param(&mut self, mv: u32, param: u32) -> u32;
     /// C: `FUN_0201BEB8(move, flag)`: move data flag.
     fn move_flag(&mut self, mv: u32, flag: u32) -> bool;
+    /// C: `FUN_overlay_d_93__021c82b8(wk, x)` (tail call into the battle main module).
+    fn fun_021c82b8(&mut self, x: u32) -> bool;
     /// C: `FUN_overlay_d_93__021c804c(wk, poke_id, &out)`: finds the Pokemon's queued action;
     /// writes it to `out` and returns whether found.
     fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool;
@@ -101,6 +103,39 @@ impl<H: FlowHost> Battle<H> {
     /// C: `FUN_overlay_d_93__021d7704`
     pub fn mul_var(&mut self, label: u16, fx: i32) {
         self.vars.mul_value(label, fx)
+    }
+}
+
+impl<H: FlowHost> Battle<H> {
+    /// C: `FUN_overlay_d_93__021d85c0(wk, percent)`: a `percent`% roll, or always true when
+    /// `FUN_overlay_d_93__021c82b8(wk, 1)` holds.
+    pub fn roll_percent_or_forced(&mut self, percent: u32) -> bool {
+        if self.calc.roll_percent(percent) {
+            return true;
+        }
+        self.host.fun_021c82b8(1)
+    }
+
+    /// C: `FUN_overlay_d_93__021e85f8(poke_id)`: `poke_id` is one of the event's targets
+    /// (var 5 = count, vars 6.. = IDs).
+    pub fn is_event_target(&self, poke_id: u32) -> bool {
+        let n = self.var(5) as u32;
+        let mut i = 0u32;
+        while i < n {
+            if poke_id == self.var((i + 6) as u16) as u32 {
+                return true;
+            }
+            i += 1;
+        }
+        false
+    }
+
+    /// C: `FUN_overlay_d_93__021d7b74` on Pokemon `poke_id`: max HP / `div`, at least 1.
+    pub fn max_hp_div_min1(&mut self, poke_id: u32, div: u32) -> u32 {
+        match crate::calc::u32_div(self.mon_get(poke_id, crate::battle_mon::value::MAX_HP), div) {
+            0 => 1,
+            v => v,
+        }
     }
 }
 
