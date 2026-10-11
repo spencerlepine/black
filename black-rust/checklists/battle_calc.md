@@ -8,9 +8,9 @@
 - [x] `FUN_overlay_d_93__021d75ec` → `black_battle::event_var::EventVarStack::set_const_value`
 - [x] `FUN_overlay_d_93__021d7630` → `black_battle::event_var::EventVarStack::set_rewrite_once_value`
 - [x] `FUN_overlay_d_93__021d7674` → `black_battle::event_var::EventVarStack::set_mul_value`
-- [x] `FUN_overlay_d_93__021d76bc` → `black_battle::event_var::EventVarStack::rewrite_value`
-- [x] `FUN_overlay_d_93__021d7704` → `black_battle::event_var::EventVarStack::mul_value`
-- [x] `FUN_overlay_d_93__021d775c` → `black_battle::event_var::EventVarStack::get_value`
+- [x] `FUN_overlay_d_93__021d76bc` → `black_battle::flow::Battle::rewrite_var`
+- [x] `FUN_overlay_d_93__021d7704` → `black_battle::flow::Battle::mul_var`
+- [x] `FUN_overlay_d_93__021d775c` → `black_battle::flow::Battle::var`
 - [x] `FUN_overlay_d_93__021d77c4` → `black_battle::event_var::EventVarStack::slot_for_set`
 - [x] `FUN_overlay_d_93__021d77e8` → `black_battle::event_var::EventVarStack::find`
 - [x] `FUN_overlay_d_93__021d780c` → `black_battle::event_var::EventVarStack::clamp`

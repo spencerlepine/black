@@ -1,0 +1,121 @@
+//! Battle context passed to event handlers (the original's `BTL_SVFLOW_WORK*`).
+//!
+//! [`Battle`] owns the state handlers read and write directly: the event-variable stack, the
+//! battle RNG and the battle Pokemon. Everything else a handler calls in the server-flow layer
+//! (asm/battle_server.s, asm/battle_ungrouped.s, not yet ported) goes through [`FlowHost`].
+
+use crate::battle_mon::{BattleMon, BppEnv};
+use crate::calc::BattleCalc;
+use crate::event_factor::{EventSystem, FactorId};
+use crate::event_var::EventVarStack;
+
+/// Number of battle Pokemon IDs (4 clients x 6).
+pub const POKE_ID_COUNT: usize = 24;
+/// "No Pokemon" ID.
+pub const POKE_ID_NONE: u32 = 0x1F;
+
+/// Handle to a handler-effect ("HANDEX") work being filled in.
+pub type HandexId = usize;
+
+/// Undecompiled server-flow routines handlers call.
+pub trait FlowHost: BppEnv {
+    /// C: `FUN_overlay_d_93__021c88a4(wk, type, poke_id)`: pushes a handler-effect work of
+    /// `ty` and returns it (zeroed) for the handler to fill.
+    fn handex_push(&mut self, ty: u32, poke_id: u32) -> HandexId;
+    /// The bytes of a pushed work.
+    fn handex(&mut self, id: HandexId) -> &mut [u8];
+    /// C: `FUN_overlay_d_93__021c88c8(wk, work)`: finishes a work.
+    fn handex_pop(&mut self, id: HandexId);
+    /// C: `FUN_overlay_d_93__021c88b4(wk, type, poke_id)`: pushes and immediately pops a work
+    /// with no parameters.
+    fn handex_push_pop(&mut self, ty: u32, poke_id: u32);
+    /// C: `FUN_overlay_d_93__021c7d00(wk, poke_id)`: the Pokemon's battle position.
+    fn poke_pos(&mut self, poke_id: u32) -> u32;
+    /// C: `FUN_overlay_d_93__021c7f68(wk, code, out)`: expands a position code into Pokemon
+    /// IDs written to `out`; returns how many (`FUN_overlay_d_93__021c8120` supplies `out`).
+    fn expand_poke_ids(&mut self, code: u32, out: &mut [u8]) -> u32;
+    /// C: `FUN_overlay_d_93__021c8288` (-> `021c2ab0`): the current weather.
+    fn weather(&mut self) -> u32;
+    /// C: `FUN_0201C1E8(move)`: the move's damage category (1 = physical).
+    fn move_category(&mut self, mv: u32) -> u32;
+}
+
+/// The battle state handlers operate on.
+pub struct Battle<H: FlowHost> {
+    pub vars: EventVarStack,
+    pub calc: BattleCalc,
+    /// Battle Pokemon by ID.
+    pub mons: Vec<BattleMon>,
+    /// Stands in for the NULL the original's lookup returns for an unknown ID (reads see
+    /// zeros; the original would dereference NULL).
+    pub null_mon: BattleMon,
+    pub host: H,
+}
+
+impl<H: FlowHost> Battle<H> {
+    pub fn new(host: H) -> Self {
+        Battle {
+            vars: EventVarStack::new(),
+            calc: BattleCalc::new(),
+            mons: vec![BattleMon::default(); POKE_ID_COUNT],
+            null_mon: BattleMon::default(),
+            host,
+        }
+    }
+
+    /// C: `FUN_overlay_d_93__021c7cf4(wk, poke_id)`: battle Pokemon by ID.
+    pub fn mon(&mut self, poke_id: u32) -> &mut BattleMon {
+        match self.mons.get_mut(poke_id as usize) {
+            Some(m) => m,
+            None => &mut self.null_mon,
+        }
+    }
+
+    /// `BattleMon_Get` on Pokemon `poke_id`.
+    pub fn mon_get(&mut self, poke_id: u32, id: u32) -> u32 {
+        let mon = match self.mons.get(poke_id as usize) {
+            Some(m) => m,
+            None => &self.null_mon,
+        };
+        mon.get(id, &mut self.host)
+    }
+
+    /// C: `FUN_overlay_d_93__021d775c`
+    pub fn var(&self, label: u16) -> i32 {
+        self.vars.get_value(label)
+    }
+    /// C: `FUN_overlay_d_93__021d76bc`
+    pub fn rewrite_var(&mut self, label: u16, v: i32) -> bool {
+        self.vars.rewrite_value(label, v)
+    }
+    /// C: `FUN_overlay_d_93__021d7704`
+    pub fn mul_var(&mut self, label: u16, fx: i32) {
+        self.vars.mul_value(label, fx)
+    }
+}
+
+/// A battle event handler: C `void handler(factor, flow_work, poke_id, work)`.
+pub type Handler<H> = fn(&mut EventSystem, FactorId, &mut Battle<H>, u8);
+
+/// Byte-level writes into a handler-effect work.
+pub trait HandexBytes {
+    fn put_u8(&mut self, o: usize, v: u8);
+    fn put_u16(&mut self, o: usize, v: u16);
+    fn put_u32(&mut self, o: usize, v: u32);
+    fn get_u32(&self, o: usize) -> u32;
+}
+
+impl HandexBytes for [u8] {
+    fn put_u8(&mut self, o: usize, v: u8) {
+        self[o] = v;
+    }
+    fn put_u16(&mut self, o: usize, v: u16) {
+        self[o..o + 2].copy_from_slice(&v.to_le_bytes());
+    }
+    fn put_u32(&mut self, o: usize, v: u32) {
+        self[o..o + 4].copy_from_slice(&v.to_le_bytes());
+    }
+    fn get_u32(&self, o: usize) -> u32 {
+        u32::from_le_bytes(self[o..o + 4].try_into().unwrap())
+    }
+}
