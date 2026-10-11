@@ -181,8 +181,8 @@ impl EventSystem {
         Some(f)
     }
 
-    /// C: `FUN_overlay_d_93__021d7494`: clears a factor and returns it to the pool (no-op
-    /// when nothing is allocated).
+    /// C: `FUN_overlay_d_93__021d7494` (clearing via `021d74bc`): clears a factor and
+    /// returns it to the pool (no-op when nothing is allocated).
     fn release(&mut self, f: FactorId) {
         if self.count == 0 {
             return;
@@ -228,8 +228,13 @@ impl EventSystem {
         };
         f.work = [0; 7];
         self.link(id);
+        self.list_changed();
         Some(id)
     }
+
+    /// C: `FUN_overlay_d_93__021d6f08`: empty hook the original calls after every list
+    /// change.
+    fn list_changed(&self) {}
 
     fn link(&mut self, id: FactorId) {
         let pri = self.pool[id as usize].priority;
@@ -283,6 +288,7 @@ impl EventSystem {
         if let Some(n) = f.next {
             self.pool[n as usize].prev = f.prev;
         }
+        self.list_changed();
         self.release(id);
     }
 

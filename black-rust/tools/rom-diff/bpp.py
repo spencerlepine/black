@@ -444,7 +444,24 @@ def suite_b():
     return h.hex()
 
 
+def tagged():
+    c = Ctx()
+    h = Fnv()
+    r = Rng(0x4D64)
+    for _ in range(300):
+        ln = r.next() % 0x40
+        hdr = (ln << 8) | (r.next() & 0xFF)
+        src = bytes(r.next() & 0xFF for _ in range(0x40))
+        tag = r.next() & 0xFF
+        c.e.wbytes(SCR, struct.pack("<I", hdr) + bytes(0x44))
+        c.e.wbytes(SCR + 0x100, src)
+        c.run(0x021D4D64, SCR, SCR + 0x100, tag)
+        for x in c.e.rbytes(SCR, 0x48):
+            h.b(x)
+    return h.hex()
+
+
 if __name__ == "__main__":
-    which = sys.argv[1:] or ["suite_a", "suite_b"]
+    which = sys.argv[1:] or ["suite_a", "suite_b", "tagged"]
     for name in which:
         print(name, globals()[name]())

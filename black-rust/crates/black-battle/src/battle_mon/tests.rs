@@ -599,3 +599,20 @@ fn suite_b_matches_rom() {
     }
     assert_eq!(h.hex(), "df1a8d25a55e9335");
 }
+
+/// `set_tagged_payload` against the original (`tools/rom-diff/bpp.py tagged`).
+#[test]
+fn tagged_payload_matches_rom() {
+    let mut h = Fnv::new();
+    let mut r = Rng::new(0x4D64);
+    for _ in 0..300 {
+        let mut buf = vec![0u8; 0x48];
+        let len = r.next() % 0x40;
+        buf[0..4].copy_from_slice(&(len << 8 | (r.next() & 0xFF)).to_le_bytes());
+        let src: Vec<u8> = (0..0x40).map(|_| r.next() as u8).collect();
+        let tag = r.next() as u8;
+        set_tagged_payload(&mut buf, &src, tag);
+        buf.iter().for_each(|&b| h.b(b));
+    }
+    assert_eq!(h.hex(), "037e8b18d36622a0");
+}

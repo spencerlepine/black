@@ -262,6 +262,15 @@ impl BattleMon {
     }
 }
 
+/// C: `FUN_overlay_d_93__021d4d64`: sets the low byte of a tagged buffer's header word to
+/// `tag`, then copies `header >> 8` bytes from `src` to the payload after the header
+/// (`MI_CpuCopy8`).
+pub fn set_tagged_payload(buf: &mut [u8], src: &[u8], tag: u8) {
+    buf[0] = tag;
+    let len = (u32::from_le_bytes(buf[0..4].try_into().unwrap()) >> 8) as usize;
+    buf[4..4 + len].copy_from_slice(&src[..len]);
+}
+
 // ---- move slots -----------------------------------------------------------------------------
 
 /// C: `FUN_overlay_d_93__021d5208`: loads `mv` into the slot half at `half` with full PP

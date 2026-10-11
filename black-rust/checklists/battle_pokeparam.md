@@ -3,7 +3,7 @@
 `x` ported+verified, `~` ported (unverified), `-` stubbed/skipped (see note).
 
 - [x] `FUN_021D4D5C` → `black_battle::battle_mon::BattleMon::free`
-- [ ] `FUN_overlay_d_93__021d4d64`
+- [x] `FUN_overlay_d_93__021d4d64` → `black_battle::battle_mon::set_tagged_payload`
 - [x] `FUN_overlay_d_93__021d4d84` → `black_battle::battle_mon::BattleMon::new`
 - [x] `FUN_overlay_d_93__021d4efc` → `black_battle::battle_mon::BattleMon::reload_from_party`
 - [x] `FUN_overlay_d_93__021d4f84` → `black_battle::battle_mon::BattleMon::moves_load`
@@ -149,7 +149,7 @@
 - [x] `FUN_overlay_d_93__021d6e88` → `black_battle::battle_mon::BattleMon::clear_1f6`
 - [x] `FUN_overlay_d_93__021d6eac` → `black_battle::event_factor::EventSystem::init`
 - [x] `FUN_overlay_d_93__021d6ee8` → `black_battle::event_factor::EventSystem::enable_all_moves`
-- [ ] `FUN_overlay_d_93__021d6f08`
+- [x] `FUN_overlay_d_93__021d6f08` → `black_battle::event_factor::EventSystem::list_changed`
 - [x] `FUN_overlay_d_93__021d6f0c` → `black_battle::event_factor::EventSystem::add`
 - [x] `FUN_overlay_d_93__021d701c` → `black_battle::event_factor::EventSystem::remove_type6`
 - [x] `FUN_overlay_d_93__021d7040` → `black_battle::event_factor::EventSystem::remove`
@@ -175,6 +175,6 @@
 - [x] `FUN_overlay_d_93__021d7438` → `black_battle::event_factor::EventSystem::enable`
 - [x] `FUN_overlay_d_93__021d7474` → `black_battle::event_factor::EventSystem::alloc`
 - [x] `FUN_overlay_d_93__021d7494` → `black_battle::event_factor::EventSystem::release`
-- [ ] `FUN_overlay_d_93__021d74bc`
+- [x] `FUN_overlay_d_93__021d74bc` → `black_battle::event_factor::EventSystem::release`
 - [x] `FUN_overlay_d_93__021d74c8` → `black_battle::event_factor::reset_event_vars`
 - [x] `FUN_overlay_d_93__021d74e4` → `black_battle::event_factor::reset_event_vars_if_used`
