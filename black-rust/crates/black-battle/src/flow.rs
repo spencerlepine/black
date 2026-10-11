@@ -53,6 +53,17 @@ pub trait FlowHost: BppEnv {
     fn rule(&mut self) -> u32;
     /// C: `FUN_overlay_d_93__021b9a6c(pos_a, pos_b)`: positions are adjacent (triples).
     fn positions_adjacent(&mut self, a: u32, b: u32) -> bool;
+    /// C: `FUN_overlay_d_93__021c7d54(wk, poke_id, out)`: IDs of the Pokemon on the other
+    /// side (written to `out`); returns how many.
+    fn opponent_ids(&mut self, poke_id: u32, out: &mut [u8]) -> u32;
+    /// C: `FUN_0201C1D8(move)`: base power (`u8`).
+    fn move_power(&mut self, mv: u32) -> u32;
+    /// C: `FUN_0201C1BC(move)`: move effect class (9 = one-hit KO).
+    fn move_effect_class(&mut self, mv: u32) -> u32;
+    /// C: `FUN_0201C314(move)`.
+    fn move_fun_0201c314(&mut self, mv: u32) -> bool;
+    /// C: `FUN_0201C1C8(move)`: move type.
+    fn move_type(&mut self, mv: u32) -> u32;
     /// C: `FUN_overlay_d_93__021c804c(wk, poke_id, &out)`: finds the Pokemon's queued action;
     /// writes it to `out` and returns whether found.
     fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool;

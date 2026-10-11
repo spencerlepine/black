@@ -104,8 +104,8 @@
 - [x] `FUN_overlay_d_93__021d96cc` → `black_battle::handlers::abilities::h_021d96cc`
 - [x] `FUN_overlay_d_93__021d96dc` → `black_battle::handlers::abilities::cure_own_on_entry`
 - [x] `FUN_overlay_d_93__021d96fc` → `black_battle::handlers::abilities::cure_own`
-- [ ] `FUN_overlay_d_93__021da5bc`
-- [ ] `FUN_overlay_d_93__021da8dc`
+- [x] `FUN_overlay_d_93__021da5bc` → `black_battle::handlers::abilities::has_dangerous_move`
+- [x] `FUN_overlay_d_93__021da8dc` → `black_battle::handlers::abilities::absorb_heal`
 - [ ] `FUN_overlay_d_93__021db254`
 - [ ] `FUN_overlay_d_93__021db274`
 - [ ] `FUN_overlay_d_93__021db298`

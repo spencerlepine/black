@@ -5,7 +5,7 @@
 //! numeric (see `event_var`).
 
 use crate::battle_mon::value;
-use crate::calc::{effectiveness_class, fx_mul, u32_div};
+use crate::calc::{effectiveness_class, fx_mul, max_i32, u32_div};
 use crate::event_factor::{EventSystem, FactorId};
 use crate::flow::{str_param_add_arg, str_param_setup, Battle, FlowHost, HandexBytes};
 use crate::main_util::same_side;
@@ -1354,6 +1354,315 @@ pub fn h_021da2f0<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     b.host.handex_pop(id);
 }
 
+fn popup_message<H: FlowHost>(b: &mut Battle<H>, me: u8, str_id: u32, args: &[u32]) {
+    b.host.handex_push_pop(hx::ABILITY_POPUP_IN, me as u32);
+    let id = b.host.handex_push(hx::MESSAGE, me as u32);
+    let buf = b.host.handex(id);
+    str_param_setup(buf, 4, 2, str_id);
+    for &a in args {
+        str_param_add_arg(buf, 4, a);
+    }
+    b.host.handex_pop(id);
+    b.host.handex_push_pop(hx::ABILITY_POPUP_OUT, me as u32);
+}
+
+/// 0x021DA32C: Download: raises Sp. Atk if the foes' total Defense is at least their total
+/// Sp. Def, else Attack.
+pub fn h_021da32c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) {
+        return;
+    }
+    let mut ids = [0u8; 8];
+    let n = b.host.opponent_ids(me as u32, &mut ids);
+    if n == 0 {
+        return;
+    }
+    let (mut def, mut spd) = (0u16, 0u16);
+    let mut i = 0u8;
+    while (i as u32) < n {
+        let id = ids[i as usize] as u32;
+        def = def.wrapping_add(b.mon_get(id, value::DEFENSE) as u16);
+        spd = spd.wrapping_add(b.mon_get(id, value::SP_DEFENSE) as u16);
+        i = i.wrapping_add(1);
+    }
+    let stat = if def < spd { 1 } else { 3 };
+    let id = b.host.handex_push(hx::RANK_EFFECT, me as u32);
+    let buf = b.host.handex(id);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | HANDEX_HEADER_POPUP);
+    buf.put_u8(0xF, 1);
+    buf.put_u8(0x10, me);
+    buf.put_u32(4, stat);
+    buf.put_u8(0xC, 1);
+    b.host.handex_pop(id);
+}
+
+/// 0x021DA3D8: Forewarn: announces the foes' strongest move (one-hit KOs count as 150,
+/// Counter / Mirror Coat / Metal Burst 120, other variable power 80, status moves 1),
+/// choosing randomly among ties.
+pub fn h_021da3d8<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) {
+        return;
+    }
+    let mut ids = [0u8; 8];
+    let n = b.host.opponent_ids(me as u32, &mut ids);
+    let mut best = 0u32;
+    let mut found: Vec<(u8, u16)> = Vec::new();
+    let mut i = 0u8;
+    while (i as u32) < n {
+        let id = ids[i as usize] as u32;
+        let moves = b.mon(id).move_count();
+        let mut j = 0u8;
+        while j < moves {
+            let mv = b.mon(id).move_id(j as u32) as u32;
+            let power = if b.host.move_category(mv) == 0 {
+                1
+            } else {
+                let p = b.host.move_power(mv) as u8 as u32;
+                if p != 1 {
+                    p
+                } else if b.host.move_effect_class(mv) == 9 {
+                    150
+                } else if mv == 68 || mv == 243 || mv == 0x170 {
+                    120
+                } else {
+                    80
+                }
+            };
+            if power >= best {
+                if power > best {
+                    best = power;
+                    found.clear();
+                }
+                let pid = b.mon(id).poke_id();
+                found.push((pid, mv as u16));
+            }
+            j = j.wrapping_add(1);
+        }
+        i = i.wrapping_add(1);
+    }
+    if found.is_empty() {
+        return;
+    }
+    let k = b.calc.rand(found.len() as u32) as u8 as usize;
+    let (pid, mv) = found[k];
+    popup_message(b, me, 0x1B1, &[pid as u32, mv as u32]);
+}
+
+/// C: `FUN_overlay_d_93__021da5bc`: whether `foe` knows a one-hit KO move or a damaging
+/// move that is super effective against `me`.
+fn has_dangerous_move<H: FlowHost>(b: &mut Battle<H>, me: u32, foe: u32) -> bool {
+    let pair = b.mon(me).type_pair();
+    let moves = b.mon(foe).move_count();
+    let mut i = 0u8;
+    while i < moves {
+        let mv = b.mon(foe).move_id(i as u32) as u32;
+        if b.host.move_effect_class(mv) == 9 {
+            return true;
+        }
+        if b.host.move_fun_0201c314(mv) {
+            let ty = b.host.move_type(mv) as u8;
+            if crate::calc::type_effectiveness_vs_pair(ty, pair) > 3 {
+                return true;
+            }
+        }
+        i = i.wrapping_add(1);
+    }
+    false
+}
+
+/// 0x021DA528: Anticipation: shudders if a foe has a dangerous move (message 0x1B4).
+pub fn h_021da528<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) {
+        return;
+    }
+    let mut ids = [0u8; 8];
+    let n = b.host.opponent_ids(me as u32, &mut ids);
+    let mut i = 0u8;
+    while (i as u32) < n {
+        if has_dangerous_move(b, me as u32, ids[i as usize] as u32) {
+            break;
+        }
+        i = i.wrapping_add(1);
+    }
+    if i as u32 == n {
+        return;
+    }
+    popup_message(b, me, 0x1B4, &[me as u32]);
+}
+
+/// 0x021DA624: Frisk: reveals a random foe's held item (message 0x1B7).
+pub fn h_021da624<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) {
+        return;
+    }
+    let mut ids = [0u8; 8];
+    let n = b.host.opponent_ids(me as u32, &mut ids);
+    let mut items = [0u16; 8];
+    let mut count = 0u8;
+    let mut i = 0u8;
+    while (i as u32) < n {
+        items[count as usize] = b.mon(ids[i as usize] as u32).held_item();
+        if items[count as usize] != 0 {
+            count = count.wrapping_add(1);
+        }
+        i = i.wrapping_add(1);
+    }
+    if count == 0 {
+        return;
+    }
+    let k = b.calc.rand(count as u32) as u8 as usize;
+    popup_message(b, me, 0x1B7, &[me as u32, items[k] as u32]);
+}
+
+/// 0x021DA6EC: sets var 0x41 and shows message 210 with the ability pop-up.
+pub fn h_021da6ec<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 4, me) && b.rewrite_var(0x41, 1) {
+        popup_message(b, me, 210, &[me as u32]);
+    }
+}
+
+/// 0x021DA748: Sturdy: at full HP, var 0x3A = 4 (survive); records the result in work 0.
+pub fn h_021da748<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) {
+        return;
+    }
+    let full = b.mon_get(me as u32, value::HP) == b.mon_get(me as u32, value::MAX_HP);
+    work(sys, f)[0] = if full {
+        b.rewrite_var(0x3A, 4) as u32
+    } else {
+        0
+    };
+}
+
+/// 0x021DA780: Sturdy message (0x202) after it triggered.
+pub fn h_021da780<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) || work(sys, f)[0] == 0 {
+        return;
+    }
+    popup_message(b, me, 0x202, &[me as u32]);
+    work(sys, f)[0] = 0;
+}
+
+/// 0x021DA7DC: Unaware: ignores the foe's stages (vars 0x28 / 0x27 = 6).
+pub fn h_021da7dc<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 3, me) {
+        b.rewrite_var(0x28, 6);
+    } else if is_me(b, 4, me) {
+        b.rewrite_var(0x27, 6);
+    }
+}
+
+/// 0x021DA808: sets var 0x51 for the defender.
+pub fn h_021da808<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 4, me) {
+        b.rewrite_var(0x51, 1);
+    }
+}
+
+/// 0x021DA820: sets var 0x51 for the attacker.
+pub fn h_021da820<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 3, me) {
+        b.rewrite_var(0x51, 1);
+    }
+}
+
+/// 0x021DA844: Heatproof: Fire moves x0.5.
+pub fn h_021da844<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 4, me) && b.var(0x16) == 9 {
+        b.mul_var(0x31, 0x800);
+    }
+}
+
+/// 0x021DA868: Heatproof: halves burn damage (at least 1).
+pub fn h_021da868<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) && b.var(0x1D) == 4 {
+        let v = b.var(0x32) / 2;
+        b.rewrite_var(0x32, max_i32(v, 1));
+    }
+}
+
+/// 0x021DA9E0: Dry Skin: loses 1/8 HP in sun, restores 1/8 in rain (var 0x39).
+pub fn h_021da9e0<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) {
+        return;
+    }
+    let w = b.var(0x39) as u8;
+    if w == 1 {
+        b.host.handex_push_pop(hx::ABILITY_POPUP_IN, me as u32);
+        let id = b.host.handex_push(HANDEX_DAMAGE, me as u32);
+        b.host.handex(id).put_u8(6, me);
+        let a = b.max_hp_div_min1(me as u32, 8);
+        b.host.handex(id).put_u16(4, a as u16);
+        b.host.handex_pop(id);
+        b.host.handex_push_pop(hx::ABILITY_POPUP_OUT, me as u32);
+    } else if w == 2 {
+        let id = b.host.handex_push(HANDEX_RECOVER_HP, me as u32);
+        let h = b.host.handex(id).get_u32(0);
+        b.host.handex(id).put_u32(0, h | HANDEX_HEADER_POPUP);
+        b.host.handex(id).put_u8(6, me);
+        let a = b.max_hp_div_min1(me as u32, 8);
+        b.host.handex(id).put_u16(4, a as u16);
+        b.host.handex_pop(id);
+    }
+}
+
+/// 0x021DAA70: Dry Skin: Fire moves x1.25.
+pub fn h_021daa70<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 4, me) && b.var(0x16) == 9 {
+        b.mul_var(0x31, 0x1400);
+    }
+}
+
+/// C: `FUN_overlay_d_93__021da8a8`: absorbs another Pokemon's move of type `ty` (var 0x40).
+fn absorbs<H: FlowHost>(b: &mut Battle<H>, me: u8, ty: u32) -> bool {
+    if is_me(b, 4, me) && !is_me(b, 3, me) && ty == b.var(0x16) as u32 {
+        return b.rewrite_var(0x40, 1);
+    }
+    false
+}
+
+/// C: `FUN_overlay_d_93__021da8dc`: restores 1/`div` HP (message 0x183), or reports no
+/// effect at full HP (210); sets var 0x51.
+fn absorb_heal<H: FlowHost>(b: &mut Battle<H>, me: u8, div: u32) {
+    let full = b.mon_get(me as u32, value::HP) == b.mon_get(me as u32, value::MAX_HP);
+    if !full {
+        let id = b.host.handex_push(HANDEX_RECOVER_HP, me as u32);
+        b.host.handex(id).put_u8(6, me);
+        let a = b.max_hp_div_min1(me as u32, div);
+        let buf = b.host.handex(id);
+        buf.put_u16(4, a as u16);
+        let h = buf.get_u32(0);
+        buf.put_u32(0, h | HANDEX_HEADER_POPUP);
+        str_param_setup(buf, 8, 2, 0x183);
+        str_param_add_arg(buf, 8, me as u32);
+        b.host.handex_pop(id);
+    } else {
+        let id = b.host.handex_push(hx::MESSAGE, me as u32);
+        let buf = b.host.handex(id);
+        str_param_setup(buf, 4, 2, 210);
+        str_param_add_arg(buf, 4, me as u32);
+        let h = buf.get_u32(0);
+        buf.put_u32(0, h | HANDEX_HEADER_POPUP);
+        b.host.handex_pop(id);
+    }
+    b.rewrite_var(0x51, 1);
+}
+
+/// 0x021DAA94: Water Absorb (and Dry Skin): Water moves restore 1/4 HP.
+pub fn h_021daa94<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if absorbs(b, me, 10) {
+        absorb_heal(b, me, 4);
+    }
+}
+
+/// 0x021DAAC0: same as 0x021DAA94 for another event.
+pub fn h_021daac0<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if absorbs(b, me, 10) {
+        absorb_heal(b, me, 4);
+    }
+}
+
 /// Original addresses of the ported handlers (also the differential test order).
 pub const PORTED: &[u32] = &[
     0x021D85F4, 0x021D8684, 0x021D86A8, 0x021D86FC, 0x021D8734, 0x021D8760, 0x021D8794, 0x021D87C8,
@@ -1370,7 +1679,9 @@ pub const PORTED: &[u32] = &[
     0x021D9934, 0x021D9978, 0x021D99A4, 0x021D99C8, 0x021D99E0, 0x021D99F8, 0x021D9A24, 0x021D9A44,
     0x021D9A68, 0x021D9ADC, 0x021D9B40, 0x021D9BA4, 0x021D9BC8, 0x021D9BF8, 0x021D9C8C, 0x021D9CBC,
     0x021D9CEC, 0x021D9D1C, 0x021D9DB0, 0x021D9E80, 0x021D9F1C, 0x021D9FC4, 0x021DA04C, 0x021DA0FC,
-    0x021DA120, 0x021DA150, 0x021DA2F0,
+    0x021DA120, 0x021DA150, 0x021DA2F0, 0x021DA32C, 0x021DA3D8, 0x021DA528, 0x021DA624, 0x021DA6EC,
+    0x021DA748, 0x021DA780, 0x021DA7DC, 0x021DA808, 0x021DA820, 0x021DA844, 0x021DA868, 0x021DA9E0,
+    0x021DAA70, 0x021DAA94, 0x021DAAC0,
 ];
 
 /// Ported ability handlers by original address.
@@ -1491,6 +1802,22 @@ pub fn handler<H: FlowHost>(addr: u32) -> Option<crate::flow::Handler<H>> {
         0x021DA120 => h_021da120::<H>,
         0x021DA150 => h_021da150::<H>,
         0x021DA2F0 => h_021da2f0::<H>,
+        0x021DA32C => h_021da32c::<H>,
+        0x021DA3D8 => h_021da3d8::<H>,
+        0x021DA528 => h_021da528::<H>,
+        0x021DA624 => h_021da624::<H>,
+        0x021DA6EC => h_021da6ec::<H>,
+        0x021DA748 => h_021da748::<H>,
+        0x021DA780 => h_021da780::<H>,
+        0x021DA7DC => h_021da7dc::<H>,
+        0x021DA808 => h_021da808::<H>,
+        0x021DA820 => h_021da820::<H>,
+        0x021DA844 => h_021da844::<H>,
+        0x021DA868 => h_021da868::<H>,
+        0x021DA9E0 => h_021da9e0::<H>,
+        0x021DAA70 => h_021daa70::<H>,
+        0x021DAA94 => h_021daa94::<H>,
+        0x021DAAC0 => h_021daac0::<H>,
         _ => return None,
     })
 }

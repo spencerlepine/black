@@ -42,6 +42,11 @@ class Host:
         st(0x021C8288, self.weather)
         st(0x0201C1E8, self.category)
         st(0x021C804C, self.find_action)
+        st(0x021C7D54, self.opponents)
+        st(0x0201C1D8, lambda em, mv, *a, sp: (self.log.extend([0x111, mv]), [0, 1, 1, 40, 60, 90, 120, 250][mix(mv, 0xC1D8) % 8])[1])
+        st(0x0201C1BC, lambda em, mv, *a, sp: (self.log.extend([0x112, mv]), mix(mv, 0xC1BC) % 12)[1])
+        st(0x0201C314, lambda em, mv, *a, sp: (self.log.extend([0x113, mv]), mix(mv, 0xC314) & 1)[1])
+        st(0x0201C1C8, lambda em, mv, *a, sp: (self.log.extend([0x114, mv]), mix(mv, 0xC1C8) % 18)[1])
         st(0x021C83D4, lambda em, *a, sp: (self.log.append(0x10C), mix(self.wseed, 0x83D4) & 1)[1])
         st(0x0689C944, lambda em, ab, *a, sp: (self.log.extend([0x10D, ab]), int(mix(ab, 0xC944) % 4 == 0))[1])
         st(0x021C815C, lambda em, *a, sp: (self.log.append(0x10E), mix(self.wseed, 0x815C) % 4)[1])
@@ -96,6 +101,14 @@ def _pos_in_battle(self, e, wk, poke, *_, sp):
     return mix(poke, 0x8010) % 7
 
 
+def _opponents(self, e, wk, poke, buf, *_, sp):
+    self.log += [0x110, poke]
+    n = mix(poke, 0x7D54) % 4
+    e.wbytes(buf, bytes(mix(poke, 0x7D55 + i) % NMONS for i in range(n)))
+    return n
+
+
+Host.opponents = _opponents
 Host.find_action = _find_action
 Host.pos_in_battle = _pos_in_battle
 

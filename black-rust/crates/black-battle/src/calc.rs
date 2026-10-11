@@ -703,6 +703,15 @@ pub fn fx_mul(value: u32, fx: u32) -> u32 {
     }
 }
 
+/// C: unlabeled routine at `0x021D7B08`: signed maximum.
+pub fn max_i32(a: i32, b: i32) -> i32 {
+    if a >= b {
+        a
+    } else {
+        b
+    }
+}
+
 /// C: `FUN_overlay_d_93__021d7b2c`: [`fx_mul`], but never 0.
 pub fn fx_mul_min1(value: u32, fx: u32) -> u32 {
     match fx_mul(value, fx) {

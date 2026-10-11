@@ -145,6 +145,30 @@ impl FlowHost for TestHost {
         self.log.extend([0x10F, a, b]);
         mix(a ^ (b << 8), 0x9A6C) & 1 != 0
     }
+    fn opponent_ids(&mut self, poke_id: u32, out: &mut [u8]) -> u32 {
+        self.log.extend([0x110, poke_id]);
+        let n = mix(poke_id, 0x7D54) % 4;
+        for (i, o) in out.iter_mut().enumerate().take(n as usize) {
+            *o = (mix(poke_id, 0x7D55 + i as u32) % MONS as u32) as u8;
+        }
+        n
+    }
+    fn move_power(&mut self, mv: u32) -> u32 {
+        self.log.extend([0x111, mv]);
+        [0, 1, 1, 40, 60, 90, 120, 250][(mix(mv, 0xC1D8) % 8) as usize]
+    }
+    fn move_effect_class(&mut self, mv: u32) -> u32 {
+        self.log.extend([0x112, mv]);
+        mix(mv, 0xC1BC) % 12
+    }
+    fn move_fun_0201c314(&mut self, mv: u32) -> bool {
+        self.log.extend([0x113, mv]);
+        mix(mv, 0xC314) & 1 != 0
+    }
+    fn move_type(&mut self, mv: u32) -> u32 {
+        self.log.extend([0x114, mv]);
+        mix(mv, 0xC1C8) % 18
+    }
     fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool {
         self.log.extend([0x107, poke_id]);
         *out = mix(poke_id, 0x804C);
