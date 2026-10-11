@@ -201,21 +201,38 @@ def ported(module):
 
 
 def skips():
-    """Skip-check callbacks called with random (ftype, event, sub, owner)."""
+    """Skip-check callbacks with random battle Pokemon, factor owner and arguments."""
     e = Emu()
-    Env(e)
+    e.uc.mem_map(0, 0x10000)
+    env = Env(e)
     host = Host(e)
     h = Fnv()
     r = Rng(0x5C1B)
-    for addr in [0x021DAEC4, 0x021DB1A8]:
-        for _ in range(500):
-            ftype, ev, sub, owner = r.next() % 8, r.next() % 0x90, r.next() % 200, r.next() % 24
-            if r.next() & 1:
+    ovy = e.ovy
+    for addr in [0x021DAEC4, 0x021DB1A8, 0x021DB650]:
+        for _ in range(300):
+            for i in range(NMONS):
+                e.wbytes(MONS_ADDR + 0x200 * i, random_bpp(r))
+            fac = bytearray(0x3C)
+            fac[0x3B] = r.next() % 10
+            e.wbytes(POOL, fac)
+            ftype, ev = r.next() % 8, r.next() % 0x90
+            k = r.next() % 3
+            if k == 0:
                 sub = 106
-            h.w(e.call(addr, 0, 0, ftype, ev, stack_args=(sub, owner))[0])
+            elif k == 1:
+                sub = r.next() % 600
+            else:
+                o = 0x021F0B78 - 0x021B6100 + 2 * (r.next() % 13)
+                sub = ovy[o] | ovy[o + 1] << 8
+            owner = r.next() % 10
+            h.w(e.call(addr, POOL, FLOW, ftype, ev, stack_args=(sub, owner))[0])
             for v in host.log:
                 h.w(v)
-            host.log.clear()
+            for ent in env.log:
+                for v in ent:
+                    h.w(v)
+            host.log.clear(); env.log.clear()
     return h.hex()
 
 

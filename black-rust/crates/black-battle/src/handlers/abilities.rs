@@ -1830,7 +1830,15 @@ pub fn h_021dae38<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battl
 pub const SKIP_CHECK_DAMP: u32 = 0x021D_AEC5;
 
 /// Unlabeled skip-check callback at 0x021DAEC4: disables ability 106 (Aftermath).
-pub fn skip_021daec4(ftype: u32, sub_id: u16) -> bool {
+pub fn skip_021daec4<H: FlowHost>(
+    _: &EventSystem,
+    _: FactorId,
+    _: &mut Battle<H>,
+    ftype: u32,
+    _: u32,
+    sub_id: u16,
+    _: u8,
+) -> bool {
     ftype == 4 && sub_id == 106
 }
 
@@ -1980,8 +1988,16 @@ pub fn h_021db134<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battl
 pub const SKIP_CHECK_MOLD_BREAKER: u32 = 0x021D_B1A9;
 
 /// Unlabeled skip-check callback at 0x021DB1A8: disables breakable abilities.
-pub fn skip_021db1a8<H: FlowHost>(host: &mut H, ftype: u32, sub_id: u16) -> bool {
-    ftype == 4 && host.ability_breakable(sub_id as u32)
+pub fn skip_021db1a8<H: FlowHost>(
+    _: &EventSystem,
+    _: FactorId,
+    b: &mut Battle<H>,
+    ftype: u32,
+    _: u32,
+    sub_id: u16,
+    _: u8,
+) -> bool {
+    ftype == 4 && b.host.ability_breakable(sub_id as u32)
 }
 
 /// 0x021DB1D4: Mold Breaker: while attacking, installs the skip check (work word 0).
@@ -2107,6 +2123,204 @@ pub fn h_021db41c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battl
     work(sys, f)[0] = redirect(b, me, 10) as u32;
 }
 
+/// 0x021DB430: Storm Drain: Water moves raise Sp. Atk.
+pub fn h_021db430<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if absorbs(b, me, 10) {
+        boost_own_stat(b, me, 3, 1);
+    }
+}
+
+/// 0x021DB460: Lightning Rod: redirects Electric moves (work word 0 = redirected).
+pub fn h_021db460<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    work(sys, f)[0] = redirect(b, me, 12) as u32;
+}
+
+/// 0x021DB474: after a redirect, shows message 0x1C0 if this Pokemon is a target.
+pub fn h_021db474<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if work(sys, f)[0] == 0 {
+        return;
+    }
+    if b.is_event_target(me as u32) {
+        message_with_popup_flag(b, me, 0x1C0, &[me as u32]);
+    }
+    work(sys, f)[0] = 0;
+}
+
+/// 0x021DB4C4: Lightning Rod: Electric moves raise Sp. Atk.
+pub fn h_021db4c4<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if absorbs(b, me, 12) {
+        boost_own_stat(b, me, 3, 1);
+    }
+}
+
+/// 0x021DB560: sets var 0x41 and shows message 0x1C6.
+pub fn h_021db560<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) || !b.rewrite_var(0x41, 1) {
+        return;
+    }
+    let id = b.host.handex_push(hx::MESSAGE, me as u32);
+    let buf = b.host.handex(id);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | (1 << 23));
+    str_param_setup(buf, 4, 2, 0x1C6);
+    str_param_add_arg(buf, 4, me as u32);
+    b.host.handex_pop(id);
+}
+
+/// 0x021DB5C0: Liquid Ooze: drained HP (var 0x20) damages the drainer instead (0x1C9).
+pub fn h_021db5c0<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) {
+        return;
+    }
+    let amount = b.var(0x20) as u16;
+    b.rewrite_var(0x20, 0);
+    if amount == 0 {
+        return;
+    }
+    let id = b.host.handex_push(HANDEX_DAMAGE, me as u32);
+    let h = b.host.handex(id).get_u32(0);
+    b.host.handex(id).put_u32(0, h | (32 << 18));
+    let drainer = b.var(3) as u8;
+    let buf = b.host.handex(id);
+    buf.put_u8(6, drainer);
+    buf.put_u16(4, amount);
+    str_param_setup(buf, 0xC, 2, 0x1C9);
+    let who = buf[6] as u32;
+    str_param_add_arg(buf, 0xC, who);
+    b.host.handex_pop(id);
+}
+
+/// 0x021DB62C: makes this factor temporary (type 6) when var 2 is this Pokemon.
+pub fn h_021db62c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) {
+        sys.make_temporary(f);
+    }
+}
+
+/// Skip-check callback of [`h_021db6a4`] (address of the original routine).
+pub const SKIP_CHECK_KLUTZ: u32 = 0x021D_B651;
+
+/// Items Klutz does not disable: battle_calc rodata 0x021F0B78 (13 `u16`s).
+fn klutz_exempt(item: u16) -> bool {
+    (0..13).any(|i| {
+        let o = 0x0B78 - 0x041C + 2 * i;
+        u16::from_le_bytes([
+            crate::calc::BATTLE_CALC_RODATA[o],
+            crate::calc::BATTLE_CALC_RODATA[o + 1],
+        ]) == item
+    })
+}
+
+/// Unlabeled skip-check callback at 0x021DB650: Klutz: disables this Pokemon's held item
+/// (factor type 5) except exempt items, unless its ability is suppressed (condition 0x10).
+pub fn skip_021db650<H: FlowHost>(
+    sys: &EventSystem,
+    g: FactorId,
+    b: &mut Battle<H>,
+    ftype: u32,
+    _: u32,
+    sub_id: u16,
+    owner: u8,
+) -> bool {
+    if b.mon(owner as u32).has_sick(0x10) {
+        return false;
+    }
+    if ftype != 5 || owner != sys.poke_id(g) {
+        return false;
+    }
+    !klutz_exempt(sub_id)
+}
+
+/// 0x021DB6A4: Klutz: installs the skip check once (work word 0).
+pub fn h_021db6a4<H: FlowHost>(sys: &mut EventSystem, f: FactorId, _: &mut Battle<H>, _: u8) {
+    if work(sys, f)[0] == 0 {
+        sys.set_skip_check(f, SKIP_CHECK_KLUTZ);
+        work(sys, f)[0] = 1;
+    }
+}
+
+/// 0x021DB6C0: Klutz on entry.
+pub fn h_021db6c0<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) {
+        h_021db6a4(sys, f, b, me);
+    }
+}
+
+/// 0x021DB6E4: removes the skip check when this Pokemon leaves.
+pub fn h_021db6e4<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) {
+        sys.clear_skip_check(f);
+    }
+}
+
+/// HANDEX work type 0x21 (+4 Pokemon).
+const HANDEX_21: u32 = 0x21;
+
+/// 0x021DB6FC: pushes work 0x21 for this Pokemon when it holds an item.
+pub fn h_021db6fc<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) && b.mon(me as u32).held_item() != 0 {
+        let id = b.host.handex_push(HANDEX_21, me as u32);
+        b.host.handex(id).put_u8(4, me);
+        b.host.handex_pop(id);
+    }
+}
+
+/// 0x021DB734: blocks move 363 by this Pokemon via var 0x22 = 19 (work word 2).
+pub fn h_021db734<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) {
+        return;
+    }
+    let mv = b.var(0x12) as u16;
+    work(sys, f)[2] = 0;
+    if mv == 0x16B && is_me(b, 2, me) {
+        work(sys, f)[2] = b.rewrite_var(0x22, 19) as u32;
+    }
+}
+
+/// 0x021DB774: message 0x389 for the block of 0x021DB734.
+pub fn h_021db774<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) || work(sys, f)[2] == 0 {
+        return;
+    }
+    let _ = b.var(2);
+    let id = b.host.handex_push(hx::MESSAGE, me as u32);
+    let buf = b.host.handex(id);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | HANDEX_HEADER_POPUP_MSG);
+    str_param_setup(buf, 4, 2, 0x389);
+    str_param_add_arg(buf, 4, me as u32);
+    let mv = b.var(0x12) as u32;
+    str_param_add_arg(b.host.handex(id), 4, mv);
+    b.host.handex_pop(id);
+    work(sys, f)[2] = 0;
+}
+
+/// 0x021DB7E8: blocks moves 271 and 415 (var 0x40) with message 210.
+pub fn h_021db7e8<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) {
+        return;
+    }
+    let mv = b.var(0x12) as u16;
+    if (mv == 0x10F || mv == 0x19F) && b.rewrite_var(0x40, 1) {
+        message_with_popup_flag(b, me, 210, &[me as u32]);
+    }
+}
+
+/// 0x021DB854: sets var 0x41 when var 0x2D is clear (work word 0 = result).
+pub fn h_021db854<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) && b.var(0x2D) == 0 {
+        work(sys, f)[0] = b.rewrite_var(0x41, 1) as u32;
+    }
+}
+
+/// 0x021DB87C: message 0x1ED after 0x021DB854 triggered.
+pub fn h_021db87c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) && work(sys, f)[0] != 0 {
+        message_with_popup_flag(b, me, 0x1ED, &[me as u32]);
+        work(sys, f)[0] = 0;
+    }
+}
+
 /// Original addresses of the ported handlers (also the differential test order).
 pub const PORTED: &[u32] = &[
     0x021D85F4, 0x021D8684, 0x021D86A8, 0x021D86FC, 0x021D8734, 0x021D8760, 0x021D8794, 0x021D87C8,
@@ -2129,8 +2343,20 @@ pub const PORTED: &[u32] = &[
     0x021DAC1C, 0x021DAC6C, 0x021DAC90, 0x021DAD2C, 0x021DAD58, 0x021DAD84, 0x021DADD8, 0x021DAE04,
     0x021DAE38, 0x021DAE94, 0x021DAEA4, 0x021DAEAC, 0x021DAEE4, 0x021DAF1C, 0x021DAF58, 0x021DB00C,
     0x021DB0DC, 0x021DB0E4, 0x021DB134, 0x021DB1D4, 0x021DB200, 0x021DB224, 0x021DB254, 0x021DB274,
-    0x021DB298, 0x021DB2B8, 0x021DB2C8, 0x021DB2F8, 0x021DB41C,
+    0x021DB298, 0x021DB2B8, 0x021DB2C8, 0x021DB2F8, 0x021DB41C, 0x021DB430, 0x021DB460, 0x021DB474,
+    0x021DB4C4, 0x021DB560, 0x021DB5C0, 0x021DB62C, 0x021DB6A4, 0x021DB6C0, 0x021DB6E4, 0x021DB6FC,
+    0x021DB734, 0x021DB774, 0x021DB7E8, 0x021DB854, 0x021DB87C,
 ];
+
+/// Ported skip-check callbacks by the address stored in the factor.
+pub fn skip_check<H: FlowHost>(addr: u32) -> Option<crate::flow::SkipCheck<H>> {
+    Some(match addr & !1 {
+        0x021DAEC4 => skip_021daec4::<H>,
+        0x021DB1A8 => skip_021db1a8::<H>,
+        0x021DB650 => skip_021db650::<H>,
+        _ => return None,
+    })
+}
 
 /// Ported ability handlers by original address.
 pub fn handler<H: FlowHost>(addr: u32) -> Option<crate::flow::Handler<H>> {
@@ -2300,6 +2526,22 @@ pub fn handler<H: FlowHost>(addr: u32) -> Option<crate::flow::Handler<H>> {
         0x021DB2C8 => h_021db2c8::<H>,
         0x021DB2F8 => h_021db2f8::<H>,
         0x021DB41C => h_021db41c::<H>,
+        0x021DB430 => h_021db430::<H>,
+        0x021DB460 => h_021db460::<H>,
+        0x021DB474 => h_021db474::<H>,
+        0x021DB4C4 => h_021db4c4::<H>,
+        0x021DB560 => h_021db560::<H>,
+        0x021DB5C0 => h_021db5c0::<H>,
+        0x021DB62C => h_021db62c::<H>,
+        0x021DB6A4 => h_021db6a4::<H>,
+        0x021DB6C0 => h_021db6c0::<H>,
+        0x021DB6E4 => h_021db6e4::<H>,
+        0x021DB6FC => h_021db6fc::<H>,
+        0x021DB734 => h_021db734::<H>,
+        0x021DB774 => h_021db774::<H>,
+        0x021DB7E8 => h_021db7e8::<H>,
+        0x021DB854 => h_021db854::<H>,
+        0x021DB87C => h_021db87c::<H>,
         _ => return None,
     })
 }

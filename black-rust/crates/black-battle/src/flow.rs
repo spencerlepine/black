@@ -182,6 +182,10 @@ impl<H: FlowHost> Battle<H> {
 /// A battle event handler: C `void handler(factor, flow_work, poke_id, work)`.
 pub type Handler<H> = fn(&mut EventSystem, FactorId, &mut Battle<H>, u8);
 
+/// A skip-check callback: C `BOOL cb(factor, flow_work, type, event, sub_id, owner)` for the
+/// factor `type`/`sub_id`/`owner` about to run; true skips it.
+pub type SkipCheck<H> = fn(&EventSystem, FactorId, &mut Battle<H>, u32, u32, u16, u8) -> bool;
+
 /// Byte-level writes into a handler-effect work.
 pub trait HandexBytes {
     fn put_u8(&mut self, o: usize, v: u8);

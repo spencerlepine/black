@@ -13,7 +13,8 @@ for mod in sys.argv[1:]:
     ported = f"pub const PORTED: &[u32] = &[\n{body},\n];"
     s = re.sub(r"pub const PORTED: &\[u32\] = &\[.*?\];", ported, s, flags=re.S)
     arms = "\n".join(f"        0x{a:08X} => h_{a:08x}::<H>," for a in addrs)
-    s = re.sub(r"(    Some\(match addr & !1 \{\n).*?(        _ => return None,)",
-               lambda m: m.group(1) + arms + "\n" + m.group(2), s, flags=re.S)
+    i = s.index("pub fn handler<")
+    s = s[:i] + re.sub(r"(    Some\(match addr & !1 \{\n).*?(        _ => return None,)",
+                       lambda m: m.group(1) + arms + "\n" + m.group(2), s[i:], count=1, flags=re.S)
     open(p, "w").write(s)
     print(mod, len(addrs), "handlers")
