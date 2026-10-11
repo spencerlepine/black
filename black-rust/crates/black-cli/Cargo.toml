@@ -1,0 +1,14 @@
+[package]
+name = "black-cli"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Command line front end for the Pokemon Black ROM tooling"
+
+[[bin]]
+name = "black"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+nds-rom = { version = "0.1.0", path = "../nds-rom" }
