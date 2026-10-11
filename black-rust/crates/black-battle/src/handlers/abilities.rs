@@ -8,6 +8,7 @@ use crate::battle_mon::value;
 use crate::calc::{effectiveness_class, fx_mul, u32_div};
 use crate::event_factor::{EventSystem, FactorId};
 use crate::flow::{str_param_add_arg, str_param_setup, Battle, FlowHost, HandexBytes};
+use crate::main_util::same_side;
 
 /// HANDEX work types used below.
 mod hx {
@@ -407,12 +408,157 @@ pub fn h_021d8d40<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battl
     }
 }
 
+/// Species 421 (Cherrim).
+const SPECIES_CHERRIM: u16 = 0x1A5;
+
+/// HANDEX work type 0x39: form change (+4 Pokemon, +5 form, +8 string parameter).
+const HANDEX_FORM_CHANGE: u32 = 0x39;
+
+/// C: `FUN_overlay_d_93__021d8e00`: the Pokemon is Cherrim.
+fn is_cherrim<H: FlowHost>(b: &mut Battle<H>, me: u8) -> bool {
+    b.mon(me as u32).species() == SPECIES_CHERRIM
+}
+
+/// C: `FUN_overlay_d_93__021d8e7c`: changes to `form` (if different) with message 0xDE;
+/// `popup` goes to header bit 23.
+fn change_form<H: FlowHost>(b: &mut Battle<H>, me: u8, form: u8, popup: u8) {
+    if form as u32 == b.mon_get(me as u32, value::FORM) {
+        return;
+    }
+    let id = b.host.handex_push(HANDEX_FORM_CHANGE, me as u32);
+    let buf = b.host.handex(id);
+    buf.put_u8(4, me);
+    buf.put_u8(5, form);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, (h & 0xFF7F_FFFF) | (((popup as u32) << 31) >> 8));
+    str_param_setup(buf, 8, 2, 0xDE);
+    str_param_add_arg(buf, 8, me as u32);
+    b.host.handex_pop(id);
+}
+
+/// 0x021D8E1C: Flower Gift: takes the sunny form in sun (form 1), else form 0; marks the
+/// factor active (work word 0).
+pub fn h_021d8e1c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_cherrim(b, me) {
+        return;
+    }
+    let sunny = (b.host.weather() == 1) as u8;
+    change_form(b, me, sunny, 1);
+    work(sys, f)[0] = 1;
+}
+
+/// 0x021D8E58: Flower Gift on entry (var 2).
+pub fn h_021d8e58<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 2, me) {
+        h_021d8e1c(sys, f, b, me);
+    }
+}
+
+/// 0x021D8EDC: Flower Gift weather change.
+pub fn h_021d8edc<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if work(sys, f)[0] != 0 && is_cherrim(b, me) {
+        let sunny = (b.host.weather() == 1) as u8;
+        change_form(b, me, sunny, 1);
+    }
+}
+
+/// 0x021D8F1C: Flower Gift: back to form 0 when var 2 is this Pokemon.
+pub fn h_021d8f1c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if work(sys, f)[0] != 0 && is_me(b, 2, me) && is_cherrim(b, me) {
+        change_form(b, me, 0, 0);
+    }
+}
+
+/// 0x021D8F54: Flower Gift: back to form 0.
+pub fn h_021d8f54<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if work(sys, f)[0] != 0 && is_cherrim(b, me) {
+        change_form(b, me, 0, 0);
+    }
+}
+
+/// 0x021D8F84: Flower Gift: back to form 0 when var 0x10 is no longer this factor's ability.
+pub fn h_021d8f84<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    if work(sys, f)[0] == 0 || !is_cherrim(b, me) || !is_me(b, 2, me) {
+        return;
+    }
+    if b.var(0x10) as u32 != sys.sub_id(f) as u32 {
+        change_form(b, me, 0, 0);
+    }
+}
+
+/// 0x021D8FCC: Flower Gift: in sun, physical moves of allies x1.5.
+pub fn h_021d8fcc<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_cherrim(b, me) || b.host.weather() != 1 {
+        return;
+    }
+    let attacker = b.var(3) as u8 as u32;
+    if same_side(me as u32, attacker) && is_physical(b) {
+        b.mul_var(0x35, 0x1800);
+    }
+}
+
+/// 0x021D901C: Flower Gift: in sun, allies take special hits (var 0x1A == 2) x1.5 better.
+pub fn h_021d901c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_cherrim(b, me) || b.host.weather() != 1 {
+        return;
+    }
+    let defender = b.var(4) as u8 as u32;
+    if same_side(me as u32, defender) && b.var(0x1A) == 2 {
+        b.mul_var(0x35, 0x1800);
+    }
+}
+
+/// 0x021D9070: Rivalry: same gender x1.25, opposite x0.75 (genderless, 2, unaffected).
+pub fn h_021d9070<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 3, me) {
+        return;
+    }
+    let target = b.var(4) as u8 as u32;
+    let mine = b.mon_get(me as u32, value::FA_BYTE) as u8;
+    let theirs = b.mon_get(target, value::FA_BYTE) as u8;
+    if mine == 2 || theirs == 2 {
+        return;
+    }
+    b.mul_var(0x31, if mine == theirs { 0x1400 } else { 0xC00 });
+}
+
+/// 0x021D90E8: Technician: power 60 or less x1.5.
+pub fn h_021d90e8<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if is_me(b, 3, me) && b.var(0x30) as u32 <= 60 {
+        b.mul_var(0x31, 0x1800);
+    }
+}
+
+/// 0x021D9118: Iron Fist: moves with flag 7 (punching) x1.2.
+pub fn h_021d9118<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 3, me) {
+        return;
+    }
+    let mv = b.var(0x12) as u16 as u32;
+    if b.host.move_flag(mv, 7) {
+        b.mul_var(0x31, 0x1333);
+    }
+}
+
+/// 0x021D9154: Reckless: recoil moves (param 30) and Jump Kick / Hi Jump Kick x1.2.
+pub fn h_021d9154<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 3, me) {
+        return;
+    }
+    let mv = b.var(0x12) as u16 as u32;
+    if b.host.move_param(mv, 30) != 0 || mv == 26 || mv == 136 {
+        b.mul_var(0x31, 0x1333);
+    }
+}
+
 /// Original addresses of the ported handlers (also the differential test order).
 pub const PORTED: &[u32] = &[
     0x021D85F4, 0x021D8684, 0x021D86A8, 0x021D86FC, 0x021D8734, 0x021D8760, 0x021D8794, 0x021D87C8,
     0x021D8808, 0x021D8844, 0x021D8874, 0x021D88E8, 0x021D890C, 0x021D8940, 0x021D8964, 0x021D89B8,
     0x021D8A3C, 0x021D8A64, 0x021D8A8C, 0x021D8AA8, 0x021D8AD0, 0x021D8B1C, 0x021D8B50, 0x021D8B84,
     0x021D8BB4, 0x021D8C0C, 0x021D8C3C, 0x021D8C58, 0x021D8C74, 0x021D8C90, 0x021D8CF4, 0x021D8D40,
+    0x021D8E1C, 0x021D8E58, 0x021D8EDC, 0x021D8F1C, 0x021D8F54, 0x021D8F84, 0x021D8FCC, 0x021D901C,
+    0x021D9070, 0x021D90E8, 0x021D9118, 0x021D9154,
 ];
 
 /// Ported ability handlers by original address.
@@ -450,6 +596,18 @@ pub fn handler<H: FlowHost>(addr: u32) -> Option<crate::flow::Handler<H>> {
         0x021D8C90 => h_021d8c90::<H>,
         0x021D8CF4 => h_021d8cf4::<H>,
         0x021D8D40 => h_021d8d40::<H>,
+        0x021D8E1C => h_021d8e1c::<H>,
+        0x021D8E58 => h_021d8e58::<H>,
+        0x021D8EDC => h_021d8edc::<H>,
+        0x021D8F1C => h_021d8f1c::<H>,
+        0x021D8F54 => h_021d8f54::<H>,
+        0x021D8F84 => h_021d8f84::<H>,
+        0x021D8FCC => h_021d8fcc::<H>,
+        0x021D901C => h_021d901c::<H>,
+        0x021D9070 => h_021d9070::<H>,
+        0x021D90E8 => h_021d90e8::<H>,
+        0x021D9118 => h_021d9118::<H>,
+        0x021D9154 => h_021d9154::<H>,
         _ => return None,
     })
 }

@@ -38,6 +38,10 @@ pub trait FlowHost: BppEnv {
     fn weather(&mut self) -> u32;
     /// C: `FUN_0201C1E8(move)`: the move's damage category (1 = physical, 2 = special).
     fn move_category(&mut self, mv: u32) -> u32;
+    /// C: `FUN_0201BD28(move, param)`: move data parameter.
+    fn move_param(&mut self, mv: u32, param: u32) -> u32;
+    /// C: `FUN_0201BEB8(move, flag)`: move data flag.
+    fn move_flag(&mut self, mv: u32, flag: u32) -> bool;
     /// C: `FUN_overlay_d_93__021c804c(wk, poke_id, &out)`: finds the Pokemon's queued action;
     /// writes it to `out` and returns whether found.
     fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool;

@@ -42,6 +42,8 @@ class Host:
         st(0x021C8288, self.weather)
         st(0x0201C1E8, self.category)
         st(0x021C804C, self.find_action)
+        st(0x0201BD28, lambda em, mv, prm, *a, sp: (self.log.extend([0x109, mv, prm]), mix(mv, prm ^ 0xBD28) % 3)[1])
+        st(0x0201BEB8, lambda em, mv, fl, *a, sp: (self.log.extend([0x10A, mv, fl]), mix(mv, fl ^ 0xBEB8) & 1)[1])
         st(0x021C8010, self.pos_in_battle)
         st(0x021C7CF4, lambda em, wk, i, *a, sp: MONS_ADDR + 0x200 * i if i < NMONS else 0)
 

@@ -94,8 +94,8 @@
 - [ ] `FUN_overlay_d_93__021d8964`
 - [x] `FUN_overlay_d_93__021d8974` → `black_battle::handlers::abilities::start_countdown`
 - [ ] `FUN_overlay_d_93__021d89b8`
-- [ ] `FUN_overlay_d_93__021d8e00`
-- [ ] `FUN_overlay_d_93__021d8e7c`
+- [x] `FUN_overlay_d_93__021d8e00` → `black_battle::handlers::abilities::is_cherrim`
+- [x] `FUN_overlay_d_93__021d8e7c` → `black_battle::handlers::abilities::change_form`
 - [ ] `FUN_overlay_d_93__021d8f84`
 - [ ] `FUN_overlay_d_93__021d8fcc`
 - [ ] `FUN_overlay_d_93__021d901c`

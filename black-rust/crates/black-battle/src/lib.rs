@@ -11,6 +11,7 @@ pub mod event_var;
 pub mod flow;
 pub mod handlers;
 pub mod hooks;
+pub mod main_util;
 pub mod poke_type;
 pub mod sick_cont;
 
