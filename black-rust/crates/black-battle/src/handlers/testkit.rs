@@ -175,10 +175,13 @@ pub fn run_handler_suite(
                 let s = i + 1;
                 vars.label[s] = lab;
                 vars.value[s] = value_for(&mut r, me) as i32;
-                vars.kind[s] = (r.next() % 5) as u8;
+                vars.kind[s] = [0, 1, 2, 3, 3, 3, 4, 0][(r.next() % 8) as usize];
                 if vars.kind[s] == 3 {
-                    vars.min[s] = (r.next() % 0x40) as i32;
-                    vars.max[s] = (r.next() % 0x10000) as i32;
+                    vars.value[s] = (0x100 + r.next() % 0x10000) as i32;
+                    if r.next() & 1 != 0 {
+                        vars.min[s] = (r.next() % 0x40) as i32;
+                        vars.max[s] = (r.next() % 0x10000) as i32;
+                    }
                 }
             }
             b.vars = vars;

@@ -43,8 +43,8 @@ pub fn h_021d85f4<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     buf.put_u8(0xC, 0xFF);
     buf.put_u8(0xE, 1);
     buf.put_u8(0xF, n as u8);
-    for i in 0..n as usize {
-        buf.put_u8(0x10 + i, targets[i]);
+    for (i, &t) in targets.iter().enumerate().take(n as usize) {
+        buf.put_u8(0x10 + i, t);
     }
     b.host.handex_pop(w);
     b.host.handex_push_pop(hx::ABILITY_POPUP_OUT, me as u32);

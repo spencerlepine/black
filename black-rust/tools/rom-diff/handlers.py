@@ -115,11 +115,13 @@ def run(addrs):
                 s = i + 1
                 struct.pack_into("<H", ev, 4 + 2 * s, lab)
                 struct.pack_into("<I", ev, 0xC4 + 4 * s, value_for(r, me) & M)
-                k = r.next() % 5
+                k = [0, 1, 2, 3, 3, 3, 4, 0][r.next() % 8]
                 ev[0x544 + s] = k
                 if k == 3:
-                    struct.pack_into("<I", ev, 0x3C4 + 4 * s, r.next() % 0x40)
-                    struct.pack_into("<I", ev, 0x244 + 4 * s, r.next() % 0x10000)
+                    struct.pack_into("<I", ev, 0xC4 + 4 * s, 0x100 + r.next() % 0x10000)
+                    if r.next() & 1:
+                        struct.pack_into("<I", ev, 0x3C4 + 4 * s, r.next() % 0x40)
+                        struct.pack_into("<I", ev, 0x244 + 4 * s, r.next() % 0x10000)
             e.wbytes(EV, ev)
             hi, lo = r.next(), r.next()
             e.wbytes(RNGCTX, struct.pack("<QQQ", (hi << 32) | lo, 0x5D588B656C078965, 0x269EC3))
