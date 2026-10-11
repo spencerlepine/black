@@ -99,7 +99,7 @@
 - [ ] `FUN_overlay_d_93__021d8f84`
 - [ ] `FUN_overlay_d_93__021d8fcc`
 - [ ] `FUN_overlay_d_93__021d901c`
-- [ ] `FUN_overlay_d_93__021d9558`
+- [x] `FUN_overlay_d_93__021d9558` → `black_battle::handlers::abilities::h_021d9558`
 - [x] `FUN_overlay_d_93__021d9670` → `black_battle::handlers::abilities::immune_message`
 - [x] `FUN_overlay_d_93__021d96cc` → `black_battle::handlers::abilities::h_021d96cc`
 - [x] `FUN_overlay_d_93__021d96dc` → `black_battle::handlers::abilities::cure_own_on_entry`

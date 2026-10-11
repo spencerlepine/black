@@ -769,6 +769,123 @@ pub fn h_021d9498<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     cure_own_on_entry(b, me, 3);
 }
 
+/// 0x021D94C4: blocks condition 5 (poison): Immunity.
+pub fn h_021d94c4<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    work(sys, f)[0] = immune_to(b, me, 5) as u32;
+}
+/// 0x021D94D8: cures condition 5 on entry.
+pub fn h_021d94d8<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    cure_own_on_entry(b, me, 5);
+}
+/// 0x021D94E8: cures condition 5.
+pub fn h_021d94e8<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    cure_own(b, me, 5);
+}
+/// 0x021D9504: blocks condition 4 (burn): Water Veil.
+pub fn h_021d9504<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    work(sys, f)[0] = immune_to(b, me, 4) as u32;
+}
+/// 0x021D9518: cures condition 4 on entry.
+pub fn h_021d9518<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    cure_own_on_entry(b, me, 4);
+}
+/// 0x021D9528: cures condition 4.
+pub fn h_021d9528<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    cure_own(b, me, 4);
+}
+/// 0x021D9544: blocks condition 6 (confusion): Own Tempo.
+pub fn h_021d9544<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    work(sys, f)[0] = immune_to(b, me, 6) as u32;
+}
+/// C: `FUN_overlay_d_93__021d9558`: [`immune_message`] with message 0x165.
+pub fn h_021d9558<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    immune_message(sys, f, b, me, 0x165);
+}
+/// 0x021D956C: cures condition 6 on entry.
+pub fn h_021d956c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    cure_own_on_entry(b, me, 6);
+}
+/// 0x021D957C: cures condition 6.
+pub fn h_021d957c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    cure_own(b, me, 6);
+}
+/// 0x021D9598: blocks condition 7 (attraction): Oblivious.
+pub fn h_021d9598<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
+    work(sys, f)[0] = immune_to(b, me, 7) as u32;
+}
+/// 0x021D95AC: cures condition 7 on entry.
+pub fn h_021d95ac<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    cure_own_on_entry(b, me, 7);
+}
+/// 0x021D95BC: cures condition 7.
+pub fn h_021d95bc<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    cure_own(b, me, 7);
+}
+
+/// 0x021D95CC: Oblivious vs move 445 (Captivate): sets var 0x40 and shows message 210.
+pub fn h_021d95cc<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 4, me) || b.var(0x12) as u16 != 0x1BD || !b.rewrite_var(0x40, 1) {
+        return;
+    }
+    b.host.handex_push_pop(hx::ABILITY_POPUP_IN, me as u32);
+    let id = b.host.handex_push(hx::MESSAGE, me as u32);
+    let buf = b.host.handex(id);
+    str_param_setup(buf, 4, 2, 210);
+    str_param_add_arg(buf, 4, me as u32);
+    b.host.handex_pop(id);
+    b.host.handex_push_pop(hx::ABILITY_POPUP_OUT, me as u32);
+}
+
+/// HANDEX work type 0x1D: weather change (+4 weather, +5 turns, +6 flag, +8 string).
+const HANDEX_WEATHER: u32 = 0x1D;
+
+/// Unlabeled helper at 0x021D97B4: sets permanent weather (turns 0xFF) when this Pokemon
+/// enters (var 2).
+fn set_weather_on_entry<H: FlowHost>(b: &mut Battle<H>, me: u8, weather: u8) {
+    if !is_me(b, 2, me) {
+        return;
+    }
+    let id = b.host.handex_push(HANDEX_WEATHER, me as u32);
+    let buf = b.host.handex(id);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | HANDEX_HEADER_POPUP);
+    buf.put_u8(4, weather);
+    buf.put_u8(5, 0xFF);
+    b.host.handex_pop(id);
+}
+
+/// 0x021D9744: Drizzle: sets weather 2 on entry.
+pub fn h_021d9744<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    set_weather_on_entry(b, me, 2);
+}
+/// 0x021D9760: Drought: sets weather 1 on entry.
+pub fn h_021d9760<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    set_weather_on_entry(b, me, 1);
+}
+/// 0x021D977C: Sand Stream: sets weather 4 on entry.
+pub fn h_021d977c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    set_weather_on_entry(b, me, 4);
+}
+/// 0x021D9798: Snow Warning: sets weather 3 on entry.
+pub fn h_021d9798<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    set_weather_on_entry(b, me, 3);
+}
+
+/// 0x021D97EC: Cloud Nine / Air Lock: clears the weather on entry (message 94).
+pub fn h_021d97ec<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
+    if !is_me(b, 2, me) {
+        return;
+    }
+    let id = b.host.handex_push(HANDEX_WEATHER, me as u32);
+    let buf = b.host.handex(id);
+    let h = buf.get_u32(0);
+    buf.put_u32(0, h | HANDEX_HEADER_POPUP);
+    buf.put_u8(4, 0);
+    buf.put_u8(6, 1);
+    str_param_setup(buf, 8, 1, 94);
+    b.host.handex_pop(id);
+}
+
 /// Original addresses of the ported handlers (also the differential test order).
 pub const PORTED: &[u32] = &[
     0x021D85F4, 0x021D8684, 0x021D86A8, 0x021D86FC, 0x021D8734, 0x021D8760, 0x021D8794, 0x021D87C8,
@@ -779,7 +896,9 @@ pub const PORTED: &[u32] = &[
     0x021D9070, 0x021D90E8, 0x021D9118, 0x021D9154, 0x021D919C, 0x021D91E4, 0x021D9214, 0x021D9224,
     0x021D9240, 0x021D9250, 0x021D926C, 0x021D927C, 0x021D9340, 0x021D936C, 0x021D93A8, 0x021D93D8,
     0x021D93EC, 0x021D93FC, 0x021D9418, 0x021D9440, 0x021D9450, 0x021D9460, 0x021D9484, 0x021D9498,
-    0x021D96CC,
+    0x021D94C4, 0x021D94D8, 0x021D94E8, 0x021D9504, 0x021D9518, 0x021D9528, 0x021D9544, 0x021D9558,
+    0x021D956C, 0x021D957C, 0x021D9598, 0x021D95AC, 0x021D95BC, 0x021D95CC, 0x021D96CC, 0x021D9744,
+    0x021D9760, 0x021D977C, 0x021D9798, 0x021D97EC,
 ];
 
 /// Ported ability handlers by original address.
@@ -849,7 +968,26 @@ pub fn handler<H: FlowHost>(addr: u32) -> Option<crate::flow::Handler<H>> {
         0x021D9460 => h_021d9460::<H>,
         0x021D9484 => h_021d9484::<H>,
         0x021D9498 => h_021d9498::<H>,
+        0x021D94C4 => h_021d94c4::<H>,
+        0x021D94D8 => h_021d94d8::<H>,
+        0x021D94E8 => h_021d94e8::<H>,
+        0x021D9504 => h_021d9504::<H>,
+        0x021D9518 => h_021d9518::<H>,
+        0x021D9528 => h_021d9528::<H>,
+        0x021D9544 => h_021d9544::<H>,
+        0x021D9558 => h_021d9558::<H>,
+        0x021D956C => h_021d956c::<H>,
+        0x021D957C => h_021d957c::<H>,
+        0x021D9598 => h_021d9598::<H>,
+        0x021D95AC => h_021d95ac::<H>,
+        0x021D95BC => h_021d95bc::<H>,
+        0x021D95CC => h_021d95cc::<H>,
         0x021D96CC => h_021d96cc::<H>,
+        0x021D9744 => h_021d9744::<H>,
+        0x021D9760 => h_021d9760::<H>,
+        0x021D977C => h_021d977c::<H>,
+        0x021D9798 => h_021d9798::<H>,
+        0x021D97EC => h_021d97ec::<H>,
         _ => return None,
     })
 }
