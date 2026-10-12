@@ -1,1 +1,27 @@
 sha,status,added_utc,reviewed_utc,run,scope,findings,subject
+d985a7b,SKIPPED,2026-10-12T21:53Z,,,,,"Import existing black-rust workspace (nds-rom, black-cli, black-core)"
+3ce35de,SKIPPED,2026-10-12T21:53Z,2026-10-12T22:00Z,,tooling only (rom-diff Unicorn harness; exercised by every later check),,tools/rom-diff: run original overlay 93 code under Unicorn for differential tests
+b7070d9,REVIEWED,2026-10-12T21:53Z,2026-10-12T22:06Z,R-20261012-2202,"fn:black-battle/sick_cont;fn:black-battle/poke_type (gen.py hashes, at TIP 729e65e)",,black-battle: new crate with type-pair and sick-cont helpers
+13d722d,TODO,2026-10-12T21:53Z,,,,,black-battle: port the battle event-variable stack (battle_calc.s)
+3fb05b8,TODO,2026-10-12T21:53Z,,,,,black-battle: port battle_calc.s math helpers
+86ae7da,TODO,2026-10-12T21:53Z,,,,,black-battle: verify type-pair helpers against the original code
+f4b39ae,SKIPPED,2026-10-12T21:53Z,2026-10-12T22:00Z,,"docs only (PORTING-STATUS, READMEs)",,"docs: black-battle symbol map, rom-diff usage, PORTING-STATUS"
+aa9f455,SKIPPED,2026-10-12T21:53Z,2026-10-12T22:00Z,,UI/tooling only (wasm browser playground; no game logic),,web: browser playground for black-battle via WebAssembly
+ec4c75b,TODO,2026-10-12T21:53Z,,,,,black-battle: port BTL_POKEPARAM (battle_pokeparam.s 0x021D4D5C-0x021D6EA0)
+5380f04,TODO,2026-10-12T21:53Z,,,,,black-battle: port the battle event-factor system (battle_pokeparam.s 0x021D6EAC-0x021D74E4)
+4b6e836,TODO,2026-10-12T21:53Z,,,,,"black-battle: finish battle_pokeparam.s (021d4d64, empty list hook, factor clear)"
+5d4bcef,SKIPPED,2026-10-12T21:53Z,2026-10-12T22:00Z,,docs only (PORTING-STATUS),,"PORTING-STATUS: workflow, handler registries, next batch"
+d93386f,TODO,2026-10-12T21:53Z,,,,,"black-battle: handler framework (flow::Battle, FlowHost) and first 11 ability handlers"
+78feb66,TODO,2026-10-12T21:53Z,,,,,"handlers: fix clippy, stronger multiplier coverage in the generic driver; tools/gate.sh"
+69c5e23,TODO,2026-10-12T21:53Z,,,,,"abilities: 21 more handlers (Slow Start, pinch boosts, Plus/Minus, weather, ...); string-param helpers; tools/sync-handlers.py, tools/check-handlers.sh"
+900ffd8,SKIPPED,2026-10-12T21:53Z,2026-10-12T22:00Z,,"lint only (clippy needless_lifetimes; signature elision, no behaviour change)",,abilities: fix clippy needless_lifetimes
+9e7cb70,TODO,2026-10-12T21:53Z,,,,,"abilities: Flower Gift, Rivalry, Technician, Iron Fist, Reckless (44/240); main_util sides"
+b74aa88,TODO,2026-10-12T21:53Z,,,,,"abilities: status immunities/cures (Limber, Insomnia, Magma Armor, ...), Simple, Leaf Guard, Marvel Scale (65/240)"
+b63484c,TODO,2026-10-12T21:53Z,,,,,"abilities: more immunities/cures, Oblivious, weather setters, Cloud Nine (84/240)"
+5bf72a5,TODO,2026-10-12T21:53Z,,,,,"abilities: Ice Body, Rain Dish, Solar Power, Hydration, Shed Skin, Poison Heal, ... (99/240)"
+b572496,TODO,2026-10-12T21:53Z,,,,,"abilities: contact statuses, Effect Spore, Rough Skin, Aftermath, Color Change, Synchronize, Trace, Natural Cure, Anger Point (115/240)"
+38e12db,TODO,2026-10-12T21:53Z,,,,,"abilities: Download, Forewarn, Anticipation, Frisk, Sturdy, Unaware, Heatproof, Dry Skin, Water Absorb (131/240)"
+c0b22a5,TODO,2026-10-12T21:53Z,,,,,"abilities: Volt Absorb, Motor Drive, Soundproof, Wonder Guard, Damp (+ skip-check callback), Flash Fire, ... (149/240)"
+3fe13ed,TODO,2026-10-12T21:53Z,,,,,"abilities: Flash Fire activation, Bad Dreams, Mold Breaker/Turboblaze/Teravolt (+ skip check), Forecast, Storm Drain redirect (165/240)"
+383e4f0,TODO,2026-10-12T21:53Z,,,,,"abilities: Lightning Rod, Storm Drain boosts, Liquid Ooze, Klutz (+ skip check), ... (181/240); uniform SkipCheck signature"
+729e65e,TODO,2026-10-12T21:53Z,,,,,initial commit; standalone repository

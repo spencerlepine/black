@@ -1,5 +1,4 @@
 # Validator runs (VALIDATION-AGENT)
 
 One line per run, appended by the validator. Format: `- R-YYYYMMDD-HHMM — tested <tip> (commits a..b: n, reviewed r, skipped s) — areas: … — findings: … — <minutes> min — notes: …`
-
-- TODO
+- R-20261012-2202 — tested 729e65e (commits b7070d9..b7070d9: 1, reviewed 1, skipped 0; user-scoped single commit, other TODO rows untouched) — areas: fn:black-battle/sick_cont ✅ (gen.py 2dbe3d01dd5611d2 = Rust) poke_type ✅ (525001f51ea0442c = Rust); V3 widened 10x + full-range type bytes, both sides match (1dee670f606c9356, 1303e577a3add172); V4 16 functions read vs rizin, clean; gate ❌ (fmt only; clippy/test/build ok by hand); drift ⚠ (tracked .pyc) — findings: V-0001 (high), V-0002 (low), both introduced outside b7070d9 — ~12 min — notes: these areas predate spec/check-fn.sh (hashes live in gen.py + matches_rom_fuzz); 021e8d0c split_pair (out-pointers) is not hashed, verified by reading only

@@ -115,8 +115,7 @@ mod tests {
     #[cfg(feature = "rom")]
     #[test]
     fn real_rom_evolutions() {
-        const DIR: &str =
-            "$HOME/workplace/black/black-rom/files/a/0";
+        const DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../black-rom/files/a/0");
         let (Ok(evo), Ok(baby)) = (
             std::fs::read(format!("{DIR}/1/9")),
             std::fs::read(format!("{DIR}/2/0")),

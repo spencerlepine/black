@@ -198,8 +198,10 @@ mod tests {
 
     #[test]
     fn real_rom_trainers() {
-        const DIR: &str =
-            "$HOME/workplace/black/black-rom/files/a/0/9";
+        const DIR: &str = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../../black-rom/files/a/0/9"
+        );
         let (Ok(d), Ok(p)) = (
             std::fs::read(format!("{DIR}/2")),
             std::fs::read(format!("{DIR}/3")),

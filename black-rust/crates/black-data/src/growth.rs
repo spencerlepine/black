@@ -60,8 +60,10 @@ impl GrowthTables {
 mod tests {
     use super::*;
 
-    const ARC: &str =
-        "$HOME/workplace/black/black-rom/files/a/0/1/7";
+    const ARC: &str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../black-rom/files/a/0/1/7"
+    );
 
     #[test]
     fn real_rom_growth_tables() {

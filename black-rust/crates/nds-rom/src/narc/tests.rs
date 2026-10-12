@@ -3,8 +3,7 @@ use crate::fnt::Fnt;
 use crate::lz;
 use std::path::{Path, PathBuf};
 
-const ROM_FILES: &str =
-    "$HOME/workplace/black/black-rom/files";
+const ROM_FILES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../black-rom/files");
 
 #[test]
 fn build_and_parse_nameless() {

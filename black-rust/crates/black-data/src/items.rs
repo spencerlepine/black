@@ -132,8 +132,10 @@ mod tests {
 
     #[test]
     fn real_rom_items() {
-        const ARC: &str =
-            "$HOME/workplace/black/black-rom/files/a/0/2/4";
+        const ARC: &str = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../../black-rom/files/a/0/2/4"
+        );
         let Ok(bytes) = std::fs::read(ARC) else {
             eprintln!("skipping: {ARC} missing");
             return;

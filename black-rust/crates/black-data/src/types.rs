@@ -105,8 +105,10 @@ mod tests {
     #[cfg(feature = "rom")]
     #[test]
     fn real_rom_chart() {
-        const OVY: &str =
-            "$HOME/workplace/black/black-rom/build/black.us/OVY_93.sbin";
+        const OVY: &str = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../../black-rom/build/black.us/OVY_93.sbin"
+        );
         let Ok(image) = std::fs::read(OVY) else {
             eprintln!("skipping: {OVY} missing");
             return;

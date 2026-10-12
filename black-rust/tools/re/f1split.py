@@ -40,7 +40,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 BUILD = os.environ.get(
     "BLACK_ROM_BUILD",
-    "$HOME/workplace/black/black-rom/build/black.us",
+    os.path.expanduser("~/workplace/black/black-rom/build/black.us"),
 )
 RE_OUT = os.environ.get("RE_OUT", "/tmp/blk/re")
 OVL = {10: 0x02155160, 11: 0x02172BC0, 18: 0x0217AE20, 20: 0x02183B60, 21: 0x02187F00}

@@ -29,7 +29,7 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-MAIN_CHECKOUT = "$HOME/workplace/black"
+MAIN_CHECKOUT = os.path.expanduser("~/workplace/black")
 ROM = os.environ.get("BLACK_ROM", MAIN_CHECKOUT + "/black-rom")
 BUILD = os.environ.get("BLACK_ROM_BUILD", ROM + "/build/black.us")
 RE_OUT = os.environ.get("RE_OUT", "/tmp/blk/re")
