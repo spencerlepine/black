@@ -1,0 +1,141 @@
+# source	group	class	feeds	what
+event_ircbattle.c		oos	X1	IR battle events
+musical_event.c	musical	oos	X2	Musical (D9/X2) events
+musical_dressup_sys.c	musical	oos	X2	Musical dress-up
+musical_stage_sys.c	musical	oos	X2	Musical stage
+musical_program.c	musical	oos	X2	Musical program
+delivery_beacon.c	delivery	oos	X1	wireless delivery (mystery gift) beacon
+delivery_irc.c	delivery	oos	X1	IR delivery
+script_sys.c	script_sys+work	logic	F7	script system glue: context create, script-id to ARC 57 load, event start
+script_work.c	script_sys+work	logic	F7	script work/context accessors; tail 02159954.. unclear
+map_matrix.c	map_matrix+replace	logic	F2	map matrix create (matrix ARC 9)
+map_replace.c	map_matrix+replace	logic	F2	map replacement via ARC 9 matrices
+event_poke_status.c		logic	F8	field Pokemon status events (poison step damage etc.) UNVERIFIED
+scrcmd_work.c		logic	F8	scrcmd.c body: script command handlers (large cluster); text via msg bank 262
+scrcmd_proc.c		logic	F8	script commands that launch field procs (apps); UI side is U
+scrcmd_sodateya.c		logic	F8	daycare script commands (logic in sodateya.c, 21)
+scrcmd_musical.c		oos	X2	musical script commands
+field_encount_st.c		logic	F5	encounter state (step counters, repel, etc.)
+move_pokemon.c		logic	F5	roaming ("moving") Pokemon state
+scrcmd_network.c		oos	X1	Wi-Fi/C-Gear script commands (ARC 209)
+event_shortcut_menu.c		logic	U10	registered-item (Y button) event flow
+event_field_proclink.c		logic	G2	field to app proc-link glue (launch/return bag, party, ...)
+eventdata_system.c		logic	F6	zone event data (ARC 125): NPC/bg/warp/coord events
+calender.c		logic	F11	calendar/date events (ARC 97)
+game_beacon_search.c	beacon	oos	X1	game beacon (C-Gear) search
+game_beacon_accessor.c	beacon	oos	X1	game beacon accessors
+symbol_map.c		logic	F5	symbol (visible) encounters, Entree Forest style; data source D9 Dream World
+event_research_radar.c		logic	F10	research-radar style event (msg 47) UNVERIFIED
+comm_player.c		oos	X1	comm player
+fld_btl_inst_tool.c		logic	F10	battle-institute / subway helper (ARC 215)
+field_g3d_map.c		render	G8	3D map model draw/load
+report_event.c		logic	F8	report (save prompt) event flow; save screen is U
+namein_setup.c		logic	F8	naming screen setup args; screen is U
+fldmmdl.c		logic	F4	MMDL core (alloc/ids/params, ARC 48 model table, add/delete/search)
+event_battle.c		logic	F5	field battle start/return events
+trcard_sys.c		render	U18	Trainer Card screen
+waza_oshie.c		render	U20	move relearner screen
+intrude_comm.c		oos	X1	Entralink (intrude) comm
+intrude_field.c		oos	X1	Entralink field
+intrude_subdisp.c		oos	X1	Entralink sub display
+event_comm_common.c		oos	X1	wireless common events
+event_mapchange.c		logic	F6	map change events (ARC 101)
+field_wfbc_data_local.c		oos	X1	White Forest / Black City data (Entralink-linked), deferred
+el_scoreboard.c		logic	F10	electric scoreboard gimmick (ARC 151) UNVERIFIED
+fieldmap.c		mixed	F2	fieldmap core: create, map load, matrix, attributes, 3D map draw
+field_buildmodel.c		mixed	F2	building models: placement data (F2) + render (G8)
+field_g3d_mapper.c		render	G8	3D map block mapper
+field_camera.c		mixed	G8	camera; camera-follow math is logic
+field_camera_anime.c		render	G8	camera animation
+field_msgbg.c		render	G5/U2	field message/BG windows
+field_wfbc.c		oos	X1	WFBC logic, deferred
+field_comm_actor.c		oos	X1	comm actors
+ircbattlemenu.c		oos	X1	IR battle menu
+fldmmdl_acmd.c		logic	F4	MMDL: acmd + move types + hit check (tables 021D4160..)
+fldmmdl_blact.c		render	U2	MMDL billboard actors
+fldmmdl_g3dobj.c		render	U2	MMDL 3D objects
+field_rail_loader.c		logic	F3	rail system loader (no-grid movement)
+field_fog.c		render	G8	fog
+field_zonefog.c		render	G8	zone fog
+field_light.c		render	G8	lighting; day-night colour logic F11
+field_subscreen.c		render	U2	touch-screen subscreen
+field_3dbg.c		render	G8	3D BG
+weather.c	weather	mixed	F11	weather state/ID
+weather_task.c	weather	render	G8	weather effects tasks
+fieldmap_ctrl_grid.c		logic	F3	grid movement controller
+field_player.c		logic	F3	player object
+field_player_core.c		logic	F3	player core
+field_player_grid.c		logic	F3	grid movement
+field_player_nogrid.c		logic	F3	no-grid movement
+fieldmap_ctrl_nogrid_work.c		logic	F3	no-grid work
+fieldmap_ctrl_hybrid.c		logic	F3	hybrid controller
+field_ground_anime.c		render	G8	ground tile animation
+field_menu.c		render	U10	field menu (start menu launch)
+field_encount.c		logic	F5	encounter roll
+effect_encount.c		mixed	F5	encounter effects (shake/dust/ripple); slots logic
+fld_scenearea.c	scenearea	logic	F2	scene area params
+fld_scenearea_loader.c	scenearea	logic	F2	scene area loader
+field_effect.c		render	U2	field effect manager
+fldeff_shadow.c		render	U2	effect: shadow
+fldeff_kemuri.c		render	U2	effect: smoke
+fldeff_grass.c		render	U2	effect: grass
+fldeff_namipoke.c		mixed	F3	surf Pokemon effect + state
+fldeff_encount.c		render	U2	effect: encounter
+fldeff_iwakudaki.c		mixed	F10	rock smash
+fldeff_fishing.c		mixed	F5	fishing
+event_trainer_eye.c		logic	F4	trainer line-of-sight
+scrcmd_screeneffects.c		logic	F8	screen-effect script commands
+scrcmd_shop.c		logic	F8	shop script commands (ARC 25, 54)
+scrcmd_proc_fld.c		logic	F8	field proc script commands
+scrcmd_encount.c		logic	F5	encounter script commands (ARC 126)
+scrcmd_fld_battle.c		logic	F8	field battle script commands
+scrcmd_c03center.c		logic	F8	city-specific script commands
+scrcmd_pokemon_fld.c		logic	F8	Pokemon script commands
+pdw_postman.c		oos	X2	Dream World postman
+field_rail.c		logic	F3	rail movement
+rail_attr.c		logic	F3	rail attributes
+field_nogrid_mapper.c		mixed	F3	no-grid mapper (ARC 109)
+fldeff_gyoe.c		render	U2	effect: exclamation
+fieldmap_func.c		logic	F2	fieldmap helpers
+fldeff_footmark.c		render	U2	effect: footprints
+fldeff_reflect.c		render	U2	effect: water reflection
+field_place_name.c	placename	render	U2	place-name popup
+place_name_letter.c	placename	render	U2	place-name letters
+entrance_camera.c		render	G8	door-entrance camera
+fld_exp_obj.c		render	U2	expansion objects
+height_ex.c		logic	F3	extended height (slope) attributes
+field_player_grid_event.c		logic	F3	tile events (ledge, ice, ...)
+fld_particle.c		render	U2	particles
+fld3d_ci.c		render	U2	3D cut-in
+sodateya.c		logic	F8	daycare logic (ARC 123 egg moves)
+fldeff_ripple.c		render	U2	effect: ripple
+fldeff_splash.c		render	U2	effect: splash
+sound_obj.c		render	H2	sound objects
+shortcut_menu.c		render	U10	Y-button menu
+field_g3dobj.c		render	U2	3D objects
+fieldmap_tcb_camera_zoom.c		render	G8	camera zoom task
+field_task.c	task	logic	G2/F12	field task
+field_task_manager.c	task	logic	G2/F12	field task manager
+field_flash.c		render	U2	flash
+fieldskill_mapeff.c		render	F10	hidden-move map effects
+fld_wipe_3dobj.c		render	U2	wipe
+pleasure_boat.c		logic	F10	pleasure boat event
+fldeff_d06denki.c		render	F10	gimmick effect
+land_data_patch.c		logic	F2	land data patch
+fldeff_iaigiri.c		mixed	F10	cut effect
+bsubway_scr.c		logic	F10	Battle Subway script commands (local)
+fld_trade.c		logic	F8	in-game trade
+scrcmd_palpark.c		logic	F8	script commands
+party_select_list.c		render	U6	party select list
+field_bbd_color.c		render	U2	billboard colour
+comm_entry_menu.c		oos	X1	wireless entry menu
+enceff.c		render	U2	battle-transition effects
+fldeff_btrain.c		render	F10	effect: train
+fldeff_hide.c		render	U2	effect: hide
+fldeff_bubble.c		render	U2	effect: bubbles
+trial_house.c		logic	F10	trial house
+field_saveanime.c		render	U10	save animation
+event_game_manual.c		render	U17	game manual
+fld_vreq.c		render	G8	VRAM requests
+field_palace_sys.c		oos	X1	Palace (Entralink)
+scrcmd (unanchored)		logic	F8	scrcmd handlers without own debug names

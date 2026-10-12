@@ -25,21 +25,5 @@ impl Fnv {
     }
 }
 
-/// xorshift32 with the same seeding as black-core's differential tests.
-pub struct Rng(u32);
-
-impl Rng {
-    pub fn new(seed: u32) -> Self {
-        let s = seed.wrapping_mul(2654435761).wrapping_add(1);
-        Rng(if s == 0 { 1 } else { s })
-    }
-
-    pub fn next(&mut self) -> u32 {
-        let mut x = self.0;
-        x ^= x << 13;
-        x ^= x >> 17;
-        x ^= x << 5;
-        self.0 = x;
-        x
-    }
-}
+// xorshift32 (one copy, in black-fndiff; same seeding as the emulator harness)
+pub use black_fndiff::Rng;

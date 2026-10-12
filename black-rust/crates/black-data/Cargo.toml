@@ -1,0 +1,16 @@
+[package]
+name = "black-data"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Data types and loaders for the extracted assets (assets/data, assets/maps, assets/text)"
+
+[features]
+# ROM-side converters (native only, used by `black extract-assets`); never enabled for wasm.
+rom = ["dep:nds-rom"]
+
+[dependencies]
+black-core = { version = "0.1.0", path = "../black-core" }
+nds-rom = { version = "0.1.0", path = "../nds-rom", optional = true }
+serde = { version = "1", features = ["derive"] }
+ron = "0.8"

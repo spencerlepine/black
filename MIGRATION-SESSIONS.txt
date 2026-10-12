@@ -1,0 +1,37 @@
+[42d18e01-ff32-482e-8000-d9d2a7bb003e]
+  Total cost:            $88.36
+  Total duration (API):  5h 0m 28s
+  Total duration (wall): 3h 24m 26s
+  Total code changes:    17525 lines added, 745 lines removed
+  Usage by model:
+      claude-opus-5-5:  1.7k input, 172.6k output, 50.4m cache read, 925.0k cache write ($18.15)
+    claude-sonnet-5-5:  684.9k input, 1.5m output, 309.6m cache read, 7.9m cache write ($67.34)
+      claude-haiku-5-5:  83.7k input, 368.2k output, 36.0m cache read, 1.3m cache write ($2.87)
+  Prompt cache (main):   275 requests · 95% of input tokens from cache · 9 misses (last 6m 47s ago — likely cause: idle past the 5m TTL, 3.6m tokens re-cached) · warm (5m TTL, last activity 59s ago)
+
+
+[b9d0aa1c-419b-40dd-824b-c2d18683aa79]
+   Total cost:            $355.37
+   Total duration (API):  12h 19m 10s
+   Total duration (wall): 19h 5m 51s
+   Total code changes:    52658 lines added, 822 lines removed
+   Usage by model:
+      claude-sonnet-5-5:  2.4m input, 4.4m output, 986.1m cache read, 20.4m cache write ($297.12)
+       claude-haiku-5-5:  231.0k input, 695.1k output, 80.1m cache read, 2.2m cache write ($4.80)
+        claude-opus-5-5:  1.4k input, 270.2k output, 142.8m cache read, 3.2m cache write ($53.46)
+   Prompt cache (main):   419 requests · 98% of input tokens from cache · 10 misses (last 4h 39m 48s ago, 2.7m tokens re-cached) · cold — idle 23m 23s, next turn re-caches ~648.0k tokens
+
+
+[49deb3e4-d674-4bf3-ad28-7040906d554f]
+Total cost:            $106.83
+Total duration (API):  3h 48m 8s
+Total duration (wall): 2h 48m 25s
+Total code changes:    14969 lines added, 400 lines removed
+Usage by model:
+     claude-opus-5-5:  362 input, 105.3k output, 33.5m cache read, 546.0k cache write ($12.54)
+    claude-haiku-5-5:  84.6k input, 286.8k output, 50.8m cache read, 1.1m cache write ($3.69)
+   claude-sonnet-5-5:  793.9k input, 1.3m output, 323.7m cache read, 4.4m cache write ($90.61)
+Prompt cache (main):   162 requests · 98% of input tokens from cache · 2 misses (last 2h 34m 6s ago, 235.7k tokens re-cached) · warm (1h TTL, last activity 4m 48s ago)
+
+
+[TODO]

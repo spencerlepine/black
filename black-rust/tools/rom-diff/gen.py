@@ -279,7 +279,120 @@ def hooks():
     return h.hex()
 
 
+# ---- field (btl_field.c) ----------------------------------------------------------------------
+FIELD = 0x021F63F4
+GFXG = 0x021F6398
+FCB = 0x021F7100
+FCONT = 0x02E90000
+FMONS = 0x02EA0000
+
+
+def field():
+    fh = {"h": None, "n": 0, "cb": []}
+    mons.clear()
+
+    def create(em, slot, *_, sp):
+        fh["n"] += 1
+        handle = 0 if fh["n"] % 5 == 0 else 0x1000 + fh["n"] * 16 + slot
+        for v in (0xA1, slot, handle):
+            fh["h"].w(v)
+        return handle
+
+    def destroy(em, handle, *_, sp):
+        fh["h"].w(0xA2)
+        fh["h"].w(handle)
+
+    def gfx(tag, nstack):
+        def f(em, a, b, c, d=0, *_, sp):
+            vals = [tag, a, b, c]
+            if nstack:
+                vals = [tag, a, b, c, d, em.r32(sp), em.r32(sp + 4)]
+            for v in vals:
+                fh["h"].w(v)
+
+        return f
+
+    def cb(em, slot, ctx, *_, sp):
+        fh["cb"] += [0xC0, slot, ctx]
+
+    e.stub(0x021EFA84, create)
+    for a in (0x021EFAC8, 0x021EFC0C, 0x021EFCD4):
+        e.stub(a, destroy)
+    e.stub(0x02045CAC, gfx(0xB0, False))
+    e.stub(0x0201EFA4, gfx(0xB1, True))
+    e.stub(0x0201F250, gfx(0xB2, False))
+    e.stub(FCB, cb)
+
+    # Move table shared with the Rust test; the real lookup (021b9940) and move check (021d5750)
+    # run on this memory.
+    t = Rng(0xF1E1D)
+    for pid in range(64):
+        e.w32(FCONT + 0x84 + pid * 4, FMONS + pid * 0x200)
+        for i in range(4):
+            mv = t.next() % 9
+            e.wbytes(FMONS + pid * 0x200 + 0x10A + i * 14, struct.pack("<H", mv))
+    total = Fnv()
+    for seed in range(1000):
+        r = Rng(seed)
+        mons.clear()
+        MON = add_mon(Mon.__new__(Mon), 0)
+        mons[MON].poke_id = r.next() % 24
+        fh["n"] = 0
+        fh["cb"] = []
+        fh["h"] = Fnv()
+        h = fh["h"]
+        call(0x021EF874, 0)
+        call(0x021EF874, r.next())
+        for _ in range(30):
+            op = r.next() % 15
+            a = r.next()
+            b = r.next()
+            cont = (b & ~0x1FF & M) | (((a >> 20) % 8) << 3) | (1 + (b ^ (a >> 16)) % 4)
+            v = 0
+            if op == 0:
+                call(0x021EF874, a)
+            elif op == 1:
+                call(0x021EF8A4, a % 8, 0xFF if b % 3 == 0 else b % 6)
+            elif op == 2:
+                v = call(0x021EF8B8)
+            elif op == 3:
+                v = (call(0x021EF884) * 31 + call(0x021EF894)) & M
+            elif op == 4:
+                v = call(0x021EF8C8, a % 8, cont) & 0xFF
+            elif op == 5:
+                v = call(0x021EF9F4, FIELD, a % 8, cont, 0) & 0xFF
+            elif op == 6:
+                v = call(0x021EF8E8, a % 8) & 0xFF
+            elif op == 7:
+                v = call(0x021EF8F8, a % 8, b % 64) & 0xFF
+            elif op == 8:
+                call(0x021EF90C, b % 64)
+            elif op == 9:
+                v = call(0x021EF91C, FCONT, MON, a % 9) & 0xFF
+            elif op == 10:
+                fh["cb"] = []
+                call(0x021EF934, (FCB | 1) if a & 1 else 0, b)
+                for x in fh["cb"]:
+                    h.w(x)
+            elif op == 11:
+                v = call(0x021EF948, a % 8)
+            elif op in (12, 13):
+                e.w32(GFXG + 0x1C, r.next())
+                e.w32(GFXG + 0x08, r.next())
+                e.w32(GFXG + 0x0C, r.next())
+                vals = [r.next() for _ in range(6)]
+                e.call(0x021EF71C if op == 12 else 0x021EF7AC, a, vals[0], vals[1], vals[2], stack_args=vals[3:])
+            else:
+                call(0x021EF9C8, FIELD)
+            h.w(v)
+            for o in range(0, 0x168, 4):
+                h.w(e.r32(FIELD + o))
+        total.w(h.h & M)
+        total.w(h.h >> 32)
+    return total.hex()
+
+
 if __name__ == "__main__":
-    which = sys.argv[1:] or ["poke_type", "sick_cont", "event_var", "pure", "rng", "hooks"]
+    which = sys.argv[1:] or ["poke_type", "sick_cont", "event_var", "pure", "rng", "hooks", "field"]
     for name in which:
         print(name, globals()[name]())

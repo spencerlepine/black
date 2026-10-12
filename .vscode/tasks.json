@@ -1,0 +1,62 @@
+{
+  "version": "2.0.0",
+  "presentation": {
+    "echo": false,
+    "reveal": "always",
+    "focus": false,
+    "panel": "dedicated",
+    "showReuseMessage": true
+  },
+  "tasks": [
+    {
+      "label": "Create terminals",
+      "dependsOn": [
+        "claude",
+        "gh-push",
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    },
+    {
+      "label": "claude",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "options": {
+        "shell": {
+          "executable": "/bin/zsh",
+          "args": [
+            "-l",
+            "-i",
+            "-c",
+            "tmux has-session -t rewrite 2>/dev/null && tmux attach -t rewrite || tmux new-session -s rewrite 'claude --dangerously-skip-permissions'"
+          ]
+        }
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "gh-push",
+      "type": "shell",
+      "command": "/bin/zsh",
+      "options": {
+        "shell": {
+          "executable": "/bin/zsh",
+          "args": [
+            "-l",
+            "-i",
+            "-c",
+            "tmux has-session -t gh-push 2>/dev/null && tmux attach -t gh-push || tmux new-session -s gh-push 'while true; do git pull origin main && git push origin main; sleep 180; done'"
+          ]
+        }
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

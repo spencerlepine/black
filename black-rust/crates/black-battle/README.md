@@ -81,6 +81,19 @@ trait.
 | `FUN_overlay_d_93__021e8cfc` / `8d04` / `8d0c` | `pair_type1` / `pair_type2` / `split_pair` |
 | `FUN_overlay_d_93__021e8d24` / `8da8` | `pair_has_type` / `pair_is_mono` |
 
+## handlers::effects (B7: overlay-95 registries)
+
+Decoded by B7h; the full table and evidence are in the module doc of
+`src/handlers/effects.rs`. Summary: overlay 95 (linked at 0x06898020) has three registries with
+the same getter protocol as abilities/items/moves: field effects 0x0689D650 (8 keys, factor
+type 3, owner 0), **position effects** 0x0689D6C8 (5 keys, type 1, owner = battle position;
+Wish, Lunar Dance, Healing Wish, Future Sight / Doom Desire, Baton Pass) and **side effects**
+0x0689D780 (14 keys with a max layer count, type 2, owner = side; Reflect, Light Screen,
+Safeguard, Mist, Tailwind, Lucky Chant, Spikes, Toxic Spikes, Stealth Rock, Wide Guard, Quick
+Guard, 3 Pledge combos). The "type-2 adder at 0x06898328" is the Wish handler; the adder is
+`06898c10`. 30 distinct handlers (`tools/rom-diff/handlers.py effects --list`), checked with
+`tools/check-handlers.sh effects`.
+
 ## Deviations
 
 - Function and argument types are narrowed to what callers pass (`u8` types, `u16` type pairs

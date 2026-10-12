@@ -3,30 +3,7 @@
 //! A type pair is a `u16`: `type1 << 8 | type2`. A single-type Pokemon stores the same type
 //! twice.
 
-/// Type IDs (Gen 5 order), as indexed by the type chart in `battle_calc.s`.
-pub mod types {
-    pub const NORMAL: u8 = 0;
-    pub const FIGHTING: u8 = 1;
-    pub const FLYING: u8 = 2;
-    pub const POISON: u8 = 3;
-    pub const GROUND: u8 = 4;
-    pub const ROCK: u8 = 5;
-    pub const BUG: u8 = 6;
-    pub const GHOST: u8 = 7;
-    pub const STEEL: u8 = 8;
-    pub const FIRE: u8 = 9;
-    pub const WATER: u8 = 10;
-    pub const GRASS: u8 = 11;
-    pub const ELECTRIC: u8 = 12;
-    pub const PSYCHIC: u8 = 13;
-    pub const ICE: u8 = 14;
-    pub const DRAGON: u8 = 15;
-    pub const DARK: u8 = 16;
-    /// Number of real types (rows/columns of the type chart).
-    pub const COUNT: u8 = 17;
-    /// "No type" (`0x11`): always neutral and never matched by `has_type`.
-    pub const NONE: u8 = 17;
-}
+pub use black_core::ids::types;
 
 /// C: `FUN_overlay_d_93__021e8ce0`
 pub fn make_pair(type1: u8, type2: u8) -> u16 {

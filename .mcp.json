@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "rea": {
+      "command": "npx",
+      "args": [
+        "rea-agents",
+        "mcp"
+      ],
+      "env": {
+        "GHIDRA_INSTALL_DIR": "${HOME}/tools/ghidra_12.1.4_PUBLIC",
+        "JAVA_HOME": "${HOME}/.local/share/mise/installs/java/temurin-21.0.12+8.0.LTS"
+      }
+    }
+  }
+}

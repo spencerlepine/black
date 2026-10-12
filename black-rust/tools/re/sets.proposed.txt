@@ -1,0 +1,62 @@
+field main 10 11 18 20 21
+bag main 10 11 70
+party-summary main 10 11 90 91 131 134
+box main 10 11 67 131 170
+startmenu main 10 11 67 88 204 228
+demo3d main 10 11 67 203
+townmap main 10 11 67 72
+pokedex main 10 11 67 206 208 212
+pokedex-area main 10 11 67 72 208 212
+pokedex-search main 10 11 67 206 210 212
+evolution main 10 11 67 131 195 196 198
+naming-egg main 10 11 194 215
+nick-register main 10 11 67 94 206 207
+battle-bag main 93 94 95 96 196 197
+battle-party main 93 94 95 96 196 198
+pdc main 10 11 94 98 196 197
+pack-fld-01 26 33 48 82 81
+pack-fld-02 25 34 39 75 78
+pack-fld-03 24 188 38 83 79
+pack-fld-04 28 41 76 77 80
+pack-fld-05 27 43 73 74
+pack-fld-06 46
+pack-fld-07 56
+pack-fld-08 54 55
+pack-fld-09 51
+pack-fld-10 59
+pack-fld-11 63
+pack-fld-12 53
+pack-fld-13 64
+pack-fld-14 36
+pack-fld-15 42
+pack-fld-16 45
+pack-fld-17 60
+pack-fld-18 58
+pack-fld-19 52
+pack-fld-20 61
+pack-fld-21 44
+pack-fld-22 49
+pack-fld-23 65
+pack-fld-24 50
+pack-fld-25 40
+pack-fld-26 57
+pack-fld-27 37
+pack-fld-28 47
+pack-fld-29 62
+pack-app-01 219 230 173 110 111 122 129 171
+pack-app-02 71 109 209 136
+pack-app-03 180 223
+pack-app-04 179 225 211
+pack-app-05 17 68
+pack-app-06 214
+pack-app-07 218
+pack-app-08 181
+pack-app-09 69
+pack-app-10 220
+pack-app-11 222
+pack-app-12 221
+pack-app-13 205
+pack-app-14 92
+pack-app-15 224
+pack-app-16 182
+pack-app-17 227

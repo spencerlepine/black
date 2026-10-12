@@ -1,2 +1,6 @@
 target/
 web/*.wasm
+# extracted game assets (D5): private, never commit
+assets/
+__pycache__/
+*.pyc

@@ -13,13 +13,35 @@ RET = 0x02FFF000
 REGS = [UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R2, UC_ARM_REG_R3]
 
 
+def overlay_base(n):
+    """Load address of overlay `n` (first code section `OVY_<n>` of the build's main.elf)."""
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "re"))
+    import mkelf
+    _, _, secs = mkelf.read_elf(f"{B}/main.elf")
+    return next(s["addr"] for s in secs if s["name"] == "OVY_%d" % n and s["type"] == mkelf.SHT_PROGBITS)
+
+
 class Emu:
-    def __init__(self):
+    """`overlays=None`: ARM9 main + overlay 93 (battle), as always. `overlays=[10, 11, ...]`:
+    ARM9 main + those overlays at their link addresses (a `tools/re/sets.txt` set); `ovy` is empty."""
+
+    def __init__(self, overlays=None):
         uc = Uc(UC_ARCH_ARM, UC_MODE_ARM)
         uc.mem_map(0x02000000, 0x01000000)  # main RAM (generous)
-        uc.mem_write(0x02004000, open(f"{B}/main.sbin", "rb").read())
-        self.ovy = open(f"{B}/OVY_93.sbin", "rb").read()
-        uc.mem_write(0x021B6100, self.ovy)
+        main = open(f"{B}/main.sbin", "rb").read()
+        uc.mem_write(0x02004000, main)
+        self.images = [(0x02004000, main)]  # (base, bytes) of everything loaded from the build
+        if overlays is None:
+            self.ovy = open(f"{B}/OVY_93.sbin", "rb").read()
+            uc.mem_write(0x021B6100, self.ovy)
+            self.images.append((0x021B6100, self.ovy))
+        else:
+            self.ovy = b""
+            for n in overlays:
+                blob = open(f"{B}/OVY_{n}.sbin", "rb").read()
+                base = overlay_base(n)
+                uc.mem_write(base, blob)
+                self.images.append((base, blob))
         self.uc = uc
         self.stubs = {}
         self.traces = {}

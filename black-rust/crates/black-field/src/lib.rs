@@ -1,0 +1,15 @@
+//! Field logic: map matrix, collision, player and NPC movement (fldmmdl), encounters, warps/events.
+//!
+//! Logic crate (D6): no Bevy dependency.
+
+pub mod btl_setup;
+pub mod encounter;
+pub mod event_work;
+pub mod events;
+pub mod fieldmap;
+pub mod game_data;
+pub mod hooks;
+pub mod mmdl;
+pub mod player;
+pub mod season;
+pub mod zonedata;

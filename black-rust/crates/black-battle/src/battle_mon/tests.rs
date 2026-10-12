@@ -616,3 +616,18 @@ fn tagged_payload_matches_rom() {
     }
     assert_eq!(h.hex(), "037e8b18d36622a0");
 }
+
+/// B6-last: `021d5c44` returns `i32::MAX` for 0/0 (NaN through the soft-float conversion; checked
+/// against the ROM for every hp/max-HP pair in a grid), and saturates for hp > 0 with max HP 0.
+#[test]
+fn hp_percent_fx_edge_cases() {
+    let mut b = BattleMon::default();
+    b.set_u16(0x0E, 0);
+    b.set_u16(0x10, 0);
+    assert_eq!(b.hp_percent_fx(), i32::MAX);
+    b.set_u16(0x10, 5);
+    assert_eq!(b.hp_percent_fx(), i32::MAX);
+    b.set_u16(0x0E, 200);
+    b.set_u16(0x10, 100);
+    assert_eq!(b.hp_percent_fx(), 50 * 4096);
+}

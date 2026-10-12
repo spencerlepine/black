@@ -46,7 +46,7 @@
 - [x] `FUN_overlay_d_93__021d57a8` → `black_battle::battle_mon::BattleMon::types`
 - [x] `FUN_overlay_d_93__021d57fc` → `black_battle::battle_mon::BattleMon::type_pair`
 - [x] `FUN_overlay_d_93__021d5814` → `black_battle::hooks::has_type`
-- [x] `BattleMon_GetPokemon` → `black_battle::battle_mon::BattleMon::get_pokemon`
+- [x] `BattleMon_GetPokemon` → `black_battle::handlers::moves::fun_021d5844`
 - [x] `BattleMon_SetIllusionMon` → `black_battle::battle_mon::BattleMon::set_illusion_mon`
 - [x] `BattleMon_ClearIllusionMon` → `black_battle::battle_mon::BattleMon::clear_illusion_mon`
 - [x] `BattleMon_GetVisibleMon` → `black_battle::battle_mon::BattleMon::visible_mon`

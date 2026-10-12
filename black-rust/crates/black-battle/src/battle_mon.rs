@@ -1115,6 +1115,12 @@ impl BattleMon {
     /// (computed in double precision like the original's soft-float calls).
     pub fn hp_percent_fx(&self) -> i32 {
         let x = (self.hp() as u32).wrapping_mul(100) as i32 as f64 / self.max_hp() as f64;
+        if x.is_nan() {
+            // hp == max_hp == 0: 0.0 / 0.0 is NaN; the ROM's compare takes the "not greater"
+            // path and its soft-float double-to-int conversion returns i32::MAX for NaN (an
+            // `as i32` cast would give 0).
+            return i32::MAX;
+        }
         if x > 0.0 {
             (x * 4096.0 + 0.5) as i32
         } else {

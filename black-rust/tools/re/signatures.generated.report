@@ -1,0 +1,295 @@
+generated lines: {'include': 23, 'rust': 212, 'runtime': 2} (total 237)
+rust /// C: items followed by a fn: 444
+
+== conflicts (5) ==
+include mi_memory.h:MI_CpuFill8 @02082bcc
+    existing: void MI_CpuFill8(void *dst, int v, unsigned int n)
+    include : void MI_CpuFill8(void *dest, unsigned char data, unsigned int size)
+rust crates/black-battle/src/flow.rs:46 @021c82b8
+    kept rust (crates/black-battle/src/calc_target.rs:42): unsigned int FUN_overlay_d_93__021c82b8(unsigned int a)
+    dropped rust: int FUN_overlay_d_93__021c82b8(unsigned int x)
+rust crates/black-battle/src/hooks.rs:22 @021d59b4
+    kept rust (crates/black-battle/src/battle_mon.rs:1048): unsigned int BattleMon_Get(BTL_POKEPARAM *bpp, unsigned int id)
+    dropped rust: unsigned int BattleMon_Get(unsigned int id)
+rust crates/black-battle/src/hooks.rs:24 @021d5814
+    kept rust (crates/black-battle/src/battle_mon.rs:968): int FUN_overlay_d_93__021d5814(BTL_POKEPARAM *bpp, unsigned int ty)
+    dropped rust: int FUN_overlay_d_93__021d5814(unsigned int ty)
+rust crates/black-battle/src/hooks.rs:43 @02019c90
+    kept rust (crates/black-battle/src/battle_mon.rs:143): unsigned int FUN_02019C90(unsigned int species, unsigned int form, unsigned int param)
+    dropped rust: unsigned int FUN_02019C90(unsigned short species, unsigned short form, unsigned int param)
+
+== arity differs from existing pseudo-C (50; review before merging) ==
+02017d30 rust: declared 1, ghidra 4 (crates/black-battle/src/battle_mon.rs:131)
+02017d70 rust: declared 2, ghidra 4 (crates/black-battle/src/battle_mon.rs:133)
+02017e1c rust: declared 2, ghidra 3 (crates/black-battle/src/battle_mon.rs:127)
+02017f00 rust: declared 1, ghidra 0 (crates/black-battle/src/battle_mon.rs:137)
+02017f90 rust: declared 1, ghidra 2 (crates/black-battle/src/battle_mon.rs:139)
+020181f4 rust: declared 3, ghidra 0 (crates/black-battle/src/battle_mon.rs:135)
+0201c020 rust: declared 1, ghidra 4 (crates/black-battle/src/flow.rs:102)
+0201c0bc rust: declared 2, ghidra 4 (crates/black-battle/src/flow.rs:104)
+0201c158 rust: declared 2, ghidra 4 (crates/black-battle/src/battle_mon.rs:141)
+0201c1c8 rust: declared 1, ghidra 4 (crates/black-battle/src/flow.rs:66)
+0201c1d8 rust: declared 1, ghidra 4 (crates/black-battle/src/flow.rs:60)
+0201c314 rust: declared 1, ghidra 4 (crates/black-battle/src/flow.rs:64)
+0201f250 rust: declared 3, ghidra 4 (crates/black-battle/src/field.rs:58)
+0202a3fc rust: declared 1, ghidra 0 (crates/black-battle/src/hooks.rs:50)
+0209c054 runtime: declared 2, ghidra 4 (0209c054)
+021b8588 rust: declared 0, ghidra 1 (crates/black-battle/src/calc_target.rs:26)
+021b8c50 rust: declared 2, ghidra 1 (crates/black-battle/src/calc_target.rs:34)
+021b8c5c rust: declared 2, ghidra 4 (crates/black-battle/src/flow.rs:106)
+021b8d8c rust: declared 2, ghidra 3 (crates/black-battle/src/calc_target.rs:28)
+021b8ddc rust: declared 1, ghidra 0 (crates/black-battle/src/flow.rs:95)
+021b9b94 rust: declared 0, ghidra 1 (crates/black-battle/src/hooks.rs:35)
+021c8010 rust: declared 1, ghidra 2 (crates/black-battle/src/flow.rs:78)
+021c80ac rust: declared 1, ghidra 2 (crates/black-battle/src/flow.rs:91)
+021c815c rust: declared 0, ghidra 1 (crates/black-battle/src/flow.rs:53)
+021c8168 rust: declared 0, ghidra 1 (crates/black-battle/src/flow.rs:93)
+021c8434 rust: declared 2, ghidra 3 (crates/black-battle/src/flow.rs:98)
+021c88b4 rust: declared 2, ghidra 1 (crates/black-battle/src/flow.rs:31)
+021d4d5c rust: declared 1, ghidra 0 (crates/black-battle/src/battle_mon.rs:917)
+021d51cc rust: declared 2, ghidra 1 (crates/black-battle/src/battle_mon.rs:303)
+021d52b4 rust: declared 3, ghidra 4 (crates/black-battle/src/battle_mon.rs:1391)
+021d5440 rust: declared 0, ghidra 1 (crates/black-battle/src/hooks.rs:26)
+021d5444 rust: declared 0, ghidra 1 (crates/black-battle/src/hooks.rs:28)
+021d5608 rust: declared 3, ghidra 4 (crates/black-battle/src/battle_mon.rs:542)
+021d57fc rust: declared 1, ghidra 4 (crates/black-battle/src/battle_mon.rs:962)
+021d5814 rust: declared 2, ghidra 4 (crates/black-battle/src/battle_mon.rs:968)
+021d587c rust: declared 1, ghidra 2 (crates/black-battle/src/battle_mon.rs:993)
+021d58a8 rust: declared 2, ghidra 1 (crates/black-battle/src/battle_mon.rs:1007)
+021d59b4 rust: declared 2, ghidra 1 (crates/black-battle/src/battle_mon.rs:1048)
+021d5b48 rust: declared 1, ghidra 4 (crates/black-battle/src/battle_mon.rs:1097)
+021d5b68 rust: declared 1, ghidra 4 (crates/black-battle/src/battle_mon.rs:1102)
+021d5b7c rust: declared 1, ghidra 4 (crates/black-battle/src/battle_mon.rs:1107)
+021d5c30 rust: declared 1, ghidra 0 (crates/black-battle/src/battle_mon.rs:888)
+021d5d50 rust: declared 2, ghidra 4 (crates/black-battle/src/battle_mon.rs:719)
+021d66a0 rust: declared 1, ghidra 0 (crates/black-battle/src/battle_mon.rs:158)
+021d6b84 rust: declared 2, ghidra 1 (crates/black-battle/src/battle_mon.rs:1532)
+021d6d70 rust: declared 2, ghidra 1 (crates/black-battle/src/battle_mon.rs:1833)
+021d7b2c rust: declared 2, ghidra 0 (crates/black-battle/src/calc.rs:716)
+021ee600 include: declared 1, ghidra 0 (battle_record.h:BattleRecord_Free)
+021efa84 rust: declared 1, ghidra 0 (crates/black-battle/src/field.rs:45)
+021efac8 rust: declared 1, ghidra 0 (crates/black-battle/src/field.rs:49)
+
+== skipped (222) ==
+include mi_memory.h:MI_CpuCopy8: no address for symbol
+runtime 0209b790: address 0209b790 not in index (other overlay set?)
+rust crates/black-battle/src/battle_mon.rs:268 (set_tagged_payload @021d4d64): param type &mut [u8]
+rust crates/black-battle/src/battle_mon.rs:488 (move_info @021d5528): return type (u16, u8, u8)
+rust crates/black-battle/src/battle_mon.rs:664 (stages_reset @021d53c0): param type &mut [u8]
+rust crates/black-battle/src/battle_mon.rs:670 (stages_clear_negative @021d53dc): param type &mut [u8]
+rust crates/black-battle/src/battle_mon.rs:683 (stage_offset @021d5cb4): return type Option<usize>
+rust crates/black-battle/src/battle_mon.rs:839: address 021d5ba4 not in index (other overlay set?)
+rust crates/black-battle/src/battle_mon.rs:939 (types @021d57a8): return type (u8, u8)
+rust crates/black-battle/src/battle_mon.rs:1020 (read_party_stats @021d590c): param type &mut [u16; 7]
+rust crates/black-battle/src/battle_mon.rs:1140 (get_sick_cont @021d6314): return type SickCont
+rust crates/black-battle/src/battle_mon.rs:1168 (set_sick @021d6034): param type SickCont
+rust crates/black-battle/src/battle_mon.rs:1221 (tick_sick @021d6064): param type Option<&mut SickCont>
+rust crates/black-battle/src/battle_mon.rs:1655: address 021d67b0 not in index (other overlay set?)
+rust crates/black-battle/src/battle_mon.rs:1735 (push_history @021d6848): param type &ActionRecord
+rust crates/black-battle/src/battle_mon.rs:1770 (history_record @021d6940): return type Option<ActionRecord>
+rust crates/black-battle/src/battle_mon.rs:1803 (get_1f6 @021d6e50): return type Option<(u8, u16)>
+rust crates/black-battle/src/battle_mon.rs:1846 (hit_substitute @021d6d9c): param type &mut u16
+rust crates/black-battle/src/battle_mon.rs:1930 (gain_exp @021d69b8): param type &mut u32
+rust crates/black-battle/src/battle_mon.rs:2017 (new @021d4d84): param type &mut crate::calc::BattleCalc
+rust crates/black-battle/src/calc.rs:384: no resolvable C symbol/address
+rust crates/black-battle/src/calc.rs:463 (init @021d7840): self of BattleCalc
+rust crates/black-battle/src/calc.rs:469 (set_rng @021d787c): self of BattleCalc
+rust crates/black-battle/src/calc.rs:474 (free @021d7894): self of BattleCalc
+rust crates/black-battle/src/calc.rs:481 (set_unk_00 @021d804c): self of BattleCalc
+rust crates/black-battle/src/calc.rs:487 (rand @021d78ac): self of BattleCalc
+rust crates/black-battle/src/calc.rs:492 (roll_critical @021d7930): self of BattleCalc
+rust crates/black-battle/src/calc.rs:498 (roll_percent @021d7af0): self of BattleCalc
+rust crates/black-battle/src/calc.rs:503 (rand_range @021d7b8c): self of BattleCalc
+rust crates/black-battle/src/calc.rs:510 (roll_hit_count @021d7ba4): self of BattleCalc
+rust crates/black-battle/src/calc.rs:525 (make_default_sick_cont @021d7d18): self of BattleCalc
+rust crates/black-battle/src/calc.rs:536 (make_sick_cont @021d7dc0): self of BattleCalc
+rust crates/black-battle/src/calc.rs:557 (make_move_sick_cont @021d7c70): self of BattleCalc
+rust crates/black-battle/src/calc.rs:667 (resisting_types @021d7a9c): param type &mut [u8; types::COUNT as usize]
+rust crates/black-battle/src/calc.rs:734 (max_hp_div @021d7b60): param type &M
+rust crates/black-battle/src/calc.rs:739 (max_hp_div_min1 @021d7b74): param type &M
+rust crates/black-battle/src/calc.rs:748 (weather_residual_damage @021d7bd4): param type &M
+rust crates/black-battle/src/calc.rs:786 (exp_yield @021d7eb4): param type &M
+rust crates/black-battle/src/calc.rs:795: address 021d7ef0 not in index (other overlay set?)
+rust crates/black-battle/src/calc.rs:818 (fun_021d7f38 @021d7f38): param type &A
+rust crates/black-battle/src/calc.rs:823 (fun_021d7f4c @021d7f4c): param type &A
+rust crates/black-battle/src/calc.rs:828 (fun_021d7f60 @021d7f60): param type &A
+rust crates/black-battle/src/calc.rs:834 (prize_money @021d7ff8): param type &P
+rust crates/black-battle/src/calc.rs:850 (pack_5bit_x6 @021d806c): param type &[u8; 6]
+rust crates/black-battle/src/calc.rs:857 (unpack_5bit_x6 @021d8090): param type &mut [u8; 6]
+rust crates/black-battle/src/calc.rs:866 (fun_021d80a8 @021d80a8): param type &M
+rust crates/black-battle/src/calc_action.rs:30 (tag @021d8454): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:35 (set_none @021d8434): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:40 (set_fight @021d82d0): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:46 (set_fight_pos @021d82fc): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:53 (set_fight_flag @021d8318): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:60 (fight_flag @021d832c): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:69 (fight_waza @021d8340): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:78 (set_item @021d8358): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:83 (set_switch @021d8394): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:88 (set_switch_flagged @021d83c4): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:93 (is_switch_flagged @021d83e0): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:99 (set_tag6 @021d83fc): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:104 (set_tag4 @021d8414): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:109 (set_tag5 @021d8424): self of ActionRecord
+rust crates/black-battle/src/calc_action.rs:114 (set_tag7 @021d8444): self of ActionRecord
+rust crates/black-battle/src/calc_target.rs:32: address 0201beb8 not in index (other overlay set?)
+rust crates/black-battle/src/calc_target.rs:37 (fun_021b8d38 @021b8d38): param type &mut [u8; 8]
+rust crates/black-battle/src/calc_target.rs:40 (fun_021b8778 @021b8778): param type &mut [u8; 8]
+rust crates/black-battle/src/calc_target.rs:50 (fun_021d80bc @021d80bc): param type &mut BattleCalc
+rust crates/black-battle/src/calc_target.rs:115 (fun_021d81f8 @021d81f8): param type &mut BattleCalc
+rust crates/black-battle/src/calc_target.rs:153 (new @021d8230): return type Self
+rust crates/black-battle/src/calc_target.rs:165 (add @021d8244): self of IdSet
+rust crates/black-battle/src/calc_target.rs:180 (count @021d826c): self of IdSet
+rust crates/black-battle/src/calc_target.rs:187 (classify @021d8270): self of IdSet
+rust crates/black-battle/src/calc_target.rs:212 (speed_unstaged @021d85b0): param type &Bpp
+rust crates/black-battle/src/calc_target.rs:218 (fun_021d85c0 @021d85c0): param type &mut BattleCalc
+rust crates/black-battle/src/event_factor.rs:115 (get_mon @021c7cf4): return type Option<&BattleMon>
+rust crates/black-battle/src/event_factor.rs:119 (fun_021e03e8 @021e03e8): param type &EventSystem
+rust crates/black-battle/src/event_factor.rs:163 (init @021d6eac): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:175 (alloc @021d7474): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:186 (release @021d7494): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:198 (add @021d6f0c): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:237 (list_changed @021d6f08): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:273 (remove @021d7040): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:306 (remove_type6 @021d701c): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:318 (enable_all_moves @021d6ee8): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:325 (dispatch_all @021d70e4): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:330 (dispatch_all_checked @021d70f0): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:335 (dispatch_type @021d70fc): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:341 (dispatch @021d7108): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:364 (dispatch_level @021d713c): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:437 (should_skip @021d7240): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:494 (set_skip_check @021d7320): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:503 (find @021d732c): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:511 (find_next @021d7360): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:526 (disable_moves_of @021d7394): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:538 (enable_moves_of @021d73d4): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:548 (disable @021d7404): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:559 (enable @021d7438): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:572 (sub_id @021d70a8): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:576 (poke_id @021d70ac): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:580 (work @021d70b4): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:584 (set_work @021d70dc): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:588 (enable_event_0x73 @021d70bc): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:592 (allow_reentry @021d70c8): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:599 (make_temporary @021d7090): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:603 (is_temporary @021d7098): self of EventSystem
+rust crates/black-battle/src/event_factor.rs:609 (reset_event_vars @021d74c8): param type &mut crate::event_var::EventVarStack
+rust crates/black-battle/src/event_factor.rs:615 (reset_event_vars_if_used @021d74e4): param type &mut crate::event_var::EventVarStack
+rust crates/black-battle/src/event_var.rs:99 (push @021d74f8): self of EventVarStack
+rust crates/black-battle/src/event_var.rs:115 (pop @021d7540): self of EventVarStack
+rust crates/black-battle/src/event_var.rs:138 (slot_for_set @021d77c4): self of EventVarStack
+rust crates/black-battle/src/event_var.rs:155 (find @021d77e8): self of EventVarStack
+rust crates/black-battle/src/event_var.rs:176 (set_value @021d75a8): self of EventVarStack
+rust crates/black-battle/src/event_var.rs:181 (set_const_value @021d75ec): self of EventVarStack
+rust crates/black-battle/src/event_var.rs:186 (set_rewrite_once_value @021d7630): self of EventVarStack
+rust crates/black-battle/src/event_var.rs:192 (set_mul_value @021d7674): self of EventVarStack
+rust crates/black-battle/src/event_var.rs:198 (rewrite_value @021d76bc): self of EventVarStack
+rust crates/black-battle/src/event_var.rs:217 (mul_value @021d7704): self of EventVarStack
+rust crates/black-battle/src/event_var.rs:232 (clamp @021d780c): self of EventVarStack
+rust crates/black-battle/src/event_var.rs:248 (get_value @021d775c): self of EventVarStack
+rust crates/black-battle/src/event_var.rs:265 (get_value_if_exists @021d778c): self of EventVarStack
+rust crates/black-battle/src/field.rs:85 (new @021ef958): return type Self
+rust crates/black-battle/src/field.rs:102 (init @021ef988): self of Field
+rust crates/black-battle/src/field.rs:112 (reset_slot @021ef83c): self of Field
+rust crates/black-battle/src/field.rs:122 (weather @021ef9a8): self of Field
+rust crates/black-battle/src/field.rs:128 (weather_turns @021ef9b0): self of Field
+rust crates/black-battle/src/field.rs:137 (set_weather @021ef9c0): self of Field
+rust crates/black-battle/src/field.rs:143 (clear_weather @021ef9c8): self of Field
+rust crates/black-battle/src/field.rs:150 (tick_weather @021ef9d0): self of Field
+rust crates/black-battle/src/field.rs:164 (is_active @021efce4): self of Field
+rust crates/black-battle/src/field.rs:172 (add_effect @021ef9f4): self of Field
+rust crates/black-battle/src/field.rs:203 (remove_effect @021efa94): self of Field
+rust crates/black-battle/src/field.rs:217 (add_poke @021efad8): self of Field
+rust crates/black-battle/src/field.rs:239 (remove_poke @021efb34): self of Field
+rust crates/black-battle/src/field.rs:277 (foe_knows_move @021efc1c): self of Field
+rust crates/black-battle/src/field.rs:296 (tick_effects @021efc78): self of Field
+rust crates/black-battle/src/field.rs:353 (load_gfx_a @021ef71c): param type &mut H
+rust crates/black-battle/src/field.rs:358 (load_gfx_b @021ef7ac): param type &mut H
+rust crates/black-battle/src/flow.rs:24 (handex_push @021c88a4): return type HandexId
+rust crates/black-battle/src/flow.rs:28 (handex_pop @021c88c8): param type HandexId
+rust crates/black-battle/src/flow.rs:36 (expand_poke_ids @021c7f68): param type &mut [u8]
+rust crates/black-battle/src/flow.rs:44: address 0201beb8 not in index (other overlay set?)
+rust crates/black-battle/src/flow.rs:58 (opponent_ids @021c7d54): param type &mut [u8]
+rust crates/black-battle/src/flow.rs:75 (find_action @021c804c): param type &mut u32
+rust crates/black-battle/src/flow.rs:135 (mon @021c7cf4): self of Battle
+rust crates/black-battle/src/flow.rs:170 (var @021d775c): self of Battle
+rust crates/black-battle/src/flow.rs:174 (rewrite_var @021d76bc): self of Battle
+rust crates/black-battle/src/flow.rs:178 (mul_var @021d7704): self of Battle
+rust crates/black-battle/src/flow.rs:186 (roll_percent_or_forced @021d85c0): self of Battle
+rust crates/black-battle/src/flow.rs:195 (is_event_target @021e85f8): self of Battle
+rust crates/black-battle/src/flow.rs:209 (make_sick_cont @021d7dc0): self of Battle
+rust crates/black-battle/src/flow.rs:222 (max_hp_div @021d7b60): self of Battle
+rust crates/black-battle/src/flow.rs:227 (max_hp_div_min1 @021d7b74): self of Battle
+rust crates/black-battle/src/flow.rs:268 (str_param_setup @021c8838): param type &mut [u8]
+rust crates/black-battle/src/flow.rs:278 (str_param_set_extra @021c888c): param type &mut [u8]
+rust crates/black-battle/src/flow.rs:287 (str_param_add_arg @021c8860): param type &mut [u8]
+rust crates/black-battle/src/handlers/abilities.rs:189 (start_countdown @021d8974): param type &mut EventSystem
+rust crates/black-battle/src/handlers/abilities.rs:420 (is_cherrim @021d8e00): param type &mut Battle<H>
+rust crates/black-battle/src/handlers/abilities.rs:426 (change_form @021d8e7c): param type &mut Battle<H>
+rust crates/black-battle/src/handlers/abilities.rs:681 (immune_message @021d9670): param type &mut EventSystem
+rust crates/black-battle/src/handlers/abilities.rs:702 (h_021d96cc @021d96cc): param type &mut EventSystem
+rust crates/black-battle/src/handlers/abilities.rs:710 (cure_own @021d96fc): param type &mut Battle<H>
+rust crates/black-battle/src/handlers/abilities.rs:725 (cure_own_on_entry @021d96dc): param type &mut Battle<H>
+rust crates/black-battle/src/handlers/abilities.rs:803 (h_021d9558 @021d9558): param type &mut EventSystem
+rust crates/black-battle/src/handlers/abilities.rs:1456 (has_dangerous_move @021da5bc): param type &mut Battle<H>
+rust crates/black-battle/src/handlers/abilities.rs:1620 (absorbs @021da8a8): param type &mut Battle<H>
+rust crates/black-battle/src/handlers/abilities.rs:1629 (absorb_heal @021da8dc): param type &mut Battle<H>
+rust crates/black-battle/src/handlers/abilities.rs:1949 (ally_sets_51 @021e889c): param type &mut Battle<H>
+rust crates/black-battle/src/handlers/abilities.rs:2108 (redirect @021db4e8): param type &mut Battle<H>
+rust crates/black-battle/src/handlers/registry.rs:27 (split_getter_word @021d84f8): return type (u32, u32)
+rust crates/black-battle/src/handlers/registry.rs:42 (getter_021d88d0 @021d88d0): return type (u32, u32)
+rust crates/black-battle/src/handlers/registry.rs:48 (getter_021dc564 @021dc564): return type (u32, u32)
+rust crates/black-battle/src/handlers/registry.rs:63 (register_ability @021d8484): param type &mut EventSystem
+rust crates/black-battle/src/handlers/registry.rs:87 (unregister_ability @021d8510): param type &mut EventSystem
+rust crates/black-battle/src/handlers/registry.rs:95 (disable_ability @021d8538): param type &mut EventSystem
+rust crates/black-battle/src/handlers/registry.rs:101 (enable_ability @021d8548): param type &mut EventSystem
+rust crates/black-battle/src/handlers/registry.rs:114 (swap_abilities @021d8564): param type &mut EventSystem
+rust crates/black-battle/src/hooks.rs:37 (member @021b9c00): return type &Self::Mon
+rust crates/black-battle/src/main_util.rs:19: address 021b9a4c not in index (other overlay set?)
+rust crates/black-battle/src/poke_type.rs:52 (split_pair @021e8d0c): return type (u8, u8)
+rust crates/black-battle/src/sick_cont.rs:40 (turn @021e8940): return type Self
+rust crates/black-battle/src/sick_cont.rs:45 (turn_param @021e896c): return type Self
+rust crates/black-battle/src/sick_cont.rs:50 (poke @021e899c): return type Self
+rust crates/black-battle/src/sick_cont.rs:55 (permanent @021e89c0): return type Self
+rust crates/black-battle/src/sick_cont.rs:60 (permanent_param @021e89d4): return type Self
+rust crates/black-battle/src/sick_cont.rs:65 (permanent_count @021e89f8): return type Self
+rust crates/black-battle/src/sick_cont.rs:70 (poke_turn @021e8a28): return type Self
+rust crates/black-battle/src/sick_cont.rs:75 (badly_poisoned @021e8a58): return type Self
+rust crates/black-battle/src/sick_cont.rs:80 (is_badly_poisoned @021e8a78): self of SickCont
+rust crates/black-battle/src/sick_cont.rs:85 (none @021e8918): return type Self
+rust crates/black-battle/src/sick_cont.rs:90 (is_none @021e8928): self of SickCont
+rust crates/black-battle/src/sick_cont.rs:95 (linked_poke_id @021e8a98): self of SickCont
+rust crates/black-battle/src/sick_cont.rs:104 (set_linked_poke_id @021e8ac8): self of SickCont
+rust crates/black-battle/src/sick_cont.rs:113 (turns @021e8afc): self of SickCont
+rust crates/black-battle/src/sick_cont.rs:122 (param_any @021e8b80): self of SickCont
+rust crates/black-battle/src/sick_cont.rs:131 (set_param_any @021e8b28): self of SickCont
+rust crates/black-battle/src/sick_cont.rs:143 (set_flag @021e8bd0): self of SickCont
+rust crates/black-battle/src/sick_cont.rs:154 (flag @021e8c24): self of SickCont
+rust crates/black-battle/src/sick_cont.rs:163 (add_turns @021e8c50): self of SickCont
+rust crates/black-battle/src/sick_cont.rs:173 (set_turns @021e8c9c): self of SickCont
+rust crates/black-core/src/battle_common.rs:32 (init_unk3 @021d845c): param type &mut BattleEntry
+rust crates/black-core/src/battle_common.rs:34 (init_end @021d8470): param type &mut BattleEntry
+rust crates/black-core/src/battle_record.rs:48: no resolvable C symbol/address
+rust crates/black-core/src/battle_record.rs:53: no resolvable C symbol/address
+rust crates/black-core/src/battle_record.rs:58: no resolvable C symbol/address
+rust crates/black-core/src/battle_record.rs:63: no resolvable C symbol/address
+rust crates/black-core/src/battle_record.rs:116: no resolvable C symbol/address
+rust crates/black-core/src/battle_record.rs:129 (free @021ee600): param type &mut dyn Heap
+rust crates/black-core/src/battle_record.rs:135 (append @021ee608): param type &[u8]
+rust crates/black-core/src/battle_record.rs:151 (data @021ee63c): return type (&[u8], u32)
+rust crates/black-core/src/battle_record.rs:157 (header_code_of @021ee638): param type &[u8]
+rust crates/black-core/src/battle_record.rs:200 (new @021ee644): param type &'a [u8]
+rust crates/black-core/src/battle_record.rs:310 (read_next @021ee6b8): param type &dyn EntryHooks
+rust crates/black-core/src/battle_record.rs:432 (new @021ee8b4): return type Self
+rust crates/black-core/src/battle_record.rs:443 (header_only_flag_record @021ee8d8): return type &[u8]
+rust crates/black-core/src/battle_record.rs:451 (add_client_entries @021ee8f4): param type &[BattleEntry]
+rust crates/black-core/src/battle_record.rs:478 (finish @021ee96c): param type HeaderCode
+rust crates/black-core/src/battle_record.rs:489 (header_only_unk3_record @021ee9a4): return type &[u8]
+rust crates/black-core/src/battle_record.rs:498 (load @021ee9b4): param type &[u8]
+rust crates/black-core/src/battle_record.rs:513 (read_next @021ee9e4): param type &mut u32
+rust crates/black-core/src/heap.rs:13: no resolvable C symbol/address
+rust crates/black-core/src/heap.rs:23: no resolvable C symbol/address
+rust crates/black-core/src/mi_memory.rs:6: no resolvable C symbol/address
+rust crates/black-core/src/mi_memory.rs:14 (cpu_fill8 @02082bcc): param type &mut [u8]
+rust crates/black-core/src/unk_02008574.rs:10 (set_bytes_18_19 @02008574): param type &mut [u8]

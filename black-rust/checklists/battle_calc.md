@@ -32,7 +32,7 @@
 - [x] `FUN_overlay_d_93__021d7b10` → `black_battle::calc::fx_mul`
 - [x] `FUN_overlay_d_93__021d7b2c` → `black_battle::calc::fx_mul_min1`
 - [x] `FUN_overlay_d_93__021d7b3c` → `black_battle::calc::percent_mul`
-- [x] `FUN_overlay_d_93__021d7b60` → `black_battle::calc::max_hp_div`
+- [x] `FUN_overlay_d_93__021d7b60` → `black_battle::flow::Battle::max_hp_div`
 - [x] `FUN_overlay_d_93__021d7b74` → `black_battle::flow::Battle::max_hp_div_min1`
 - [x] `FUN_overlay_d_93__021d7b8c` → `black_battle::calc::BattleCalc::rand_range`
 - [x] `FUN_overlay_d_93__021d7ba4` → `black_battle::calc::BattleCalc::roll_hit_count`
@@ -40,11 +40,11 @@
 - [x] `FUN_overlay_d_93__021d7c38` → `black_battle::calc::weather_power_modifier`
 - [x] `FUN_overlay_d_93__021d7c70` → `black_battle::calc::BattleCalc::make_move_sick_cont`
 - [x] `FUN_overlay_d_93__021d7d18` → `black_battle::calc::BattleCalc::make_default_sick_cont`
-- [ ] `FUN_overlay_d_93__021d7d6c`
+- [x] `FUN_overlay_d_93__021d7d6c` → `black_battle::calc_leftovers2::sick_below_6`
 - [x] `FUN_overlay_d_93__021d7dc0` → `black_battle::calc::BattleCalc::make_sick_cont`
-- [ ] `FUN_overlay_d_93__021d7e10` — ARM overlay call (0x0689C9E4), todo
-- [ ] `FUN_021D7E34`
-- [ ] `thunk_EXT_FUN_0689c9e4`
+- [x] `FUN_overlay_d_93__021d7e10` → `black_battle::calc_leftovers2::first_table_sick`
+- [x] `FUN_021D7E34` → `black_battle::calc_leftovers2::fun_021d7e34`
+- [x] `thunk_EXT_FUN_0689c9e4` → `black_battle::calc_leftovers2::thunk_ext_fun_0689c9e4`
 - [x] `FUN_overlay_d_93__021d7eb4` → `black_battle::calc::exp_yield`
 - [x] `FUN_overlay_d_93__021d7ef0` → `black_battle::calc::is_not_0_or_3`
 - [x] `FUN_overlay_d_93__021d7f00` → `black_battle::calc::fun_021d7f00`
@@ -52,45 +52,45 @@
 - [x] `FUN_overlay_d_93__021d7f38` → `black_battle::calc::fun_021d7f38`
 - [x] `FUN_overlay_d_93__021d7f4c` → `black_battle::calc::fun_021d7f4c`
 - [x] `FUN_overlay_d_93__021d7f60` → `black_battle::calc::fun_021d7f60`
-- [ ] `FUN_overlay_d_93__021d7f88` — undecompiled ARM9 item calls, todo
-- [ ] `FUN_overlay_d_93__021d7fbc` — undecompiled ARM9 item calls, todo
+- [x] `FUN_overlay_d_93__021d7f88` → `black_battle::calc_leftovers2::fun_021d7f88`
+- [x] `FUN_overlay_d_93__021d7fbc` → `black_battle::calc_leftovers2::fun_021d7fbc`
 - [x] `FUN_overlay_d_93__021d7ff8` → `black_battle::calc::prize_money`
 - [~] `FUN_overlay_d_93__021d804c` — unit-tested only (state setter)
-- [ ] `FUN_overlay_d_93__021d8058` — empty function
-- [ ] `FUN_overlay_d_93__021d805c` — tail call FUN_02020FE4, todo
+- [x] `FUN_overlay_d_93__021d8058` → `black_battle::calc_leftovers2::fun_021d8058`
+- [x] `FUN_overlay_d_93__021d805c` → `black_battle::calc_leftovers2::fun_021d805c`
 - [x] `FUN_overlay_d_93__021d806c` → `black_battle::calc::pack_5bit_x6`
 - [x] `FUN_overlay_d_93__021d8090` → `black_battle::calc::unpack_5bit_x6`
 - [x] `FUN_overlay_d_93__021d80a8` → `black_battle::calc::fun_021d80a8`
-- [ ] `FUN_overlay_d_93__021d80bc`
-- [ ] `FUN_overlay_d_93__021d81f8`
-- [ ] `FUN_overlay_d_93__021d8230`
-- [ ] `FUN_overlay_d_93__021d8244`
-- [ ] `FUN_overlay_d_93__021d826c`
-- [ ] `FUN_overlay_d_93__021d8270`
-- [ ] `FUN_overlay_d_93__021d82d0`
-- [ ] `FUN_overlay_d_93__021d82fc`
-- [ ] `FUN_overlay_d_93__021d832c`
-- [ ] `FUN_overlay_d_93__021d8340`
-- [ ] `FUN_overlay_d_93__021d8358`
-- [ ] `FUN_overlay_d_93__021d8394`
-- [ ] `FUN_overlay_d_93__021d83c4`
-- [ ] `FUN_overlay_d_93__021d83e0`
-- [ ] `FUN_overlay_d_93__021d83fc`
-- [ ] `FUN_overlay_d_93__021d8414`
-- [ ] `FUN_overlay_d_93__021d8434`
-- [ ] `FUN_overlay_d_93__021d8444`
-- [ ] `FUN_overlay_d_93__021d8454`
+- [x] `FUN_overlay_d_93__021d80bc` → `black_battle::calc_target::fun_021d80bc`
+- [x] `FUN_overlay_d_93__021d81f8` → `black_battle::calc_target::fun_021d81f8`
+- [x] `FUN_overlay_d_93__021d8230` → `black_battle::calc_target::IdSet::new`
+- [x] `FUN_overlay_d_93__021d8244` → `black_battle::calc_target::IdSet::add`
+- [x] `FUN_overlay_d_93__021d826c` → `black_battle::calc_target::IdSet::count`
+- [x] `FUN_overlay_d_93__021d8270` → `black_battle::calc_target::IdSet::classify`
+- [x] `FUN_overlay_d_93__021d82d0` → `black_battle::calc_action::ActionRecord::set_fight`
+- [x] `FUN_overlay_d_93__021d82fc` → `black_battle::calc_action::ActionRecord::set_fight_pos`
+- [x] `FUN_overlay_d_93__021d832c` → `black_battle::calc_action::ActionRecord::fight_flag`
+- [x] `FUN_overlay_d_93__021d8340` → `black_battle::calc_action::ActionRecord::fight_waza`
+- [x] `FUN_overlay_d_93__021d8358` → `black_battle::calc_action::ActionRecord::set_item`
+- [x] `FUN_overlay_d_93__021d8394` → `black_battle::calc_action::ActionRecord::set_switch`
+- [x] `FUN_overlay_d_93__021d83c4` → `black_battle::calc_action::ActionRecord::set_switch_flagged`
+- [x] `FUN_overlay_d_93__021d83e0` → `black_battle::calc_action::ActionRecord::is_switch_flagged`
+- [x] `FUN_overlay_d_93__021d83fc` → `black_battle::calc_action::ActionRecord::set_tag6`
+- [x] `FUN_overlay_d_93__021d8414` → `black_battle::calc_action::ActionRecord::set_tag4`
+- [x] `FUN_overlay_d_93__021d8434` → `black_battle::calc_action::ActionRecord::set_none`
+- [x] `FUN_overlay_d_93__021d8444` → `black_battle::calc_action::ActionRecord::set_tag7`
+- [x] `FUN_overlay_d_93__021d8454` → `black_battle::calc_action::ActionRecord::tag`
 - [x] `FUN_overlay_d_93__021d845c` → `black_core::battle_common::BattleEntry::init_unk3`
 - [x] `FUN_overlay_d_93__021d8470` → `black_core::battle_common::BattleEntry::init_end`
-- [ ] `FUN_overlay_d_93__021d8484`
-- [ ] `FUN_overlay_d_93__021d84f0`
-- [ ] `FUN_overlay_d_93__021d84f8`
-- [ ] `FUN_overlay_d_93__021d8510`
-- [ ] `FUN_overlay_d_93__021d8538`
-- [ ] `FUN_overlay_d_93__021d8548`
-- [ ] `FUN_overlay_d_93__021d8564`
-- [ ] `FUN_overlay_d_93__021d85b0`
-- [ ] `FUN_overlay_d_93__021d85c0`
+- [x] `FUN_overlay_d_93__021d8484` → `black_battle::handlers::registry::register_ability`
+- [x] `FUN_overlay_d_93__021d84f0` → `black_battle::handlers::registry::pack_u16_pair`
+- [x] `FUN_overlay_d_93__021d84f8` → `black_battle::handlers::registry::split_getter_word`
+- [x] `FUN_overlay_d_93__021d8510` → `black_battle::handlers::registry::unregister_ability`
+- [x] `FUN_overlay_d_93__021d8538` → `black_battle::handlers::registry::disable_ability`
+- [x] `FUN_overlay_d_93__021d8548` → `black_battle::handlers::registry::enable_ability`
+- [x] `FUN_overlay_d_93__021d8564` → `black_battle::handlers::registry::swap_abilities`
+- [x] `FUN_overlay_d_93__021d85b0` → `black_battle::calc_target::speed_unstaged`
+- [x] `FUN_overlay_d_93__021d85c0` → `black_battle::calc_target::fun_021d85c0`
 - [ ] `FUN_overlay_d_93__021d8964`
 - [x] `FUN_overlay_d_93__021d8974` → `black_battle::handlers::abilities::start_countdown`
 - [ ] `FUN_overlay_d_93__021d89b8`

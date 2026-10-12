@@ -61,3 +61,39 @@ fn missing_file_is_an_error() {
         .unwrap();
     assert!(!out.status.success());
 }
+
+#[test]
+fn extract_assets_small_categories_are_idempotent() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../black-rom");
+    if !root.join("files/a/0/2/3").exists() {
+        eprintln!("skipping: ROM files not found under {}", root.display());
+        return;
+    }
+    let dir = scratch("assets");
+    let run = |out: &PathBuf| {
+        let o = black()
+            .arg("extract-assets")
+            .arg(&root)
+            .arg(out)
+            .args(["--only", "fonts,text,maps", "--jobs", "2"])
+            .output()
+            .unwrap();
+        assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
+        std::fs::read_to_string(out.join("manifest.json")).unwrap()
+    };
+    let first = run(&dir);
+    assert!(first.contains("\"path\": \"fonts/font0.png\""), "{first}");
+    assert!(first.contains("\"path\": \"text/en/sys_089.json\""));
+    assert!(first.contains("\"path\": \"maps/zone_389.ron\""));
+    assert!(dir.join("fonts/font0.metrics.ron").exists());
+    assert_eq!(first, run(&dir), "second run must reproduce the manifest");
+    let bad = black()
+        .arg("extract-assets")
+        .arg(&root)
+        .arg(&dir)
+        .args(["--only", "bogus"])
+        .status()
+        .unwrap();
+    assert!(!bad.success());
+    std::fs::remove_dir_all(dir).ok();
+}

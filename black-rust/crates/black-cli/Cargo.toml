@@ -11,4 +11,8 @@ path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
-nds-rom = { version = "0.1.0", path = "../nds-rom" }
+black-data = { version = "0.1.0", path = "../black-data", features = ["rom"] }
+nds-rom ={ version = "0.1.0", path = "../nds-rom" }
+
+[dev-dependencies]
+ron = "0.8"

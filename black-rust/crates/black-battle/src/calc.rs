@@ -11,6 +11,7 @@
 //! signed; multiplications wrap.
 
 use black_core::heap::{Heap, HeapId};
+pub use black_core::rng::MathRandContext32;
 
 use crate::hooks::{bpp, Arm9Misc, BattleMon, BattleParty, PersonalData};
 use crate::poke_type::{split_pair, types};
@@ -398,47 +399,6 @@ fn s32_div(n: i32, d: i32) -> i32 {
 // ---------------------------------------------------------------------------------------------
 // RNG and module state
 // ---------------------------------------------------------------------------------------------
-
-/// SDK `MATHRandContext32`: 64-bit LCG `x = x * mul + add`.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct MathRandContext32 {
-    pub x: u64,
-    pub mul: u64,
-    pub add: u64,
-}
-
-impl MathRandContext32 {
-    pub const SIZE: usize = 24;
-
-    pub fn from_bytes(b: &[u8; 24]) -> Self {
-        let q = |i: usize| u64::from_le_bytes(b[i..i + 8].try_into().unwrap());
-        MathRandContext32 {
-            x: q(0),
-            mul: q(8),
-            add: q(16),
-        }
-    }
-
-    pub fn to_bytes(&self) -> [u8; 24] {
-        let mut out = [0u8; 24];
-        out[0..8].copy_from_slice(&self.x.to_le_bytes());
-        out[8..16].copy_from_slice(&self.mul.to_le_bytes());
-        out[16..24].copy_from_slice(&self.add.to_le_bytes());
-        out
-    }
-
-    /// Advances the state; returns the high word scaled to `[0, max)`, or the raw high word
-    /// when `max == 0`.
-    pub fn next(&mut self, max: u32) -> u32 {
-        self.x = self.mul.wrapping_mul(self.x).wrapping_add(self.add);
-        let hi = (self.x >> 32) as u32;
-        if max == 0 {
-            hi
-        } else {
-            ((hi as u64 * max as u64) >> 32) as u32
-        }
-    }
-}
 
 /// C: the battle_calc globals at `0x021F6360`.
 #[derive(Debug, Default)]

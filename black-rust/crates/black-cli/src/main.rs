@@ -1,11 +1,20 @@
 //! `black`: build, extract and verify the Pokemon Black ROM.
 
+mod cmd_extract_assets;
+mod cmd_extract_data;
+mod cmd_extract_sprites;
 use clap::{Args, Parser, Subcommand};
 use nds_rom::build::{self, BuildInputs};
 use nds_rom::error::{read_file, write_file};
-use nds_rom::{banner, blz, compare, module, overlay, pack, sha1_hex, Rom};
+use nds_rom::msg::Bank;
+use nds_rom::{banner, blz, compare, lz, module, narc::Narc, overlay, pack, sha1_hex, Rom};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
+
+mod cmd_font2;
+mod cmd_g3d;
+mod cmd_map;
+mod cmd_render;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -20,6 +29,17 @@ struct Cli {
 enum Cmd {
     /// Print the header, file system and overlay summary of a ROM
     Info { rom: PathBuf },
+    /// Convert ROM data tables to <out>/data/*.ron
+    ExtractData {
+        /// The black-rom directory (contains files/ and build/black.us/)
+        #[arg(long, default_value = "black-rom")]
+        rom_root: PathBuf,
+        out: PathBuf,
+    },
+    /// Run every converter: the full assets/ tree plus manifest.json (A11)
+    ExtractAssets(cmd_extract_assets::Args),
+    /// Convert ROM sprites to <out>/sprites/<category>/ PNG atlases + RON
+    ExtractSprites(cmd_extract_sprites::Args),
     /// Extract header, binaries, overlays, banner, FNT and data files from a ROM
     Extract { rom: PathBuf, outdir: PathBuf },
     /// Assemble a ROM from built artifacts (make_rom.py)
@@ -66,6 +86,110 @@ enum Cmd {
         #[command(subcommand)]
         op: CompareCmd,
     },
+    /// NARC archive tools
+    Narc {
+        #[command(subcommand)]
+        op: NarcCmd,
+    },
+    /// Dump one zone: header, matrix, events
+    Map(cmd_map::MapArgs),
+    /// Message bank (text) tools
+    Msg {
+        #[command(subcommand)]
+        op: MsgCmd,
+    },
+    /// Render graphics members of a NARC to PNG (manual inspection; write under /tmp/blk)
+    Gfx(Box<GfxArgs>),
+    /// Inspect a sound archive (wb_sound_data.sdat)
+    Sdat {
+        #[command(subcommand)]
+        op: SdatCmd,
+    },
+    /// Render the NFTR text fonts of a NARC (a/0/2/3) to PNG atlases in a directory
+    Font2 { narc: PathBuf, out_dir: PathBuf },
+    /// Convert BMD0/BTX0 (or a map container / NARC of them) to glTF + PNG files
+    G3d(cmd_g3d::G3dArgs),
+    /// Render gfl_font.dat to a PNG glyph atlas (32 glyphs per row) and print widths
+    Font {
+        input: PathBuf,
+        /// Output PNG path
+        out: PathBuf,
+    },
+}
+
+#[derive(Args)]
+struct GfxArgs {
+    narc: PathBuf,
+    /// Output PNG path
+    out: PathBuf,
+    /// Palette member (NCLR)
+    #[arg(long)]
+    pal: usize,
+    /// Character member (NCGR)
+    #[arg(long)]
+    tiles: usize,
+    /// Tilemap member (NSCR): render the screen instead of the raw tile sheet
+    #[arg(long)]
+    screen: Option<usize>,
+    /// Cell bank member (NCER); needs --cell
+    #[arg(long, requires = "cell")]
+    cells: Option<usize>,
+    /// Cell index inside the bank
+    #[arg(long)]
+    cell: Option<usize>,
+    /// Palette row (16 colours) for the raw tile sheet
+    #[arg(long, default_value_t = 0)]
+    row: usize,
+}
+
+fn gfx_member(narc: &Narc, i: usize) -> Result<Vec<u8>> {
+    let f = narc.get(i).ok_or("member index out of range")?;
+    Ok(lz::decompress_any(f).unwrap_or_else(|| f.to_vec()))
+}
+
+fn gfx(a: &GfxArgs) -> Result<()> {
+    use nds_rom::{ncer::Ncer, ncgr::Ncgr, nclr::Nclr, nscr::Nscr, render};
+    let narc = Narc::parse(&read_file(&a.narc)?)?;
+    let pal = Nclr::parse(&gfx_member(&narc, a.pal)?)?;
+    let tiles = Ncgr::parse(&gfx_member(&narc, a.tiles)?)?;
+    let img = if let Some(s) = a.screen {
+        render::render_screen(&tiles, &pal, &Nscr::parse(&gfx_member(&narc, s)?)?)
+    } else if let (Some(c), Some(n)) = (a.cells, a.cell) {
+        let bank = Ncer::parse(&gfx_member(&narc, c)?)?;
+        render::render_cell(&bank, n, &tiles, &pal)
+            .ok_or("cell index out of range")?
+            .0
+    } else {
+        render::render_tiles(&tiles, &pal, a.row)
+    };
+    write_file(&a.out, &img.to_png()?)?;
+    println!("{}x{} -> {}", img.width, img.height, a.out.display());
+    Ok(())
+}
+
+#[derive(Subcommand)]
+enum MsgCmd {
+    /// Print the strings of a message NARC (a/0/0/2, a/0/0/3) or of a single bank file
+    Dump {
+        file: PathBuf,
+        /// Only this bank of the NARC
+        #[arg(long)]
+        bank: Option<usize>,
+        /// JSON instead of `bank:entry<TAB>text` lines
+        #[arg(long)]
+        json: bool,
+        /// Only entries whose text contains this string
+        #[arg(long)]
+        grep: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+enum NarcCmd {
+    /// List the members of a NARC (index, size, LZ type)
+    List { file: PathBuf },
+    /// Write every member to <outdir>/<index>.bin (or its stored path)
+    Extract { file: PathBuf, outdir: PathBuf },
 }
 
 #[derive(Args)]
@@ -137,6 +261,129 @@ enum BlzCmd {
     },
     /// Decompress a file (blz.py)
     Decompress { input: PathBuf, output: PathBuf },
+}
+
+#[derive(Subcommand)]
+enum SdatCmd {
+    /// List every named entry (id, name, info) of an SDAT, per type
+    List { sdat: PathBuf },
+    /// Render a sequence to a stereo WAV (loop points in a `smpl` chunk)
+    Render(cmd_render::RenderArgs),
+    /// Parse every file in an SDAT and print a summary; optionally write one sound as WAV
+    Dump {
+        sdat: PathBuf,
+        /// Sound to write as WAV: `<swar>:<swav>` for a wave, or `strm:<id>`; then the output path
+        #[arg(long, num_args = 2, value_names = ["ID", "OUT"])]
+        wav: Option<Vec<String>>,
+    },
+}
+
+fn sdat_cmd(op: SdatCmd) -> Result<()> {
+    use nds_rom::sdat::{sbnk::Sbnk, ssar::Ssar, sseq::Sseq, strm::Strm, swar::Swar, Kind, Sdat};
+    match op {
+        SdatCmd::Render(a) => cmd_render::run(&a)?,
+        SdatCmd::List { sdat } => {
+            let bytes = read_file(&sdat)?;
+            let s = Sdat::parse(&bytes)?;
+            for k in Kind::ALL {
+                println!("== {} ({} entries)", k.name(), s.count(k));
+                for (id, e) in s.entries(k).iter().enumerate() {
+                    let Some(e) = e else { continue };
+                    println!(
+                        "{id:5} {:<40} file {:5} {:?}",
+                        e.name.as_deref().unwrap_or("-"),
+                        e.info.file_id,
+                        e.info
+                    );
+                }
+            }
+        }
+        SdatCmd::Dump { sdat, wav } => {
+            let bytes = read_file(&sdat)?;
+            let s = Sdat::parse(&bytes)?;
+            let (mut ev, mut seqs, mut insts, mut waves, mut ssar) = (0, 0, 0, 0, 0);
+            for (id, _) in s
+                .entries(Kind::Seq)
+                .iter()
+                .enumerate()
+                .filter(|e| e.1.is_some())
+            {
+                let q = Sseq::parse(s.entry_file(Kind::Seq, id)?)?;
+                ev += q.event_count();
+                seqs += 1;
+            }
+            for (id, _) in s
+                .entries(Kind::SeqArc)
+                .iter()
+                .enumerate()
+                .filter(|e| e.1.is_some())
+            {
+                ssar += Ssar::parse(s.entry_file(Kind::SeqArc, id)?)?
+                    .sequences
+                    .len();
+            }
+            for (id, _) in s
+                .entries(Kind::Bank)
+                .iter()
+                .enumerate()
+                .filter(|e| e.1.is_some())
+            {
+                insts += Sbnk::parse(s.entry_file(Kind::Bank, id)?)?
+                    .instruments
+                    .len();
+            }
+            for (id, _) in s
+                .entries(Kind::WaveArc)
+                .iter()
+                .enumerate()
+                .filter(|e| e.1.is_some())
+            {
+                for w in &Swar::parse(s.entry_file(Kind::WaveArc, id)?)?.waves {
+                    w.decode()?;
+                    waves += 1;
+                }
+            }
+            let mut strm_frames = 0;
+            for (id, _) in s
+                .entries(Kind::Strm)
+                .iter()
+                .enumerate()
+                .filter(|e| e.1.is_some())
+            {
+                strm_frames += Strm::parse(s.entry_file(Kind::Strm, id)?)?
+                    .decode()?
+                    .frames();
+            }
+            println!(
+                "SSEQ {seqs} ({ev} events), SSAR sequences {ssar}, instruments {insts}, SWAV {waves}, STRM frames {strm_frames}"
+            );
+            if let Some(w) = wav {
+                let (id, out) = (&w[0], &w[1]);
+                let pcm = match id.split_once(':') {
+                    Some(("strm", n)) => {
+                        let n: usize = n.parse()?;
+                        Strm::parse(s.entry_file(Kind::Strm, n)?)?.decode()?
+                    }
+                    Some((a, b)) => {
+                        let (a, b): (usize, usize) = (a.parse()?, b.parse()?);
+                        Swar::parse(s.entry_file(Kind::WaveArc, a)?)?
+                            .waves
+                            .get(b)
+                            .ok_or("no such wave")?
+                            .decode()?
+                    }
+                    None => return Err("--wav id must be <swar>:<swav> or strm:<id>".into()),
+                };
+                write_file(out, &pcm.to_wav())?;
+                println!(
+                    "wrote {out} ({} frames, {} Hz)",
+                    pcm.frames(),
+                    pcm.sample_rate
+                );
+            }
+        }
+    }
+    Ok(())
 }
 
 #[derive(Subcommand)]
@@ -374,6 +621,9 @@ fn verify(rom: Option<PathBuf>, list: &Path, root: &Path) -> Result<bool> {
 fn run(cli: Cli) -> Result<bool> {
     match cli.command {
         Cmd::Info { rom } => info(&rom)?,
+        Cmd::ExtractAssets(a) => return cmd_extract_assets::run(&a),
+        Cmd::ExtractSprites(a) => cmd_extract_sprites::run(&a)?,
+        Cmd::ExtractData { rom_root, out } => cmd_extract_data::run(&rom_root, &out)?,
         Cmd::Extract { rom, outdir } => {
             let rom = Rom::open(rom)?;
             let r = nds_rom::rom::extract(&rom, &outdir)?;
@@ -411,6 +661,71 @@ fn run(cli: Cli) -> Result<bool> {
                 println!("{} bytes", data.len());
             }
         },
+        Cmd::Narc { op } => match op {
+            NarcCmd::List { file } => {
+                let narc = Narc::parse(&read_file(file)?)?;
+                let names = narc.names();
+                for (i, f) in narc.files().enumerate() {
+                    let lz = match lz::kind(f).filter(|_| lz::decompress_any(f).is_some()) {
+                        Some(lz::LzKind::Lz10) => " LZ10",
+                        Some(lz::LzKind::Lz11) => " LZ11",
+                        None => "",
+                    };
+                    let name = names.as_ref().map_or("", |n| n[i].as_str());
+                    println!("{i:5} {:8}{lz} {name}", f.len());
+                }
+                println!("{} files", narc.len());
+            }
+            NarcCmd::Extract { file, outdir } => {
+                let narc = Narc::parse(&read_file(file)?)?;
+                let names = narc.names();
+                for (i, f) in narc.files().enumerate() {
+                    let rel = match names.as_ref().map(|n| n[i].as_str()) {
+                        Some(n) if !n.is_empty() && !n.split('/').any(|p| p == "..") => {
+                            n.to_string()
+                        }
+                        _ => format!("{i}.bin"),
+                    };
+                    let path = outdir.join(rel);
+                    if let Some(dir) = path.parent() {
+                        nds_rom::error::create_dir(dir)?;
+                    }
+                    write_file(&path, f)?;
+                }
+                println!("extracted {} files to {}", narc.len(), outdir.display());
+            }
+        },
+        Cmd::Map(a) => cmd_map::run(a)?,
+        Cmd::Msg { op } => match op {
+            MsgCmd::Dump {
+                file,
+                bank,
+                json,
+                grep,
+            } => msg_dump(&file, bank, json, grep.as_deref())?,
+        },
+        Cmd::Gfx(args) => gfx(&args)?,
+        Cmd::Sdat { op } => sdat_cmd(op)?,
+        Cmd::Font2 { narc, out_dir } => cmd_font2::run(&narc, &out_dir)?,
+        Cmd::G3d(a) => cmd_g3d::run(a)?,
+        Cmd::Font { input, out } => {
+            let font = nds_rom::font::Font::parse(&read_file(&input)?)?;
+            let img = font.atlas(32);
+            write_file(&out, &img.to_png()?)?;
+            let widths: Vec<_> = (0..font.len())
+                .map(|g| font.glyph_width(g).unwrap_or(0).to_string())
+                .collect();
+            println!(
+                "{} glyphs {}x{}, atlas {}x{} -> {}\nwidths: {}",
+                font.len(),
+                font.width,
+                font.height,
+                img.width,
+                img.height,
+                out.display(),
+                widths.join(" ")
+            );
+        }
         Cmd::Table { table, lsf, csv } => {
             let overlays = overlay::parse_table(&read_file(table)?)?;
             if lsf {
@@ -447,6 +762,56 @@ fn run(cli: Cli) -> Result<bool> {
         Cmd::Compare { op } => return compare_cmd(op),
     }
     Ok(true)
+}
+
+fn msg_dump(file: &Path, bank: Option<usize>, json: bool, grep: Option<&str>) -> Result<()> {
+    let bytes = read_file(file)?;
+    let banks: Vec<(usize, Bank)> = if bytes.starts_with(b"NARC") {
+        let narc = Narc::parse(&bytes)?;
+        let range = match bank {
+            Some(b) if b >= narc.len() => return Err(format!("no bank {b}").into()),
+            Some(b) => b..b + 1,
+            None => 0..narc.len(),
+        };
+        let mut v = Vec::new();
+        for i in range {
+            v.push((i, Bank::parse(narc.file(i))?));
+        }
+        v
+    } else {
+        vec![(bank.unwrap_or(0), Bank::parse(&bytes)?)]
+    };
+    let keep = |text: &str| grep.is_none_or(|g| text.contains(g));
+    if json {
+        let mut out = String::from("{");
+        for (n, (i, b)) in banks.iter().enumerate() {
+            let mut b = b.clone();
+            if grep.is_some() {
+                b.sections = vec![b
+                    .entries()
+                    .iter()
+                    .filter(|e| keep(&e.render()))
+                    .cloned()
+                    .collect()];
+            }
+            out.push_str(&format!(
+                "{}\n\"{i}\": {}",
+                if n > 0 { "," } else { "" },
+                b.to_json().trim_end()
+            ));
+        }
+        println!("{out}\n}}");
+    } else {
+        for (i, b) in &banks {
+            for (k, e) in b.entries().iter().enumerate() {
+                let text = e.render();
+                if keep(&text) {
+                    println!("{i}:{k}\t{}", text.replace('\n', "\\n"));
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 fn compare_cmd(op: CompareCmd) -> Result<bool> {

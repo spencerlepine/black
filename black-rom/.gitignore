@@ -1,0 +1,84 @@
+mwccarm.zip
+libsyscall.zip
+TwlSDK-5_3-1-20090824.zip
+
+# Base ROM (provide your own)
+baserom.nds
+*.nds
+
+# Extracted ROM components
+extracted/
+overlay_*.bin
+overlay_*.asm
+overlay_dumps/
+
+# Build outputs
+build/
+.cache/
+*.o
+*.d
+*.elf
+*.sbin
+*.lcf
+*.map
+*.lst
+*.a
+*.bin
+!*/rom_header_template.sbin
+!files/**/*.bin
+!*/fnt.bin
+!*/twl_tail.bin
+
+# Reverse-engineering scratch
+asm_dumps/
+ghidra_projects/
+IRBO.yml
+tools/IRBO.yml
+asm/unk_02006EA4.s.backup
+
+# Tools 
+tools/*.exe
+tools/*.o
+tools/local
+tools/ndstool/
+!tools/ndstool/README.md
+tools/ndsdisasm/
+ndstool
+/tools/mwccarm
+tools/mwasmarm_patcher/mwasmarm_patcher
+tools/README.md
+!tools/scripts/
+!tools/PLACE_MWCCARM_HERE.md
+!tools/PLACE_NDSTOOL_HERE.md
+
+# Proprietary SDK (cannot distribute)
+lib/NitroSDK/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-*
+
+# OS / emulator junk
+.DS_Store
+Thumbs.db
+*.log
+melonDS_log.txt
+
+# Personal notes
+notes/
+
+# m2ctx output
+ctx.c
+
+# objdiff
+/tools/objdiff

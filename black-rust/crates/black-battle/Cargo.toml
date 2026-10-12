@@ -7,3 +7,6 @@ description = "Safe Rust port of the Pokemon Black battle overlay (overlay 93) l
 
 [dependencies]
 black-core = { version = "0.1.0", path = "../black-core" }
+
+[dev-dependencies]
+black-fndiff = { version = "0.1.0", path = "../black-fndiff" }

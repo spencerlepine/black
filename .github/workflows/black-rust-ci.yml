@@ -1,0 +1,41 @@
+name: black-rust CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "black-rust/**"
+      - ".github/workflows/black-rust-ci.yml"
+
+defaults:
+  run:
+    working-directory: black-rust
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      # Bevy system dependencies on Linux
+      - name: Install system libraries
+        working-directory: .
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+
+      # Caches ~/.cargo registry and target/ keyed on Cargo.lock
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: black-rust
+
+      - name: Build
+        run: cargo build --workspace --locked
+
+      - name: Lint
+        run: cargo clippy --workspace --locked --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace --locked

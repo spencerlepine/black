@@ -1,0 +1,10 @@
+# Local browser dev only (D5: never deploy publicly).
+# Run from crates/black-game:  trunk serve   (http://127.0.0.1:8080)
+[build]
+target = "index.html"
+dist = "dist"
+
+[serve]
+address = "127.0.0.1"
+port = 8080
+open = false

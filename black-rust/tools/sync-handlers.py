@@ -9,8 +9,8 @@ for mod in sys.argv[1:]:
     p = os.path.join(os.path.dirname(__file__), "../crates/black-battle/src/handlers", mod + ".rs")
     s = open(p).read()
     addrs = sorted(set(int(a, 16) for a in re.findall(r"pub fn h_([0-9a-f]{8})<", s)))
-    body = ",\n".join("    " + f"0x{a:08X}" for a in addrs)
-    ported = f"pub const PORTED: &[u32] = &[\n{body},\n];"
+    body = "".join(f"    0x{a:08X},\n" for a in addrs)
+    ported = f"pub const PORTED: &[u32] = &[\n{body}];"
     s = re.sub(r"pub const PORTED: &\[u32\] = &\[.*?\];", ported, s, flags=re.S)
     arms = "\n".join(f"        0x{a:08X} => h_{a:08x}::<H>," for a in addrs)
     i = s.index("pub fn handler<")

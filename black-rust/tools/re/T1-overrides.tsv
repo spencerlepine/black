@@ -1,0 +1,52 @@
+# T1 hand labels (the only LLM step). file<TAB>subsystem<TAB>sources<TAB>conf<TAB>scope<TAB>phase<TAB>note. Empty cell = keep the script value.
+overlay_000_021542C0.s	networking / C-Gear / minigames (D9)		med	out	X1	base 0x021542C0/0x02154CA0 sibling of ov1 (event_gtsnego.c), ov2 (event_wifibattlematch.c), ov6 (event_wificlub.c): Wi-Fi event-script overlays
+overlay_003_021542C0.s	networking / C-Gear / minigames (D9)		med	out	X1	base 0x021542C0/0x02154CA0 sibling of ov1 (event_gtsnego.c), ov2 (event_wifibattlematch.c), ov6 (event_wificlub.c): Wi-Fi event-script overlays
+overlay_004_021542C0.s	networking / C-Gear / minigames (D9)		med	out	X1	base 0x021542C0/0x02154CA0 sibling of ov1 (event_gtsnego.c), ov2 (event_wifibattlematch.c), ov6 (event_wificlub.c): Wi-Fi event-script overlays
+overlay_007_021542C0.s	networking / C-Gear / minigames (D9)		med	out	X1	base 0x021542C0/0x02154CA0 sibling of ov1 (event_gtsnego.c), ov2 (event_wifibattlematch.c), ov6 (event_wificlub.c): Wi-Fi event-script overlays
+overlay_008_02154CA0.s	networking / C-Gear / minigames (D9)		med	out	X1	base 0x021542C0/0x02154CA0 sibling of ov1 (event_gtsnego.c), ov2 (event_wifibattlematch.c), ov6 (event_wificlub.c): Wi-Fi event-script overlays
+overlay_013_021AEB20.s	networking / C-Gear / minigames (D9)		med	out	X1	loaded only in Wi-Fi mode with 9/14/114 (Z12); calls are NitroSDK WM/wireless; ov15 follows ov14 net_devwireless.c
+overlay_015_021797C0.s	networking / C-Gear / minigames (D9)		med	out	X1	loaded only in Wi-Fi mode with 9/14/114 (Z12); calls are NitroSDK WM/wireless; ov15 follows ov14 net_devwireless.c
+overlay_017_021B6100.s	networking / C-Gear / minigames (D9)		med	out	X1	msg 2/232 '<msg text>' + 2/82 comm error; called by ov68
+overlay_024_021EE740.s	field child overlay (cutscene/gimmick, unnamed)		low	in	F10	base 0x021EE740 (after ov21); own proc table; calls sound API, MCSS, gflib graphics; not in the ov21 gimmick table
+overlay_025_021EE740.s	field child overlay (cutscene/gimmick, unnamed)		low	in	F10	base 0x021EE740 (after ov21); own proc table; calls sound API, MCSS, gflib graphics; not in the ov21 gimmick table
+overlay_026_021EE740.s	field child overlay (cutscene/gimmick, unnamed)		low	in	F10	base 0x021EE740 (after ov21); own proc table; calls sound API, MCSS, gflib graphics; not in the ov21 gimmick table
+overlay_027_021EE740.s	field child overlay (cutscene/gimmick, unnamed)		low	in	F10	base 0x021EE740 (after ov21); own proc table; calls sound API, MCSS, gflib graphics; not in the ov21 gimmick table
+overlay_028_021EE740.s	field child overlay (cutscene/gimmick, unnamed)		low	in	F10	base 0x021EE740 (after ov21); own proc table; calls sound API, MCSS, gflib graphics; not in the ov21 gimmick table
+overlay_055_021F39C0.s	field gimmick / event overlay		low	in	F10	own proc tables, ARC 186, story msg 3/159; base 0x021F39C0
+overlay_068_021B95A0.s	unidentified UI list screen (calls WFC error dialog ov17)		low	?	U	ARC 27, msg 2/29 'no data' x4, story 3/158; calls ov17 x3; scope unclear (possibly Battle Video / Wi-Fi record list)
+overlay_069_021B95A0.s	ranking / trainer list UI (bank 57 Rank, Trainer No., Location)		low	?	U	ARC 199, msg 2/57 '<msg text>'; role unclear, possibly Wi-Fi ranking (D9)
+overlay_073_021F5260.s	field gimmick child (73-83, unnamed)		low	in	F10	base 0x021F5260..0x021F5A80, tiny; chained calls (78->75, 80->76/77, 81->82, 79->83); sound/graphics calls
+overlay_074_021F54E0.s	field gimmick child (73-83, unnamed)		low	in	F10	base 0x021F5260..0x021F5A80, tiny; chained calls (78->75, 80->76/77, 81->82, 79->83); sound/graphics calls
+overlay_075_021F5260.s	field gimmick child (73-83, unnamed)		low	in	F10	base 0x021F5260..0x021F5A80, tiny; chained calls (78->75, 80->76/77, 81->82, 79->83); sound/graphics calls
+overlay_076_021F5260.s	field gimmick child (73-83, unnamed)		low	in	F10	base 0x021F5260..0x021F5A80, tiny; chained calls (78->75, 80->76/77, 81->82, 79->83); sound/graphics calls
+overlay_077_021F5620.s	field gimmick child (73-83, unnamed)		low	in	F10	base 0x021F5260..0x021F5A80, tiny; chained calls (78->75, 80->76/77, 81->82, 79->83); sound/graphics calls
+overlay_078_021F5620.s	field gimmick child (73-83, unnamed)		low	in	F10	base 0x021F5260..0x021F5A80, tiny; chained calls (78->75, 80->76/77, 81->82, 79->83); sound/graphics calls
+overlay_079_021F5A80.s	field gimmick child (73-83, unnamed)		low	in	F10	base 0x021F5260..0x021F5A80, tiny; chained calls (78->75, 80->76/77, 81->82, 79->83); sound/graphics calls
+overlay_080_021F5A80.s	field gimmick child (73-83, unnamed)		low	in	F10	base 0x021F5260..0x021F5A80, tiny; chained calls (78->75, 80->76/77, 81->82, 79->83); sound/graphics calls
+overlay_081_021F5A80.s	field gimmick child (73-83, unnamed)		low	in	F10	base 0x021F5260..0x021F5A80, tiny; chained calls (78->75, 80->76/77, 81->82, 79->83); sound/graphics calls
+overlay_083_021F5260.s	field gimmick child (73-83, unnamed)		low	in	F10	base 0x021F5260..0x021F5A80, tiny; chained calls (78->75, 80->76/77, 81->82, 79->83); sound/graphics calls
+overlay_090_021B6100.s	party/summary helper (loaded with 91, 131 by ov134)		low	in	U	Z12: 134 loads 91, 131, 90 together; callers ov091/ov010; its calls into main hit the (ambiguous) net-labelled region
+overlay_099_021B95A0.s	networking / C-Gear / minigames (D9)		low	out	X1	43 KB, no strings; 34% of main calls hit net_*.c/DWC code; Z12 'network inferred from loaders/siblings'
+overlay_102_021B7560.s	IR / infrared features (D9)		med	out	X1	base 0x021B7560 siblings of ov106 irc_ranking.c; family 100-106 (ircbattlematch.c, compatible_irc_sys.c)
+overlay_103_021B7560.s	IR / infrared features (D9)		med	out	X1	base 0x021B7560 siblings of ov106 irc_ranking.c; family 100-106 (ircbattlematch.c, compatible_irc_sys.c)
+overlay_104_021B7560.s	IR / infrared features (D9)		med	out	X1	base 0x021B7560 siblings of ov106 irc_ranking.c; family 100-106 (ircbattlematch.c, compatible_irc_sys.c)
+overlay_105_021B7560.s	IR / infrared features (D9)		med	out	X1	base 0x021B7560 siblings of ov106 irc_ranking.c; family 100-106 (ircbattlematch.c, compatible_irc_sys.c)
+overlay_109_021BB8E0.s	app helper (tiny, unidentified)		low	?	U	576 B, 1 fn, calls graphics helpers; base 0x021BB8E0
+overlay_111_021C3CC0.s	Trainer Card UI (trcard)		med	in	U	msg 2/187 '<msg text>' + 2/191 trainer classes, ARC 40; calls bmp/msg/graphics helpers
+overlay_122_021D4240.s	C-Gear UI (help/warning)		med	out	X1	msg 2/23 '<msg text>' + WARNING text; base 0x021D4240 shared with network apps (115-125)
+overlay_128_021C6180.s	networking / C-Gear / minigames (D9)		low	out	X1	18 KB, no strings; 12% of main calls hit net code; Z12 'network inferred from loaders/siblings' (base 0x021C6180)
+overlay_129_021D85C0.s	unidentified UI using nature names (bank 25) + MCSS		low	in	U	msg 2/25 '<msg text>', ARC 23,59, MCSS calls; screen unknown
+overlay_134_021DC860.s	party/summary launcher (loads 90, 91, 131)		med	in	U	OVERLAY-SETS: 134 loads 91, 131, 90 (021DC9C8/021DCA92/021DCC36); 5 fns; calls party code (unk_0201A858)
+overlay_171_021DC860.s	Hall of Fame record UI		med	in	U	msg 2/85 '<msg text>', ARC 213
+overlay_173_021B6100.s	move-teaching UI (move relearner / tutor)		med	in	U	msg 2/202 '<msg text>', 2/203 move descriptions, 2/204 move names, ARC 124, MCSS; called by ov110/171
+overlay_178_021E5440.s	networking / C-Gear / minigames (D9)		med	out	X1	base 0x021E5440 shared with ov177 (wifibattlematch_*.c); 56% of main calls hit net code
+overlay_180_021B6100.s	Hall of Fame ceremony / result UI		med	in	U	msg 2/32 '<msg text>' + Lv. text, ARC 23,216, MCSS
+overlay_181_021B95A0.s	Staff credits roll		high	in	U	msg 2/177 '<msg text>', ARC 26,220 (ov182 ending shares ARC 220)
+overlay_184_021F8480.s	Musicals helper (D9/X2)		low	out	X2	base 0x021F8480 shared with ov132 (sta_acting.c, musical); no strings
+overlay_185_021F8480.s	Musicals helper (D9/X2)		low	out	X2	base 0x021F8480 shared with ov132 (sta_acting.c, musical); no strings
+overlay_205_021B95A0.s	whiteout / battle-return handler		med	in	F	msg 2/37 '<mon> fainted! ... is out of usable Pokemon / scurried to a Pokemon Center'; calls btl_setup helpers; sibling of ov92 battle-return
+overlay_209_021BC240.s	Pokedex app family		med	in	U	ARC 159 (+7 icons) shared with ov207/208/210; base 0x021BC240 shared with pokedex overlays (Z12: 208-212)
+overlay_211_021BC240.s	Pokedex app family		med	in	U	ARC 159 (+7 icons) shared with ov207/208/210; base 0x021BC240 shared with pokedex overlays (Z12: 208-212)
+overlay_219_02183B60.s	Geonet location registry UI (Wi-Fi adjacent)		low	out	X1	msg 2/207 '<msg text>', 2/231 country list, ARC 53,197
+overlay_230_02187F00.s	unidentified data-heavy overlay (3 fns, 6.8 KB)		low	?	?	same base 0x02187F00 as ov21 (field) and ov96; no strings or callees
+overlay_231_02180820.s	unidentified SDK-heavy helper		low	?	?	512 B; calls NitroSDK/MWCC runtime only; Z12: network inferred

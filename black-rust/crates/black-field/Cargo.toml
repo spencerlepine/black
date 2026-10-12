@@ -1,0 +1,12 @@
+[package]
+name = "black-field"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Field logic: map matrix, collision, player and NPC movement (fldmmdl), encounters, warps/events"
+
+[dependencies]
+black-core = { version = "0.1.0", path = "../black-core" }
+
+[dev-dependencies]
+black-fndiff = { version = "0.1.0", path = "../black-fndiff" }

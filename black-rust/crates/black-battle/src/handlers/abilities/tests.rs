@@ -6,7 +6,7 @@ use crate::handlers::testkit::{run_handler_suite, TestHost};
 fn abilities_match_rom() {
     let addrs: Vec<u32> = super::PORTED.to_vec();
     let h = run_handler_suite(&addrs, |a| super::handler::<TestHost>(a).unwrap());
-    assert_eq!(h, "dd64d29b450eede5");
+    assert_eq!(h, "bb61c0a1ff660ed0");
 }
 
 /// Skip-check callbacks against the original (`tools/rom-diff/handlers.py skips`).
@@ -19,7 +19,13 @@ fn skip_checks_match_rom() {
     use crate::testutil::{Fnv, Rng};
     let mut h = Fnv::new();
     let mut r = Rng::new(0x5C1B);
-    for addr in [0x021DAEC4u32, 0x021DB1A8, 0x021DB650] {
+    for addr in [
+        0x021DAEC4u32,
+        0x021DB1A8,
+        0x021DB650,
+        0x021DC820,
+        0x021DCCEC,
+    ] {
         let cb = super::skip_check::<TestHost>(addr).unwrap();
         for _ in 0..300 {
             let mut b = Battle::new(TestHost::default());
@@ -49,5 +55,5 @@ fn skip_checks_match_rom() {
             }
         }
     }
-    assert_eq!(h.hex(), "8d7f7b9e4abfad7a");
+    assert_eq!(h.hex(), "060b3edecd0a0c7a");
 }
