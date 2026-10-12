@@ -2,7 +2,7 @@ sha,status,added_utc,reviewed_utc,run,scope,findings,subject
 d985a7b,SKIPPED,2026-10-12T21:53Z,,,,,"Import existing black-rust workspace (nds-rom, black-cli, black-core)"
 3ce35de,SKIPPED,2026-10-12T21:53Z,2026-10-12T22:00Z,,tooling only (rom-diff Unicorn harness; exercised by every later check),,tools/rom-diff: run original overlay 93 code under Unicorn for differential tests
 b7070d9,REVIEWED,2026-10-12T21:53Z,2026-10-12T22:06Z,R-20261012-2202,"fn:black-battle/sick_cont;fn:black-battle/poke_type (gen.py hashes, at TIP 729e65e)",,black-battle: new crate with type-pair and sick-cont helpers
-13d722d,TODO,2026-10-12T21:53Z,,,,,black-battle: port the battle event-variable stack (battle_calc.s)
+13d722d,REVIEWED,2026-10-12T21:53Z,2026-10-12T22:16Z,R-20261012-2212,"fn:black-battle/event_var (gen.py event_var hash, at TIP c7cc534)",V-0003,black-battle: port the battle event-variable stack (battle_calc.s)
 3fb05b8,TODO,2026-10-12T21:53Z,,,,,black-battle: port battle_calc.s math helpers
 86ae7da,TODO,2026-10-12T21:53Z,,,,,black-battle: verify type-pair helpers against the original code
 f4b39ae,SKIPPED,2026-10-12T21:53Z,2026-10-12T22:00Z,,"docs only (PORTING-STATUS, READMEs)",,"docs: black-battle symbol map, rom-diff usage, PORTING-STATUS"
