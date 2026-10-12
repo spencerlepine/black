@@ -25,10 +25,10 @@
     {
       "label": "claude",
       "type": "shell",
-      "command": "/bin/zsh",
+      "command": "${env:SHELL}",
       "options": {
         "shell": {
-          "executable": "/bin/zsh",
+          "executable": "${env:SHELL}",
           "args": [
             "-l",
             "-i",
@@ -43,15 +43,15 @@
     {
       "label": "gh-push",
       "type": "shell",
-      "command": "/bin/zsh",
+      "command": "${env:SHELL}",
       "options": {
         "shell": {
-          "executable": "/bin/zsh",
+          "executable": "${env:SHELL}",
           "args": [
             "-l",
             "-i",
             "-c",
-            "tmux has-session -t gh-push 2>/dev/null && tmux attach -t gh-push || tmux new-session -s gh-push 'while true; do git pull origin main && git push origin main; sleep 180; done'"
+            "tmux has-session -t gh-push 2>/dev/null && tmux attach -t gh-push || tmux new-session -s gh-push 'while true; do git pull origin main && git push origin main; sleep 30; done'"
           ]
         }
       },
