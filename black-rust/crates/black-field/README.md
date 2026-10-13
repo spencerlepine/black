@@ -534,3 +534,74 @@ Render-only functions left out (D3, U2; callers stub them by address): `021ACA70
 * The ports call the out-of-area callees through `FieldEnv::call` by address (D3: no draw code is ported).
 * Mutation check of the smoke ports: 6/6 caught (one per area; the first `namipoke` mutation, `min(0x3FFFF)`, was equivalent and the
   first `height_ex` one exposed a weak rectangle bias in `021C0598`, now fixed).
+
+## F3a: the grid player ported (304 of 306 verified)
+
+| area | ported | verified (in `PORTED`) | area hash | unverified ports |
+|---|---|---|---|---|
+| `player` | 72 | 72 | `cfc4cc44e7fa9732` | |
+| `player_core` | 64 | 64 | `d8693533c4c894f4` | |
+| `player_grid` | 97 | 97 | `fb2d9e2ee4aa1297` | |
+| `namipoke` | 18 | 18 | `5f2f50bb7702f7eb` | |
+| `height_ex` | 38 | 36 | `948bf8d388d1c30b` | `021C09B0`, `021C0BE8` (below) |
+| `player_event` | 17 | 17 | `5471f01d992c9f52` | |
+
+The area hashes differ from the F3a-spec ones because the in-area stubs switch off once their callees are in `PORTED`
+(the ROM side then runs the real callees). `--order-check` is clean for all six. Every callee outside an area (the other
+five F3a areas, the no-grid player and rail system of F3b, fldmmdl, mmdl_move, fieldmap, eventdata, effect_encount,
+fldmmdl_acmd, the PLAYER record of the GAMEDATA, heap, tasks, SE, camera shake, the namipoke render functions) is reached
+through `hooks::FieldEnv::call` by address (D3: no draw code is ported); callees inside an area are Rust calls, also the
+in-area targets of the ROM tables. The Heap_Free veneers `021A3810` / `021A41A8` and the veneer `021A575C` -> `021A550C`
+are called at their targets (the specs stub the targets). Stack locals the original hands to its callees (positions,
+rail locations, grid triples, the 0x14-byte grid INPUT record, the HEADER copy of the core constructor) are local byte
+arrays (`CArg::InBuf` / `OutBuf`) or `Mem::push_local` windows.
+
+* `player` (`fieldmap_ctrl_grid.c` + `field_player.c`): the MAP CTRL grid callbacks, FIELD_PLAYER create / delete /
+  save, the grid / no-grid dispatch wrappers and the tails into the core, the front-tile / front-position / direction
+  vector helpers (rail offsets `(d * u + 0x800) >> 12` on 64-bit products as the original). `021A30C8` / `021A3128`
+  return their caller's r4 / r6 for a map kind other than 0 / 1: the ports take that register as an explicit `stale`
+  argument (0 in the tests; the map-kind stub answers 0 / 1 only).
+* `player_core` (`field_player_core.c`): the CORE constructor (finds or creates the player MMDL from the HEADER template
+  ROM 0x021D89A0, `HEADER_TEMPLATE`), move state / form / OBJ-code changes, pad -> direction, and the request state
+  machine (request lists ROM 0x021D89C4 `REQUEST_LISTS` and the proc block 0x021D895C..0x021D89A0 `REQUEST_PROCS`,
+  dispatched to the Rust procs).
+* `player_grid` (`field_player_grid.c`): the frame (INPUT record), move values by form (walk, ice, cycle, surf),
+  actions by form (walk / run / turn / bump / jump / slide / fall, ride with dust, swim), hit checks, footstep SE (flag
+  tables 0x021D8A00 / 0x021D8A0C, predicate tables 0x021D89F4 / 0x021D8A2C), forced-move tiles (0x021D89EC, dispatched to
+  the in-area ports) and the ice turn order 0x021D8A24.
+* `namipoke` (`fldeff_namipoke.c` logic): RESOURCE blocks, the surf and splash tasks, mode / hide setters, init procs and
+  the grid / rail update procs (bob height 0x1000..0x4000, draw offset, the follower trailing the MMDL); splash offsets
+  ROM 0x021D91F8 (`SPLASH_OFFSETS`).
+* `height_ex` (`height_ex.c` + GMEVENTs): HEIGHT_EX create / set / delete / lookups, the script-callback GMEVENT, the two
+  build-model animation GMEVENTs (model offsets ROM 0x021DA098 / 0x021DA0E0, `MODEL_OFFSETS`) and the boulder push
+  (step check `021C0CA4`, footprint, start, event).
+* `player_event` (`field_player_grid_event.c`): the surf start task and the surf end task (step procs ROM 0x021DA128,
+  `SURF_END_STEPS`, Rust calls).
+
+Unverified ports (doc `UNVERIFIED port of`; not in `PORTED`, their callers `021C0844` / `021C0AC0` reach them through
+their stubs and are verified): `021C09B0` / `021C0BE8` pass `ROM 0x021DA098 + 12 * i` (resp. 0x021DA0E0) to
+`MTX_MultVec33` (`0207C9D0`, reads 0x24 bytes) with `i` = work `+0x15`, which the code only advances while it is below
+the count `+0x14` (at most 6 in the game). The spec draws both bytes `alt range 0 6 || any`, so `i` reaches ~255 and the
+original reads far past the 6-entry tables (the port embeds 0xA8 bytes and panics there). Spec fix: `fix work 0xC15 u8
+range 0 5` and `fix work 0xC14 u8 range 0 6` in both blocks.
+
+UNVERIFIED (behaviour the differential tests cannot reach; the port panics where the original reads past a table):
+`player_core::run_request` with a request / step outside the ROM proc block; `021A5630` with a display dir >= 4 (4-entry
+stack copy of 0x021D8A24); `021A55A8` with a forced-move index >= 2; `namipoke` `021AD5E0` with a kind > 4;
+`player_event` `021C1988` with a step outside 0..5; `player::entry_code` outside the form table.
+
+Spec comments that disagree with the code (the ports follow the code; harness job): `021A5408` jump table (state 0 -> 1,
+1 -> 0, 2..3 -> cancel the acmd and 1, > 3 -> 1); `021A3D08` equal-code path returns 1, not the getter's r0;
+`021ACDC4` / `021ACFF8` bob clamp is 0x1000..0x4000 (not 0x400..), the rail follower's "still" test is `<= 40` (grid
+`< 40`), and the mode-2 rail proc still adds `bob - 0x1000` to y; `021C0780` step 3 passes the `02012138(gsys)` result,
+not 1; `021C14F8` / `021C16AC` shake the camera with 0xFFFE0000; `021C1318` writes the tile centre to `+0x24` and then
+overwrites it; `021C1988` runs `021C16AC` when `+0 == 0` (the table loop otherwise); `021C09B0` uses the ROM row as the
+matrix and work `+8` as the vector (the `MTX_Rot` result is unused).
+
+Mutation spot check (`tools/check-fn.sh black-field AREA --fn`, each reverted): 11 of 15 caught, at least one per area:
+`player` 2/3 (`021A3504` form bound, `021A3524` form 2 -> 3; survivor: the rail rounding 0x800 -> 0x400 in `021A3364`,
+because the unit-length stub `021B7C38` answers only multiples of 0x1000), `player_core` 2/2, `player_grid` 2/2,
+`height_ex` 2/2, `player_event` 1/1, `namipoke` 2/5 (survivors: the bob lower bound `>` -> `>=` and the rail speed
+`<= 40` -> `< 40` need exact values the inputs never hit; the grid clamp `>` -> `>=` is equivalent).
+
+Deliberate deviations: none in behaviour.
