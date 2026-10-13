@@ -6,7 +6,7 @@ use crate::handlers::testkit::{run_handler_suite, TestHost};
 fn abilities_match_rom() {
     let addrs: Vec<u32> = super::PORTED.to_vec();
     let h = run_handler_suite(&addrs, |a| super::handler::<TestHost>(a).unwrap());
-    assert_eq!(h, "1865d8239f76334e");
+    assert_eq!(h, "af0586d18b8c3c1a");
 }
 
 /// Skip-check callbacks against the original (`tools/rom-diff/handlers.py skips`).

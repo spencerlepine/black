@@ -97,6 +97,7 @@ OVY95_BASE = 0x06898020
 FX_REGISTRIES = [("field", 0x0689D650, 8, 8, 3), ("pos", 0x0689D6C8, 5, 8, 1), ("side", 0x0689D780, 14, 12, 2)]
 FX_TYPE = {kind: ty for kind, _, _, _, ty in FX_REGISTRIES}
 FX_ALT_BD28 = 0x068993B0  # effect handler whose hint makes 0201bd28 answer 4 / 5 (the plain stub does so only for 1 key in 4, see wide_param)
+AB_ALT_89B8 = 0x021D89B8  # V-0015: Slow Start; its hint keys 021c804c on poke ^ wseed (by poke ID alone only poke 0 is found, with action kind 3)
 FX_STUB_DE0 = 0x06898DE0  # side-effect layer count (reads the 0x0689E7E0 state array): stubbed, tag 0x155
 
 
@@ -378,6 +379,10 @@ class Host:
 
 def _find_action(self, e, wk, poke, out, *_, sp):
     self.log += [0x107, poke]
+    if self.alt_hint == AB_ALT_89B8:
+        k = (poke ^ self.wseed) & M
+        e.w32(out, mix(k, 0x89BA))
+        return mix(k, 0x89B9) & 1
     e.w32(out, mix(poke, 0x804C))
     return mix(poke, 0x804E if self.alt_hint == 0x021E6E38 else 0x804D) & 1
 
@@ -797,7 +802,8 @@ def run(addrs, funcs=None, detail=None, items=False, hook=None, moves=False, cov
                         struct.pack_into("<I", ev, 0x3C4 + 4 * s, r.next() % 0x40)
                         struct.pack_into("<I", ev, 0x244 + 4 * s, r.next() % 0x10000)
             host.alt_dfe28 = items and addr == 0x021DFE28
-            host.alt_hint = addr if (moves and addr in (0x021E7634, 0x021E6E38) or effects and addr == FX_ALT_BD28) and seed % 4 != 0 else 0
+            host.alt_hint = addr if (moves and addr in (0x021E7634, 0x021E6E38) or effects and addr == FX_ALT_BD28
+                                     or not (moves or items or effects) and addr == AB_ALT_89B8) and seed % 4 != 0 else 0
             if items and addr == 0x021DFE28 and seed % 4:
                 # Harness hint (no extra draws): 021dfe28 is gated on var 0x4D == 0 and the holder
                 # being an event target (var 5 = count, var 6 = ID); `alt_dfe28` picks other

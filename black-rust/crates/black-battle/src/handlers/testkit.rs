@@ -234,6 +234,13 @@ impl FlowHost for TestHost {
     }
     fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool {
         self.log.extend([0x107, poke_id]);
+        if self.alt_hint == 0x021D_89B8 {
+            // AB_ALT_89B8 in handlers.py (V-0015): keyed on poke ^ wseed, so Slow Start's
+            // counting path runs (by poke ID alone only poke 0 is found, with action kind 3).
+            let k = poke_id ^ self.wseed;
+            *out = mix(k, 0x89BA);
+            return mix(k, 0x89B9) & 1 != 0;
+        }
         *out = mix(poke_id, 0x804C);
         mix(
             poke_id,
@@ -1284,6 +1291,13 @@ fn run_suite(
                 fac.poke_id = 0x1F;
                 // FX_ALT_BD28 in handlers.py: this handler's hint makes `move_param` answer 4 / 5
                 b.host.alt_hint = if seed % 4 != 0 && addr == 0x0689_93B0 {
+                    addr
+                } else {
+                    0
+                };
+            }
+            if items.is_none() && moves.is_none() && effects.is_none() {
+                b.host.alt_hint = if seed % 4 != 0 && addr == 0x021D_89B8 {
                     addr
                 } else {
                     0
