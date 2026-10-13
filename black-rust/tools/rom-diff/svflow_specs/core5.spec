@@ -66,8 +66,8 @@
 area core5
 
 # # the list walk of the first kind: bracket 0x25ac on the packed queue header word around 4910(0x1f, r2), then per entry another bracket (0x25b6) around 4910(id, r2) + 4f64
-# # (the entry's own processing), and 5200 (the end-of-list flag pass)
-fn 021c4838 ret=none inputs=300
+# # (the entry's own processing), and 5200 (the end-of-list flag pass), whose result is returned (V-0023: tail bl + epilogue)
+fn 021c4838 ret=u32 inputs=300
   arg work
   arg u32 any
   arg u32 any
@@ -147,7 +147,8 @@ fn 021c4910 ret=none
   stub 021d7540 ret=none args=v
 
 # # per-list damage record: list of up to 6 mon ids in a 4-byte-aligned stack array, 4a54 (record writer) per (mon, entry) pair, then command 0x15 with the packed ids
-fn 021c493c ret=none inputs=300
+# # and 5200, whose result is returned (V-0023: tail bl + epilogue)
+fn 021c493c ret=u32 inputs=300
   arg work
   arg u32 any
   region Q 0xC00

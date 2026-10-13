@@ -66,7 +66,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x02014044, "6e6a747b9d2db586"),
     (0x0201405C, "c88fcd3bfd66d0e2"),
     (0x02014068, "6cd30f8f717f7fe7"),
-    (0x0201407C, "2d1e99288b865bb2"),
+    (0x0201407C, "fd55f0f5cb5fbffd"),
     (0x020140B4, "1e1df1cef737c6b6"),
     (0x020140BC, "297132bf350f5e58"),
     (0x020140C0, "62db697482c5942d"),
@@ -125,9 +125,9 @@ impl ZoneHooks for Rom<'_> {
     fn fun_0201441c(&mut self, v: u32) -> u32 {
         self.stubs.call(0x0201_441c, &mut [Arg::V(v)])
     }
-    fn fun_02020e08(&mut self, a: u32, b: u32, c: u32) {
+    fn fun_02020e08(&mut self, a: u32, b: u32, c: u32) -> u32 {
         self.stubs
-            .call(0x0202_0e08, &mut [Arg::V(a), Arg::V(b), Arg::V(c)]);
+            .call(0x0202_0e08, &mut [Arg::V(a), Arg::V(b), Arg::V(c)])
     }
     fn fun_0204a298(&mut self, a: u32, b: u32, c: u32, heap: u32, size: &mut u32) -> u32 {
         let mut out = [0u8; 4];
@@ -255,10 +255,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x0201_3EEC => with_rom(c, &[0x02146264], |h, v| zone_table_a(h, v[0]) as u64),
         0x0201_3F2C => with_rom(c, &[0x02146264], |h, v| zone_table_b(h, v[0]) as u64),
         0x0201_3F6C => with_rom(c, &[0x02146264], |h, v| zone_table_c(h, v[0]) as u64),
-        0x0201_407C => with_rom(c, &[], |h, v| {
-            advance_zone_timer(h, v[0], v[1], v[2]);
-            0
-        }),
+        0x0201_407C => with_rom(c, &[], |h, v| load_area_data(h, v[0], v[1], v[2]) as u64),
         0x0201_40B4 => with_rom(c, &[], |h, v| {
             small_free(h, v[0]);
             0

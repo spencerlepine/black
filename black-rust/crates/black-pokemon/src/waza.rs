@@ -339,7 +339,8 @@ pub fn record_pp_ups_count(
 }
 
 /// C: `FUN_0201C0BC(move, idx, out)`: `*out` = signed byte `0x18 + idx` of the record if byte `0x15 + idx` is
-/// nonzero, else 0. `out` is the 4-byte destination.
+/// nonzero, else 0. `out` is the 4-byte destination. Returns byte `0x15 + idx` (the `ldrb r0` of the test is r0 at the
+/// `pop`; ov93's 021c2f70 stores it, V-0022 audit).
 pub fn record_signed_if_set(
     move_id: u32,
     idx: u32,
@@ -347,15 +348,17 @@ pub fn record_signed_if_set(
     cache: Option<&mut MoveCache>,
     scratch: &mut [u8; RECORD_SIZE],
     h: &mut impl WazaHooks,
-) {
+) -> u32 {
     let rec = record_of(move_id, cache, scratch, h);
     let idx = idx as usize;
-    let v: i32 = if rec[0x15 + idx] != 0 {
+    let flag = rec[0x15 + idx];
+    let v: i32 = if flag != 0 {
         rec[0x18 + idx] as i8 as i32
     } else {
         0
     };
     out[..4].copy_from_slice(&v.to_le_bytes());
+    flag as u32
 }
 
 /// C: `FUN_0201C1F4(move)`: 1 if byte 4 of the record is 101 (`'e'`).

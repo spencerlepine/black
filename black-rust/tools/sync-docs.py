@@ -22,7 +22,11 @@ UNIT_TESTED = {
     "FUN_overlay_d_93__021d804c": "unit-tested only (state setter)",
 }
 
-SYM_RE = re.compile(r"`((?:FUN|LAB|thunk|sub)_[A-Za-z0-9_]+|0x[0-9A-Fa-f]{8}|[0-9a-f]{4,8}|[A-Z][A-Za-z0-9]+_[A-Za-z0-9_]+|[A-Z][a-z]+[A-Z][A-Za-z0-9]+)`")
+# V-0021: a head may put the argument list inside the backticks (`FUN_0201C328(count, heap)`).
+SYM_RE = re.compile(r"`((?:FUN|LAB|thunk|sub)_[A-Za-z0-9_]+|0x[0-9A-Fa-f]{8}|[0-9a-f]{4,8}|[A-Z][A-Za-z0-9]+_[A-Za-z0-9_]+|[A-Z][a-z]+[A-Z][A-Za-z0-9]+)(?:\([^`]*\))?`")
+# V-0021: a `/// C:` comment inside a macro invocation (`getter!(/// C: ... \n name, 0x28);`, `wrapper!(/// C: ...
+# \n cmd_00 => ...);`) documents the item the macro defines, named by its first argument.
+MACRO_ARG_RE = re.compile(r"\s*([A-Za-z_][A-Za-z0-9_]*)\s*(?:,|=>)")
 
 
 def expand(tokens):
@@ -74,6 +78,18 @@ def scan_crate(crate):
                 if not m:
                     continue
                 head = m.group(1).split(":")[0] if "`:" in m.group(1) else m.group(1)
+                if "`:" not in m.group(1) and "):" not in m.group(1):
+                    # V-0021: a head list that wraps (`/// C: `FUN_a` (60), `021893cc` (62),\n/// `02189d38` (103): ...`)
+                    # continues on the next doc lines up to the one with the `:` that ends it
+                    cont = []
+                    for k in range(i + 1, min(i + 4, len(lines))):
+                        cm = re.match(r"\s*/// (.*)", lines[k])
+                        if not cm or cm.group(1).startswith("C:"):
+                            break
+                        cont.append(cm.group(1))
+                        if "`:" in cm.group(1) or "):" in cm.group(1):
+                            head = (m.group(1) + " " + " ".join(cont)).split(":")[0]
+                            break
                 syms = expand(SYM_RE.findall(head))
                 if not syms:
                     continue
@@ -83,6 +99,13 @@ def scan_crate(crate):
                     if mm:
                         indented = lines[j].startswith("    ")
                         item = (impl + "::" if indented and impl else "") + mm.group(1)
+                        documented.add(j)
+                        break
+                    if re.match(r"\s*(?://|#\[)", lines[j]):
+                        continue  # the rest of the doc block, attributes
+                    ma = MACRO_ARG_RE.match(lines[j])
+                    if ma and any(re.search(r"\b[a-z_][a-z0-9_]*!\s*[({]\s*$", lines[k]) for k in range(max(0, i - 8), i)):
+                        item = ma.group(1)  # macro-defined item (module level)
                         documented.add(j)
                         break
                 if item:

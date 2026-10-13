@@ -211,8 +211,8 @@ fn 021b9234 ret=none
   arg buf 0x1000
 
 # unless flag bit 4: if setup[0] <= 1: M[0x438] = min(021d7ff8(setup[0x80], 9af8(M+0x1B0, M[0x46C])), 0200C274(02012F08(setup[0x58])));
-# flag |= 0x10
-fn 021b9244 ret=none
+# flag |= 0x10; returns M[0x438] as stored, 0 when the flag was set or setup[0] > 1 (V-0022; client4 021d1410 / 021d16b0 read it)
+fn 021b9244 ret=u32
   nowork
   arg buf 0x1000
   fix arg0 0 u32 addrof arg0 0x480

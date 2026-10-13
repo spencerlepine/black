@@ -639,9 +639,11 @@ pub fn flinch_message<E: FlowEnv>(
 
 // ---- item-effect table entries (pool 0x021EFDE4): a fixed argument, then the shared body ----------
 
+// The `/// C:` line is an argument (V-0021: tools/sync-docs.py maps a doc comment inside a macro invocation to the
+// macro's first identifier, as for `getter!`; a `#[doc = concat!(..)]` built from `$addr` was invisible to it).
 macro_rules! cure_entry {
-    ($name:ident, $addr:literal, $sick:literal) => {
-        #[doc = concat!("C: `FUN_overlay_d_93__", $addr, "`: `cure_status(.., ", stringify!($sick), ")`.")]
+    ($(#[$doc:meta])* $name:ident, $sick:literal) => {
+        $(#[$doc])*
         pub fn $name<E: FlowEnv + BppEnv>(
             env: &mut E,
             w: &mut SvFlowWork,
@@ -653,8 +655,8 @@ macro_rules! cure_entry {
     };
 }
 macro_rules! stage_entry {
-    ($name:ident, $addr:literal, $stat:literal) => {
-        #[doc = concat!("C: `FUN_overlay_d_93__", $addr, "`: `change_stage(.., amount, ", stringify!($stat), ")`.")]
+    ($(#[$doc:meta])* $name:ident, $stat:literal) => {
+        $(#[$doc])*
         pub fn $name<E: FlowEnv + BppEnv>(
             env: &mut E,
             w: &mut SvFlowWork,
@@ -666,18 +668,54 @@ macro_rules! stage_entry {
         }
     };
 }
-cure_entry!(cure_entry_2, "021cbf30", 2);
-cure_entry!(cure_entry_5, "021cbf40", 5);
-cure_entry!(cure_entry_4, "021cbf50", 4);
-cure_entry!(cure_entry_3, "021cbf60", 3);
-cure_entry!(cure_entry_1, "021cbf70", 1);
-cure_entry!(cure_entry_6, "021cbf80", 6);
-stage_entry!(stage_entry_1, "021cc098", 1);
-stage_entry!(stage_entry_2, "021cc0a8", 2);
-stage_entry!(stage_entry_3, "021cc0b8", 3);
-stage_entry!(stage_entry_4, "021cc0c8", 4);
-stage_entry!(stage_entry_5, "021cc0d8", 5);
-stage_entry!(stage_entry_6, "021cc0e8", 6);
+cure_entry!(
+    /// C: `FUN_overlay_d_93__021cbf30`: `cure_status(.., 2)`.
+    cure_entry_2, 2
+);
+cure_entry!(
+    /// C: `FUN_overlay_d_93__021cbf40`: `cure_status(.., 5)`.
+    cure_entry_5, 5
+);
+cure_entry!(
+    /// C: `FUN_overlay_d_93__021cbf50`: `cure_status(.., 4)`.
+    cure_entry_4, 4
+);
+cure_entry!(
+    /// C: `FUN_overlay_d_93__021cbf60`: `cure_status(.., 3)`.
+    cure_entry_3, 3
+);
+cure_entry!(
+    /// C: `FUN_overlay_d_93__021cbf70`: `cure_status(.., 1)`.
+    cure_entry_1, 1
+);
+cure_entry!(
+    /// C: `FUN_overlay_d_93__021cbf80`: `cure_status(.., 6)`.
+    cure_entry_6, 6
+);
+stage_entry!(
+    /// C: `FUN_overlay_d_93__021cc098`: `change_stage(.., amount, 1)`.
+    stage_entry_1, 1
+);
+stage_entry!(
+    /// C: `FUN_overlay_d_93__021cc0a8`: `change_stage(.., amount, 2)`.
+    stage_entry_2, 2
+);
+stage_entry!(
+    /// C: `FUN_overlay_d_93__021cc0b8`: `change_stage(.., amount, 3)`.
+    stage_entry_3, 3
+);
+stage_entry!(
+    /// C: `FUN_overlay_d_93__021cc0c8`: `change_stage(.., amount, 4)`.
+    stage_entry_4, 4
+);
+stage_entry!(
+    /// C: `FUN_overlay_d_93__021cc0d8`: `change_stage(.., amount, 5)`.
+    stage_entry_5, 5
+);
+stage_entry!(
+    /// C: `FUN_overlay_d_93__021cc0e8`: `change_stage(.., amount, 6)`.
+    stage_entry_6, 6
+);
 
 /// C: `FUN_overlay_d_93__021cbf90`: [`cure_all_statuses`] (the stack constant 7 is dead).
 pub fn cure_all_entry<E: FlowEnv + BppEnv>(

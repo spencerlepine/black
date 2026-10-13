@@ -6,7 +6,7 @@
 - [ ] `FUN_overlay_d_93__021e0354`
 - [ ] `FUN_overlay_d_93__021e0394`
 - [ ] `FUN_overlay_d_93__021e03d8`
-- [ ] `FUN_overlay_d_93__021e03e8`
+- [x] `FUN_overlay_d_93__021e03e8` → `black_battle::event_factor::fun_021e03e8`
 - [ ] `FUN_overlay_d_93__021e03f8`
 - [ ] `FUN_overlay_d_93__021e0434`
 - [ ] `FUN_overlay_d_93__021e0468`

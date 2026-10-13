@@ -612,11 +612,12 @@ pub fn gd_call_0200c418<H: GameDataHooks>(h: &mut H, gd: u32, a: u32, b: u32) {
     h.fun_0200c418(x, a, b);
 }
 
-/// C: `FUN_02012BF8`: `FUN_0200C44C(FUN_0200C404(*gd), a)`.
-pub fn gd_call_0200c44c<H: GameDataHooks>(h: &mut H, gd: u32, a: u32) {
+/// C: `FUN_02012BF8`: `FUN_0200C44C(FUN_0200C404(*gd), a)`, whose 0 / 1 it returns (tail `bl` then `pop`; ~27 callers
+/// in overlays 68 / 70 / 111 test or keep it, V-0022 audit).
+pub fn gd_call_0200c44c<H: GameDataHooks>(h: &mut H, gd: u32, a: u32) -> u32 {
     let save = gd_get_02012ec0(h, gd);
     let x = h.fun_0200c404(save);
-    h.fun_0200c44c(x, a);
+    h.fun_0200c44c(x, a)
 }
 
 /// C: `FUN_02012FBC`: tail call `FUN_020085D4(*(gd + 0x6AC))`.

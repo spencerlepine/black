@@ -499,22 +499,27 @@ pub fn set_doubling(mem: &mut Mem, m: u32) {
 }
 
 /// C: `FUN_overlay_d_93__021b9244`: once (flag bit 4): for battle types 0 / 1, `M[0x438] = min(021d7ff8(setup[0x80], party),
-/// 0200C274(02012F08(setup[0x58])))` with the own client's party of pokecon 1.
-pub fn compute_438<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) {
+/// 0200C274(02012F08(setup[0x58])))` with the own client's party of pokecon 1. Returns the stored value (r0 at the
+/// `pop {r4, r5, r6, pc}`), 0 when the flag was already set or the battle type is > 1 (V-0022; client4's 021d1410 /
+/// 021d16b0 read it).
+pub fn compute_438<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
     if mem.r8(m + M_FLAGS) & 0x10 != 0 {
-        return;
+        return 0;
     }
     let s = setup(mem, m);
+    let mut r = 0;
     if mem.r32(s + SET_TYPE) <= 1 {
         let a = call(env, 0x0201_2F08, &[mem.r32(s + SET_58)]);
         let lim = call(env, 0x0200_C274, &[a]);
         let party = party_addr2(m + M_PC1, own_client(mem, m));
         let s = setup(mem, m);
         let v = call(env, 0x021D_7FF8, &[mem.r8(s + SET_80), party]);
-        mem.w32(m + M_438, v.min(lim));
+        r = v.min(lim);
+        mem.w32(m + M_438, r);
     }
     let f = mem.r8(m + M_FLAGS);
     mem.w8(m + M_FLAGS, f | 0x10);
+    r
 }
 
 /// C: `FUN_overlay_d_93__021b92a0`: sets flag bit 5.
@@ -1081,7 +1086,7 @@ pub fn party_get2(mem: &Mem, p: u32, i: u32) -> u32 {
     party_get(mem, p, i)
 }
 
-/// C: `BattleParty_SwapSlots`: swaps `P.mon[i]` and `P.mon[j]`.
+/// C: `BattleParty_SwapSlots` (`0x021B9C10`): swaps `P.mon[i]` and `P.mon[j]`.
 pub fn party_swap(mem: &mut Mem, p: u32, i: u32, j: u32) {
     let a = p.wrapping_add(i << 2);
     let b = p.wrapping_add(j << 2);
@@ -1129,7 +1134,7 @@ pub fn party_rotate_for_pos(mem: &mut Mem, p: u32, pos: u32, out_old: u32, out_n
     }
 }
 
-/// C: `BattleParty_GetMonIndex`: index of the mon pointer `mon` in the party, or -1.
+/// C: `BattleParty_GetMonIndex` (`0x021B9C98`): index of the mon pointer `mon` in the party, or -1.
 pub fn party_index_of(mem: &Mem, p: u32, mon: u32) -> u32 {
     let mut i = 0u32;
     while (i as i32) < mem.r8(p + PARTY_COUNT) as i32 {

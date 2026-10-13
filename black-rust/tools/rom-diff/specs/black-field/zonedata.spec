@@ -725,13 +725,14 @@ fn 020140e8 ret=bool inputs=200
   nowork
   arg u32 alt near 2 2 || near 0xD2 2 || any
 
-# FUN_0201407C(a, b, c): if FUN_020140E8(b): b = (b + (c & 0xFFFF)) & 0xFFFF; if b >= 282: b = 0; FUN_02020E08(0xD, a, b * 10)
-fn 0201407c ret=none inputs=300
+# FUN_0201407C(a, b, c): if FUN_020140E8(b): b = (b + (c & 0xFFFF)) & 0xFFFF; if b >= 282: b = 0; return FUN_02020E08(0xD, a, b * 10)
+# (V-0022 audit: tail bl + pop; the archive load's result is the area data fieldmap.c keeps at FIELDMAP +0xC)
+fn 0201407c ret=u32 inputs=300
   nowork
   arg u32 any
   arg u32 alt near 2 2 || near 0xD2 2 || range 0 300 || any
   arg u32 alt range 0 20 || any
-  stub 02020e08 ret=none args=v,v,v
+  stub 02020e08 ret=u32 args=v,v,v
 
 # FUN_020140B4(ptr): tail call heap free(ptr)
 fn 020140b4 ret=none inputs=100

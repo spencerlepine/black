@@ -286,8 +286,9 @@ fn 020079a0 ret=u32
   arg u32 any
   stub 0200791c force ret=mod:31 args=v,v
 
-# FUN_020079BC(mgr, tray, slot, id, buf): PokeParaGet(&tray[slot], id, buf); tray > 23 (but not -1) or slot > 29: assert.
-fn 020079bc ret=none
+# FUN_020079BC(mgr, tray, slot, id, buf): return PokeParaGet(&tray[slot], id, buf); tray > 23 (but not -1) or slot > 29: assert.
+# (V-0022 audit: tail bl 02017E88 + pop; the ov21 / ov170 callers compare the value)
+fn 020079bc ret=u32
   nowork
   arg u32 any
   arg u32 alt range 0 7 || range 0 23 || range 0 23 || const 0xFFFFFFFF || range 24 40

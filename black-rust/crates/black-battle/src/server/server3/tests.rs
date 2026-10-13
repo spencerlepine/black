@@ -21,7 +21,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021B91E4, "f9c8cac9c7885de6"),
     (0x021B9210, "2ad733ce1bdcac67"),
     (0x021B9234, "695c978b09f14ac2"),
-    (0x021B9244, "77ac0f97223d25b1"),
+    (0x021B9244, "154d383984c4bde6"),
     (0x021B92A0, "79b79fd0658940c8"),
     (0x021B92B0, "aa3143d8236d620a"),
     (0x021B92D4, "e012bd83b1d19593"),
@@ -223,10 +223,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             set_doubling(m, v[0]);
             0
         }
-        0x021B_9244 => {
-            compute_438(e, m, v[0]);
-            0
-        }
+        0x021B_9244 => compute_438(e, m, v[0]).into(),
         0x021B_92A0 => {
             set_flag5(m, v[0]);
             0

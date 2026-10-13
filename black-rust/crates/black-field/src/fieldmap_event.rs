@@ -36,6 +36,7 @@ pub const PORTED: &[u32] = &[
     0x0218_A9B0,
     0x0218_AA2C,
     0x0218_AA74,
+    0x0218_AAD0,
     0x0218_AB0C,
     0x0218_AB50,
     0x0218_AB9C,
@@ -1074,10 +1075,9 @@ pub fn eggs_step<E: FieldEnv>(env: &mut E, party: u32) {
 /// the save block `FUN_02008854(FUN_02012EBC(gd))`) goes up by `FUN_02010FF4(0x100)`; past 0x10000 the eggs step
 /// ([`eggs_step`]) and it restarts at 0.
 ///
-/// UNVERIFIED port of `FUN_0218AAD0`: not in [`PORTED`]. Its spec's stub `02010ff4 args=v,p,v,v` logs r2 and r3,
-/// which the one-argument callee does not read; r2 is this function's entry r2 (in the standalone spec, whatever
-/// the previous input left in the emulator's register), so no port can reproduce that hash. Callers reach it
-/// through its stub (`FieldEnv::call(0x0218AAD0, ..)`).
+/// Verified (in [`PORTED`] since the Z19 entry state: the r2 / r3 its spec's stub `02010ff4 args=v,p,v,v` logs are this
+/// function's entry r2 (the `r2` argument) and r3 (0 on every input)). Callers reach it through their (forced) stub
+/// (`FieldEnv::call(0x0218AAD0, ..)`).
 pub fn egg_counter<E: FieldEnv>(env: &mut E, gd: u32, party: u32, r2: u32) {
     let save = env.callv(0x0201_2EBC, &[gd]);
     let s = env.callv(0x0200_8854, &[save]);

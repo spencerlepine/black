@@ -4,9 +4,9 @@ use crate::server_flow::testkit::{run_area_suite, Case};
 // Written by tools/check-svflow.sh only, after the Rust hashes matched the ROM run.
 // svflow-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
-    (0x021C4838, "833941fe5cd84d58"),
+    (0x021C4838, "3633b3e2a12bc78c"),
     (0x021C4910, "5303d6f27e1364ba"),
-    (0x021C493C, "bdd0329299e97647"),
+    (0x021C493C, "eeb777758e538eb4"),
     (0x021C4A64, "7407233c92541c49"),
     (0x021C4B3C, "f5ca5e20f4110a13"),
     (0x021C4B9C, "8bea30f19c798298"),
@@ -124,8 +124,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         }
         0x021C_4838 => {
             let mut cx = cx!(c);
-            super::walk_list(&mut c.env, &mut c.work, &mut cx, c.vals[1], c.vals[2]);
-            0
+            super::walk_list(&mut c.env, &mut c.work, &mut cx, c.vals[1], c.vals[2]) as u64
         }
         0x021C_4D1C => {
             let mut cx = cx!(c);
@@ -166,8 +165,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         }
         0x021C_493C => {
             let mut cx = cx!(c);
-            super::pair_pass(&mut c.env, &mut c.work, &mut cx, c.vals[1]);
-            0
+            super::pair_pass(&mut c.env, &mut c.work, &mut cx, c.vals[1]) as u64
         }
         0x021C_4A64 => {
             let mut cx = cx!(c);

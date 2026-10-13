@@ -19,9 +19,11 @@ pub const PORTED: &[u32] = &[
     0x0218_7FE8,
     0x0218_8030,
     0x0218_80A4,
+    0x0218_80C8,
     0x0218_81D8,
     0x0218_8758,
     0x0218_8910,
+    0x0218_8990,
     0x0218_8B58,
     0x0218_8BD8,
     0x0218_8BE8,
@@ -77,6 +79,7 @@ pub const PORTED: &[u32] = &[
     0x0218_95BC,
     0x0218_95D0,
     0x0218_95DC,
+    0x0218_95E8,
     0x0218_9614,
     0x0218_9684,
     0x0218_96F4,
@@ -405,9 +408,9 @@ pub fn destroy<E: FieldEnv>(env: &mut E, fm: u32) {
 /// ..)`), the VBlank task (`+0xAC`), the task system (`+0x110` / `+0x114`, 0x20 tasks, line 0x26B), `+0x134`, `+0x14C`,
 /// the overlay (0x13 for the zone kinds of `FUN_02013CC8` / `FUN_02013CE0`, else 0x12), `FUN_02035660(0x1E)`; 1.
 ///
-/// UNVERIFIED port of `FUN_021880C8`: not in [`PORTED`]. The spec's stub `02188d5c args=v,v,v,v` logs r1..r3, which
-/// the one-argument render function does not read; r2 and r3 are this function's entry registers (the proc driver's
-/// or the harness's), so no port reproduces the hash. The driver [`proc_step`] reaches it through its stub.
+/// Verified (in [`PORTED`] since the Z19 entry state: the r2 / r3 the stub `02188d5c args=v,v,v,v` logs are this
+/// function's entry registers, 0 on every input, as the port passes them). The driver [`proc_step`] still reaches it
+/// through its (forced) stub.
 pub fn proc_graphics_init<E: FieldEnv>(env: &mut E, _gs: u32, fm: u32) -> u32 {
     let heap = env.r16(fm) as u32;
     env.callv(0x0204_33E0, &[0x021D_3688]);
@@ -561,7 +564,7 @@ pub fn proc_setup<E: FieldEnv>(env: &mut E, gs: u32, fm: u32) -> u32 {
             let v = zone_494(env, z);
             env.w32(fm + 0x104, v);
             let (z, h) = (zone(env), heap(env));
-            // `FUN_021895E8` through its stub (UNVERIFIED port, see `zone_change_10_at`)
+            // `FUN_021895E8` through its stub ([`zone_change_10_at`]; the ROM side forces the stub)
             env.callv(0x0218_95E8, &[fm, z, h]);
         }
         3 => {
@@ -711,7 +714,8 @@ pub fn proc_setup<E: FieldEnv>(env: &mut E, gs: u32, fm: u32) -> u32 {
 /// rail, 0x0218A4BD hybrid, 0x0218A075 grid), running (`+0xC0 = 1`), `FUN_020129DC(gd, 1)`; 1.
 ///
 /// UNVERIFIED port of `FUN_021885E8`: not in [`PORTED`]. Its call of the render function `FUN_02189084(fm)` (spec stub
-/// `args=v,v,v,v`) logs r3, which comes from this function's entry registers (see [`proc_graphics_init`]).
+/// `args=v,v,v,v`) logs r3, which (after Z19) is no longer an entry register but what the real `FUN_02189004` left in
+/// r3 (seed 0: ROM 0xF66E, port 0); verifying it needs the render stubs' arity settled (harness job).
 pub fn proc_start<E: FieldEnv>(env: &mut E, gs: u32, fm: u32) -> u32 {
     let sub = env.r8(fm + 0xC8);
     if sub > 1 {
@@ -907,8 +911,9 @@ pub fn proc_frame<E: FieldEnv>(env: &mut E, gs: u32, fm: u32) -> u32 {
 /// `FUN_0218E104(+0x10, trigger mask)`, the camera distance (`+0x100`, [`camera_distance`]) and the map draw
 /// `FUN_02189084(fm)` (render, G8) with EXMEMCNT toggled.
 ///
-/// UNVERIFIED port of `FUN_021888C8`: not in [`PORTED`]. The render call's spec stub (`args=v,v,v,v`) logs r3, this
-/// function's entry r3.
+/// UNVERIFIED port of `FUN_021888C8`: not in [`PORTED`]. The render call's spec stub (`args=v,v,v,v`) logs r3, which
+/// (after Z19) is what the preceding code left in r3 (seed 0: ROM 0x3620, port 0), not an entry register; verifying it
+/// needs the render stubs' arity settled (harness job).
 pub fn draw_step<E: FieldEnv>(env: &mut E, fm: u32) {
     env.callv(0x0204_7CE4, &[]);
     let k = env.callv(0x0203_630C, &[]) & 0xFFFF;
@@ -958,8 +963,9 @@ pub fn proc_draw<E: FieldEnv>(env: &mut E, gs: u32, fm: u32) -> u32 {
 /// C: `FUN_02188990` (unlabeled routine at `0x02188990`, proc step 4): the teardown of the subsystems (the reverse of
 /// [`proc_setup`]), the MAP CTRL teardown callback, [`clear_ctrl_work`], [`mmdl_delete`]; 1.
 ///
-/// UNVERIFIED port of `FUN_02188990`: not in [`PORTED`]. The spec's stubs `021c1c04` / `021c1ad0 args=v,v,v,v` log r2
-/// and r3, this function's entry registers.
+/// Verified (in [`PORTED`] since the Z19 entry state: the r2 / r3 the stubs `021c1c04` / `021c1ad0 args=v,v,v,v` log are
+/// this function's entry registers, 0 on every input). Callers reach it through their forced stub (`fieldmap.spec`
+/// keeps `force` there: ai1 ports the ov96 function at the same address).
 pub fn proc_teardown<E: FieldEnv>(env: &mut E, gs: u32, fm: u32) -> u32 {
     let o = env.r32(fm + 0x13C);
     env.callv(0x021C_F480, &[o]);
@@ -1046,7 +1052,9 @@ pub fn proc_teardown<E: FieldEnv>(env: &mut E, gs: u32, fm: u32) -> u32 {
 /// `FUN_020450C8()`, `FUN_02188E38(fm)` (G8), unload the overlay of [`proc_graphics_init`]; 2 (finished).
 ///
 /// UNVERIFIED port of `FUN_02188AD4`: not in [`PORTED`]. The render stubs `021890c8 args=v,v,v,v` /
-/// `02188e38 args=p,v,v,v` log registers the functions do not read (this function's entry r2 / r3).
+/// `02188e38 args=p,v,v,v` log registers the functions do not read; after Z19 they are what the preceding real code
+/// left there (seed 0: r3 = 0x020307B0 from the heap free), not entry registers; verifying it needs the render stubs'
+/// arity settled (harness job).
 pub fn proc_graphics_exit<E: FieldEnv>(env: &mut E, _gs: u32, fm: u32) -> u32 {
     let t = env.r32(fm + 0x110);
     env.call(0x0203_0DA4, &mut [CArg::X(t)]);
@@ -1092,8 +1100,8 @@ pub const PROC_TABLE: [[u32; 2]; 6] = [
     [0x0218_8AD5, 0x0218_8AD5],
 ];
 
-/// Run the proc step function at `f` (a [`PROC_TABLE`] entry): the ported ones as Rust, the UNVERIFIED ports through
-/// their stubs.
+/// Run the proc step function at `f` (a [`PROC_TABLE`] entry): [`proc_setup`] / [`proc_frame`] / [`proc_draw`] as Rust,
+/// the others through their stubs (`021880C8` / `02188990` verified ports, `021885E8` / `02188AD4` UNVERIFIED ones).
 fn run_proc_fn<E: FieldEnv>(env: &mut E, f: u32, gs: u32, fm: u32) -> u32 {
     match f & !1 {
         0x0218_81D8 => proc_setup(env, gs, fm),
@@ -1533,7 +1541,7 @@ pub fn zone_change<E: FieldEnv>(env: &mut E, fm: u32) {
     zone_change_save(env, fm, z);
     zone_change_1c(env, fm, z);
     zone_change_20(env, fm, z);
-    // `FUN_021895D0` -> `FUN_021895E8` through its stub (UNVERIFIED port, see `zone_change_10_at`)
+    // `FUN_021895D0` -> `FUN_021895E8` through its stub ([`zone_change_10_at`]; the ROM side forces the stub)
     zone_change_10(env, fm, z);
     zone_change_record(env, gd, z);
     zone_change_scene(env, fm, z);
@@ -1630,9 +1638,8 @@ pub fn clear_ctrl_work(mem: &mut Mem, fm: u32) {
 /// C: `FUN_021895E8` (unlabeled routine at `0x021895E8`): the zone's map texture set `w = FUN_02013BD0(z)`: load it
 /// (`FUN_0218F14C(+0x10, w, heap)`) or, for 0xFFFF, clear (`FUN_0218F134(+0x10)`).
 ///
-/// UNVERIFIED port of `FUN_021895E8`: not in [`PORTED`]. The spec's stub `0218f134 args=v,p,p,v` logs r3, which the
-/// one-argument callee does not read; r3 is this function's entry r3 (the caller's), so the hash depends on
-/// whoever called it. Callers reach it through its stub.
+/// Verified (in [`PORTED`] since the Z19 entry state: the r3 the stub `0218f134 args=v,p,p,v` logs is this function's
+/// entry r3, 0 on every input). Callers reach it through their (forced) stub.
 pub fn zone_change_10_at<E: FieldEnv>(env: &mut E, fm: u32, z: u32, heap: u32) {
     let w = env.callv(0x0201_3BD0, &[z & 0xFFFF]);
     let h = env.r32(fm + 0x10);

@@ -612,8 +612,9 @@ pub fn refresh_priorities<E: FlowEnv>(
 
 /// C: `FUN_overlay_d_93__021bc220`: for every client with a used slot (`s` = server-side object)
 /// and every action word of its list in `buf` (counts at `+0x30`, words at `client * 12 + j * 4`) with
-/// kind 3 and bit 10 clear, calls `021bd9d4`; then `021bda00` and `021c5200`.
-pub fn queue_switch_ins<E: FlowEnv>(env: &mut E, s: &[u8], buf: &[u8]) {
+/// kind 3 and bit 10 clear, calls `021bd9d4`; then `021bda00` and `021c5200`, whose result (0 / 1) it returns (r0 is
+/// untouched between the `bl 021c5200` and the `pop`; 021bbd2c branches on it, V-0023).
+pub fn queue_switch_ins<E: FlowEnv>(env: &mut E, s: &[u8], buf: &[u8]) -> u32 {
     for i in 0..4u32 {
         if server_side::slot_checked(s, i).is_none() {
             continue;
@@ -636,7 +637,7 @@ pub fn queue_switch_ins<E: FlowEnv>(env: &mut E, s: &[u8], buf: &[u8]) {
         }
     }
     env.call(0x021B_DA00, &mut [Arg::P]);
-    env.call(0x021C_5200, &mut [Arg::P]);
+    env.call(0x021C_5200, &mut [Arg::P])
 }
 
 /// C: `FUN_overlay_d_93__021bc3b0`: in mode 1 (work + 0x18), pushes command 0x29 `(client, n)` for

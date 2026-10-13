@@ -127,9 +127,9 @@
 - [x] `FUN_overlay_d_93__021d69ac` → `black_battle::battle_mon::BattleMon::set_u8_157`
 - [x] `FUN_overlay_d_93__021d69b8` → `black_battle::battle_mon::BattleMon::gain_exp`
 - [x] `FUN_overlay_d_93__021d6b6c` → `black_battle::battle_mon::BattleMon::exp_for_max_level`
-- [x] `FUN_overlay_d_93__021d6b84` → `black_battle::battle_mon::BattleMon::store_to_party`
+- [x] `FUN_overlay_d_93__021d6b84` → `black_battle::server::server3::pokecon_sync_back`
 - [x] `FUN_overlay_d_93__021d6bfc` → `black_battle::battle_mon::BattleMon::refresh_from_party`
-- [x] `FUN_overlay_d_93__021d6c24` → `black_battle::battle_mon::BattleMon::is_illusion_active`
+- [x] `FUN_overlay_d_93__021d6c24` → `black_battle::server::server3::illusion_source`
 - [x] `FUN_overlay_d_93__021d6c2c` → `black_battle::battle_mon::BattleMon::clear_illusion_mon`
 - [x] `FUN_overlay_d_93__021d6c3c` → `black_battle::battle_mon::BattleMon::set_pokemon`
 - [x] `FUN_overlay_d_93__021d6c50` → `black_battle::battle_mon::BattleMon::transform_into`

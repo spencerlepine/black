@@ -485,9 +485,16 @@ pub fn sum_non_egg<E: BoxEnv>(env: &mut E, mgr: u32) -> u32 {
     total
 }
 
-/// C: `FUN_020079BC`: `PokeParaGet` of one slot. `tray` `>= 24` (but not
-/// `CURRENT`) or `slot >= 30` asserts.
-pub fn mon_para_get<E: BoxEnv>(env: &mut E, mgr: u32, tray: u32, slot: u32, id: u32, buf: u32) {
+/// C: `FUN_020079BC`: `PokeParaGet` of one slot; returns its value (tail `bl FUN_02017E88`, r0 untouched up to the
+/// `pop`; the field and box callers compare it, V-0022 audit). `tray` `>= 24` (but not `CURRENT`) or `slot >= 30` asserts.
+pub fn mon_para_get<E: BoxEnv>(
+    env: &mut E,
+    mgr: u32,
+    tray: u32,
+    slot: u32,
+    id: u32,
+    buf: u32,
+) -> u32 {
     let meta = env.meta_addr(mgr);
     if tray != CURRENT && tray >= MAX_BOXES {
         env.assert_fail();
@@ -497,7 +504,7 @@ pub fn mon_para_get<E: BoxEnv>(env: &mut E, mgr: u32, tray: u32, slot: u32, id: 
     }
     let tray = current_or(env, meta, tray);
     let base = env.tray_addr(mgr, tray);
-    env.poke_get(slot_addr(base, slot), id, buf);
+    env.poke_get(slot_addr(base, slot), id, buf)
 }
 
 /// C: `FUN_02007A18`: the address of a slot (same checks as [`mon_para_get`]).

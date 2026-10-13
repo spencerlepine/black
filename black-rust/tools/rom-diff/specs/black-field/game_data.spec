@@ -823,13 +823,14 @@ fn 02012be0 ret=none inputs=100
   stub 0200c40c ret=u32 args=v
   stub 0200c418 ret=none args=v,v,v
 
-# FUN_02012BF8(gd, a): FUN_0200C44C(FUN_0200C404(*gd), a)
-fn 02012bf8 ret=none inputs=100
+# FUN_02012BF8(gd, a): FUN_0200C44C(FUN_0200C404(*gd), a), returned (V-0022 audit: tail bl + pop; 0200C44C is
+# "1 if one of the 25 bytes at x equals a, else 0", ~27 overlay callers test the result)
+fn 02012bf8 ret=u32 inputs=100
   nowork
   arg buf 0x6C0
   arg u32 any
   stub 0200c404 ret=u32 args=v
-  stub 0200c44c ret=none args=v,v
+  stub 0200c44c ret=bool args=v,v
 
 # FUN_02012C0C(gamedata): address gamedata + 0x5E8 (returned as an offset into the buffer)
 fn 02012c0c ret=ofs:arg0 inputs=100

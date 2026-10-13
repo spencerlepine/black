@@ -45,8 +45,10 @@ pub const PORTED: &[u32] = &[
 use crate::hooks::{MsgHooks, StrHeap};
 
 /// The end-of-string marker (the u16 at `0x020A7E7C` in the ROM image).
+/// C: `FUN_02045A98`: returns it.
 pub const EOS: u16 = 0xFFFF;
 /// Offset of the first character.
+/// C: `FUN_02045A90`: returns it.
 pub const CHARS_OFS: usize = 8;
 
 pub(crate) fn rd16(b: &[u8], ofs: usize) -> u16 {

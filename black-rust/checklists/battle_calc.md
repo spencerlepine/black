@@ -41,9 +41,9 @@
 - [x] `FUN_overlay_d_93__021d7c70` → `black_battle::calc::BattleCalc::make_move_sick_cont`
 - [x] `FUN_overlay_d_93__021d7d18` → `black_battle::calc::BattleCalc::make_default_sick_cont`
 - [x] `FUN_overlay_d_93__021d7d6c` → `black_battle::calc_leftovers2::sick_below_6`
-- [x] `FUN_overlay_d_93__021d7dc0` → `black_battle::calc::BattleCalc::make_sick_cont`
-- [x] `FUN_overlay_d_93__021d7e10` → `black_battle::calc_leftovers2::first_table_sick`
-- [x] `FUN_021D7E34` → `black_battle::calc_leftovers2::fun_021d7e34`
+- [x] `FUN_overlay_d_93__021d7dc0` → `black_battle::flow::Battle::make_sick_cont`
+- [x] `FUN_overlay_d_93__021d7e10` → `black_battle::handlers::items::first_table_sick`
+- [x] `FUN_021D7E34` → `black_battle::flow::sick_list_entry`
 - [x] `thunk_EXT_FUN_0689c9e4` → `black_battle::calc_leftovers2::thunk_ext_fun_0689c9e4`
 - [x] `FUN_overlay_d_93__021d7eb4` → `black_battle::calc::exp_yield`
 - [x] `FUN_overlay_d_93__021d7ef0` → `black_battle::calc::is_not_0_or_3`
@@ -57,11 +57,11 @@
 - [x] `FUN_overlay_d_93__021d7ff8` → `black_battle::calc::prize_money`
 - [~] `FUN_overlay_d_93__021d804c` — unit-tested only (state setter)
 - [x] `FUN_overlay_d_93__021d8058` → `black_battle::calc_leftovers2::fun_021d8058`
-- [x] `FUN_overlay_d_93__021d805c` → `black_battle::calc_leftovers2::fun_021d805c`
+- [x] `FUN_overlay_d_93__021d805c` → `black_battle::flow::item_param`
 - [x] `FUN_overlay_d_93__021d806c` → `black_battle::calc::pack_5bit_x6`
 - [x] `FUN_overlay_d_93__021d8090` → `black_battle::calc::unpack_5bit_x6`
 - [x] `FUN_overlay_d_93__021d80a8` → `black_battle::calc::fun_021d80a8`
-- [x] `FUN_overlay_d_93__021d80bc` → `black_battle::calc_target::fun_021d80bc`
+- [x] `FUN_overlay_d_93__021d80bc` → `black_battle::flow::fun_021c8030`
 - [x] `FUN_overlay_d_93__021d81f8` → `black_battle::calc_target::fun_021d81f8`
 - [x] `FUN_overlay_d_93__021d8230` → `black_battle::calc_target::IdSet::new`
 - [x] `FUN_overlay_d_93__021d8244` → `black_battle::calc_target::IdSet::add`
@@ -90,7 +90,7 @@
 - [x] `FUN_overlay_d_93__021d8548` → `black_battle::handlers::registry::enable_ability`
 - [x] `FUN_overlay_d_93__021d8564` → `black_battle::handlers::registry::swap_abilities`
 - [x] `FUN_overlay_d_93__021d85b0` → `black_battle::calc_target::speed_unstaged`
-- [x] `FUN_overlay_d_93__021d85c0` → `black_battle::calc_target::fun_021d85c0`
+- [x] `FUN_overlay_d_93__021d85c0` → `black_battle::flow::Battle::roll_percent_or_forced`
 - [ ] `FUN_overlay_d_93__021d8964`
 - [x] `FUN_overlay_d_93__021d8974` → `black_battle::handlers::abilities::start_countdown`
 - [ ] `FUN_overlay_d_93__021d89b8`
@@ -134,10 +134,10 @@
 - [ ] `thunk_FUN_overlay_d_93__021d7040`
 - [ ] `FUN_overlay_d_93__021dcfa4`
 - [ ] `FUN_overlay_d_93__021dcfb4`
-- [ ] `FUN_overlay_d_93__021dcfd0`
-- [ ] `FUN_overlay_d_93__021dcff8`
-- [ ] `FUN_overlay_d_93__021dd008`
-- [ ] `FUN_overlay_d_93__021dd044`
+- [x] `FUN_overlay_d_93__021dcfd0` → `black_battle::handlers::items::roll_percent_or_forced_2`
+- [x] `FUN_overlay_d_93__021dcff8` → `black_battle::handlers::items::item_param`
+- [x] `FUN_overlay_d_93__021dd008` → `black_battle::handlers::items::item_percent_fixed`
+- [x] `FUN_overlay_d_93__021dd044` → `black_battle::handlers::items::allow_reentry_and_pop`
 - [ ] `FUN_overlay_d_93__021dd26c`
 - [ ] `FUN_overlay_d_93__021dd2a4`
 - [ ] `FUN_overlay_d_93__021dd2f8`
@@ -148,13 +148,13 @@
 - [ ] `FUN_overlay_d_93__021dd70c`
 - [ ] `FUN_overlay_d_93__021dd744`
 - [ ] `FUN_overlay_d_93__021dd77c`
-- [ ] `FUN_overlay_d_93__021dd7b8`
+- [x] `FUN_overlay_d_93__021dd7b8` → `black_battle::handlers::items::fraction_work_and_sick`
 - [ ] `FUN_overlay_d_93__021ddd8c`
 - [ ] `FUN_overlay_d_93__021dddc4`
 - [ ] `FUN_overlay_d_93__021dddfc`
-- [ ] `FUN_overlay_d_93__021dde30`
-- [ ] `FUN_overlay_d_93__021dde74`
-- [ ] `FUN_overlay_d_93__021ddea4`
+- [x] `FUN_overlay_d_93__021dde30` → `black_battle::handlers::items::max_hp_check_reentry`
+- [x] `FUN_overlay_d_93__021dde74` → `black_battle::handlers::items::max_hp_check_var2`
+- [x] `FUN_overlay_d_93__021ddea4` → `black_battle::handlers::items::max_hp_check`
 - [ ] `FUN_overlay_d_93__021ddfdc`
 - [ ] `FUN_overlay_d_93__021de000`
 - [ ] `FUN_overlay_d_93__021de024`
@@ -167,7 +167,7 @@
 - [ ] `FUN_overlay_d_93__021deea4`
 - [ ] `FUN_overlay_d_93__021def48`
 - [ ] `FUN_overlay_d_93__021df1b0`
-- [ ] `FUN_overlay_d_93__021df4e0`
+- [x] `FUN_overlay_d_93__021df4e0` → `black_battle::handlers::items::rewrite_24_from_item_param`
 - [ ] `FUN_overlay_d_93__021df5f4`
 - [ ] `FUN_overlay_d_93__021df7f4`
-- [ ] `FUN_overlay_d_93__021df93c`
+- [x] `FUN_overlay_d_93__021df93c` → `black_battle::handlers::items::mul_0x31_percent_on_kind`

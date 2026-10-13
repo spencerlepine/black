@@ -505,7 +505,7 @@ pub fn mon_check_824c<E: FlowEnv>(env: &mut E, w: &SvFlowWork, poke_id: u32) -> 
     env.call(0x021E_F948, &mut [Arg::V(7)]) == 0
 }
 
-/// C: `thunk_FUN_overlay_d_93__021c2ab0` (0x021C8288): thunk to core4 `021c2ab0(work)` (the
+/// C: `thunk_FUN_overlay_d_93__021c2ab0` (`0x021C8288`): thunk to core4 `021c2ab0(work)` (the
 /// weather).
 pub fn weather<E: FlowEnv>(env: &mut E) -> u32 {
     env.call(0x021C_2AB0, &mut [Arg::P])
@@ -595,12 +595,12 @@ pub fn mon_weight<E: FlowEnv>(env: &mut E, w: &SvFlowWork, poke_id: u32) -> u32 
     }
 }
 
-/// C: `FUN_overlay_d_93__021c2e4c` (thunk at 0x021C83CC): thunk to core4 `021c2e4c(work)`.
+/// C: `FUN_overlay_d_93__021c2e4c` (thunk at `0x021C83CC`): thunk to core4 `021c2e4c(work)`.
 pub fn counter_2e4c<E: FlowEnv>(env: &mut E) -> u32 {
     env.call(0x021C_2E4C, &mut [Arg::P])
 }
 
-/// C: `thunk_FUN_overlay_d_93__021bc2b0` (0x021C83D4): thunk to core1 `021bc2b0(work)`.
+/// C: `thunk_FUN_overlay_d_93__021bc2b0` (`0x021C83D4`): thunk to core1 `021bc2b0(work)`.
 pub fn core1_bc2b0<E: FlowEnv>(env: &mut E) -> u32 {
     env.call(0x021B_C2B0, &mut [Arg::P])
 }
@@ -661,17 +661,17 @@ pub fn call_2128_flag<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, x: u32, out: 
     r
 }
 
-/// C: `FUN_overlay_d_93__021bdbb8` (thunk at 0x021C84D0): thunk to core2 `021bdbb8(work, x)`.
+/// C: `FUN_overlay_d_93__021bdbb8` (thunk at `0x021C84D0`): thunk to core2 `021bdbb8(work, x)`.
 pub fn core2_bdbb8<E: FlowEnv>(env: &mut E, x: u32) {
     env.call(0x021B_DBB8, &mut [Arg::P, Arg::V(x)]);
 }
 
-/// C: `thunk_FUN_overlay_d_93__021cc668` (0x021C84D8): thunk to events `021cc668(work, mon)`.
+/// C: `thunk_FUN_overlay_d_93__021cc668` (`0x021C84D8`): thunk to events `021cc668(work, mon)`.
 pub fn events_cc668<E: FlowEnv>(env: &mut E, mon: u32) -> u32 {
     env.call(0x021C_C668, &mut [Arg::P, Arg::V(mon)])
 }
 
-/// C: `sub_021c84f4` (thunk at 0x021C84E0): thunk to [`set_add`].
+/// C: `sub_021c84f4` (thunk at `0x021C84E0`): thunk to [`set_add`].
 pub fn set_add_thunk(w: &mut SvFlowWork, v: u32) {
     set_add(w, v);
 }

@@ -167,7 +167,7 @@ fn put_list_ids<E: FlowEnv>(env: &mut E, list: u32, n: u32, member: u32) {
 
 // ---- 65a8 .. 6e00 ----
 
-/// Port of `FUN_overlay_d_93__021c65a8`: message 0x2D0D: argument 2 = id of `mon`, 0x12 = `value`, 5 = member count of
+/// C: `FUN_overlay_d_93__021c65a8`: message 0x2D0D: argument 2 = id of `mon`, 0x12 = `value`, 5 = member count of
 /// `list`, 6.. = member ids; returns the reply 0x3E. The u16 reply 0x13 is stored through the pointer at
 /// `work + 0x4A8` when non-zero (`slot16` is the 2-byte target of that pointer).
 pub fn list_round_trip<E: FlowEnv>(
@@ -196,7 +196,7 @@ pub fn list_round_trip<E: FlowEnv>(
     r
 }
 
-/// Port of `FUN_overlay_d_93__021c6668`: message 0x2D36 for `mon`, returns the reply 0x51.
+/// C: `FUN_overlay_d_93__021c6668`: message 0x2D36 for `mon`, returns the reply 0x51.
 pub fn message_2d36<E: FlowEnv>(env: &mut E, mon: u32) -> u32 {
     begin(env, 0x2D36);
     let id = mon_id(env, mon);
@@ -208,7 +208,7 @@ pub fn message_2d36<E: FlowEnv>(env: &mut E, mon: u32) -> u32 {
     r
 }
 
-/// Port of `FUN_overlay_d_93__021c66ac`: message 0x2D4F for `mon` and the first member of `list` (0x1F when none);
+/// C: `FUN_overlay_d_93__021c66ac`: message 0x2D4F for `mon` and the first member of `list` (0x1F when none);
 /// returns the reply 0x41.
 pub fn message_2d4f<E: FlowEnv>(env: &mut E, mon: u32, list: u32) -> u32 {
     let first = env.call(0x021C_6710, &mut [Arg::V(list), Arg::V(0)]);
@@ -224,7 +224,7 @@ pub fn message_2d4f<E: FlowEnv>(env: &mut E, mon: u32, list: u32) -> u32 {
     r
 }
 
-/// Port of `FUN_overlay_d_93__021c6720`: message 0x2D66 for `mon` with `value`; returns the reply 0x51.
+/// C: `FUN_overlay_d_93__021c6720`: message 0x2D66 for `mon` with `value`; returns the reply 0x51.
 pub fn message_2d66<E: FlowEnv>(env: &mut E, mon: u32, value: u32) -> u32 {
     begin(env, 0x2D66);
     let id = mon_id(env, mon);
@@ -237,7 +237,7 @@ pub fn message_2d66<E: FlowEnv>(env: &mut E, mon: u32, value: u32) -> u32 {
     r
 }
 
-/// Port of `FUN_overlay_d_93__021c676c`: message 0x2D80 for `mon` and the members of `list` (0x1F when empty); stores the
+/// C: `FUN_overlay_d_93__021c676c`: message 0x2D80 for `mon` and the members of `list` (0x1F when empty); stores the
 /// reply 6 (0x1F when the reply 0x51 is 0) into `out_u8[0]` and the reply 0x4F into `out_int`; true when the reply
 /// 0x41 is 0.
 pub fn message_2d80<E: FlowEnv>(
@@ -274,7 +274,7 @@ pub fn message_2d80<E: FlowEnv>(
     r == 0
 }
 
-/// Port of `FUN_overlay_d_93__021c6848`: message 0x2DAC (command 0x96) for `mon`.
+/// C: `FUN_overlay_d_93__021c6848`: message 0x2DAC (command 0x96) for `mon`.
 pub fn message_2dac<E: FlowEnv>(env: &mut E, mon: u32) {
     begin(env, 0x2DAC);
     let id = mon_id(env, mon);
@@ -283,7 +283,7 @@ pub fn message_2dac<E: FlowEnv>(env: &mut E, mon: u32) {
     end(env, 0x2DAC + 3);
 }
 
-/// Port of `FUN_overlay_d_93__021c6878`: message 0x2DBD (command 0x97) for `mon`.
+/// C: `FUN_overlay_d_93__021c6878`: message 0x2DBD (command 0x97) for `mon`.
 pub fn message_2dbd<E: FlowEnv>(env: &mut E, mon: u32) {
     begin(env, 0x2DBD);
     let id = mon_id(env, mon);
@@ -292,7 +292,7 @@ pub fn message_2dbd<E: FlowEnv>(env: &mut E, mon: u32) {
     end(env, 0x2DBD + 3);
 }
 
-/// Port of `FUN_overlay_d_93__021c68a8`: message 0x2DD3 for `mon` and the members of `list`; true when the reply 0x41 is 0.
+/// C: `FUN_overlay_d_93__021c68a8`: message 0x2DD3 for `mon` and the members of `list`; true when the reply 0x41 is 0.
 pub fn message_2dd3<E: FlowEnv>(env: &mut E, mon: u32, list: u32) -> bool {
     let n = env.call(0x021C_6928, &mut [Arg::V(list)]);
     begin(env, 0x2DD3);
@@ -307,7 +307,7 @@ pub fn message_2dd3<E: FlowEnv>(env: &mut E, mon: u32, list: u32) -> bool {
     r & 0xFF == 0
 }
 
-/// Port of `FUN_overlay_d_93__021c6948`: when `5c08(b)` is not 0x10, message 0x2DF5 for both mons and that value; true when
+/// C: `FUN_overlay_d_93__021c6948`: when `5c08(b)` is not 0x10, message 0x2DF5 for both mons and that value; true when
 /// the reply 0x42 is non-zero.
 pub fn message_2df5<E: FlowEnv>(env: &mut E, a: u32, b: u32) -> bool {
     let v = env.call(0x021D_5C08, &mut [Arg::V(b)]);
@@ -327,7 +327,7 @@ pub fn message_2df5<E: FlowEnv>(env: &mut E, a: u32, b: u32) -> bool {
     res
 }
 
-/// Port of `FUN_overlay_d_93__021c69b8`: `c1f4(x)`; when it is 0 message 0x2E15 for `mon` and the reply 0x51 instead.
+/// C: `FUN_overlay_d_93__021c69b8`: `c1f4(x)`; when it is 0 message 0x2E15 for `mon` and the reply 0x51 instead.
 pub fn message_2e15<E: FlowEnv>(env: &mut E, mon: u32, x: u32) -> u32 {
     let mut r = env.call(0x0201_C1F4, &mut [Arg::V(x)]);
     if r == 0 {
@@ -342,7 +342,7 @@ pub fn message_2e15<E: FlowEnv>(env: &mut E, mon: u32, x: u32) -> u32 {
     r
 }
 
-/// Port of `FUN_overlay_d_93__021c6a04`: message 0x2E2F for the mons `a`, `b` and the move record `rec` (u16 id at +0,
+/// C: `FUN_overlay_d_93__021c6a04`: message 0x2E2F for the mons `a`, `b` and the move record `rec` (u16 id at +0,
 /// u32 at +8); the replies 0x2B / 0x35 are scaled by `7b10` (returned).
 pub fn message_2e2f<E: FlowEnv>(env: &mut E, a: u32, b: u32, rec: &[u8]) -> u32 {
     let v = field(env, u16_at(rec, 0), 4);
@@ -362,7 +362,7 @@ pub fn message_2e2f<E: FlowEnv>(env: &mut E, a: u32, b: u32, rec: &[u8]) -> u32 
     scale(env, r1, r2)
 }
 
-/// Port of `FUN_overlay_d_93__021c6a9c`: 0 when `a`'s value 0xF is below `b`'s; else message 0x2E5A (reply 0x41): non-zero
+/// C: `FUN_overlay_d_93__021c6a9c`: 0 when `a`'s value 0xF is below `b`'s; else message 0x2E5A (reply 0x41): non-zero
 /// reply -> 0; otherwise `bf324(work, a, b)` (core3) -> 1, else a percent roll `78ac(100)` against
 /// `bd28(r3, 4) + (va - vb)`.
 pub fn priority_roll<E: FlowEnv>(env: &mut E, a: u32, b: u32, r3: u32) -> u32 {
@@ -393,7 +393,7 @@ pub fn priority_roll<E: FlowEnv>(env: &mut E, a: u32, b: u32, r3: u32) -> u32 {
     1
 }
 
-/// Port of `FUN_overlay_d_93__021c6b5c`: message 0x2E83 for the mons `a`, `b` and the byte at `rec + 6`; returns the reply 0x51.
+/// C: `FUN_overlay_d_93__021c6b5c`: message 0x2E83 for the mons `a`, `b` and the byte at `rec + 6`; returns the reply 0x51.
 pub fn message_2e83<E: FlowEnv>(env: &mut E, a: u32, b: u32, rec: &[u8]) -> u32 {
     begin(env, 0x2E83);
     let ia = mon_id(env, a);
@@ -408,7 +408,7 @@ pub fn message_2e83<E: FlowEnv>(env: &mut E, a: u32, b: u32, rec: &[u8]) -> u32 
     r
 }
 
-/// Port of `FUN_overlay_d_93__021c6bb8`: message 0x2E98 (command 0x31) for the mons `a`, `b`.
+/// C: `FUN_overlay_d_93__021c6bb8`: message 0x2E98 (command 0x31) for the mons `a`, `b`.
 pub fn message_2e98<E: FlowEnv>(env: &mut E, a: u32, b: u32) {
     begin(env, 0x2E98);
     let ia = mon_id(env, a);
@@ -419,7 +419,7 @@ pub fn message_2e98<E: FlowEnv>(env: &mut E, a: u32, b: u32) {
     end(env, 0x2E98 + 4);
 }
 
-/// Port of `FUN_overlay_d_93__021c6bf8`: message 0x2EB0 (reply 0x41, value 0x2C = `bd28(r3, 7) + 5f14(a)`); when the reply
+/// C: `FUN_overlay_d_93__021c6bf8`: message 0x2EB0 (reply 0x41, value 0x2C = `bd28(r3, 7) + 5f14(a)`); when the reply
 /// is 0: `c284(r3)` -> 1, else `7930(min(reply 0x2C, 4))`; then `911c(work[4], 3)` forces 1.
 pub fn message_2eb0<E: FlowEnv>(env: &mut E, w: &SvFlowWork, a: u32, b: u32, r3: u32) -> u32 {
     let v = field(env, r3, 7);
@@ -452,7 +452,7 @@ pub fn message_2eb0<E: FlowEnv>(env: &mut E, w: &SvFlowWork, a: u32, b: u32, r3:
     res
 }
 
-/// Port of `FUN_overlay_d_93__021c6cac`: message 0x2EF3 for `mon` (replies 0x35 / 0x41 / 0x51 / 0x36) scaling either
+/// C: `FUN_overlay_d_93__021c6cac`: message 0x2EF3 for `mon` (replies 0x35 / 0x41 / 0x51 / 0x36) scaling either
 /// `59b4(mon, 0xE)` (when `x` has field 0x1F but not 0x1E) or `amount` through `7b3c`; `*out` gets the reply 0x51.
 pub fn scaled_message<E: FlowEnv>(
     env: &mut E,
@@ -514,7 +514,7 @@ pub fn scaled_message<E: FlowEnv>(
     v
 }
 
-/// Port of `FUN_overlay_d_93__021c6dd0`: message 0x2F2D (command 0x72) for `mon`.
+/// C: `FUN_overlay_d_93__021c6dd0`: message 0x2F2D (command 0x72) for `mon`.
 pub fn message_2f2d<E: FlowEnv>(env: &mut E, mon: u32) {
     begin(env, 0x2F2D);
     let id = mon_id(env, mon);
@@ -533,7 +533,7 @@ pub fn message_2f3d<E: FlowEnv>(env: &mut E, mon: u32, value: u32) {
     end(env, 0x2F3D + 4);
 }
 
-/// Port of `FUN_overlay_d_93__021c6e3c`: type-chart check of the move type `rec[6]` (0x11 -> 3) against the defender `b`'s
+/// C: `FUN_overlay_d_93__021c6e3c`: type-chart check of the move type `rec[6]` (0x11 -> 3) against the defender `b`'s
 /// type pair: `7038` for each type of the pair (combined by `79e8`), then for type 4 the pair-resist question `6f0c`;
 /// with `flag` set and the question answered a message is sent (`5750`, or the bracketed `6fc0` when it was 1).
 /// Returns 3 (no effect), the multiplier code, or 0.
@@ -711,7 +711,7 @@ pub fn message_306f<E: FlowEnv>(env: &mut E, mon: u32, value: u32) -> u32 {
     r
 }
 
-/// Port of `FUN_overlay_d_93__021c71e0`: fills the 6-byte answer `rec` for the item power `v = bd28(x, 8)`: with `v > 1`
+/// C: `FUN_overlay_d_93__021c71e0`: fills the 6-byte answer `rec` for the item power `v = bd28(x, 8)`: with `v > 1`
 /// message 0x3090 (replies 0x51 / 0x2A / 0x42) and returns true, else `rec = {1, _, 0, 0}` and false.
 pub fn power_message<E: FlowEnv>(env: &mut E, mon: u32, x: u32, rec: &mut [u8]) -> bool {
     let v = field(env, x, 8) & 0xFF;
@@ -746,7 +746,7 @@ pub fn power_message<E: FlowEnv>(env: &mut E, mon: u32, x: u32, rec: &mut [u8]) 
     }
 }
 
-/// Port of `FUN_overlay_d_93__021c728c`: two sends (0x37 / 0x38) of message 0x30C7 for the mons `a`, `b` and the move
+/// C: `FUN_overlay_d_93__021c728c`: two sends (0x37 / 0x38) of message 0x30C7 for the mons `a`, `b` and the move
 /// record `rec` (u16 id at +0, byte at +6, u32 at +8); returns `7b10(reply 0x30, reply 0x31)` as a u16.
 pub fn move_record_message<E: FlowEnv>(env: &mut E, a: u32, b: u32, rec: &[u8]) -> u32 {
     let c = env.call(0x0201_C1D8, &mut [Arg::V(u16_at(rec, 0))]);
@@ -776,7 +776,7 @@ pub fn move_record_message<E: FlowEnv>(env: &mut E, a: u32, b: u32, rec: &[u8]) 
     scale(env, r1 & 0xFFFF, r2) & 0xFFFF
 }
 
-/// Port of `FUN_overlay_d_93__021c7330`: message 0x30E9 for `mon` (slot 4, default 1); returns the reply 0x51.
+/// C: `FUN_overlay_d_93__021c7330`: message 0x30E9 for `mon` (slot 4, default 1); returns the reply 0x51.
 pub fn message_30e9<E: FlowEnv>(env: &mut E, mon: u32) -> u32 {
     begin(env, 0x30E9);
     let id = mon_id(env, mon);
@@ -800,7 +800,7 @@ fn pick_value<E: FlowEnv>(env: &mut E, mon: u32, k: u32, flagged: bool, alt: boo
     env.call(addr, &mut [Arg::V(mon), Arg::V(k)])
 }
 
-/// Port of `FUN_overlay_d_93__021c7374`: message 0x30FE (replies 0x3B and 0x51) for the mons `a`, `b`, then message 0x3123
+/// C: `FUN_overlay_d_93__021c7374`: message 0x30FE (replies 0x3B and 0x51) for the mons `a`, `b`, then message 0x3123
 /// with the record `rec` and the chosen BattleMon value; returns `7b10(reply 0x33, reply 0x35)` as a u16.
 pub fn damage_message<E: FlowEnv>(
     env: &mut E,
@@ -841,7 +841,7 @@ pub fn damage_message<E: FlowEnv>(
     res & 0xFFFF
 }
 
-/// Port of `FUN_overlay_d_93__021c7474`: message 0x3133 (type multiplier id 9 / 0xB; reply 0x3D may swap it), then the
+/// C: `FUN_overlay_d_93__021c7474`: message 0x3133 (type multiplier id 9 / 0xB; reply 0x3D may swap it), then the
 /// BattleMon value of `b` scaled by 0x1800 for id 0xB under `c2ab0(work) == 4` and `5814(b, 5)`, then message 0x3157;
 /// returns `7b10(reply 0x34, reply 0x35)` as a u16.
 pub fn multiplier_message<E: FlowEnv>(env: &mut E, a: u32, b: u32, rec: &[u8], alt: u32) -> u32 {
@@ -885,7 +885,7 @@ pub fn multiplier_message<E: FlowEnv>(env: &mut E, a: u32, b: u32, rec: &[u8], a
     scale(env, r34 & 0xFFFF, r35) & 0xFFFF
 }
 
-/// Port of `FUN_overlay_d_93__021c75ec`: `5814(mon, x)` as the default of the reply 0x51 of message 0x3178 (sent 0x40);
+/// C: `FUN_overlay_d_93__021c75ec`: `5814(mon, x)` as the default of the reply 0x51 of message 0x3178 (sent 0x40);
 /// then message part 0x41 with the value 0x1000 (0x1800 when that reply was non-zero); returns the reply 0x35.
 pub fn boost_message<E: FlowEnv>(env: &mut E, mon: u32, x: u32) -> u32 {
     let q = env.call(0x021D_5814, &mut [Arg::V(mon), Arg::V(x)]);
@@ -907,7 +907,7 @@ pub fn boost_message<E: FlowEnv>(env: &mut E, mon: u32, x: u32) -> u32 {
     res
 }
 
-/// Port of `FUN_overlay_d_93__021c7664`: message 0x319D for `mon` with `v = bd28(x, 10)` (replies 0x41 / 0x45 / 0x26):
+/// C: `FUN_overlay_d_93__021c7664`: message 0x319D for `mon` with `v = bd28(x, 10)` (replies 0x41 / 0x45 / 0x26):
 /// 0 when the reply 0x41 is set and `v` non-zero; else `v` (or the reply 0x26 when `v` is 0), doubled when the
 /// reply 0x45 is set.
 pub fn message_319d<E: FlowEnv>(env: &mut E, x: u32, mon: u32) -> u32 {
@@ -934,7 +934,7 @@ pub fn message_319d<E: FlowEnv>(env: &mut E, x: u32, mon: u32) -> u32 {
     res
 }
 
-/// Port of `FUN_overlay_d_93__021c76f4`: message 0x31C9 for `mon` with `x` (slot 0x26); false when the reply 0x41 is set;
+/// C: `FUN_overlay_d_93__021c76f4`: message 0x31C9 for `mon` with `x` (slot 0x26); false when the reply 0x41 is set;
 /// else with a non-zero reply 0x26: true when `82b8(work)` says so, else a percent roll `78ac(100) < reply`.
 pub fn message_31c9<E: FlowEnv>(env: &mut E, mon: u32, x: u32) -> bool {
     begin(env, 0x31C9);
@@ -959,7 +959,7 @@ pub fn message_31c9<E: FlowEnv>(env: &mut E, mon: u32, x: u32) -> bool {
     false
 }
 
-/// Port of `FUN_overlay_d_93__021c7780`: message 0x31EA (command 0x6E) for `mon`.
+/// C: `FUN_overlay_d_93__021c7780`: message 0x31EA (command 0x6E) for `mon`.
 pub fn message_31ea<E: FlowEnv>(env: &mut E, mon: u32) {
     begin(env, 0x31EA);
     let id = mon_id(env, mon);
@@ -968,7 +968,7 @@ pub fn message_31ea<E: FlowEnv>(env: &mut E, mon: u32) {
     end(env, 0x31EA + 3);
 }
 
-/// Port of `FUN_overlay_d_93__021c77b0`: message 0x3201 (command 0x5B) for `mon` with the values `a` (0x1F), `b` (3),
+/// C: `FUN_overlay_d_93__021c77b0`: message 0x3201 (command 0x5B) for `mon` with the values `a` (0x1F), `b` (3),
 /// `c` (0x20) and `d` (0x19); true when the reply 0x41 is 0.
 pub fn message_3201<E: FlowEnv>(env: &mut E, mon: u32, a: u32, b: u32, c: u32, d: u32) -> bool {
     begin(env, 0x3201);
@@ -985,7 +985,7 @@ pub fn message_3201<E: FlowEnv>(env: &mut E, mon: u32, a: u32, b: u32, c: u32, d
     r == 0
 }
 
-/// Port of `FUN_overlay_d_93__021c7820`: message 0x321A (command 0x5C) for `mon` with `x` (slot 0x19).
+/// C: `FUN_overlay_d_93__021c7820`: message 0x321A (command 0x5C) for `mon` with `x` (slot 0x19).
 pub fn message_321a<E: FlowEnv>(env: &mut E, mon: u32, x: u32) {
     begin(env, 0x321A);
     let id = mon_id(env, mon);
@@ -995,7 +995,7 @@ pub fn message_321a<E: FlowEnv>(env: &mut E, mon: u32, x: u32) {
     end(env, 0x321A + 4);
 }
 
-/// Port of `FUN_overlay_d_93__021c785c`: message 0x322E (command 0x5D): `raw` as argument 3 (a raw value), the id of `mon`
+/// C: `FUN_overlay_d_93__021c785c`: message 0x322E (command 0x5D): `raw` as argument 3 (a raw value), the id of `mon`
 /// as argument 2, then `a` (0x1F) and `b` (0x20).
 pub fn message_322e<E: FlowEnv>(env: &mut E, raw: u32, mon: u32, a: u32, b: u32) {
     begin(env, 0x322E);
@@ -1008,7 +1008,7 @@ pub fn message_322e<E: FlowEnv>(env: &mut E, raw: u32, mon: u32, a: u32, b: u32)
     end(env, 0x322E + 6);
 }
 
-/// Port of `FUN_overlay_d_93__021c78a8`: message 0x3244 (command 0x5E) for `mon` with `x` (0x12), `a` (0x1F), `b` (0x20).
+/// C: `FUN_overlay_d_93__021c78a8`: message 0x3244 (command 0x5E) for `mon` with `x` (0x12), `a` (0x1F), `b` (0x20).
 pub fn message_3244<E: FlowEnv>(env: &mut E, mon: u32, x: u32, a: u32, b: u32) {
     begin(env, 0x3244);
     let id = mon_id(env, mon);
@@ -1020,7 +1020,7 @@ pub fn message_3244<E: FlowEnv>(env: &mut E, mon: u32, x: u32, a: u32, b: u32) {
     end(env, 0x3244 + 6);
 }
 
-/// Port of `FUN_overlay_d_93__021c78f4`: messages 0x8C / 0x8D (0x325E) for `mon` and `other` (id 0x1F when 0) around
+/// C: `FUN_overlay_d_93__021c78f4`: messages 0x8C / 0x8D (0x325E) for `mon` and `other` (id 0x1F when 0) around
 /// `7b2c(reply 0x20, reply 0x35)`; returns the final reply 0x20 as a u16.
 pub fn message_325e<E: FlowEnv>(env: &mut E, mon: u32, other: u32, x: u32) -> u32 {
     let oid = if other == 0 {
@@ -1048,7 +1048,7 @@ pub fn message_325e<E: FlowEnv>(env: &mut E, mon: u32, other: u32, x: u32) -> u3
     r
 }
 
-/// Port of `FUN_overlay_d_93__021c7998`: message 0x3282 with `x` (slot 0x39): sends 0x7D, and 0x7E when the reply 0x41 is 0.
+/// C: `FUN_overlay_d_93__021c7998`: message 0x3282 with `x` (slot 0x39): sends 0x7D, and 0x7E when the reply 0x41 is 0.
 pub fn message_3282<E: FlowEnv>(env: &mut E, x: u32) {
     begin(env, 0x3282);
     put(env, 0x39, x);
@@ -1060,7 +1060,7 @@ pub fn message_3282<E: FlowEnv>(env: &mut E, x: u32) {
     end(env, 0x328A);
 }
 
-/// Port of `FUN_overlay_d_93__021c79e0`: `v = bd28(x, 0x1A)`; message 0x329C for `mon` (reply 0x35); the value `59b4(mon, 0xE)`
+/// C: `FUN_overlay_d_93__021c79e0`: `v = bd28(x, 0x1A)`; message 0x329C for `mon` (reply 0x35); the value `59b4(mon, 0xE)`
 /// is scaled by `7b3c(.., v)` or, with a reply, `7b10(.., reply)`; at least 1 and at most the value.
 pub fn message_329c<E: FlowEnv>(env: &mut E, x: u32, mon: u32) -> u32 {
     let v = field(env, x, 0x1A);
@@ -1109,7 +1109,7 @@ pub fn message_32d9<E: FlowEnv>(env: &mut E, mon: u32) {
     end(env, 0x32D9 + 3);
 }
 
-/// Port of `FUN_overlay_d_93__021c7ad0`: message 0x32E9 (command 0x9C) for `mon` with `x` (slot 0x2D).
+/// C: `FUN_overlay_d_93__021c7ad0`: message 0x32E9 (command 0x9C) for `mon` with `x` (slot 0x2D).
 pub fn message_32e9<E: FlowEnv>(env: &mut E, mon: u32, x: u32) {
     begin(env, 0x32E9);
     let id = mon_id(env, mon);
@@ -1119,7 +1119,7 @@ pub fn message_32e9<E: FlowEnv>(env: &mut E, mon: u32, x: u32) {
     end(env, 0x32E9 + 4);
 }
 
-/// Port of `FUN_overlay_d_93__021c7b0c`: message 0x32FA (command 0x9D) for `mon`.
+/// C: `FUN_overlay_d_93__021c7b0c`: message 0x32FA (command 0x9D) for `mon`.
 pub fn message_32fa<E: FlowEnv>(env: &mut E, mon: u32) {
     begin(env, 0x32FA);
     let id = mon_id(env, mon);
@@ -1128,7 +1128,7 @@ pub fn message_32fa<E: FlowEnv>(env: &mut E, mon: u32) {
     end(env, 0x32FA + 3);
 }
 
-/// Port of `FUN_overlay_d_93__021c7b3c`: message 0x330C (command 0x89) with the raw values `a` (2), `b` (0xF), `c` (0x10).
+/// C: `FUN_overlay_d_93__021c7b3c`: message 0x330C (command 0x89) with the raw values `a` (2), `b` (0xF), `c` (0x10).
 pub fn message_330c<E: FlowEnv>(env: &mut E, a: u32, b: u32, c: u32) {
     begin(env, 0x330C);
     put(env, 2, a);
@@ -1138,7 +1138,7 @@ pub fn message_330c<E: FlowEnv>(env: &mut E, a: u32, b: u32, c: u32) {
     end(env, 0x330C + 5);
 }
 
-/// Port of `FUN_overlay_d_93__021c7b7c`: message 0x331D (command 0x8A) with the raw value `a` (2).
+/// C: `FUN_overlay_d_93__021c7b7c`: message 0x331D (command 0x8A) with the raw value `a` (2).
 pub fn message_331d<E: FlowEnv>(env: &mut E, a: u32) {
     begin(env, 0x331D);
     put(env, 2, a);
@@ -1168,12 +1168,12 @@ pub fn message_3343<E: FlowEnv>(env: &mut E) {
     end(env, 0x3343 + 2);
 }
 
-/// Port of `FUN_overlay_d_93__021c7c18`: `MI_CpuFill8(buf, 0, 0xC)`.
+/// C: `FUN_overlay_d_93__021c7c18`: `MI_CpuFill8(buf, 0, 0xC)`.
 pub fn clear_12(buf: &mut [u8]) {
     buf[..12].fill(0);
 }
 
-/// Port of `FUN_overlay_d_93__021c7c24`: bumps one of six u16 counters in `counts` (saturating at 9999): the mons `a`, `b`
+/// C: `FUN_overlay_d_93__021c7c24`: bumps one of six u16 counters in `counts` (saturating at 9999): the mons `a`, `b`
 /// (ids from `5440`, then `8d08` of each and `9a24(a, b)`) and the signed selector `sel` choose the counter.
 pub fn count_statistic<E: FlowEnv>(env: &mut E, counts: &mut [u8], a: u32, b: u32, sel: i32) {
     let ia = mon_id(env, a);

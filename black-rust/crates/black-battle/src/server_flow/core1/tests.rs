@@ -16,7 +16,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021BBD8C, "e86a84e30b5fd3f4"),
     (0x021BBFA8, "b8c56ba19338d407"),
     (0x021BC0E8, "cbaffc4d3e5dfc34"),
-    (0x021BC220, "d1d928d65560d790"),
+    (0x021BC220, "01d8292d20078c28"),
     (0x021BC2B0, "c8099f3ee28d1386"),
     (0x021BC310, "c521941c7d00ea70"),
     (0x021BC360, "ac5189e0f11adaa1"),
@@ -128,10 +128,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             );
             0
         }
-        0x021B_C220 => {
-            super::queue_switch_ins(&mut c.env, &c.regions[0], &c.bufs[1]);
-            0
-        }
+        0x021B_C220 => super::queue_switch_ins(&mut c.env, &c.regions[0], &c.bufs[1]) as u64,
         0x021B_C418 => {
             let (q, g) = (&mut c.regions[0], &mut c.globals[0]);
             super::announce_switch(&mut c.env, &c.work, q, g, c.vals[1], c.vals[2]);

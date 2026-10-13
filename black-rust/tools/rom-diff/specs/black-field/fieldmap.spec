@@ -96,7 +96,7 @@ fn 02187fd0 ret=u32 inputs=200
   fix work 0x2C u32 alt const 0 || any
   global 04000204 4
   stub 02188b58 ret=pick:0/1/2/3 args=v,v  # in-area
-  stub 021880c8 ret=pick:0/1/2/3 args=p,v  # in-area
+  stub 021880c8 force ret=pick:0/1/2/3 args=p,v  # in-area (verified port; the caller keeps the stub: the callee logs its entry r2 / r3)
   stub 021881d8 ret=pick:0/1/2/3 args=v,v  # in-area
   stub 021885e8 ret=pick:0/1/2/3 args=v,v  # in-area
   stub 02188758 ret=pick:0/1/2/3 args=v,v  # in-area
@@ -177,7 +177,7 @@ fn 02187fd0 ret=u32 inputs=200
   stub 02013c9c force ret=pick:0/1/0xFFFFFFFF args=v
   stub 021bb2f8 force ret=none args=v,v,v,v  # ov21
   stub 02189acc ret=u32 args=v  # in-area
-  stub 021895e8 ret=none args=v,v,v  # in-area
+  stub 021895e8 force ret=none args=v,v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r3)
   stub 021bb1f4 force ret=u32 args=v,v,v,v  # ov21
   stub 021d33a8 force ret=u32 args=v,v,v,v  # ov21
   stub 0218dc6c force ret=u32 args=v  # ov21
@@ -566,7 +566,7 @@ fn 021881d8 ret=u32 inputs=400
   stub 02013c9c force ret=pick:0/1/0xFFFFFFFF args=v
   stub 021bb2f8 force ret=none args=v,v,v,v  # ov21
   stub 02189acc ret=u32 args=v  # in-area
-  stub 021895e8 ret=none args=v,v,v  # in-area
+  stub 021895e8 force ret=none args=v,v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r3)
   stub 021bb1f4 force ret=u32 args=v,v,v,v  # ov21
   stub 021d33a8 force ret=u32 args=v,v,v,v  # ov21
   stub 0218dc6c force ret=u32 args=v  # ov21
@@ -811,7 +811,7 @@ fn 02188758 ret=u32 inputs=400
   stub 02158ae0 force ret=none args=v,v  # ov10
   stub 021894e0 ret=none args=v,v,v,v  # in-area
   stub 0215874c force ret=u32 args=v  # ov10
-  stub 021895e8 ret=none args=v,v,v  # in-area
+  stub 021895e8 force ret=none args=v,v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r3)
   stub 02012134 force ret=u32 args=v  # main
   stub 02012a30 force ret=u32 args=v  # main
   stub 02012b28 force ret=pick:0/1/2 args=v
@@ -1046,7 +1046,7 @@ fn 02188b58 ret=u32 inputs=300
   fix work 0x40C u32 const 0x02EE0121
   fix work 0x2C u32 alt const 0 || any
   global 04000204 4
-  stub 021880c8 ret=pick:0/1/2/3 args=p,v  # in-area
+  stub 021880c8 force ret=pick:0/1/2/3 args=p,v  # in-area (verified port; the caller keeps the stub: the callee logs its entry r2 / r3)
   stub 021881d8 ret=pick:0/1/2/3 args=v,v  # in-area
   stub 021885e8 ret=pick:0/1/2/3 args=v,v  # in-area
   stub 02188758 ret=pick:0/1/2/3 args=v,v  # in-area
@@ -1127,7 +1127,7 @@ fn 02188b58 ret=u32 inputs=300
   stub 02013c9c force ret=pick:0/1/0xFFFFFFFF args=v
   stub 021bb2f8 force ret=none args=v,v,v,v  # ov21
   stub 02189acc ret=u32 args=v  # in-area
-  stub 021895e8 ret=none args=v,v,v  # in-area
+  stub 021895e8 force ret=none args=v,v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r3)
   stub 021bb1f4 force ret=u32 args=v,v,v,v  # ov21
   stub 021d33a8 force ret=u32 args=v,v,v,v  # ov21
   stub 0218dc6c force ret=u32 args=v  # ov21
@@ -1679,7 +1679,7 @@ fn 021892cc ret=u32 inputs=300
   stub 021894e0 ret=none args=v,v,v,v  # in-area
   stub 02012138 force ret=u32 args=v  # main
   stub 0215874c force ret=u32 args=v  # ov10
-  stub 021895e8 ret=none args=v,v,v  # in-area
+  stub 021895e8 force ret=none args=v,v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r3)
   stub 02012134 force ret=u32 args=v  # main
   stub 02012a30 force ret=u32 args=v  # main
   stub 02012b28 force ret=pick:0/1/2 args=v
@@ -1808,7 +1808,7 @@ fn 021893c0 ret=none inputs=300
   stub 021894e0 ret=none args=v,v,v,v  # in-area
   stub 02012138 force ret=u32 args=v  # main
   stub 0215874c force ret=u32 args=v  # ov10
-  stub 021895e8 ret=none args=v,v,v  # in-area
+  stub 021895e8 force ret=none args=v,v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r3)
   stub 02012134 force ret=u32 args=v  # main
   stub 02012a30 force ret=u32 args=v  # main
   stub 020127a4 force ret=u32 args=v  # main
@@ -1897,7 +1897,7 @@ fn 021895bc ret=none inputs=40
 fn 021895d0 ret=none inputs=60
   arg work 0
   arg u32 any
-  stub 021895e8 ret=none args=v,v,v  # in-area
+  stub 021895e8 force ret=none args=v,v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r3)
   stub 02013bd0 force ret=pick:0/3/0xFFFF args=v
   stub 0218f14c force ret=u32 args=v,v,v  # ov21
   stub 0218f134 force ret=u32 args=v,p,p,v  # ov21

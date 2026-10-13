@@ -569,8 +569,15 @@ pub fn end_of_turn_pass<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, cx: &mut Cx
 
 /// C: `FUN_overlay_d_93__021c4838`: the first list walk (`list` = the veneer-iterated list object):
 /// record bracket 0x25AC around `mon_message(0x1f, sel)`, then for each entry (until the battle
-/// ends) a bracket around `mon_message(id, sel)` and [`mon_once`]; finally [`end_of_turn_pass`].
-pub fn walk_list<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, cx: &mut Cx, list: u32, sel: u32) {
+/// ends) a bracket around `mon_message(id, sel)` and [`mon_once`]; finally [`end_of_turn_pass`], whose result it returns
+/// (tail `bl 021c5200` then the epilogue; 021c446c waits on it, V-0023).
+pub fn walk_list<E: FlowEnv>(
+    env: &mut E,
+    w: &mut SvFlowWork,
+    cx: &mut Cx,
+    list: u32,
+    sel: u32,
+) -> u32 {
     env.call(0x021C_48E0, &mut [Arg::V(list)]);
     let old = bracket_open(w);
     mon_message(env, 0x1F, sel);
@@ -589,14 +596,14 @@ pub fn walk_list<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, cx: &mut Cx, list:
             mon = env.call(0x021C_4900, &mut [Arg::V(list)]);
         }
     }
-    end_of_turn_pass(env, w, cx);
+    end_of_turn_pass(env, w, cx)
 }
 
 /// C: `FUN_overlay_d_93__021c493c`: the per-list damage record: the ids of the `4a24(list)` mons of `list` (`4a34`) in a
 /// byte array, then for every entry `e` of the `4a44(k)` walk (until the battle ends) and every one of those mons that
 /// `d5b68` does not skip and `d6064(mon, e, &a, &b)` accepts, `4a54(mon, e, a, b, work)` inside a record bracket 0x25F7;
-/// finally command 0x15 (count, walk steps, `d806c(ids)`) and [`end_of_turn_pass`].
-pub fn pair_pass<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, cx: &mut Cx, list: u32) {
+/// finally command 0x15 (count, walk steps, `d806c(ids)`) and [`end_of_turn_pass`], whose result it returns (V-0023).
+pub fn pair_pass<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, cx: &mut Cx, list: u32) -> u32 {
     // 8 bytes on the original's stack: bytes 4 = 3 and the rest 0 (the last two are never written)
     let mut ids = [0u8, 0, 0, 0, 3, 0, 0, 0];
     let count = env.call(0x021C_4A24, &mut [Arg::V(list)]);
@@ -648,7 +655,7 @@ pub fn pair_pass<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, cx: &mut Cx, list:
     }
     let packed = env.call(0x021D_806C, &mut [Arg::In(&ids)]);
     put(env, cx, 0x15, &[count & 0xFF, step & 0xFF, packed]);
-    end_of_turn_pass(env, w, cx);
+    end_of_turn_pass(env, w, cx)
 }
 
 /// C: `FUN_overlay_d_93__021c4d1c`: the second list walk: when `ef8b8` says the walk is blocked puts

@@ -305,8 +305,9 @@ fn 021bc0e8 ret=none inputs=400
   stub 0201bd28 ret=u32 args=v,v
   stub 021d78ac ret=pick:0/1 args=v seq
 
-# per client: for each queued action word of kind 3 (switch-in) not flagged, call 021bd9d4
-fn 021bc220 ret=none inputs=300
+# per client: for each queued action word of kind 3 (switch-in) not flagged, call 021bd9d4; returns 021c5200's result
+# (V-0023: tail bl 021c5200 + epilogue; 021bbd2c branches on it)
+fn 021bc220 ret=u32 inputs=300
   arg work
   arg buf 0x40
   region S 0x1000

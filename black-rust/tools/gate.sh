@@ -24,5 +24,7 @@ cargo test -q -p black-data --features rom >>"$log" 2>&1 || { grep -E "FAILED|pa
 cargo build -q --workspace $X --release
 [ -n "$GATE_NO_GAME" ] || cargo build -q -p black-game --target wasm32-unknown-unknown
 python3 -I tools/sync-docs.py >/dev/null
+# V-0021: every address in a `pub const PORTED` must have a SYMBOLS.md row (a `/// C:` head sync-docs can read)
+python3 -I tools/check-symbols.py >/dev/null
 if [ -n "$(git ls-files assets)" ]; then echo "gate: assets/ is tracked (D5)"; exit 1; fi
 if [ -n "$GATE_NO_GAME" ]; then echo "gate (no black-game): fmt ok, clippy ok, test ok, build ok"; else echo "gate: fmt ok, clippy ok, test ok, build ok, wasm ok"; fi

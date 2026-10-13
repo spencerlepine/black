@@ -227,7 +227,7 @@ fn 02189bd0 ret=u32 inputs=1500
   stub 02008988 force ret=none args=v,v  # main
   stub 02188d50 force ret=u32 args=v  # fieldmap (other F2a area)
   stub 021c3378 force ret=none args=v  # ov21
-  stub 0218aad0 ret=none args=v,v  # in-area
+  stub 0218aad0 force ret=none args=v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r2 / r3)
   stub 0218ab0c ret=pick:0/1 args=v  # in-area
   stub 0200d564 force ret=pick:0/1/0x100 args=v
   stub 0216d83c force ret=u32 args=v  # ov10
@@ -455,7 +455,7 @@ fn 0218a074 ret=u32 inputs=300
   stub 02008988 force ret=none args=v,v  # main
   stub 02188d50 force ret=u32 args=v  # fieldmap (other F2a area)
   stub 021c3378 force ret=none args=v  # ov21
-  stub 0218aad0 ret=none args=v,v  # in-area
+  stub 0218aad0 force ret=none args=v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r2 / r3)
   stub 0218ab0c ret=pick:0/1 args=v  # in-area
   stub 0200d564 force ret=pick:0/1/0x100 args=v
   stub 0216d83c force ret=u32 args=v  # ov10
@@ -668,7 +668,7 @@ fn 0218a240 ret=u32 inputs=200
   stub 02008988 force ret=none args=v,v  # main
   stub 02188d50 force ret=u32 args=v  # fieldmap (other F2a area)
   stub 021c3378 force ret=none args=v  # ov21
-  stub 0218aad0 ret=none args=v,v  # in-area
+  stub 0218aad0 force ret=none args=v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r2 / r3)
   stub 0218ab0c ret=pick:0/1 args=v  # in-area
   stub 0200d564 force ret=pick:0/1/0x100 args=v
   stub 02008970 force ret=none args=v,outm:4:0xFF/0xFF/1/0
@@ -793,7 +793,7 @@ fn 0218a278 ret=u32 inputs=500
   stub 02008988 force ret=none args=v,v  # main
   stub 02188d50 force ret=u32 args=v  # fieldmap (other F2a area)
   stub 021c3378 force ret=none args=v  # ov21
-  stub 0218aad0 ret=none args=v,v  # in-area
+  stub 0218aad0 force ret=none args=v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r2 / r3)
   stub 0218ab0c ret=pick:0/1 args=v  # in-area
   stub 0200d564 force ret=pick:0/1/0x100 args=v
   stub 02008970 force ret=none args=v,outm:4:0xFF/0xFF/1/0
@@ -1032,7 +1032,7 @@ fn 0218a4bc ret=u32 inputs=200
   stub 02008988 force ret=none args=v,v  # main
   stub 02188d50 force ret=u32 args=v  # fieldmap (other F2a area)
   stub 021c3378 force ret=none args=v  # ov21
-  stub 0218aad0 ret=none args=v,v  # in-area
+  stub 0218aad0 force ret=none args=v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r2 / r3)
   stub 0218ab0c ret=pick:0/1 args=v  # in-area
   stub 0200d564 force ret=pick:0/1/0x100 args=v
   stub 0216d83c force ret=u32 args=v  # ov10
@@ -1361,7 +1361,7 @@ fn 0218a9b0 ret=u32 inputs=300
   stub 02008988 force ret=none args=v,v  # main
   stub 02188d50 force ret=u32 args=v  # fieldmap (other F2a area)
   stub 021c3378 force ret=none args=v  # ov21
-  stub 0218aad0 ret=none args=v,v  # in-area
+  stub 0218aad0 force ret=none args=v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r2 / r3)
   stub 0218ab0c ret=pick:0/1 args=v  # in-area
   stub 02158768 force ret=u32 args=v,v,v,v  # ov10
   stub 0200d564 force ret=pick:0/1/0x100 args=v
@@ -1426,7 +1426,7 @@ fn 0218ab50 ret=u32 inputs=200
   stub 02012934 force ret=u32 args=v  # main
   stub 02188d50 force ret=u32 args=v  # fieldmap (other F2a area)
   stub 021c3378 force ret=none args=v  # ov21
-  stub 0218aad0 ret=none args=v,v  # in-area
+  stub 0218aad0 force ret=none args=v,v  # in-area (verified port; callers keep the stub: the callee logs its entry r2 / r3)
   stub 0218ab0c ret=pick:0/1 args=v  # in-area
   stub 02158768 force ret=u32 args=v,v,v,v  # ov10
   stub 02012ebc force ret=u32 args=v  # main

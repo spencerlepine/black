@@ -214,7 +214,8 @@ fn 0201c284 ret=u32 inputs=600
   stub 02048f4c ret=none args=out:36,v,v
 
 # FUN_0201C0BC(move, idx, out): *out = signed byte 0x18 + idx of the record if byte 0x15 + idx is nonzero, else 0.
-fn 0201c0bc ret=none inputs=800
+# Returns byte 0x15 + idx (V-0022 audit: ldrb r0 is r0 at both pops; ov93 021c2f70 stores it).
+fn 0201c0bc ret=u32 inputs=800
   nowork
   global 02146530 4
   global 02146534 0x24

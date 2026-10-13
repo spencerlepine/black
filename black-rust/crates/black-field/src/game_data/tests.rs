@@ -129,7 +129,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x02012BB0, "a00360778b4287df"),
     (0x02012BC8, "42f61ace9e5d9b12"),
     (0x02012BE0, "2996b3d2b5fe22d6"),
-    (0x02012BF8, "d881831896431a45"),
+    (0x02012BF8, "efa28d28855574fb"),
     (0x02012C0C, "9596e702fa503500"),
     (0x02012E40, "53e0b53436ce75da"),
     (0x02012EBC, "777b77dcdf02b665"),
@@ -289,8 +289,8 @@ impl GameDataHooks for Rom<'_> {
     fn fun_0200c404(&mut self, save: u32) -> u32 {
         self.stubs.call(0x0200_c404, &mut [Arg::V(save)])
     }
-    fn fun_0200c44c(&mut self, x: u32, a: u32) {
-        self.stubs.call(0x0200_c44c, &mut [Arg::V(x), Arg::V(a)]);
+    fn fun_0200c44c(&mut self, x: u32, a: u32) -> u32 {
+        self.stubs.call(0x0200_c44c, &mut [Arg::V(x), Arg::V(a)])
     }
     fn fun_020071cc(&mut self, save: u32, block: u32) -> u32 {
         self.stubs
@@ -508,10 +508,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             gd_call_0200c418(h, v[0], v[1], v[2]);
             0
         }),
-        0x0201_2BF8 => with_rom(c, &[], |h, v| {
-            gd_call_0200c44c(h, v[0], v[1]);
-            0
-        }),
+        0x0201_2BF8 => with_rom(c, &[], |h, v| gd_call_0200c44c(h, v[0], v[1]) as u64),
         0x0201_2FBC => with_rom(c, &[], |h, v| gd_call_020085d4(h, v[0]) as u64),
         0x0201_2FF0 => with_rom(c, &[0x020A7298], |h, v| {
             global_handle_set(h, v[0]);

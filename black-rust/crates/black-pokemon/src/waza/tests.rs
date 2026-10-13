@@ -23,7 +23,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x0201BF44, "5f90aef8386d011c"),
     (0x0201BF58, "f0aec0b88b9c90fa"),
     (0x0201C020, "bafe45bcc701cbae"),
-    (0x0201C0BC, "f1ff80b767951e0a"),
+    (0x0201C0BC, "d5dd33534236eb27"),
     (0x0201C158, "6f0afd665ba5c53d"),
     (0x0201C184, "24ba4159b5f8b461"),
     (0x0201C1BC, "b81b57b02340c6e0"),
@@ -274,8 +274,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x0201_C0BC => {
             let mut out = c.bufs[2].clone();
             let r = with_cache(c, |cache, s, h| {
-                record_signed_if_set(v[0], v[1], &mut out, cache, s, h);
-                0
+                record_signed_if_set(v[0], v[1], &mut out, cache, s, h) as u64
             });
             c.bufs[2] = out;
             r

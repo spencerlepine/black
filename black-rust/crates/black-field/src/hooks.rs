@@ -327,8 +327,8 @@ pub trait GameDataHooks: HeapHooks {
     fn fun_0200c418(&mut self, x: u32, a: u32, b: u32);
     /// C: `FUN_0200C404(save)`.
     fn fun_0200c404(&mut self, save: u32) -> u32;
-    /// C: `FUN_0200C44C(x, a)`.
-    fn fun_0200c44c(&mut self, x: u32, a: u32);
+    /// C: `FUN_0200C44C(x, a)`: 1 if one of the 25 bytes at `x` equals `a`, else 0.
+    fn fun_0200c44c(&mut self, x: u32, a: u32) -> u32;
     /// C: `FUN_020071CC(save, block)`: the save block `block` of the save data.
     fn fun_020071cc(&mut self, save: u32, block: u32) -> u32;
     /// C: `FUN_0200C0F0(save)`.
@@ -365,8 +365,8 @@ pub trait ZoneHooks: HeapHooks {
     fn fun_0204944c(&mut self, handle: u32, a: u32, offset: u32, size: u32, dst: u32);
     /// C: `FUN_0201441C(v)`: the byte table lookup of `event_work::table_0209e050`.
     fn fun_0201441c(&mut self, v: u32) -> u32;
-    /// C: `FUN_02020E08(0xD, a, b)`.
-    fn fun_02020e08(&mut self, a: u32, b: u32, c: u32);
+    /// C: `FUN_02020E08(0xD, a, b)`: load archive 0xD entry data (allocated); returns its address.
+    fn fun_02020e08(&mut self, a: u32, b: u32, c: u32) -> u32;
 }
 
 /// One argument of an unported callee reached through [`FieldEnv::call`], in the callee's own

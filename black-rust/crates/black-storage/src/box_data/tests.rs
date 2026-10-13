@@ -28,7 +28,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x0200791C, "56abdfaf16be336d"),
     (0x02007984, "f744cc27f899a002"),
     (0x020079A0, "737266b32654cbb7"),
-    (0x020079BC, "12066722c5810f3d"),
+    (0x020079BC, "0a62e15e3bc05e8c"),
     (0x02007A18, "19ad0ac22358d13c"),
     (0x02007A68, "d99b644af06cd28e"),
     (0x02007A80, "6841b8f2d302f763"),
@@ -210,10 +210,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x0200_791C => non_egg(e, v(0), v(1)) as u64,
         0x0200_7984 => sum_occupied(e, v(0)) as u64,
         0x0200_79A0 => sum_non_egg(e, v(0)) as u64,
-        0x0200_79BC => {
-            mon_para_get(e, v(0), v(1), v(2), v(3), v(4));
-            0
-        }
+        0x0200_79BC => mon_para_get(e, v(0), v(1), v(2), v(3), v(4)) as u64,
         // `ret=ofs:argK`: the spec compares the pointer as an offset into argument K's buffer
         0x0200_7A18 => slot_ptr(e, v(0), v(1), v(2)).wrapping_sub(v(4)) as u64,
         0x0200_7A68 => {

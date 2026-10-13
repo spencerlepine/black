@@ -46,8 +46,8 @@ impl MathRandContext32 {
         out
     }
 
-    /// Advances the state; returns the high word scaled to `[0, max)`, or the raw high word
-    /// when `max == 0`.
+    /// C: `FUN_020056EC` (on the global context at `*(*0x020AA194 + 0x10)`): advances the state; returns the high
+    /// word scaled to `[0, max)`, or the raw high word when `max == 0`.
     pub fn next(&mut self, max: u32) -> u32 {
         self.x = self.mul.wrapping_mul(self.x).wrapping_add(self.add);
         let hi = (self.x >> 32) as u32;
@@ -67,7 +67,7 @@ impl MathRandContext32 {
     }
 }
 
-// C: `FUN_020056EC` is `MathRandContext32::next` (the global context at `*(*0x020AA194 + 0x10)`).
+// `FUN_020056EC` is `MathRandContext32::next` (the global context at `*(*0x020AA194 + 0x10)`).
 
 /// Multiplier of the game's 64-bit LCG context (`FUN_0203F258` stores it at +8).
 pub const LCG64_MUL: u64 = 0x5D58_8B65_6C07_8965;
