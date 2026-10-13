@@ -281,6 +281,20 @@ function that is ported deactivates the stubs of its address in every spec, like
 * A stack struct passed to a stub whose last bytes the caller never writes: `in:7` (zero-padded last word, `021d3cc8`).
 * Only stub addresses of other areas' smoke ports need `force` (here: adapter `021eebdc` in `021cd984`).
 
+## B10bc-spec additions (hem / api / handex)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged. Conventions of `hem.spec`, `api.spec` and `handex.spec` (headers):
+
+* Closure stubs as in core4: with every function of the area treated as ported, all blocks run without a fault, a stray write or an
+  unstubbed callee, so the areas can be ported in any order without spec edits. Callees in other server-flow areas (including between
+  hem, api and handex) are `force` stubs; cmd_queue callees run as real code (queue region Q block); thunks `021b8ddc` / `021b98a4` run
+  and land on the stubs of their targets.
+* A HANDEX proc is specced as `(work, buf 0x80 record[, v])`; the executor `021c8918` sees each proc as `ret=pick:0/1 args=p,v[,v]`
+  and carries the closure of all 59 procs (its block holds the record bounds the procs need). Its case table is in the comment on its
+  block.
+* Caller stubs of the smoke ports got `force` where they were plain: `021c8838` / `021c8860` (core4), `021c88a4` (events),
+  `021c88e4` (core2, core3, core4, events). Hash-neutral (the callers' ports reach them through `env.call`).
+
 ## What is compared (per input, in this order)
 
 `halt` (0, or 1 + stub address) , `ret`, `work` (all 0x212C bytes), `argN` for each buf/bpp,

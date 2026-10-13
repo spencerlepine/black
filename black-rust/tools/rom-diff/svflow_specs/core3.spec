@@ -114,7 +114,7 @@ fn 021bf4ac ret=none inputs=400
   stub 021c8828 ret=pick:0/1 args=p
   stub 021c99a0 ret=none args=p,p
   stub 021c8810 ret=none args=p
-  stub 021c88e4 ret=pick:0/1 args=p
+  stub 021c88e4 force ret=pick:0/1 args=p
   stub 021d74f8 ret=none args=v
   stub 021d75ec ret=none args=v,v
   stub 021d7630 ret=none args=v,v
@@ -144,7 +144,7 @@ fn 021bf6e8 ret=u32 inputs=400
   stub 021c8828 ret=pick:0/1 args=p
   stub 021c99a0 ret=none args=p,p
   stub 021c8810 ret=none args=p
-  stub 021c88e4 ret=pick:0/1 args=p
+  stub 021c88e4 force ret=pick:0/1 args=p
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
   stub 021d74f8 ret=none args=v
   stub 021d75ec ret=none args=v,v

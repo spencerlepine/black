@@ -157,27 +157,16 @@ fn rec_commit<E: FlowEnv>(env: &mut E, waddr: u32, rec: usize) {
     );
 }
 
-/// `FUN_overlay_d_93__021c8838` (HANDEX message parameter list at `w[p..]`): halfword 0 = `msg`,
-/// halfword 1 keeps its top bit and gets `kind` in its low byte (argument count 0).
-/// UNVERIFIED as a function of its own (it belongs to the `hem` area, B10b; its effect is part
-/// of the hashes of the record makers below).
+/// `FUN_overlay_d_93__021c8838` on the str record at `w[p..]` (ported in `hem`:
+/// [`super::hem::str_init`]).
 fn str_init(w: &mut [u8], p: usize, kind: u32, msg: u32) {
-    let h = u16::from_le_bytes([w[p + 2], w[p + 3]]);
-    let h = ((h & 0xFF00) | (kind as u16 & 0xFF)) & 0x80FF;
-    w[p + 2..p + 4].copy_from_slice(&h.to_le_bytes());
-    w[p..p + 2].copy_from_slice(&(msg as u16).to_le_bytes());
+    super::hem::str_init(&mut w[p..], kind, msg);
 }
 
-/// `FUN_overlay_d_93__021c8860`: appends a word argument to the parameter list at `w[p..]`
-/// (count in bits 8-14 of halfword 1; ignored once it is 8). Same status as [`str_init`].
+/// `FUN_overlay_d_93__021c8860` on the str record at `w[p..]` (ported in `hem`:
+/// [`super::hem::str_push`]).
 fn str_push(w: &mut [u8], p: usize, v: u32) {
-    let h = u16::from_le_bytes([w[p + 2], w[p + 3]]);
-    let n = (h as u32 >> 8) & 0x7F;
-    if n < 8 {
-        let h = (h & 0x80FF) | (((n + 1) & 0x7F) << 8) as u16;
-        w[p + 2..p + 4].copy_from_slice(&h.to_le_bytes());
-        wr32(&mut w[p + 4 + 4 * n as usize..], v);
-    }
+    super::hem::str_push(&mut w[p..], v);
 }
 
 /// `FUN_overlay_d_93__021d7b74`: max HP / `div`, at least 1.
