@@ -77,4 +77,29 @@ mod tests {
         }
         assert_eq!(h.hex(), "525001f51ea0442c");
     }
+
+    /// V-0014: full-range types and pairs, plus `split_pair`; hashed against the original
+    /// (`tools/rom-diff/gen.py poke_type_wide`).
+    #[test]
+    fn wide_matches_rom_fuzz() {
+        let mut h = Fnv::new();
+        let mut r = Rng::new(0x7F);
+        for _ in 0..40000 {
+            let (a, b, c) = (r.next() as u8, r.next() as u8, r.next() as u8);
+            let p = r.next() as u16;
+            let t = r.next() as u8;
+            h.w(make_pair(a, b) as u32);
+            h.w(make_mono_pair(a) as u32);
+            h.w(pair_type1(p) as u32);
+            h.w(pair_type2(p) as u32);
+            h.w(pair_has_type(p, t) as u32);
+            h.w(pair_has_type(make_pair(b, c), a) as u32);
+            h.w(pair_is_mono(p) as u32);
+            h.w(pair_is_mono(make_pair(b, b)) as u32);
+            let (x, y) = split_pair(p);
+            h.b(x);
+            h.b(y);
+        }
+        assert_eq!(h.hex(), "3bb569e9ea444a54");
+    }
 }

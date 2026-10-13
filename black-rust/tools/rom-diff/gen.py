@@ -551,10 +551,60 @@ def field():
     return total.hex()
 
 
+def poke_type_wide():
+    """V-0014: full-range types and pairs, plus split_pair (021e8d0c) through SCRATCH."""
+    h = Fnv()
+    r = Rng(0x7F)
+    for _ in range(40000):
+        a, b, c = r.next() & 0xFF, r.next() & 0xFF, r.next() & 0xFF
+        p = r.next() & 0xFFFF
+        t = r.next() & 0xFF
+        h.w(call(0x021E8CE0, a, b))
+        h.w(call(0x021E8CF0, a))
+        h.w(call(0x021E8CFC, p))
+        h.w(call(0x021E8D04, p))
+        h.w(call(0x021E8D24, p, t))
+        h.w(call(0x021E8D24, (b << 8) | c, a))
+        h.w(call(0x021E8DA8, p))
+        h.w(call(0x021E8DA8, (b << 8) | b))
+        e.wbytes(SCRATCH, b"\xcc\xcc")
+        call(0x021E8D0C, p, SCRATCH, SCRATCH + 1)
+        for x in e.rbytes(SCRATCH, 2):
+            h.b(x)
+    return h.hex()
+
+
+def sick_cont_wide():
+    """V-0014: every SickCont accessor, the in-place setters (read-modify-write with literal masks)
+    through SCRATCH, on kinds 0-4 (biased), 5-7 and fully random words."""
+    h = Fnv()
+    r = Rng(0x5D)
+    for i in range(60000):
+        a, b = r.next(), r.next()
+        k = (i % 5) if i % 7 else r.next() & 7          # bias to kinds 0-4, some 5-7
+        v = (a & ~7 & M) | k
+        if i % 11 == 0:
+            v = a
+        h.w(call(0x021E8918)); h.w(call(0x021E8928, v))
+        h.w(call(0x021E8A98, v)); h.w(call(0x021E8AFC, v))
+        h.w(call(0x021E8B80, v)); h.w(call(0x021E8C24, v))
+        for fn in (0x021E8AC8, 0x021E8B28, 0x021E8BD0, 0x021E8C50, 0x021E8C9C):
+            e.w32(SCRATCH, v)
+            call(fn, SCRATCH, b)
+            h.w(e.r32(SCRATCH))
+            e.w32(SCRATCH, v)
+            call(fn, SCRATCH, b & 0xF)
+            h.w(e.r32(SCRATCH))
+        h.w(call(0x021E8940, a)); h.w(call(0x021E896C, a, b)); h.w(call(0x021E899C, a))
+        h.w(call(0x021E89D4, a)); h.w(call(0x021E89F8, a, b)); h.w(call(0x021E8A28, a, b))
+        h.w(call(0x021E8A78, v)); h.w(call(0x021E8A78, 0x79 | (a & ~0xFF & M)))
+    return h.hex()
+
+
 if __name__ == "__main__":
     which = sys.argv[1:] or [
         "poke_type", "sick_cont", "event_var", "event_var_wide", "pure", "pure_wide", "rng", "rng_wide",
-        "hooks", "hooks_wide", "field",
+        "hooks", "hooks_wide", "field", "poke_type_wide", "sick_cont_wide",
     ]
     for name in which:
         print(name, globals()[name]())

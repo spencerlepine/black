@@ -241,4 +241,49 @@ mod tests {
         }
         assert_eq!(h.hex(), "2dbe3d01dd5611d2");
     }
+
+    /// V-0014: every accessor and in-place setter on kinds 0-4 (biased), 5-7 and random words;
+    /// hashed against the original (`tools/rom-diff/gen.py sick_cont_wide`).
+    #[test]
+    fn wide_matches_rom_fuzz() {
+        let mut h = Fnv::new();
+        let mut rng = Rng::new(0x5D);
+        for i in 0..60000u32 {
+            let a = rng.next();
+            let b = rng.next();
+            let k = if i % 7 != 0 { i % 5 } else { rng.next() & 7 };
+            let mut v = (a & !7) | k;
+            if i % 11 == 0 {
+                v = a;
+            }
+            h.w(SickCont::none().0);
+            h.w(SickCont(v).is_none() as u32);
+            h.w(SickCont(v).linked_poke_id());
+            h.w(SickCont(v).turns());
+            h.w(SickCont(v).param_any() as u32);
+            h.w(SickCont(v).flag());
+            for f in 0..5 {
+                for arg in [b, b & 0xF] {
+                    let mut s = SickCont(v);
+                    match f {
+                        0 => s.set_linked_poke_id(arg),
+                        1 => s.set_param_any(arg),
+                        2 => s.set_flag(arg),
+                        3 => s.add_turns(arg),
+                        _ => s.set_turns(arg),
+                    }
+                    h.w(s.0);
+                }
+            }
+            h.w(SickCont::turn(a).0);
+            h.w(SickCont::turn_param(a, b).0);
+            h.w(SickCont::poke(a).0);
+            h.w(SickCont::permanent_param(a).0);
+            h.w(SickCont::permanent_count(a, b).0);
+            h.w(SickCont::poke_turn(a, b).0);
+            h.w(SickCont(v).is_badly_poisoned() as u32);
+            h.w(SickCont(0x79 | (a & !0xFF)).is_badly_poisoned() as u32);
+        }
+        assert_eq!(h.hex(), "bb51b5141039826f");
+    }
 }
