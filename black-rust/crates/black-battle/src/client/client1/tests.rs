@@ -83,7 +83,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             0
         }
         0x021C_D978 => super::adapter(&c.bufs[0]) as u64,
-        0x021C_D97C => super::run_step(&mut c.env, &c.bufs[0]) as u64,
+        0x021C_D97C => super::run_step(&mut c.env, &mut c.bufs[0]) as u64,
         0x021C_D984 => {
             super::replay_restart(&mut c.env, &mut c.bufs[0], c.vals[1]);
             0

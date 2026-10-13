@@ -14,7 +14,9 @@
 //! Callees outside this area go through [`FlowEnv`] (`server1` / `server2`, `server_side`, `core*`, `api`, the client, the
 //! BattleMon accessors 021d5xxx and the ARM9 main routines); callees inside the area are called directly.
 
+use super::MemExt;
 use crate::server_flow::env::{Arg, FlowEnv};
+use std::rc::Rc;
 
 /// Functions of this area that are ported and checked by `tests::svflow_match_rom`.
 pub const PORTED: &[u32] = &[
@@ -138,10 +140,13 @@ pub const PORTED: &[u32] = &[
 
 // ---- memory -------------------------------------------------------------------------------------------------------------
 
-/// Byte blocks at fixed addresses: the objects a function works on (and the ROM tables it reads).
+/// Byte blocks at fixed addresses: the objects a function works on (and the ROM tables it reads). An address outside every
+/// block goes to the [`MemExt`] backend when one is installed (B16: the battle integration's shared object table), else it
+/// panics.
 #[derive(Default)]
 pub struct Mem {
     blocks: Vec<(u32, Vec<u8>)>,
+    ext: Option<Rc<dyn MemExt>>,
 }
 
 /// `battle_server_rodata` 0x021EFCF0: first BattleMon slot (mon id) of each client {0, 12, 6, 18} (+ the bytes after it).
@@ -167,6 +172,13 @@ impl Mem {
         m
     }
 
+    /// A memory with the ROM tables mapped over the shared memory `ext` (B16).
+    pub fn with_ext(ext: Rc<dyn MemExt>) -> Self {
+        let mut m = Mem::new();
+        m.ext = Some(ext);
+        m
+    }
+
     /// Maps `bytes` at `base`.
     pub fn map(&mut self, base: u32, bytes: Vec<u8>) {
         self.blocks.push((base, bytes));
@@ -182,45 +194,66 @@ impl Mem {
         self.blocks.remove(i).1
     }
 
-    fn loc(&self, addr: u32, n: u32) -> (usize, usize) {
+    fn find(&self, addr: u32, n: u32) -> Option<(usize, usize)> {
         for (i, (base, b)) in self.blocks.iter().enumerate() {
             let o = addr.wrapping_sub(*base);
             if o < b.len() as u32 && o + n <= b.len() as u32 {
-                return (i, o as usize);
+                return Some((i, o as usize));
             }
         }
+        None
+    }
+
+    fn unmapped(addr: u32) -> ! {
         panic!("server3: access to unmapped address {addr:#010x}");
     }
 
+    fn read(&self, addr: u32, out: &mut [u8]) {
+        match (self.find(addr, out.len() as u32), &self.ext) {
+            (Some((i, o)), _) => out.copy_from_slice(&self.blocks[i].1[o..o + out.len()]),
+            (None, Some(e)) => e.read(addr, out),
+            (None, None) => Self::unmapped(addr),
+        }
+    }
+
+    fn write(&mut self, addr: u32, data: &[u8]) {
+        match self.find(addr, data.len() as u32) {
+            Some((i, o)) => self.blocks[i].1[o..o + data.len()].copy_from_slice(data),
+            None => match &self.ext {
+                Some(e) => e.write(addr, data),
+                None => Self::unmapped(addr),
+            },
+        }
+    }
+
     pub fn r8(&self, addr: u32) -> u32 {
-        let (i, o) = self.loc(addr, 1);
-        u32::from(self.blocks[i].1[o])
+        let mut b = [0; 1];
+        self.read(addr, &mut b);
+        u32::from(b[0])
     }
 
     pub fn r16(&self, addr: u32) -> u32 {
-        let (i, o) = self.loc(addr, 2);
-        let b = &self.blocks[i].1;
-        u32::from(u16::from_le_bytes([b[o], b[o + 1]]))
+        let mut b = [0; 2];
+        self.read(addr, &mut b);
+        u32::from(u16::from_le_bytes(b))
     }
 
     pub fn r32(&self, addr: u32) -> u32 {
-        let (i, o) = self.loc(addr, 4);
-        u32::from_le_bytes(self.blocks[i].1[o..o + 4].try_into().unwrap())
+        let mut b = [0; 4];
+        self.read(addr, &mut b);
+        u32::from_le_bytes(b)
     }
 
     pub fn w8(&mut self, addr: u32, v: u32) {
-        let (i, o) = self.loc(addr, 1);
-        self.blocks[i].1[o] = v as u8;
+        self.write(addr, &[v as u8]);
     }
 
     pub fn w16(&mut self, addr: u32, v: u32) {
-        let (i, o) = self.loc(addr, 2);
-        self.blocks[i].1[o..o + 2].copy_from_slice(&(v as u16).to_le_bytes());
+        self.write(addr, &(v as u16).to_le_bytes());
     }
 
     pub fn w32(&mut self, addr: u32, v: u32) {
-        let (i, o) = self.loc(addr, 4);
-        self.blocks[i].1[o..o + 4].copy_from_slice(&v.to_le_bytes());
+        self.write(addr, &v.to_le_bytes());
     }
 
     /// `MI_CpuCopy8(src, dst, n)` (bytewise, ascending).

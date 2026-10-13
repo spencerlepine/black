@@ -1,8 +1,5 @@
 use crate::server_flow::testkit::{run_area_suite, Case};
 
-/// Fixed emulator address of pointer argument 0 (see svflow_specs/README.md).
-const BUF0: u32 = 0x02E1_0000;
-
 // Written by tools/check-svflow.sh only, after the Rust hashes matched the ROM run.
 // svflow-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
@@ -36,7 +33,7 @@ const RECORDED: &[(u32, &str)] = &[
 ];
 // svflow-recorded-end
 
-fn call(addr: u32, c: &mut Case) -> u64 {
+pub(crate) fn call<E: crate::server_flow::env::FlowEnv>(addr: u32, c: &mut Case<E>) -> u64 {
     match addr {
         0x021CC8D8 => super::advance_fields(&mut c.bufs[0]) as u64,
         0x021CC918 => super::advance_fields_set_low10(&mut c.bufs[0], c.vals[1]) as u64,
@@ -77,7 +74,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x021CC9AC => super::alloc_record(&mut c.bufs[0], c.vals[1], c.vals[2]) as u64,
         0x021CCA74 => {
             // vals[1] is the record's address; the port takes its offset from arg0
-            super::free_last_record(&mut c.bufs[0], c.vals[1].wrapping_sub(BUF0));
+            super::free_last_record(&mut c.bufs[0], c.vals[1].wrapping_sub(c.vals[0]));
             0
         }
         0x021CCB34 => {

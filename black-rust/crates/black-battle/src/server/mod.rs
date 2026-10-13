@@ -99,21 +99,46 @@ pub mod server1;
 pub mod server2;
 pub mod server3;
 
+use std::rc::Rc;
+
+/// B16: memory outside a [`Mem`]'s own windows / blocks: the battle integration's object table
+/// (`crate::integration`), shared by every port so a pointer read by one area sees what another
+/// area wrote. The differential tests never install one.
+pub trait MemExt {
+    /// Reads `out.len()` bytes at `addr` (panics outside every object).
+    fn read(&self, addr: u32, out: &mut [u8]);
+    /// Writes `data` at `addr` (panics outside every object).
+    fn write(&self, addr: u32, data: &[u8]);
+}
+
 /// A view of the original address space for the `battle_server.s` ports (B11a): a list of windows `(base address, bytes)`.
 ///
 /// The main module M and the objects it points at (BATTLE_SETUP, party containers, sub-proc slots, received blocks) are
 /// reached through raw pointers stored in each other, so the ports keep pointers as `u32` addresses and read or write
 /// through a `Mem`, which keeps every pointer value the original hands to its callees identical. An access outside every
-/// window panics (the original would touch whatever memory is there; UNVERIFIED for such addresses).
+/// window goes to the [`MemExt`] backend when one is installed (B16) and panics otherwise (the original would touch
+/// whatever memory is there; UNVERIFIED for such addresses).
 #[derive(Default)]
 pub struct Mem<'a> {
     wins: Vec<(u32, &'a mut [u8])>,
+    ext: Option<Rc<dyn MemExt>>,
 }
 
 impl<'a> Mem<'a> {
     /// An empty view.
     pub fn new() -> Self {
-        Mem { wins: Vec::new() }
+        Mem {
+            wins: Vec::new(),
+            ext: None,
+        }
+    }
+
+    /// An empty view over the shared memory `ext` (B16).
+    pub fn with_ext(ext: Rc<dyn MemExt>) -> Self {
+        Mem {
+            wins: Vec::new(),
+            ext: Some(ext),
+        }
     }
 
     /// Adds the window `bytes` at address `base`.
@@ -122,49 +147,94 @@ impl<'a> Mem<'a> {
     }
 
     /// Window index and offset of `addr..addr + len`.
-    fn at(&self, addr: u32, len: usize) -> (usize, usize) {
+    fn find(&self, addr: u32, len: usize) -> Option<(usize, usize)> {
         for (i, (b, v)) in self.wins.iter().enumerate() {
             let o = addr.wrapping_sub(*b) as usize;
             if o.checked_add(len).is_some_and(|e| e <= v.len()) {
-                return (i, o);
+                return Some((i, o));
             }
         }
-        panic!("address {addr:#010x}+{len} is outside every memory window");
+        None
     }
 
-    /// The `len` bytes at `addr`.
+    /// Window index and offset of `addr..addr + len` (panics outside every window).
+    fn at(&self, addr: u32, len: usize) -> (usize, usize) {
+        match self.find(addr, len) {
+            Some(r) => r,
+            None => panic!("address {addr:#010x}+{len} is outside every memory window"),
+        }
+    }
+
+    /// The `len` bytes at `addr` (windows only).
     pub fn bytes(&self, addr: u32, len: usize) -> &[u8] {
         let (w, o) = self.at(addr, len);
         &self.wins[w].1[o..o + len]
     }
 
-    /// The `len` bytes at `addr`, writable.
+    /// The `len` bytes at `addr`, writable (windows only).
     pub fn bytes_mut(&mut self, addr: u32, len: usize) -> &mut [u8] {
         let (w, o) = self.at(addr, len);
         &mut self.wins[w].1[o..o + len]
     }
 
+    /// A copy of the `len` bytes at `addr` (a window, or the [`MemExt`] backend).
+    pub fn read_vec(&self, addr: u32, len: usize) -> Vec<u8> {
+        let mut v = vec![0; len];
+        self.read_into(addr, &mut v);
+        v
+    }
+
+    /// Reads `out.len()` bytes at `addr` (a window, or the [`MemExt`] backend).
+    pub fn read_into(&self, addr: u32, out: &mut [u8]) {
+        match (self.find(addr, out.len()), &self.ext) {
+            (Some((w, o)), _) => out.copy_from_slice(&self.wins[w].1[o..o + out.len()]),
+            (None, Some(e)) => e.read(addr, out),
+            (None, None) => {
+                self.at(addr, out.len());
+            }
+        }
+    }
+
+    /// Writes `data` at `addr` (a window, or the [`MemExt`] backend).
+    pub fn write_bytes(&mut self, addr: u32, data: &[u8]) {
+        match self.find(addr, data.len()) {
+            Some((w, o)) => self.wins[w].1[o..o + data.len()].copy_from_slice(data),
+            None => match &self.ext {
+                Some(e) => e.write(addr, data),
+                None => {
+                    self.at(addr, data.len());
+                }
+            },
+        }
+    }
+
     pub fn r8(&self, addr: u32) -> u8 {
-        self.bytes(addr, 1)[0]
+        let mut b = [0; 1];
+        self.read_into(addr, &mut b);
+        b[0]
     }
 
     pub fn r16(&self, addr: u32) -> u16 {
-        u16::from_le_bytes(self.bytes(addr, 2).try_into().unwrap())
+        let mut b = [0; 2];
+        self.read_into(addr, &mut b);
+        u16::from_le_bytes(b)
     }
 
     pub fn r32(&self, addr: u32) -> u32 {
-        u32::from_le_bytes(self.bytes(addr, 4).try_into().unwrap())
+        let mut b = [0; 4];
+        self.read_into(addr, &mut b);
+        u32::from_le_bytes(b)
     }
 
     pub fn w8(&mut self, addr: u32, v: u8) {
-        self.bytes_mut(addr, 1)[0] = v;
+        self.write_bytes(addr, &[v]);
     }
 
     pub fn w16(&mut self, addr: u32, v: u16) {
-        self.bytes_mut(addr, 2).copy_from_slice(&v.to_le_bytes());
+        self.write_bytes(addr, &v.to_le_bytes());
     }
 
     pub fn w32(&mut self, addr: u32, v: u32) {
-        self.bytes_mut(addr, 4).copy_from_slice(&v.to_le_bytes());
+        self.write_bytes(addr, &v.to_le_bytes());
     }
 }

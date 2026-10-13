@@ -19,7 +19,7 @@ const RECORDED: &[(u32, &str)] = &[
 /// Address of the work image in the emulator.
 const WORK: u32 = 0x02E0_0000;
 
-fn call(addr: u32, c: &mut Case) -> u64 {
+pub(crate) fn call<E: crate::server_flow::env::FlowEnv>(addr: u32, c: &mut Case<E>) -> u64 {
     let v = c.vals.clone();
     match addr {
         0x021C_8810 => {

@@ -187,14 +187,16 @@ fn slot_handle(s: &[u8], i: usize) -> u32 {
 
 /// C: `FUN_overlay_d_93__021bb724`: bracketed by `021eeae8`/`021eeafc`, sends `(a, b, c)` to every
 /// used client slot's handle (`021eeb00`).
-pub fn broadcast<E: FlowEnv>(env: &mut E, s: &[u8], a: u32, b: u32, c: u32) {
+pub fn broadcast<E: FlowEnv>(env: &mut E, s: &mut [u8], a: u32, b: u32, c: u32) {
     env.call(0x021E_EAE8, &mut []);
     for i in 0..CLIENTS {
         if slot_used(&s[OFS_SLOTS + SLOT_SIZE * i..]) {
             let h = slot_handle(s, i);
-            env.call(
+            // `b` may point into S (the record list, the builder)
+            env.callh(
                 0x021E_EB00,
                 &mut [Arg::V(h), Arg::V(a), Arg::V(b), Arg::V(c)],
+                s,
             );
         }
     }
@@ -202,20 +204,21 @@ pub fn broadcast<E: FlowEnv>(env: &mut E, s: &[u8], a: u32, b: u32, c: u32) {
 }
 
 /// C: `FUN_overlay_d_93__021bb718`: `broadcast(S, code, 0, 0)`.
-pub fn broadcast_code<E: FlowEnv>(env: &mut E, s: &[u8], code: u32) {
+pub fn broadcast_code<E: FlowEnv>(env: &mut E, s: &mut [u8], code: u32) {
     broadcast(env, s, code, 0, 0);
 }
 
 /// C: `FUN_overlay_d_93__021bb768`: like [`broadcast`] but to one slot, preceded by `021eeb70`;
 /// the fourth value is the stack argument `count`.
-pub fn send_one<E: FlowEnv>(env: &mut E, s: &[u8], code: u32, idx: u32, data: u32, count: u32) {
+pub fn send_one<E: FlowEnv>(env: &mut E, s: &mut [u8], code: u32, idx: u32, data: u32, count: u32) {
     let o = slot_ofs(idx);
     if slot_used(&s[o..]) {
         let h = rd32(&s[o..]);
         env.call(0x021E_EB70, &mut [Arg::V(h)]);
-        env.call(
+        env.callh(
             0x021E_EB00,
             &mut [Arg::V(h), Arg::V(code), Arg::V(data), Arg::V(count)],
+            s,
         );
     }
 }
@@ -269,9 +272,10 @@ pub fn setup_slot_handle<E: FlowEnv>(env: &mut E, s: &mut [u8], handle: u32, idx
 pub fn setup_slot_created<E: FlowEnv>(env: &mut E, s: &mut [u8], r2: u32, idx: u32, v: u32) {
     let d = data_for(env, s, idx);
     let cc0 = u16::from_le_bytes([s[0xCC0], s[0xCC1]]) as u32;
-    let h = env.call(
+    let h = env.callh(
         0x021E_EA58,
         &mut [Arg::V(r2), Arg::V(idx), Arg::V(1), Arg::V(cc0)],
+        s,
     );
     let o = slot_ofs(idx);
     slot_set(&mut s[o..], idx as u8, h, 0);
@@ -294,7 +298,7 @@ const STATE_AC05: u32 = 0x021B_AC05;
 pub fn teardown<E: FlowEnv>(env: &mut E, s: &mut [u8]) {
     set_state(s, STATE_AC05);
     each_eead0(env, s);
-    env.call(0x021B_B9D8, &mut [Arg::V(ptr_0x44(s))]);
+    env.callh(0x021B_B9D8, &mut [Arg::V(ptr_0x44(s))], s);
 }
 
 /// C: `FUN_overlay_d_93__021bab5c`: `02045808(S[0xAC])`, `021bbb48(S[0x44])`, frees (`021eeae0`, a
@@ -309,7 +313,8 @@ pub fn destroy<E: FlowEnv>(env: &mut E, s_addr: u32, s: &[u8]) {
             env.call(0x0203_07B0, &mut [Arg::V(rd32(&s[o..]))]);
         }
     }
-    env.call(0x0203_07B0, &mut [Arg::V(s_addr)]);
+    // S frees itself: lent read-only so the environment can release it (B16)
+    env.callr(0x0203_07B0, &mut [Arg::V(s_addr)], s);
 }
 
 /// `S` field helper: the address stored at `S + ofs` as an offset into `S` (the data a pointer
@@ -359,13 +364,14 @@ pub fn pokemon_set_5<E: FlowEnv>(env: &mut E, s: &[u8], bpp: u32) {
 
 /// C: `FUN_overlay_d_93__021bb5fc`: initialises the builder at `S + 0x68` (tag 1), loads `tag`
 /// (`021ee8d8`), broadcasts (10, result, loaded word) and returns 1.
-pub fn builder_load<E: FlowEnv>(env: &mut E, s_addr: u32, s: &[u8], tag: u32) -> u32 {
+pub fn builder_load<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], tag: u32) -> u32 {
     let b = s_addr + OFS_BUILDER as u32;
-    env.call(0x021E_E8B4, &mut [Arg::V(b), Arg::V(1)]);
+    env.callh(0x021E_E8B4, &mut [Arg::V(b), Arg::V(1)], s);
     let mut local = [0u8; 4];
-    let r = env.call(
+    let r = env.callh(
         0x021E_E8D8,
         &mut [Arg::V(b), Arg::Out(&mut local), Arg::V(tag)],
+        s,
     );
     broadcast(env, s, 10, r, u32::from_le_bytes(local));
     1
@@ -384,13 +390,13 @@ pub enum FinishOut<'a> {
 pub fn builder_finish<E: FlowEnv>(
     env: &mut E,
     s_addr: u32,
-    s: &[u8],
+    s: &mut [u8],
     code: u32,
     mode: u32,
     out: FinishOut<'_>,
 ) -> u32 {
     let b = s_addr + OFS_BUILDER as u32;
-    env.call(0x021E_E8B4, &mut [Arg::V(b), Arg::V(mode)]);
+    env.callh(0x021E_E8B4, &mut [Arg::V(b), Arg::V(mode)], s);
     for i in 0..CLIENTS {
         if s[OFS_SLOTS + SLOT_SIZE * i + 0xB] != 0xFF {
             let mut size = [0u8; 4];
@@ -399,21 +405,30 @@ pub fn builder_finish<E: FlowEnv>(
                 &mut [Arg::V(slot_handle(s, i)), Arg::Out(&mut size)],
             );
             let n = (u32::from_le_bytes(size) & 0x3FF) >> 2;
-            env.call(
+            env.callh(
                 0x021E_E8F4,
                 &mut [Arg::V(b), Arg::V(i as u32), Arg::V(entries), Arg::V(n)],
+                s,
             );
         }
     }
     match out {
-        FinishOut::Ptr(p) => env.call(0x021E_E96C, &mut [Arg::V(b), Arg::V(code), Arg::V(p)]),
-        FinishOut::Local(l) => env.call(0x021E_E96C, &mut [Arg::V(b), Arg::V(code), Arg::Out(l)]),
+        FinishOut::Ptr(p) => env.callh(0x021E_E96C, &mut [Arg::V(b), Arg::V(code), Arg::V(p)], s),
+        FinishOut::Local(l) => {
+            env.callh(0x021E_E96C, &mut [Arg::V(b), Arg::V(code), Arg::Out(l)], s)
+        }
     }
 }
 
 /// C: `FUN_overlay_d_93__021bb628`: [`builder_finish`] into a local; when it answers nonzero,
 /// broadcasts (10, answer, local) and returns true.
-pub fn builder_flush<E: FlowEnv>(env: &mut E, s_addr: u32, s: &[u8], code: u32, mode: u32) -> bool {
+pub fn builder_flush<E: FlowEnv>(
+    env: &mut E,
+    s_addr: u32,
+    s: &mut [u8],
+    code: u32,
+    mode: u32,
+) -> bool {
     let mut local = [0u8; 4];
     let r = builder_finish(env, s_addr, s, code, mode, FinishOut::Local(&mut local));
     if r == 0 {
@@ -440,26 +455,26 @@ pub fn compare_header<E: FlowEnv>(
     let a = s_addr + 0xB4;
     match mode {
         1 => {
-            env.call(0x021B_BC34, &mut [Arg::V(o44)]);
-            env.call(0x021B_BC44, &mut [Arg::V(o44), Arg::V(a)]);
+            env.callh(0x021B_BC34, &mut [Arg::V(o44)], s);
+            env.callh(0x021B_BC44, &mut [Arg::V(o44), Arg::V(a)], s);
         }
         2 => {
-            env.call(0x021B_BD80, &mut [Arg::V(o44)]);
-            env.call(0x021B_BD8C, &mut [Arg::V(o44), Arg::V(a)]);
+            env.callh(0x021B_BD80, &mut [Arg::V(o44)], s);
+            env.callh(0x021B_BD8C, &mut [Arg::V(o44), Arg::V(a)], s);
         }
         3 => {
-            env.call(0x021B_BD20, &mut [Arg::V(o44)]);
-            env.call(0x021B_BD2C, &mut [Arg::V(o44), Arg::V(a)]);
+            env.callh(0x021B_BD20, &mut [Arg::V(o44)], s);
+            env.callh(0x021B_BD2C, &mut [Arg::V(o44), Arg::V(a)], s);
         }
         4 => {
-            env.call(0x021B_BB60, &mut [Arg::V(o44)]);
+            env.callh(0x021B_BB60, &mut [Arg::V(o44)], s);
         }
         _ => {}
     }
     let h = inner(s, s_addr, 0xCB0);
     if rd32(&s[h..]) == size {
         let hp = rd32(&s[0xCB0..]) + 8;
-        if env.call(0x0203_EFC8, &mut [Arg::V(hp), Arg::V(p3), Arg::V(size)]) == 0 {
+        if env.callh(0x0203_EFC8, &mut [Arg::V(hp), Arg::V(p3), Arg::V(size)], s) == 0 {
             return false;
         }
     }
@@ -510,11 +525,11 @@ pub fn slot1_value<E: FlowEnv>(env: &mut E, s_addr: u32, s: &[u8]) -> u32 {
 /// 021b8ff4(S[0xC])`, then the next state function from `021b86b8(S[0xC])` and the first value.
 pub fn pick_next_state<E: FlowEnv>(env: &mut E, s: &mut [u8]) -> u32 {
     let main = rd32(&s[0xC..]);
-    let a = env.call(0x021B_A54C, &mut [Arg::V(main)]);
+    let a = env.callh(0x021B_A54C, &mut [Arg::V(main)], s);
     s[0xAA..0xAC].copy_from_slice(&(a as u16).to_le_bytes());
-    let b = env.call(0x021B_8FF4, &mut [Arg::V(main)]);
+    let b = env.callh(0x021B_8FF4, &mut [Arg::V(main)], s);
     s[0xA8..0xAA].copy_from_slice(&(b as u16).to_le_bytes());
-    let mode = env.call(0x021B_86B8, &mut [Arg::V(main)]);
+    let mode = env.callh(0x021B_86B8, &mut [Arg::V(main)], s);
     let next = match mode {
         0 => {
             if a == 1 {
@@ -530,8 +545,8 @@ pub fn pick_next_state<E: FlowEnv>(env: &mut E, s: &mut [u8]) -> u32 {
         3 => STATE_BB3F9,
         _ => {
             if a == 1 {
-                let x = env.call(0x021B_86DC, &mut [Arg::V(main)]);
-                env.call(0x0200_5D90, &mut [Arg::V(x), Arg::V(0xFFFF)]);
+                let x = env.callh(0x021B_86DC, &mut [Arg::V(main)], s);
+                env.callh(0x0200_5D90, &mut [Arg::V(x), Arg::V(0xFFFF)], s);
             }
             STATE_BB321
         }
@@ -557,12 +572,19 @@ pub fn collect_slot_records<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8]) 
         }
         let handle = rd32(&s[slot..]);
         let mut size = [0u8; 4];
-        let data = env.call(0x021E_EB64, &mut [Arg::V(handle), Arg::Out(&mut size)]);
+        let data = env.callh(0x021E_EB64, &mut [Arg::V(handle), Arg::Out(&mut size)], s);
         let words = u32::from_le_bytes(size) >> 2;
-        // the data address lies inside `S` in the test environment
+        // the data address lies inside `S` in the test environment; in the game it is the
+        // channel object's reply block (B16: read through `peek`)
+        let mut ext = vec![0u8; 4 * words as usize];
+        let outside = env.peek(data, &mut ext);
         let src = data.wrapping_sub(s_addr) as usize;
         for k in 0..words as usize {
-            let w = rd32(&s[src + 4 * k..]);
+            let w = if outside {
+                rd32(&ext[4 * k..])
+            } else {
+                rd32(&s[src + 4 * k..])
+            };
             s[OFS_RECORDS + SLOT_SIZE * i + 4 * k..][..4].copy_from_slice(&w.to_le_bytes());
             s[OFS_COUNTS + i] = s[OFS_COUNTS + i].wrapping_add(1);
         }
@@ -583,9 +605,10 @@ pub fn load_record_stream<E: FlowEnv>(
         s[OFS_COUNTS + i] = 0;
     }
     let builder = s_addr + OFS_BUILDER as u32;
-    env.call(
+    env.callh(
         0x021E_E9B4,
         &mut [Arg::V(builder), Arg::V(data), Arg::V(size)],
+        s,
     );
     loop {
         let mut read_pos = [0u8; 4];
@@ -593,7 +616,7 @@ pub fn load_record_stream<E: FlowEnv>(
         let mut count = [0u8; 1];
         let mut entries = [0u8; 12];
         // `BattleRecordBuilder_ReadNext(builder, &rp, &client, &count, entries)`
-        let more = env.call(
+        let more = env.callh(
             0x021E_E9E4,
             &mut [
                 Arg::V(builder),
@@ -602,6 +625,7 @@ pub fn load_record_stream<E: FlowEnv>(
                 Arg::Out(&mut count),
                 Arg::Out(&mut entries),
             ],
+            s,
         );
         if more == 0 {
             break;

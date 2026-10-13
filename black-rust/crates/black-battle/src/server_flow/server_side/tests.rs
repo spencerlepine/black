@@ -126,16 +126,21 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             0
         }
         0x021B_B724 => {
-            super::broadcast(&mut c.env, &c.bufs[0], c.vals[1], c.vals[2], c.vals[3]);
+            super::broadcast(&mut c.env, &mut c.bufs[0], c.vals[1], c.vals[2], c.vals[3]);
             0
         }
         0x021B_B718 => {
-            super::broadcast_code(&mut c.env, &c.bufs[0], c.vals[1]);
+            super::broadcast_code(&mut c.env, &mut c.bufs[0], c.vals[1]);
             0
         }
         0x021B_B768 => {
             super::send_one(
-                &mut c.env, &c.bufs[0], c.vals[1], c.vals[2], c.vals[3], c.vals[4],
+                &mut c.env,
+                &mut c.bufs[0],
+                c.vals[1],
+                c.vals[2],
+                c.vals[3],
+                c.vals[4],
             );
             0
         }
@@ -184,17 +189,17 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             super::pokemon_set_5(&mut c.env, &c.bufs[0], c.vals[1]);
             0
         }
-        0x021B_B5FC => super::builder_load(&mut c.env, c.vals[0], &c.bufs[0], c.vals[1]) as u64,
+        0x021B_B5FC => super::builder_load(&mut c.env, c.vals[0], &mut c.bufs[0], c.vals[1]) as u64,
         0x021B_B650 => super::builder_finish(
             &mut c.env,
             c.vals[0],
-            &c.bufs[0],
+            &mut c.bufs[0],
             c.vals[1],
             c.vals[2],
             super::FinishOut::Ptr(c.vals[3]),
         ) as u64,
         0x021B_B628 => {
-            super::builder_flush(&mut c.env, c.vals[0], &c.bufs[0], c.vals[1], c.vals[2]) as u64
+            super::builder_flush(&mut c.env, c.vals[0], &mut c.bufs[0], c.vals[1], c.vals[2]) as u64
         }
         0x021B_AC04 => run_state_fn(c, super::state_ac04),
         0x021B_ACAC => run_state_fn(c, super::state_acac),

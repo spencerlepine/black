@@ -57,7 +57,7 @@ macro_rules! cx {
     };
 }
 
-fn call(addr: u32, c: &mut Case) -> u64 {
+pub(crate) fn call<E: crate::server_flow::env::FlowEnv>(addr: u32, c: &mut Case<E>) -> u64 {
     match addr {
         0x021B_F324 => super::pair_blocked(&mut c.env, &c.work, c.vals[1], c.vals[2]) as u64,
         0x021C_08CC => {
@@ -176,7 +176,9 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 &mut c.env, &c.work, &mut cx, c.vals[1], c.vals[2], c.vals[3], c.vals[4],
             ) as u64
         }
-        0x021B_FA60 => super::can_hit(&mut c.env, &c.work, c.vals[1], c.vals[2], &c.bufs[3]) as u64,
+        0x021B_FA60 => super::can_hit(
+            &mut c.env, &c.work, c.vals[1], c.vals[2], &c.bufs[3], c.vals[3],
+        ) as u64,
         0x021B_FEAC => {
             let mut cx = cx!(c, 0);
             super::swap_effect(&mut c.env, &mut cx, c.vals[1], c.vals[2], &mut c.bufs[3]) as u64
@@ -186,7 +188,9 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             0
         }
         0x021B_F8D4 => {
-            super::filter_list_hits(&mut c.env, &c.work, &c.bufs[1], c.vals[2], c.vals[3]);
+            super::filter_list_hits(
+                &mut c.env, &c.work, &c.bufs[1], c.vals[2], c.vals[3], c.vals[1],
+            );
             0
         }
         0x021B_FF60 => {
@@ -225,7 +229,15 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             ) as u64
         }
         0x021B_F3D8 => {
-            super::list_apply(&mut c.env, &c.work, c.vals[2], c.vals[3], &mut c.bufs[4]);
+            super::list_apply(
+                &mut c.env,
+                &c.work,
+                c.vals[2],
+                c.vals[3],
+                &mut c.bufs[4],
+                c.vals[1],
+                c.vals[0],
+            );
             0
         }
         0x021B_F6E8 => {
@@ -236,6 +248,8 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 &mut cx,
                 (c.vals[2], c.vals[3]),
                 c.vals[5],
+                c.vals[1],
+                c.vals[4],
             ) as u64
         }
         0x021B_F78C => {
@@ -260,6 +274,8 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 &c.bufs[1],
                 c.vals[2],
                 c.vals[3],
+                c.vals[1],
+                c.vals[4],
             );
             0
         }
@@ -281,6 +297,9 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 mon: c.vals[1],
                 list: c.vals[2],
                 table: &c.bufs[4],
+                rec_addr: c.vals[3],
+                table_addr: c.vals[4],
+                waddr: c.vals[0],
             };
             super::fill_record(&mut c.env, &mv, c.vals[5], &mut out);
             c.bufs[6] = out;
@@ -305,10 +324,13 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 mon: c.vals[2],
                 list: c.vals[3],
                 table: &c.bufs[4],
+                rec_addr: c.vals[1],
+                table_addr: c.vals[4],
+                waddr: c.vals[0],
             };
             let r = super::build_records(
                 &mut c.env,
-                &c.work,
+                &mut c.work,
                 &mut cx,
                 &mut records,
                 &mv,
@@ -337,6 +359,9 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 mon: c.vals[2],
                 list: c.vals[3],
                 table: &c.bufs[4],
+                rec_addr: c.vals[1],
+                table_addr: c.vals[4],
+                waddr: c.vals[0],
             };
             super::build_damage(
                 &mut c.env,

@@ -16,7 +16,7 @@
 //! their callers in core1-core5 keep reaching them through `env.call`.
 
 use super::cmd_queue;
-use super::env::{Arg, FlowEnv};
+use super::env::{Arg, FlowEnv, Lend};
 use super::SvFlowWork;
 
 /// Functions of this area that are ported and checked by `tests::svflow_match_rom`.
@@ -422,33 +422,37 @@ pub fn message_2e98<E: FlowEnv>(env: &mut E, a: u32, b: u32) {
 /// C: `FUN_overlay_d_93__021c6bf8`: message 0x2EB0 (reply 0x41, value 0x2C = `bd28(r3, 7) + 5f14(a)`); when the reply
 /// is 0: `c284(r3)` -> 1, else `7930(min(reply 0x2C, 4))`; then `911c(work[4], 3)` forces 1.
 pub fn message_2eb0<E: FlowEnv>(env: &mut E, w: &SvFlowWork, a: u32, b: u32, r3: u32) -> u32 {
-    let v = field(env, r3, 7);
-    let extra = env.call(0x021D_5F14, &mut [Arg::V(a)]) & 0xFF;
-    begin(env, 0x2EB0);
-    let ib = mon_id(env, b);
-    put(env, 4, ib);
-    let ia = mon_id(env, a);
-    put(env, 3, ia);
-    put_a8(env, 0x2C, ((v & 0xFFFF).wrapping_add(extra)) & 0xFFFF);
-    put_reply(env, 0x41, 0);
-    send(env, 0x36);
+    let v = field(&mut Lend::new_ref(env, w), r3, 7);
+    let extra = env.callwr(0x021D_5F14, &mut [Arg::V(a)], w) & 0xFF;
+    begin(&mut Lend::new_ref(env, w), 0x2EB0);
+    let ib = mon_id(&mut Lend::new_ref(env, w), b);
+    put(&mut Lend::new_ref(env, w), 4, ib);
+    let ia = mon_id(&mut Lend::new_ref(env, w), a);
+    put(&mut Lend::new_ref(env, w), 3, ia);
+    put_a8(
+        &mut Lend::new_ref(env, w),
+        0x2C,
+        ((v & 0xFFFF).wrapping_add(extra)) & 0xFFFF,
+    );
+    put_reply(&mut Lend::new_ref(env, w), 0x41, 0);
+    send(&mut Lend::new_ref(env, w), 0x36);
     let mut res = 0;
-    if read(env, 0x41) == 0 {
-        if env.call(0x0201_C284, &mut [Arg::V(r3)]) == 0 {
-            let mut u = read(env, 0x2C);
+    if read(&mut Lend::new_ref(env, w), 0x41) == 0 {
+        if env.callwr(0x0201_C284, &mut [Arg::V(r3)], w) == 0 {
+            let mut u = read(&mut Lend::new_ref(env, w), 0x2C);
             if (u as i32) > 4 {
                 u = 4;
             }
-            res = env.call(0x021D_7930, &mut [Arg::V(u & 0xFF)]);
+            res = env.callwr(0x021D_7930, &mut [Arg::V(u & 0xFF)], w);
         } else {
             res = 1;
         }
         let main = u32_at(&w.mem[..], OFS_MAIN);
-        if env.call(0x021B_911C, &mut [Arg::V(main), Arg::V(3)]) != 0 {
+        if env.callwr(0x021B_911C, &mut [Arg::V(main), Arg::V(3)], w) != 0 {
             res = 1;
         }
     }
-    end(env, 0x2EC7);
+    end(&mut Lend::new_ref(env, w), 0x2EC7);
     res
 }
 
@@ -550,30 +554,30 @@ pub fn type_check<E: FlowEnv>(
     if ty == 0x11 {
         return 3;
     }
-    let pair = env.call(0x021D_57FC, &mut [Arg::V(b)]) & 0xFFFF;
-    let t1 = env.call(0x021E_8CFC, &mut [Arg::V(pair)]) & 0xFF;
-    let mut m = type_question(env, a, b, ty, t1);
-    if env.call(0x021E_8DA8, &mut [Arg::V(pair)]) == 0 {
-        let t2 = env.call(0x021E_8D04, &mut [Arg::V(pair)]) & 0xFF;
-        let m2 = type_question(env, a, b, ty, t2);
-        m = env.call(0x021D_79E8, &mut [Arg::V(m & 0xFF), Arg::V(m2)]) & 0xFF;
+    let pair = env.callw(0x021D_57FC, &mut [Arg::V(b)], w) & 0xFFFF;
+    let t1 = env.callw(0x021E_8CFC, &mut [Arg::V(pair)], w) & 0xFF;
+    let mut m = type_question(&mut Lend::new(env, w), a, b, ty, t1);
+    if env.callw(0x021E_8DA8, &mut [Arg::V(pair)], w) == 0 {
+        let t2 = env.callw(0x021E_8D04, &mut [Arg::V(pair)], w) & 0xFF;
+        let m2 = type_question(&mut Lend::new(env, w), a, b, ty, t2);
+        m = env.callw(0x021D_79E8, &mut [Arg::V(m & 0xFF), Arg::V(m2)], w) & 0xFF;
     }
     if m == 0 {
-        if ty == 4 && !pair_resists(env, b, 1) {
+        if ty == 4 && !pair_resists(&mut Lend::new(env, w), b, 1) {
             return 3;
         }
     } else {
         if ty != 4 {
             return m;
         }
-        local = pair_resists(env, b, 0);
+        local = pair_resists(&mut Lend::new(env, w), b, 0);
         if !local {
             return m;
         }
     }
     if flag != 0 {
         if !local {
-            env.call(0x021C_5750, &mut [Arg::P, Arg::V(b)]);
+            env.callw(0x021C_5750, &mut [Arg::P, Arg::V(b)], w);
         } else {
             bracketed_messages(env, w, b);
         }
@@ -654,9 +658,9 @@ pub fn pair_resists<E: FlowEnv>(env: &mut E, mon: u32, flag: u32) -> bool {
 /// around `7008(work, mon)` and, unless the flow API `88e4` says 2, `5750(work, mon)`.
 pub fn bracketed_messages<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, mon: u32) {
     let old = cmd_queue::advance_fields(&mut w.mem[OFS_QUEUE_WORD..OFS_QUEUE_WORD + 4]);
-    message_1b(env, mon);
-    if env.call(0x021C_88E4, &mut [Arg::P]) != 2 {
-        env.call(0x021C_5750, &mut [Arg::P, Arg::V(mon)]);
+    message_1b(&mut Lend::new(env, w), mon);
+    if env.callw(0x021C_88E4, &mut [Arg::P], w) != 2 {
+        env.callw(0x021C_5750, &mut [Arg::P, Arg::V(mon)], w);
     }
     cmd_queue::set_word(&mut w.mem[OFS_QUEUE_WORD..OFS_QUEUE_WORD + 4], old);
 }
@@ -810,34 +814,34 @@ pub fn damage_message<E: FlowEnv>(
     rec: &[u8],
     alt: u32,
 ) -> u32 {
-    let k = env.call(0x0201_C1E8, &mut [Arg::V(u16_at(rec, 0))]);
+    let k = env.callwr(0x0201_C1E8, &mut [Arg::V(u16_at(rec, 0))], w);
     let slot = if k != 2 { 8 } else { 10 };
-    begin(env, 0x30FE);
-    let ia = mon_id(env, a);
-    put(env, 3, ia);
-    let ib = mon_id(env, b);
-    put(env, 4, ib);
-    put_a8(env, 0x3B, 0x1F);
-    put_a8(env, 0x51, 0);
-    send(env, 0x39);
-    let r3b = read(env, 0x3B) & 0xFF;
+    begin(&mut Lend::new_ref(env, w), 0x30FE);
+    let ia = mon_id(&mut Lend::new_ref(env, w), a);
+    put(&mut Lend::new_ref(env, w), 3, ia);
+    let ib = mon_id(&mut Lend::new_ref(env, w), b);
+    put(&mut Lend::new_ref(env, w), 4, ib);
+    put_a8(&mut Lend::new_ref(env, w), 0x3B, 0x1F);
+    put_a8(&mut Lend::new_ref(env, w), 0x51, 0);
+    send(&mut Lend::new_ref(env, w), 0x39);
+    let r3b = read(&mut Lend::new_ref(env, w), 0x3B) & 0xFF;
     let mut mon = a;
     if r3b != 0x1F {
         let pokecon = u32_at(&w.mem[..], OFS_POKECON);
-        mon = env.call(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(r3b)]);
+        mon = env.callwr(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(r3b)], w);
     }
-    let flagged = read(env, 0x51) != 0;
-    let v = pick_value(env, mon, slot, flagged, alt != 0);
-    put(env, 0x12, u16_at(rec, 0));
-    put(env, 0x16, rec[6] as u32);
-    put(env, 0x1A, u32_at(rec, 8));
-    put_a8(env, 0x33, v & 0xFFFF);
-    put_reply_range(env, 0x19A, 0x20000);
-    send(env, 0x3B);
-    let r33 = read(env, 0x33);
-    let r35 = read(env, 0x35);
-    let res = scale(env, r33 & 0xFFFF, r35);
-    end(env, 0x3123);
+    let flagged = read(&mut Lend::new_ref(env, w), 0x51) != 0;
+    let v = pick_value(&mut Lend::new_ref(env, w), mon, slot, flagged, alt != 0);
+    put(&mut Lend::new_ref(env, w), 0x12, u16_at(rec, 0));
+    put(&mut Lend::new_ref(env, w), 0x16, rec[6] as u32);
+    put(&mut Lend::new_ref(env, w), 0x1A, u32_at(rec, 8));
+    put_a8(&mut Lend::new_ref(env, w), 0x33, v & 0xFFFF);
+    put_reply_range(&mut Lend::new_ref(env, w), 0x19A, 0x20000);
+    send(&mut Lend::new_ref(env, w), 0x3B);
+    let r33 = read(&mut Lend::new_ref(env, w), 0x33);
+    let r35 = read(&mut Lend::new_ref(env, w), 0x35);
+    let res = scale(&mut Lend::new_ref(env, w), r33 & 0xFFFF, r35);
+    end(&mut Lend::new_ref(env, w), 0x3123);
     res & 0xFFFF
 }
 
@@ -1219,4 +1223,4 @@ pub fn count_statistic<E: FlowEnv>(env: &mut E, counts: &mut [u8], a: u32, b: u3
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

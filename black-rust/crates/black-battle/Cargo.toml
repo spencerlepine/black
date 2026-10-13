@@ -10,5 +10,7 @@ black-core = { version = "0.1.0", path = "../black-core" }
 black-pokemon = { version = "0.1.0", path = "../black-pokemon" }
 
 [dev-dependencies]
+black-data = { version = "0.1.0", path = "../black-data", features = ["rom"] }
 black-fndiff = { version = "0.1.0", path = "../black-fndiff" }
+black-pokemon = { version = "0.1.0", path = "../black-pokemon" }
 nds-rom = { version = "0.1.0", path = "../nds-rom" }

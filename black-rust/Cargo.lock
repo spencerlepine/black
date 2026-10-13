@@ -1980,6 +1980,7 @@ name = "black-battle"
 version = "0.1.0"
 dependencies = [
  "black-core",
+ "black-data",
  "black-fndiff",
  "black-pokemon",
  "nds-rom",

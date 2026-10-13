@@ -85,7 +85,7 @@ fn cure_if_condition<H: FlowHost>(
     me: u8,
     kind: u32,
 ) {
-    let v = b.vars.get_value_if_exists(0x2E);
+    let v = b.vars_ref().get_value_if_exists(0x2E);
     if is_me(b, 2, me)
         && (v.is_none() || v == Some(3) || v == Some(0))
         && holder_has_condition(b, me as u32, kind)
@@ -822,7 +822,7 @@ pub fn h_021df48c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battl
 /// C: `FUN_overlay_d_93__021dcfd0(flow, percent)`: true when `BattleCalc::roll_percent(percent)`
 /// holds, else `FUN_overlay_d_93__021c82b8(flow, 2)`.
 fn roll_percent_or_forced_2<H: FlowHost>(b: &mut Battle<H>, percent: u32) -> bool {
-    if b.calc.roll_percent(percent) {
+    if b.calc_mut().roll_percent(percent) {
         return true;
     }
     b.host.fun_021c82b8(2)
@@ -1354,7 +1354,7 @@ fn push_default_sick_work<H: FlowHost>(b: &mut Battle<H>, me: u8, target: u32, k
     let w = b.host.handex_push(0xC, target);
     b.host.handex(w).put_u8(0xF, me);
     b.host.handex(w).put_u32(4, kind);
-    let c = b.calc.make_default_sick_cont(kind).0;
+    let c = b.calc_mut().make_default_sick_cont(kind).0;
     b.host.handex(w).put_u32(8, c);
     b.host.handex_pop(w);
 }
@@ -1684,7 +1684,7 @@ pub fn h_021df640<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battl
     if is_me(b, 2, me) {
         let w = b.host.handex_push(0xC, me as u32);
         b.host.handex(w).put_u32(4, 4);
-        let c = b.calc.make_default_sick_cont(4).0;
+        let c = b.calc_mut().make_default_sick_cont(4).0;
         let item = sys.sub_id(f) as u32;
         let buf = b.host.handex(w);
         buf.put_u32(8, c);
@@ -1955,7 +1955,7 @@ pub fn h_021dd98c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
         }
     }
     if n != 0 {
-        let i = b.calc.rand(n as u32) as usize;
+        let i = b.calc_mut().rand(n as u32) as usize;
         push_work_0e(b, me as u32, list[i] as u32, 2);
     }
 }

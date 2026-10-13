@@ -59,7 +59,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x021C_DFE4 => super::random_choice(env, vals[0]) as u64,
         0x021C_F470 => super::mon_answered(env, vals[1], vals[2]) as u64,
         0x021C_F58C => {
-            super::struggle(env, &bufs[1], vals[2]);
+            super::struggle(env, vals[0], &mut bufs[1], vals[2]);
             0
         }
         _ => {
@@ -157,7 +157,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                     super::fight_table(env, o, &mut rest[0]);
                     0
                 }
-                0x021C_F524 => super::struggle_if_stuck(env, o, vals[1]) as u64,
+                0x021C_F524 => super::struggle_if_stuck(env, o, vals[1], vals[2]) as u64,
                 _ => unreachable!("{addr:#010x} is PORTED but not wired into the test"),
             }
         }

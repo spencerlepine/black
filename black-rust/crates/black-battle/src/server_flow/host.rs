@@ -29,9 +29,11 @@
 
 use black_pokemon::waza::{self, MoveCache, WazaHooks, RECORD_SIZE};
 
-use super::env::{Arg, FlowEnv};
+use super::env::{Arg, FlowEnv, LendRef};
 use super::{api, core4, hem, SvFlowWork};
-use crate::battle_mon::BppEnv;
+use crate::battle_mon::{BattleMon, BppEnv};
+use crate::calc::BattleCalc;
+use crate::event_var::EventVarStack;
 use crate::flow::{FlowHost, HandexId};
 use crate::handlers::effects::{SideEffects, SIDE_KEYS};
 use crate::server::{server2, server3};
@@ -229,7 +231,11 @@ impl<E: FlowEnv, U: Unported, W: WazaHooks> FlowWorkHost<E, U, W> {
     /// Handlers reach battle Pokemon through [`crate::flow::Battle::mon`] (the battle owns them);
     /// this is the same lookup as the flow ports see it.
     pub fn mon_addr(&mut self, poke_id: u32) -> u32 {
-        api::mon_by_id(&mut self.env, &self.work, poke_id)
+        api::mon_by_id(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        )
     }
 
     /// The pokeIDs of the members of `party` (a BattleParty address): `021b9b94(party)` members,
@@ -330,86 +336,164 @@ impl<E: FlowEnv, U: Unported, W: WazaHooks> FlowHost for FlowWorkHost<E, U, W> {
     // ---- flow API (B10c) ----
 
     fn poke_pos(&mut self, poke_id: u32) -> u32 {
-        api::poke_pos(&mut self.env, &self.work, poke_id)
+        api::poke_pos(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        )
     }
     fn expand_poke_ids(&mut self, code: u32, out: &mut [u8]) -> u32 {
-        api::expand_poke_ids(&mut self.env, &self.work, code, out)
+        api::expand_poke_ids(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            code,
+            out,
+        )
     }
     fn weather(&mut self) -> u32 {
-        api::weather(&mut self.env)
+        api::weather(&mut LendRef::new_ref(&mut self.env, &self.work))
     }
     fn fun_021c82b8(&mut self, _x: u32) -> bool {
-        api::main_911c(&mut self.env) != 0
+        api::main_911c(&mut LendRef::new_ref(&mut self.env, &self.work)) != 0
     }
     fn fun_021c83d4(&mut self) -> bool {
-        api::core1_bc2b0(&mut self.env) != 0
+        api::core1_bc2b0(&mut LendRef::new_ref(&mut self.env, &self.work)) != 0
     }
     fn rule(&mut self) -> u32 {
-        api::rule(&mut self.env, &self.work)
+        api::rule(&mut LendRef::new_ref(&mut self.env, &self.work), &self.work)
     }
     fn opponent_ids(&mut self, poke_id: u32, out: &mut [u8]) -> u32 {
-        api::list_foes(&mut self.env, poke_id, out)
+        api::list_foes(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            poke_id,
+            out,
+        )
     }
     fn fun_021c8290(&mut self, attacker: u32, defender: u32, mv: u32) -> bool {
-        api::mon_pair_bfa00(&mut self.env, &self.work, attacker, defender, mv) != 0
+        api::mon_pair_bfa00(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            attacker,
+            defender,
+            mv,
+        ) != 0
     }
     fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool {
         let mut o = out.to_le_bytes();
-        let r = api::find_action(&mut self.env, &self.work, poke_id, &mut o);
+        let r = api::find_action(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+            &mut o,
+        );
         *out = u32::from_le_bytes(o);
         r != 0
     }
     fn poke_pos_in_battle(&mut self, poke_id: u32) -> u32 {
-        api::poke_pos_in_battle(&mut self.env, &self.work, poke_id)
+        api::poke_pos_in_battle(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        )
     }
     fn fun_021c8234(&mut self, poke_id: u32) -> bool {
-        api::mon_query_6f0c(&mut self.env, &self.work, poke_id) != 0
+        api::mon_query_6f0c(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        ) != 0
     }
     fn fun_021c80ac(&mut self, poke_id: u32) -> bool {
-        api::others_actions_done(&mut self.env, &self.work, poke_id)
+        api::others_actions_done(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        )
     }
     fn fun_021c8168(&mut self) -> bool {
-        api::main_86b8(&mut self.env, &self.work) != 0
+        api::main_86b8(&mut LendRef::new_ref(&mut self.env, &self.work), &self.work) != 0
     }
     fn fun_021c8434(&mut self, poke_id: u32, attacker: u32) {
-        api::bounce_move(&mut self.env, poke_id, attacker)
+        api::bounce_move(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            poke_id,
+            attacker,
+        )
     }
     fn poke_id_at_pos(&mut self, pos: u32) -> u32 {
-        api::poke_id_at_pos(&mut self.env, &self.work, pos)
+        api::poke_id_at_pos(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            pos,
+        )
     }
     fn fun_021c7ec4(&mut self) -> bool {
         api::in_type_check(&self.work)
     }
     fn fun_021c7f24(&mut self, poke_id: u32) -> bool {
-        api::party_check(&mut self.env, &self.work, self.waddr, poke_id)
+        api::party_check(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            self.waddr,
+            poke_id,
+        )
     }
     fn fun_021c818c(&mut self, poke_id: u32) -> bool {
-        api::species_check(&mut self.env, &self.work, poke_id)
+        api::species_check(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        )
     }
     fn fun_021c830c(&mut self) -> bool {
         api::flag_78a_bit0(&self.work) != 0
     }
     fn fun_021c8374(&mut self, poke_id: u32) -> bool {
-        api::mon_check_8374(&mut self.env, &self.work, poke_id)
+        api::mon_check_8374(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        )
     }
     fn fun_021c8408(&mut self, poke_id: u32) {
-        api::server_bb914(&mut self.env, &self.work, poke_id)
+        api::server_bb914(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        )
     }
     fn fun_021c7ed8(&mut self, poke_id: u32) -> u32 {
-        api::client_value_997c(&mut self.env, &self.work, poke_id)
+        api::client_value_997c(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        )
     }
     fn party_ids(&mut self, poke_id: u32, out: &mut [u8]) -> u32 {
-        let party = api::party_of(&mut self.env, &self.work, poke_id);
+        let party = api::party_of(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        );
         self.party_member_ids(party, out)
     }
     fn partner_party_ids(&mut self, poke_id: u32, out: &mut [u8]) -> Option<u32> {
-        match api::partner_party_of(&mut self.env, &self.work, poke_id) {
+        match api::partner_party_of(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        ) {
             0 => None,
             party => Some(self.party_member_ids(party, out)),
         }
     }
     fn fun_021c8030(&mut self, poke_id: u32, x: u32) -> u32 {
-        api::mon_query_80bc(&mut self.env, &self.work, poke_id, x)
+        api::mon_query_80bc(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+            x,
+        )
     }
     fn fun_021c8114(&mut self) -> u32 {
         api::word_1f74(&self.work) as u32
@@ -418,28 +502,48 @@ impl<E: FlowEnv, U: Unported, W: WazaHooks> FlowHost for FlowWorkHost<E, U, W> {
         api::turn_count(&self.work) as u32
     }
     fn fun_021c8174(&mut self) -> u32 {
-        api::main_8714_word4(&mut self.env, &self.work, self.waddr)
+        api::main_8714_word4(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            self.waddr,
+        )
     }
     fn fun_021c8180(&mut self) -> u32 {
-        api::main_8670(&mut self.env, &self.work)
+        api::main_8670(&mut LendRef::new_ref(&mut self.env, &self.work), &self.work)
     }
     /// Adapter: handlers pass the BattleMon of `poke_id` (from `021c7cf4`); the host looks it up
     /// with [`api::mon_by_id`] and calls [`api::mon_stat`].
     fn fun_021c81c8(&mut self, poke_id: u32, x: u32) -> u32 {
-        let mon = api::mon_by_id(&mut self.env, &self.work, poke_id);
-        api::mon_stat(&mut self.env, mon, x)
+        let mon = api::mon_by_id(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        );
+        api::mon_stat(&mut LendRef::new_ref(&mut self.env, &self.work), mon, x)
     }
     fn fun_021c824c(&mut self, poke_id: u32) -> bool {
-        api::mon_check_824c(&mut self.env, &self.work, poke_id)
+        api::mon_check_824c(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        )
     }
     fn fun_021c8300(&mut self, x: u32) -> u32 {
-        api::main_9010(&mut self.env, &self.work, x)
+        api::main_9010(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            x,
+        )
     }
     fn fun_021c831c(&mut self, poke_id: u32) {
         api::list6_push(&mut self.work, poke_id)
     }
     fn fun_021c83a0(&mut self, poke_id: u32) -> u32 {
-        api::mon_weight(&mut self.env, &self.work, poke_id)
+        api::mon_weight(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        )
     }
     /// Adapter: [`api::set_turn_rec_byte4`] on the record `work[0x4A8]` points to (inside the
     /// work once the move-record blocks are selected, see [`api::move_records_select`]); a pointer
@@ -454,15 +558,28 @@ impl<E: FlowEnv, U: Unported, W: WazaHooks> FlowHost for FlowWorkHost<E, U, W> {
         }
     }
     fn fun_021c83e8(&mut self, n: u32) -> bool {
-        api::server_bb908(&mut self.env, &self.work, n)
+        api::server_bb908(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            n,
+        )
     }
     /// Adapter: [`api::mon_pair_bfeac`] with `out` as an output buffer (the api port passes the
     /// pointer through; core3 `021bfeac` stores 0 or 1 in it).
     fn fun_021c846c(&mut self, poke_id: u32, target: u32, out: &mut u32) -> bool {
-        let ma = api::mon_by_id(&mut self.env, &self.work, poke_id);
-        let mb = api::mon_by_id(&mut self.env, &self.work, target);
+        let ma = api::mon_by_id(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        );
+        let mb = api::mon_by_id(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            target,
+        );
         let mut o = out.to_le_bytes();
-        let r = self.env.call(
+        let r = self.env.call_wr(
+            &self.work,
             0x021B_FEAC,
             &mut [Arg::P, Arg::V(ma), Arg::V(mb), Arg::Out(&mut o)],
         );
@@ -470,7 +587,11 @@ impl<E: FlowEnv, U: Unported, W: WazaHooks> FlowHost for FlowWorkHost<E, U, W> {
         r != 0
     }
     fn fun_021c8494(&mut self, poke_id: u32) {
-        api::mon_bff60(&mut self.env, &self.work, poke_id)
+        api::mon_bff60(
+            &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
+            poke_id,
+        )
     }
     /// Adapter: handlers call the api thunk at 0x021C83CC ([`api::counter_2e4c`]); its target,
     /// core4 `021c2e4c`, is ported, so the host runs [`core4::counter_next`] on the work.
@@ -648,8 +769,39 @@ impl<E: FlowEnv, U: Unported, W: WazaHooks> FlowHost for FlowWorkHost<E, U, W> {
     fn fun_021c82c4(&mut self, side: u32, kind: u32) -> bool {
         self.unported.fun_021c82c4(side, kind)
     }
+    /// The string-parameter buffer event variable 0x3F points to: in the work when the pointer is
+    /// (core3 / core5 point it at a HANDEX record, B16), else [`Unported::msg_param`].
     fn msg_param(&mut self) -> &mut [u8] {
+        if let Some(v) = self.env.ext_vars() {
+            let o = (v.get_value(0x3F) as u32).wrapping_sub(self.waddr) as usize;
+            if o < SvFlowWork::SIZE {
+                return &mut self.work.mem[o..];
+            }
+        }
         self.unported.msg_param()
+    }
+
+    // ---- battle state owned by the environment (B16) ----
+
+    fn owns_battle_state(&self) -> bool {
+        self.env.ext_vars().is_some()
+    }
+    fn ext_vars(&self) -> Option<&EventVarStack> {
+        self.env.ext_vars()
+    }
+    fn ext_vars_mut(&mut self) -> Option<&mut EventVarStack> {
+        self.env.ext_vars_mut()
+    }
+    fn ext_calc_mut(&mut self) -> Option<&mut BattleCalc> {
+        self.env.ext_calc_mut()
+    }
+    /// The BattleMon [`Self::mon_addr`] finds, when the environment owns the battle Pokemon.
+    fn ext_mon(&mut self, poke_id: u32) -> Option<&mut BattleMon> {
+        if !self.owns_battle_state() {
+            return None;
+        }
+        let addr = self.mon_addr(poke_id);
+        self.env.ext_mon_at(addr)
     }
 }
 

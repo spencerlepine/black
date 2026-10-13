@@ -174,6 +174,60 @@ past the 6-record table); likewise `fun_06898cf4(side, kind)` for `side * 14 + k
 original reads past the layer array). The handlers' `wk + 0x1FEC` scratch (`021c8120`) is a local buffer in the
 handler ports, so the host does not leave the expanded IDs there.
 
+## B16 integration (`src/integration`, test only)
+
+`integration::tests::b16_single_battle` runs one wild battle end to end through the ports: a
+level-5 Snivy (player, scripted: move slot 0 every turn) against a level-5 Patrat (the AI), built
+from the ROM data (`black-data`, `black-pokemon`), via `server1::proc_init` / `proc_main` (until it
+reports the end) / `proc_exit`. It checks that HP never exceeds the maximum (unsigned, so never
+negative), that exactly one side ends fainted, and that every command frame the server sends
+(adapter message 8) decodes with the ported reader `021cd5e0`. Result (seeded, deterministic):
+3 turns, Snivy wins (Tackle for 5 / 7 / 8; Patrat: Leer, then Tackle with message 0x47, presumably a
+miss), 4 frames / 56 commands.
+
+**Dispatch.** `Env` is the integration `FlowEnv`: `env.call(addr)` goes to `dispatch::call`, which
+routes by address range to the port (`server1`-`3` with `Mem` windows, `server_side`, the flow
+areas through `flowcase` = the areas' differential-test `call` tables driven by their spec
+blocks, `client1`-`5`, `battle_mon`, `calc` / `calc_target` / `calc_action`, `event_factor` +
+the ported handlers, `field`, `sick_cont`, `poke_type`, adapter, AI create / start / answers) or
+to an explicit host model: heap / GameProc / MI memory (`arm9`), `poke_tool` / personal / waza /
+archives (the `black-pokemon` / `black-data` ports), sound, the headless battle view (every start
+returns, every "finished?" answers yes, the move menu answers move slot 0), the battle record
+builder (`recb`, 0x021EE8B4-0x021EEA2F, not ported), the Pass Power multipliers (inactive), the
+overlay-231 IR probe (genuine cartridge), key input (A pressed), the system Mersenne Twister.
+An address with neither panics with `B16 gap: no port or host model for callee …`.
+
+**Original code in an interpreter.** Unported Thumb glue runs in a minimal ARMv5T Thumb
+interpreter (`thumb.rs`): overlay-95 routines behind the `bx pc` veneers (the side-effect
+adder / remover are the ported `handlers::effects` ones), vm.c, btl_setup.c, the held-item and
+move-handler factor registration (`OV93_THUMB`), the turn-end side-effect walks, and **overlay 96
+except the four wired AI entry points** (see the gaps).
+
+**Coherence (lending).** Ports hold objects as Rust images (the flow work, `S`, client objects,
+the command queue, the 0x021F3B20 globals). A call lends them (`callw` / `callwr` / `callh` /
+`callr` / `call_l` / `Lend::{new, new_ref, wc, c, h, r, hv, wh, whr}`): `Env::dispatch` flushes the
+lent images into the object table for the call and reloads the writable ones afterwards; an
+object a frame holds without lending it panics on access (`… is held by a port frame and was not
+lent`). Read-only holders flush only the bytes they changed since their last flush (a callee's
+writes survive; each is reported as a note). Flow cases store back only the bytes a port changed
+(arguments overlap, e.g. the 0x021F3B20 arrays) and treat regions / buffers inside the work as
+parts of the work. `Arg::{PBuf, PHost, PAt}` (hash-neutral: the stubs see `P`) carry the pointer
+values the ports used to drop. `FlowEnv::peek` lets a port read memory its test model placed
+inside its own image (`S` slot table, adapter reply blocks).
+
+**Gaps found (see the B16 report for the full list).** High: ~120 call sites still pass a
+pass-through `P` where the callee's spec argument is a buffer / BattleMon (scan:
+server1 31, server2 27, core4 16, client 22, core5 6, handex 5, api 4, core1 3, ai1 5); the AI
+ports (ai1) pass their BattleMon / server / VM pointers as `P` throughout (~150 sites), so only
+create / start / chosen move / chosen target run as ports; ports hold records that live in the
+flow work as separate slices (D / E at work + 0xD04 / 0xD18, the damage records, the per-turn
+struct) — `SvFlowWork::pull` / `push` sync them in `use_move` / `build_damage` / `build_records`
+only. Medium: read-only work holders whose callees write the work (`021bbb60`, `021bf3d8`,
+`021bf83c`, `021bf8d4`, `021ca8f8`, …), client callback state words that alias the client object
+(`run` merges them), test-shaped data models (`collect_slot_records`, `slot_party`,
+`main_step` code 9: the data was assumed inside the holder's image). Low: unported callees
+modelled here (record builder, Pass Power, IR probe, `020181F4`, `02018480`, `020185C4` wiring).
+
 ## Deviations
 
 - Function and argument types are narrowed to what callers pass (`u8` types, `u16` type pairs

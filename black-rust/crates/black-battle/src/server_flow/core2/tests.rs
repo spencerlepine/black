@@ -84,7 +84,7 @@ macro_rules! cx {
     };
 }
 
-fn call(addr: u32, c: &mut Case) -> u64 {
+pub(crate) fn call<E: crate::server_flow::env::FlowEnv>(addr: u32, c: &mut Case<E>) -> u64 {
     match addr {
         0x021B_EC08 => super::mon_is_ours(&mut c.env, &c.work, c.vals[1]) as u64,
         0x021B_EC2C => {
@@ -424,7 +424,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             };
             let mut m = super::MoveCtx {
                 d: &mut d[0],
-                e: &e[0],
+                e: &mut e[0],
                 word: &mut c.bufs[2],
                 word_addr: c.vals[2],
             };

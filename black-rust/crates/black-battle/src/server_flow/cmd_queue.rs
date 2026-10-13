@@ -733,4 +733,4 @@ pub fn read_cmd_list(q: &mut [u8], cmd: u32, out: &mut [u8]) {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

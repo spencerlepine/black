@@ -85,7 +85,7 @@ macro_rules! cx {
     };
 }
 
-fn call(addr: u32, c: &mut Case) -> u64 {
+pub(crate) fn call<E: crate::server_flow::env::FlowEnv>(addr: u32, c: &mut Case<E>) -> u64 {
     match addr {
         0x021C_4910 => {
             super::mon_message(&mut c.env, c.vals[1], c.vals[2]);

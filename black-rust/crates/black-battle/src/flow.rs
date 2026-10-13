@@ -301,6 +301,33 @@ pub trait FlowHost: BppEnv {
     /// present or `side >= 2` / `key >= 14`. The handler tests seed the array per input (the ROM
     /// side runs the real 06898de0 on it).
     fn side_effect_layers(&mut self, side: u32, key: u32) -> u32;
+
+    /// B16: true when the host's environment owns the battle state (event variables, RNG,
+    /// battle Pokemon; the battle integration). The handler tests' host keeps the default.
+    fn owns_battle_state(&self) -> bool {
+        false
+    }
+    /// B16: the event-variable stack when the host's environment owns it (the battle
+    /// integration: the flow ports and the handlers must share one stack). `None` (the default,
+    /// and the handler tests' host): [`Battle::vars`] is used.
+    fn ext_vars(&self) -> Option<&EventVarStack> {
+        None
+    }
+    /// Writable [`Self::ext_vars`].
+    fn ext_vars_mut(&mut self) -> Option<&mut EventVarStack> {
+        None
+    }
+    /// B16: the battle RNG / calc state when the host's environment owns it (else
+    /// [`Battle::calc`]).
+    fn ext_calc_mut(&mut self) -> Option<&mut BattleCalc> {
+        None
+    }
+    /// B16: battle Pokemon `poke_id` when the host's environment owns the battle Pokemon (else
+    /// [`Battle::mons`]).
+    fn ext_mon(&mut self, poke_id: u32) -> Option<&mut BattleMon> {
+        let _ = poke_id;
+        None
+    }
 }
 
 /// The battle state handlers operate on.
@@ -328,50 +355,85 @@ impl<H: FlowHost> Battle<H> {
 
     /// C: `FUN_overlay_d_93__021c7cf4(wk, poke_id)`: battle Pokemon by ID.
     pub fn mon(&mut self, poke_id: u32) -> &mut BattleMon {
+        if self.host.owns_battle_state() {
+            // the original's lookup returns NULL for an unknown ID; `null_mon` stands in for it
+            if self.host.ext_mon(poke_id).is_some() {
+                return self.host.ext_mon(poke_id).unwrap();
+            }
+            return &mut self.null_mon;
+        }
         match self.mons.get_mut(poke_id as usize) {
             Some(m) => m,
             None => &mut self.null_mon,
         }
     }
 
+    /// A copy of battle Pokemon `poke_id` (for the read-only calls that also need the host).
+    pub fn mon_copy(&mut self, poke_id: u32) -> BattleMon {
+        if self.host.owns_battle_state() {
+            return match self.host.ext_mon(poke_id) {
+                Some(m) => m.clone(),
+                None => self.null_mon.clone(),
+            };
+        }
+        match self.mons.get(poke_id as usize) {
+            Some(m) => m.clone(),
+            None => self.null_mon.clone(),
+        }
+    }
+
     /// `BattleMon_Get` on Pokemon `poke_id`.
     pub fn mon_get(&mut self, poke_id: u32, id: u32) -> u32 {
-        let mon = match self.mons.get(poke_id as usize) {
-            Some(m) => m,
-            None => &self.null_mon,
-        };
+        let mon = self.mon_copy(poke_id);
         mon.get(id, &mut self.host)
     }
 
     /// `BattleMon::is_fainted` on Pokemon `poke_id`.
     pub fn mon_is_fainted(&mut self, poke_id: u32) -> bool {
-        let mon = match self.mons.get(poke_id as usize) {
-            Some(m) => m,
-            None => &self.null_mon,
-        };
+        let mon = self.mon_copy(poke_id);
         mon.is_fainted(&mut self.host)
     }
 
     /// `BattleMon::is_full_hp` on Pokemon `poke_id`.
     pub fn mon_is_full_hp(&mut self, poke_id: u32) -> bool {
-        let mon = match self.mons.get(poke_id as usize) {
-            Some(m) => m,
-            None => &self.null_mon,
-        };
+        let mon = self.mon_copy(poke_id);
         mon.is_full_hp(&mut self.host)
+    }
+
+    /// The event-variable stack in use: the host environment's when it owns one (B16), else
+    /// [`Self::vars`].
+    pub fn vars_ref(&self) -> &EventVarStack {
+        self.host.ext_vars().unwrap_or(&self.vars)
+    }
+
+    /// Writable [`Self::vars_ref`].
+    pub fn vars_mut(&mut self) -> &mut EventVarStack {
+        match self.host.ext_vars_mut() {
+            Some(v) => v,
+            None => &mut self.vars,
+        }
+    }
+
+    /// The battle RNG / calc state in use: the host environment's when it owns one (B16), else
+    /// [`Self::calc`].
+    pub fn calc_mut(&mut self) -> &mut BattleCalc {
+        match self.host.ext_calc_mut() {
+            Some(c) => c,
+            None => &mut self.calc,
+        }
     }
 
     /// C: `FUN_overlay_d_93__021d775c`
     pub fn var(&self, label: u16) -> i32 {
-        self.vars.get_value(label)
+        self.vars_ref().get_value(label)
     }
     /// C: `FUN_overlay_d_93__021d76bc`
     pub fn rewrite_var(&mut self, label: u16, v: i32) -> bool {
-        self.vars.rewrite_value(label, v)
+        self.vars_mut().rewrite_value(label, v)
     }
     /// C: `FUN_overlay_d_93__021d7704`
     pub fn mul_var(&mut self, label: u16, fx: i32) {
-        self.vars.mul_value(label, fx)
+        self.vars_mut().mul_value(label, fx)
     }
 }
 
@@ -379,7 +441,7 @@ impl<H: FlowHost> Battle<H> {
     /// C: `FUN_overlay_d_93__021d85c0(wk, percent)`: a `percent`% roll, or always true when
     /// `FUN_overlay_d_93__021c82b8(wk, 1)` holds.
     pub fn roll_percent_or_forced(&mut self, percent: u32) -> bool {
-        if self.calc.roll_percent(percent) {
+        if self.calc_mut().roll_percent(percent) {
             return true;
         }
         self.host.fun_021c82b8(1)
@@ -404,10 +466,10 @@ impl<H: FlowHost> Battle<H> {
     pub fn make_sick_cont(&mut self, sick: u32, poke_id: u32) -> crate::sick_cont::SickCont {
         use crate::sick_cont::SickCont;
         if (sick as i32) < 6 {
-            return self.calc.make_default_sick_cont(sick);
+            return self.calc_mut().make_default_sick_cont(sick);
         }
         match sick {
-            6 => SickCont::turn(self.calc.rand_range(2, 5) as u8 as u32),
+            6 => SickCont::turn(self.calc_mut().rand_range(2, 5) as u8 as u32),
             7 => SickCont::poke(self.mon(poke_id).poke_id() as u32),
             _ => SickCont::permanent(),
         }

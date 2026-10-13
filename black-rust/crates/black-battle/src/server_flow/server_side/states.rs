@@ -45,7 +45,7 @@ const STATE_BB281: u32 = 0x021B_B281;
 const STATE_BB321: u32 = 0x021B_B321;
 
 /// `021bb724(S, 8, hdr + 8, *hdr)` with `hdr = *(S + 0xCB0)`.
-fn send_header<E: FlowEnv>(env: &mut E, s_addr: u32, s: &[u8]) {
+fn send_header<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8]) {
     let hdr = rd32(&s[0xCB0..]);
     let first = rd32(&s[inner(s, s_addr, 0xCB0)..]);
     broadcast(env, s, 8, hdr + 8, first);
@@ -72,7 +72,7 @@ pub fn state_ac04<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
                 if env.call(0x021B_86B8, &mut [Arg::V(rd32(&s[0xC..]))]) == 4 {
                     set_state(s, STATE_BB281);
                 } else {
-                    let y = env.call(0x021B_BB60, &mut [Arg::V(ptr_0x44(s))]);
+                    let y = env.callh(0x021B_BB60, &mut [Arg::V(ptr_0x44(s))], s);
                     builder_load(env, s_addr, s, y);
                     st.bump(s);
                 }
@@ -104,14 +104,14 @@ pub fn state_acac<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
     let mut cur = st.get(s);
     // case 5 runs on into case 6
     if cur == 5 {
-        env.call(0x021B_BC34, &mut [Arg::V(ptr_0x44(s))]);
+        env.callh(0x021B_BC34, &mut [Arg::V(ptr_0x44(s))], s);
         each_eeb70(env, s);
         st.bump(s);
         cur = 6;
     }
     match cur {
         0 => {
-            if env.call(0x021B_C390, &mut [Arg::V(ptr_0x44(s))]) != 0 {
+            if env.callh(0x021B_C390, &mut [Arg::V(ptr_0x44(s))], s) != 0 {
                 send_header(env, s_addr, s);
                 st.bump(s);
             } else {
@@ -134,11 +134,11 @@ pub fn state_acac<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
                 return 0;
             }
             each_eeb70(env, s);
-            if env.call(0x021B_A5D8, &mut [Arg::V(main)]) != 0 {
+            if env.callh(0x021B_A5D8, &mut [Arg::V(main)], s) != 0 {
                 set_state(s, STATE_BB209);
                 return 0;
             }
-            if env.call(0x021B_A618, &mut [Arg::V(main)]) != 0 {
+            if env.callh(0x021B_A618, &mut [Arg::V(main)], s) != 0 {
                 set_state(s, STATE_BB281);
                 return 0;
             }
@@ -152,12 +152,13 @@ pub fn state_acac<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
             }
         }
         6 => {
-            let r = env.call(
+            let r = env.callh(
                 0x021B_BC44,
                 &mut [Arg::V(ptr_0x44(s)), Arg::V(s_addr + OFS_RECORDS as u32)],
+                s,
             );
             s[0x48..0x4C].copy_from_slice(&r.to_le_bytes());
-            if env.call(0x021B_86C0, &mut [Arg::V(main)]) != 0 {
+            if env.callh(0x021B_86C0, &mut [Arg::V(main)], s) != 0 {
                 nop();
             }
             send_header(env, s_addr, s);
@@ -172,8 +173,8 @@ pub fn state_acac<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
                 0 => set_state_acad(s),
                 1 => set_state(s, STATE_BB0E1),
                 2 => {
-                    let b = env.call(0x021B_86B8, &mut [Arg::V(main)]);
-                    let c = env.call(0x021B_8588, &mut [Arg::V(main)]);
+                    let b = env.callh(0x021B_86B8, &mut [Arg::V(main)], s);
+                    let c = env.callh(0x021B_8588, &mut [Arg::V(main)], s);
                     set_state(
                         s,
                         if b == 0 && c == 0 {
@@ -186,12 +187,12 @@ pub fn state_acac<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
                 3 => st.set(s, 6),
                 4 => {
                     let x = who_leads(env, s);
-                    env.call(0x021B_916C, &mut [Arg::V(main), Arg::V(x)]);
+                    env.callh(0x021B_916C, &mut [Arg::V(main), Arg::V(x)], s);
                     set_state(s, STATE_BB281);
                 }
                 6 => {
-                    let x = env.call(0x021B_C55C, &mut [Arg::V(ptr_0x44(s))]);
-                    env.call(0x021B_9120, &mut [Arg::V(main), Arg::V(x)]);
+                    let x = env.callh(0x021B_C55C, &mut [Arg::V(ptr_0x44(s))], s);
+                    env.callh(0x021B_9120, &mut [Arg::V(main), Arg::V(x)], s);
                     set_state(s, STATE_BB281);
                 }
                 _ => return 1,
@@ -214,12 +215,12 @@ pub fn state_ae60<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
                 return 0;
             }
             let main = rd32(&s[0xC..]);
-            let x = env.call(0x021B_8FF4, &mut [Arg::V(main)]);
+            let x = env.callh(0x021B_8FF4, &mut [Arg::V(main)], s);
             each_eeb70(env, s);
             let h = rd32(&s[OFS_SLOTS.wrapping_add((x as usize).wrapping_mul(12))..]);
-            let rec = env.call(0x021E_EB64, &mut [Arg::V(h), Arg::V(0)]);
+            let rec = env.callh(0x021E_EB64, &mut [Arg::V(h), Arg::V(0)], s);
             if s[rec.wrapping_sub(s_addr) as usize] != 0 {
-                let v = env.call(0x021B_C360, &mut [Arg::V(ptr_0x44(s))]);
+                let v = env.callh(0x021B_C360, &mut [Arg::V(ptr_0x44(s))], s);
                 s[0x48..0x4C].copy_from_slice(&v.to_le_bytes());
                 send_header(env, s_addr, s);
                 st.bump(s);
@@ -249,7 +250,7 @@ pub fn state_aef8<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
     // case 4 runs on into case 5
     if cur == 4 {
         each_eeb70(env, s);
-        env.call(0x021B_BD80, &mut [Arg::V(ptr_0x44(s))]);
+        env.callh(0x021B_BD80, &mut [Arg::V(ptr_0x44(s))], s);
         st.bump(s);
         cur = 5;
     }
@@ -280,7 +281,7 @@ pub fn state_aef8<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
                 return 0;
             }
             each_eeb70(env, s);
-            if env.call(0x021B_A618, &mut [Arg::V(main)]) != 0 {
+            if env.callh(0x021B_A618, &mut [Arg::V(main)], s) != 0 {
                 set_state(s, STATE_BB281);
                 return 0;
             }
@@ -300,9 +301,10 @@ pub fn state_aef8<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
             st.bump(s);
         }
         5 => {
-            let r = env.call(
+            let r = env.callh(
                 0x021B_BD8C,
                 &mut [Arg::V(ptr_0x44(s)), Arg::V(s_addr + OFS_RECORDS as u32)],
+                s,
             );
             s[0x48..0x4C].copy_from_slice(&r.to_le_bytes());
             send_header(env, s_addr, s);
@@ -318,7 +320,7 @@ pub fn state_aef8<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
                 3 => st.set(s, 5),
                 4 => {
                     let x = who_leads(env, s);
-                    env.call(0x021B_916C, &mut [Arg::V(main), Arg::V(x)]);
+                    env.callh(0x021B_916C, &mut [Arg::V(main), Arg::V(x)], s);
                     set_state(s, STATE_BB281);
                 }
                 5 => return 1,
@@ -335,9 +337,10 @@ pub fn state_b208<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
     match st.get(s) {
         0 => {
             let mut local = [0u8; 4];
-            let r = env.call(
+            let r = env.callh(
                 0x021E_E9A4,
                 &mut [Arg::V(s_addr + OFS_BUILDER as u32), Arg::Out(&mut local)],
+                s,
             );
             broadcast(env, s, 10, r, u32::from_le_bytes(local));
             st.bump(s);
@@ -378,7 +381,7 @@ pub fn state_b0e0<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
                 return 0;
             }
             each_eeb70(env, s);
-            if env.call(0x021B_A618, &mut [Arg::V(main)]) != 0 {
+            if env.callh(0x021B_A618, &mut [Arg::V(main)], s) != 0 {
                 set_state(s, STATE_BB281);
                 return 0;
             }
@@ -399,16 +402,17 @@ pub fn state_b0e0<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
         3 | 4 => {
             if phase == 3 {
                 each_eeb70(env, s);
-                env.call(0x021B_BD20, &mut [Arg::V(ptr_0x44(s))]);
+                env.callh(0x021B_BD20, &mut [Arg::V(ptr_0x44(s))], s);
                 st.bump(s);
                 phase = 4;
             }
             debug_assert_eq!(phase, 4);
             let hdr = inner(s, s_addr, 0xCB0);
             s[hdr..hdr + 8].fill(0);
-            let r = env.call(
+            let r = env.callh(
                 0x021B_BD2C,
                 &mut [Arg::V(ptr_0x44(s)), Arg::V(s_addr + OFS_RECORDS as u32)],
+                s,
             );
             s[0x48..0x4C].copy_from_slice(&r.to_le_bytes());
             send_header(env, s_addr, s);
@@ -425,7 +429,7 @@ pub fn state_b0e0<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
                 3 => st.set(s, 4),
                 4 => {
                     let x = who_leads(env, s);
-                    env.call(0x021B_916C, &mut [Arg::V(main), Arg::V(x)]);
+                    env.callh(0x021B_916C, &mut [Arg::V(main), Arg::V(x)], s);
                     set_state(s, STATE_BB281);
                 }
                 5 => return 1,
@@ -546,7 +550,7 @@ pub fn run_state<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8]) -> u32 {
         0x021B_B3F8 => state_b3f8(env, s_addr, s, &mut st),
         0x021B_B43C => state_b43c(env, s_addr, s, &mut st),
         0x021B_B484 => state_b484(env, s_addr, s, &mut st),
-        _ => env.call(f, &mut [Arg::V(s_addr), Arg::V(s_addr + 4)]),
+        _ => env.callh(f, &mut [Arg::V(s_addr), Arg::V(s_addr + 4)], s),
     };
     if done != 0 {
         let b0 = rd32(&s[0xB0..]);

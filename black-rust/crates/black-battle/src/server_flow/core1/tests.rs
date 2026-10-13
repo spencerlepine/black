@@ -54,7 +54,7 @@ const RECORDED: &[(u32, &str)] = &[
 /// Fixed address of the work image in the cases (`Case::vals`).
 const WORK: u32 = 0x02E0_0000;
 
-fn call(addr: u32, c: &mut Case) -> u64 {
+pub(crate) fn call<E: crate::server_flow::env::FlowEnv>(addr: u32, c: &mut Case<E>) -> u64 {
     use super::*;
     match addr {
         0x021B_C550 => super::struct_0x4b8(c.vals[0]) as u64,
@@ -178,7 +178,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         }
         0x021B_BC44 => {
             let (s, q) = c.regions.split_at_mut(1);
-            super::turn_start(&mut c.env, &mut c.work, &mut s[0], &mut q[0]) as u64
+            super::turn_start(&mut c.env, &mut c.work, c.vals[1], &mut s[0], &mut q[0]) as u64
         }
         0x021B_BD2C => {
             let (s, q) = c.regions.split_at_mut(1);
@@ -186,7 +186,14 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         }
         0x021B_BD8C => {
             let (s, q) = c.regions.split_at_mut(1);
-            super::build_and_run(&mut c.env, &mut c.work, c.vals[0], &mut s[0], &mut q[0]) as u64
+            super::build_and_run(
+                &mut c.env,
+                &mut c.work,
+                c.vals[0],
+                c.vals[1],
+                &mut s[0],
+                &mut q[0],
+            ) as u64
         }
         0x021B_B968 => super::create(
             &mut c.env,

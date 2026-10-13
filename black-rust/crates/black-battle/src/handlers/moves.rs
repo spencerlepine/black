@@ -106,7 +106,7 @@ pub fn h_021e0468<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battl
     }
     if count != 0 {
         let w = b.host.handex_push(0x14, me);
-        let idx = b.calc.rand(count);
+        let idx = b.calc_mut().rand(count);
         let pair = make_mono_pair(list[(idx & 0xFFFF) as usize]);
         let buf = b.host.handex(w);
         buf.put_u16(4, pair);
@@ -750,9 +750,9 @@ pub fn h_021e10d8<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
     if !is_me(b, 3, me) {
         return;
     }
-    let r = b.calc.rand(3);
+    let r = b.calc_mut().rand(3);
     let v = [1u32, 4, 3][(r & 0xFF) as usize];
-    let cont = b.calc.make_default_sick_cont(v);
+    let cont = b.calc_mut().make_default_sick_cont(v);
     b.rewrite_var(0x1D, v as i32);
     b.rewrite_var(0x1E, cont.0 as i32);
     b.rewrite_var(0x26, 0x14);
@@ -774,7 +774,7 @@ pub fn h_021e11b8<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
 /// kind 2 pushes HANDEX work 0x2B (+4 `t`, +5 = 100).
 #[allow(dead_code)]
 pub fn h_021e11dc<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Battle<H>, me: u8) {
-    if !(is_me(b, 3, me) && b.var(0x47) == 0 && b.calc.rand(100) < 0x1E) {
+    if !(is_me(b, 3, me) && b.var(0x47) == 0 && b.calc_mut().rand(100) < 0x1E) {
         return;
     }
     let m = me as u32;
@@ -972,7 +972,7 @@ pub fn h_021e15e8<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
         return;
     }
     let lv = b.mon_get(me as u32, value::LEVEL) & 0xFF;
-    let r = b.calc.rand(0x65);
+    let r = b.calc_mut().rand(0x65);
     let x = lv.wrapping_mul(r.wrapping_add(0x32) & 0xFFFF);
     let mut v = ((x as i32).wrapping_div(100) as u32) & 0xFFFF;
     if v == 0 {
@@ -1569,7 +1569,7 @@ pub fn h_021e32f8<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
 /// 0x78 by a roll of `rand(0x50)` (below 0x28 -> 0x28, above 0x45 -> 0x78, else 0x50).
 pub fn h_021e2d20<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Battle<H>, me: u8) {
     if is_me(b, 3, me) {
-        let r = b.calc.rand(0x50);
+        let r = b.calc_mut().rand(0x50);
         let v = if r < 0x28 {
             0x28
         } else if r > 0x45 {
@@ -2660,7 +2660,7 @@ pub fn h_021e2188<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
 /// `turn_param(n, sub ID)`, +0xC = 0, +0xF holder), sets `work[6]` = 1 and `work[0]` = `n`.
 pub fn h_021e21f4<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
     if is_me(b, 2, me) && !b.mon(me as u32).has_sick(0x19) && sys.work(f, 6) == 0 {
-        let n = (b.calc.rand(2) + 2) & 0xFF;
+        let n = (b.calc_mut().rand(2) + 2) & 0xFF;
         let w = b.host.handex_push(0xC, me as u32);
         let buf = b.host.handex(w);
         buf.put_u32(4, 0x19);
@@ -2840,7 +2840,7 @@ pub fn h_021e2988<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battl
 /// 0x51 to 1 and stores the result in `work[0]`; then `fun_021c83dc(work[0] != 0)`.
 pub fn h_021e2c4c<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
     if is_me(b, 3, me) {
-        if b.calc.roll_percent(0x14) {
+        if b.calc_mut().roll_percent(0x14) {
             let r = b.rewrite_var(0x51, 1);
             sys.set_work(f, 0, r as u32);
         }
@@ -3045,7 +3045,7 @@ pub fn h_021e3648<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battl
 /// +4) is pushed.
 pub fn h_021e3904<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battle<H>, me: u8) {
     if is_me(b, 2, me) {
-        let r = b.calc.rand(100) as u8;
+        let r = b.calc_mut().rand(100) as u8;
         const T: [(u8, u8); 8] = [
             (5, 10),
             (15, 30),
@@ -3150,7 +3150,7 @@ pub fn h_021e3fc0<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
     let cont = if s == 5 && held.is_badly_poisoned() {
         SickCont::badly_poisoned()
     } else {
-        b.calc.make_default_sick_cont(s)
+        b.calc_mut().make_default_sick_cont(s)
     };
     let w = b.host.handex_push(0xC, me as u32);
     let buf = b.host.handex(w);
@@ -3298,7 +3298,7 @@ pub fn h_021e4340<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
         }
     }
     if n != 0 {
-        let mut r = b.calc.rand(n as u32) as u8;
+        let mut r = b.calc_mut().rand(n as u32) as u8;
         for s in STATS_021F2D20 {
             if b.mon(t).can_change_stage(s, 2) {
                 if r == 0 {
@@ -3444,10 +3444,7 @@ pub fn h_021e4754<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
 
 /// `BattleMon::get_unstaged` on Pokemon `poke_id`.
 fn mon_get_unstaged<H: FlowHost>(b: &mut Battle<H>, poke_id: u32, id: u32) -> u32 {
-    let mon = match b.mons.get(poke_id as usize) {
-        Some(m) => m,
-        None => &b.null_mon,
-    };
+    let mon = b.mon_copy(poke_id);
     mon.get_unstaged(id, &mut b.host)
 }
 
@@ -4246,7 +4243,7 @@ pub fn h_021e6cdc<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battl
         slot = (slot + 1) & 0xFF;
     }
     if cnt != 0 {
-        let r = b.calc.rand(cnt) & 0xFF;
+        let r = b.calc_mut().rand(cnt) & 0xFF;
         let mv = sys.work(f, r) & 0xFFFF;
         let x = b.host.fun_021c8030(m, mv);
         b.rewrite_var(0x12, mv as i32);
@@ -5097,7 +5094,7 @@ pub fn fun_021e3e84<H: FlowHost>(b: &mut Battle<H>, me: u32) -> u8 {
                 if n == 0 {
                     a = 0x1F;
                 } else {
-                    let k = b.calc.rand(n) & 0xFF;
+                    let k = b.calc_mut().rand(n) & 0xFF;
                     a = ids[k as usize & 7];
                 }
             }
@@ -5162,7 +5159,7 @@ pub fn h_021e3b64<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
         let n = b.mon(me as u32).u8_157(3) as usize;
         if n != 0 {
             const TBL: [u32; 10] = [1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80, 0, 0];
-            let r = b.calc.rand(TBL[n.min(9)]);
+            let r = b.calc_mut().rand(TBL[n.min(9)]);
             if r != 0 {
                 b.rewrite_var(0x22, 0x1A);
                 return;
@@ -5369,10 +5366,7 @@ pub fn fun_021e60a8<H: FlowHost>(b: &mut Battle<H>, poke_id: u32, n: u32) -> Opt
         let mut ok = b.mon(id).poke_id() as u32 == poke_id;
         if !ok {
             let alive = {
-                let mon = match b.mons.get(id as usize) {
-                    Some(m) => m,
-                    None => &b.null_mon,
-                };
+                let mon = b.mon_copy(id);
                 mon.is_alive(&mut b.host)
             };
             ok = alive && b.mon(id).major_status() == 0;
@@ -5398,7 +5392,7 @@ pub fn fun_021d7e44<H: FlowHost>(b: &mut Battle<H>, list: &[u16], count: u32) ->
         }
         v += 1;
     }
-    let r = b.calc.rand(pool.len() as u32) & 0xFFFF;
+    let r = b.calc_mut().rand(pool.len() as u32) & 0xFFFF;
     pool.get(r as usize).copied().unwrap_or(0)
 }
 
@@ -5517,7 +5511,7 @@ pub fn h_021e45cc<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
         }
     }
     if n != 0 {
-        let r = b.calc.rand(n);
+        let r = b.calc_mut().rand(n);
         let pick = buf[r as usize];
         let w = b.host.handex_push(0x14, me as u32);
         let buf = b.host.handex(w);
@@ -5595,7 +5589,7 @@ pub fn h_021e6bf4<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
         }
     }
     if !list.is_empty() {
-        let r = b.calc.rand(list.len() as u32 & 0xFF) & 0xFF;
+        let r = b.calc_mut().rand(list.len() as u32 & 0xFF) & 0xFF;
         let mv = list[r as usize] as u32;
         let x = b.host.fun_021c8030(m, mv);
         b.rewrite_var(0x12, mv as i32);

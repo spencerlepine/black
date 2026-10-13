@@ -62,73 +62,65 @@ const RECORDED: &[(u32, &str)] = &[
 ];
 // svflow-recorded-end
 
-/// The test environment seen as both a `FlowEnv` (stubs) and a `BppEnv` (the `env bpp` mock).
-struct Both<'a>(&'a mut TestEnv);
-
-impl FlowEnv for Both<'_> {
-    fn call(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u32 {
-        self.0.call(addr, args)
-    }
-}
-
-impl BppEnv for Both<'_> {
+/// The test environment's `BppEnv` is the `env bpp` mock.
+impl BppEnv for TestEnv {
     fn pp_get(&mut self, pp: u32, id: u32) -> u32 {
-        self.0.bpp.pp_get(pp, id)
+        self.bpp.pp_get(pp, id)
     }
     fn pp_put(&mut self, pp: u32, id: u32, value: u32) {
-        self.0.bpp.pp_put(pp, id, value)
+        self.bpp.pp_put(pp, id, value)
     }
     fn pp_fast_begin(&mut self, pp: u32) -> u32 {
-        self.0.bpp.pp_fast_begin(pp)
+        self.bpp.pp_fast_begin(pp)
     }
     fn pp_fast_end(&mut self, pp: u32, token: u32) {
-        self.0.bpp.pp_fast_end(pp, token)
+        self.bpp.pp_fast_end(pp, token)
     }
     fn pp_set_move(&mut self, pp: u32, mv: u32, slot: u32) {
-        self.0.bpp.pp_set_move(pp, mv, slot)
+        self.bpp.pp_set_move(pp, mv, slot)
     }
     fn pp_fun_02017f00(&mut self, pp: u32) -> u32 {
-        self.0.bpp.pp_fun_02017f00(pp)
+        self.bpp.pp_fun_02017f00(pp)
     }
     fn pp_status(&mut self, pp: u32) -> u32 {
-        self.0.bpp.pp_status(pp)
+        self.bpp.pp_status(pp)
     }
     fn move_max_pp(&mut self, mv: u32, pp_ups: u32) -> u32 {
-        self.0.bpp.move_max_pp(mv, pp_ups)
+        self.bpp.move_max_pp(mv, pp_ups)
     }
     fn personal(&mut self, species: u32, form: u32, param: u32) -> u32 {
-        self.0.bpp.personal(species, form, param)
+        self.bpp.personal(species, form, param)
     }
     fn field_effect_active(&mut self, id: u32) -> bool {
-        self.0.bpp.field_effect_active(id)
+        self.bpp.field_effect_active(id)
     }
     fn exp_for_level(&mut self, species: u32, form: u32, level: u32) -> u32 {
-        self.0.bpp.exp_for_level(species, form, level)
+        self.bpp.exp_for_level(species, form, level)
     }
     fn pp_recalc_stats(&mut self, pp: u32) {
-        self.0.bpp.pp_recalc_stats(pp)
+        self.bpp.pp_recalc_stats(pp)
     }
     fn pp_set_status(&mut self, pp: u32, status: u32) {
-        self.0.bpp.pp_set_status(pp, status)
+        self.bpp.pp_set_status(pp, status)
     }
     fn pp_set_form(&mut self, pp: u32, form: u32) {
-        self.0.bpp.pp_set_form(pp, form)
+        self.bpp.pp_set_form(pp, form)
     }
     fn fun_0202142c(&mut self, value: u32) -> u32 {
-        self.0.bpp.fun_0202142c(value)
+        self.bpp.fun_0202142c(value)
     }
     fn sick_is_passable(&mut self, sick: u32) -> bool {
-        self.0.bpp.sick_is_passable(sick)
+        self.bpp.sick_is_passable(sick)
     }
 }
 
 /// The item-effect handlers as the spec of `021cb730` models them: stubbed by address.
 struct StubEffects;
 
-impl super::ItemEffects<Both<'_>> for StubEffects {
+impl<E: FlowEnv> super::ItemEffects<E> for StubEffects {
     fn run(
         &mut self,
-        env: &mut Both<'_>,
+        env: &mut E,
         _w: &mut SvFlowWork,
         waddr: u32,
         h: u32,
@@ -164,11 +156,11 @@ fn mons_of(images: &[(u32, Vec<u8>)]) -> impl Fn(u32) -> BattleMon {
 }
 
 /// The BattleMon behind buffer argument `i`.
-fn mon(c: &Case, i: usize) -> BattleMon {
+fn mon<E>(c: &Case<E>, i: usize) -> BattleMon {
     BattleMon::from_bytes(c.bufs[i].as_slice().try_into().unwrap())
 }
 
-fn call(addr: u32, c: &mut Case) -> u64 {
+pub(crate) fn call<E: FlowEnv + BppEnv>(addr: u32, c: &mut Case<E>) -> u64 {
     match addr {
         0x021C_B274 => {
             let mon = mon(c, 1);
@@ -177,12 +169,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x021C_C768 => {
             let mons = mons_of(&[(c.vals[4], c.bufs[4].clone())]);
             super::compare_sides(
-                &mut Both(&mut c.env),
-                &c.work,
-                &mons,
-                &c.bufs[1],
-                &c.bufs[2],
-                c.vals[3],
+                &mut c.env, &c.work, &mons, &c.bufs[1], &c.bufs[2], c.vals[3],
             ) as u64
         }
         0x021C_C8A0 => {
@@ -221,13 +208,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         }
         0x021C_C008 => {
             let mon = mon(c, 1);
-            super::revive(
-                &mut Both(&mut c.env),
-                &mut c.work,
-                c.vals[0],
-                &mon,
-                c.vals[2],
-            ) as u64
+            super::revive(&mut c.env, &mut c.work, c.vals[0], &mon, c.vals[2]) as u64
         }
         0x021C_C0F8 => {
             let mut m = mon(c, 1);
@@ -258,32 +239,20 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         }
         0x021C_C2C0 => {
             let mon = mon(c, 1);
-            super::heal(
-                &mut Both(&mut c.env),
-                &mut c.work,
-                c.vals[0],
-                &mon,
-                c.vals[2],
-            ) as u64
+            super::heal(&mut c.env, &mut c.work, c.vals[0], &mon, c.vals[2]) as u64
         }
         0x021C_C350 => {
             let mon = mon(c, 1);
-            super::cure_status(
-                &mut Both(&mut c.env),
-                &mut c.work,
-                c.vals[0],
-                &mon,
-                c.vals[4],
-            ) as u64
+            super::cure_status(&mut c.env, &mut c.work, c.vals[0], &mon, c.vals[4]) as u64
         }
         0x021C_C398 => {
             let mon = mon(c, 1);
-            super::cure_all_statuses(&mut Both(&mut c.env), &mut c.work, c.vals[0], &mon) as u64
+            super::cure_all_statuses(&mut c.env, &mut c.work, c.vals[0], &mon) as u64
         }
         0x021C_C438 => {
             let mon = mon(c, 1);
             super::change_stage(
-                &mut Both(&mut c.env),
+                &mut c.env,
                 &mut c.work,
                 c.vals[0],
                 &mon,
@@ -297,13 +266,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         }
         0x021C_C508 => {
             let mon = mon(c, 1);
-            super::ability_trigger(
-                &mut Both(&mut c.env),
-                &mut c.work,
-                c.vals[0],
-                &mon,
-                c.vals[1],
-            ) as u64
+            super::ability_trigger(&mut c.env, &mut c.work, c.vals[0], &mon, c.vals[1]) as u64
         }
         0x021C_C558 => {
             let mon = mon(c, 1);
@@ -315,7 +278,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         }
         0x021C_BF30 | 0x021C_BF40 | 0x021C_BF50 | 0x021C_BF60 | 0x021C_BF70 | 0x021C_BF80 => {
             let mon = mon(c, 1);
-            let (e, w, a) = (&mut Both(&mut c.env), &mut c.work, c.vals[0]);
+            let (e, w, a) = (&mut c.env, &mut c.work, c.vals[0]);
             (match addr {
                 0x021C_BF30 => super::cure_entry_2(e, w, a, &mon),
                 0x021C_BF40 => super::cure_entry_5(e, w, a, &mon),
@@ -327,11 +290,11 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         }
         0x021C_BF90 => {
             let mon = mon(c, 1);
-            super::cure_all_entry(&mut Both(&mut c.env), &mut c.work, c.vals[0], &mon) as u64
+            super::cure_all_entry(&mut c.env, &mut c.work, c.vals[0], &mon) as u64
         }
         0x021C_C098 | 0x021C_C0A8 | 0x021C_C0B8 | 0x021C_C0C8 | 0x021C_C0D8 | 0x021C_C0E8 => {
             let mon = mon(c, 1);
-            let (e, w, a, n) = (&mut Both(&mut c.env), &mut c.work, c.vals[0], c.vals[3]);
+            let (e, w, a, n) = (&mut c.env, &mut c.work, c.vals[0], c.vals[3]);
             (match addr {
                 0x021C_C098 => super::stage_entry_1(e, w, a, &mon, n),
                 0x021C_C0A8 => super::stage_entry_2(e, w, a, &mon, n),
@@ -343,7 +306,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         }
         0x021C_C668 => {
             let mons = mons_of(&[(c.vals[1], c.bufs[1].clone())]);
-            super::who_leads(&mut Both(&mut c.env), &c.work, c.vals[0], &mons) as u64
+            super::who_leads(&mut c.env, &c.work, c.vals[0], &mons) as u64
         }
         0x021C_C800 => {
             let img = c.bufs[4].clone();
@@ -353,14 +316,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 BattleMon::from_bytes(img[o..o + crate::battle_mon::BPP_SIZE].try_into().unwrap())
             };
             let (mut hp, mut pct) = (c.bufs[1].clone(), c.bufs[2].clone());
-            super::side_totals(
-                &mut Both(&mut c.env),
-                &c.work,
-                &mons,
-                &mut hp,
-                &mut pct,
-                c.vals[3],
-            );
+            super::side_totals(&mut c.env, &c.work, &mons, &mut hp, &mut pct, c.vals[3]);
             c.bufs[1] = hp;
             c.bufs[2] = pct;
             0
@@ -370,22 +326,16 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x021C_BD48 => {
             let mon = mon(c, 2);
             super::ball_multiplier(
-                &mut Both(&mut c.env),
-                &c.work,
-                &mon,
-                c.vals[2],
-                c.vals[3],
-                c.vals[4],
-                &c.bufs[4],
+                &mut c.env, &c.work, &mon, c.vals[2], c.vals[3], c.vals[4], &c.bufs[4],
             ) as u64
         }
         0x021C_B55C => {
             let m = mon(c, 0);
-            super::exp_scale(&mut Both(&mut c.env), &m, c.vals[1], c.vals[2], c.vals[3]) as u64
+            super::exp_scale(&mut c.env, &m, c.vals[1], c.vals[2], c.vals[3]) as u64
         }
         0x021C_B5F0 => {
             let (winner, loser) = (mon(c, 0), mon(c, 1));
-            super::ev_gain(&mut Both(&mut c.env), &winner, &loser, &mut c.bufs[2]);
+            super::ev_gain(&mut c.env, &winner, &loser, &mut c.bufs[2]);
             0
         }
         0x021C_B2D4 => {
@@ -397,7 +347,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 BattleMon::from_bytes(img[o..o + crate::battle_mon::BPP_SIZE].try_into().unwrap())
             };
             super::exp_distribute(
-                &mut Both(&mut c.env),
+                &mut c.env,
                 &c.work,
                 c.vals[1],
                 &fainted,
@@ -411,14 +361,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             let img = c.bufs[2].clone();
             let (mut count, mut flag) = (c.bufs[4].clone(), c.bufs[5].clone());
             let r = super::capture_roll(
-                &mut Both(&mut c.env),
-                &c.work,
-                &m,
-                c.vals[2],
-                c.vals[3],
-                &mut count,
-                &mut flag,
-                c.vals[2],
+                &mut c.env, &c.work, &m, c.vals[2], c.vals[3], &mut count, &mut flag, c.vals[2],
                 &img,
             );
             c.bufs[4] = count;
@@ -439,7 +382,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 }
             };
             super::throw_ball(
-                &mut Both(&mut c.env),
+                &mut c.env,
                 &mut c.work,
                 &thrower,
                 c.vals[2],
@@ -455,7 +398,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             let mut q = std::mem::take(&mut c.bufs[5]);
             let mut img = std::mem::take(&mut c.bufs[6]);
             let r = super::use_item(
-                &mut Both(&mut c.env),
+                &mut c.env,
                 &mut StubEffects,
                 &mut c.work,
                 c.vals[0],
@@ -524,14 +467,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             ]);
             let mv = u16::from_le_bytes([c.bufs[3][0], c.bufs[3][1]]) as u32;
             super::pick_ally(
-                &mut Both(&mut c.env),
-                &c.work,
-                c.vals[1],
-                &m,
-                mv,
-                c.vals[4],
-                c.vals[5],
-                &mons,
+                &mut c.env, &c.work, c.vals[1], &m, mv, c.vals[4], c.vals[5], &mons,
             ) as u64
         }
         _ => unreachable!("{addr:#010x} is PORTED but not wired into the test"),

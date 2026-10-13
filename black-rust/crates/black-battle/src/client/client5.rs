@@ -13,7 +13,7 @@
 
 use super::client4::{arg, msg_arg, msg_done, msg_set, msg_show, ofs, state_inc};
 use super::{rd16, rd32};
-use crate::server_flow::env::{Arg, FlowEnv};
+use crate::server_flow::env::{Arg, FlowEnv, Lend};
 
 /// Functions of this area that are ported and checked by `tests::svflow_match_rom`.
 pub const PORTED: &[u32] = &[
@@ -99,27 +99,29 @@ const FX_BUSY: u32 = 0x021F_7EB4;
 
 /// `021b9934(pokecon, u8 args[0])`: the BattleMon a command addresses.
 fn mon_of<E: FlowEnv>(env: &mut E, c: &[u8], id: u32) -> u32 {
-    env.call(
+    env.callr(
         MON_OF,
         &mut [Arg::V(rd32(c, ofs::POKECON)), Arg::V(id & 0xFF)],
+        c,
     )
 }
 
 /// `021b8d8c(server, pokecon, id)`.
 fn view_slot<E: FlowEnv>(env: &mut E, c: &[u8], id: u32) -> u32 {
-    env.call(
+    env.callr(
         VIEW_SLOT,
         &mut [
             Arg::V(rd32(c, ofs::SERVER)),
             Arg::V(rd32(c, ofs::POKECON)),
             Arg::V(id),
         ],
+        c,
     )
 }
 
 /// `021b8e70(server, id)`.
 fn view_pos<E: FlowEnv>(env: &mut E, c: &[u8], id: u32) -> u32 {
-    env.call(VIEW_POS, &mut [Arg::V(rd32(c, ofs::SERVER)), Arg::V(id)])
+    env.callr(VIEW_POS, &mut [Arg::V(rd32(c, ofs::SERVER)), Arg::V(id)], c)
 }
 
 fn is_quiet<E: FlowEnv>(env: &mut E) -> bool {
@@ -135,7 +137,7 @@ fn mon_relay<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8], callee: u32, extra:
     let mon = mon_of(env, c, arg(args, 0));
     let mut a: Vec<Arg<'_>> = vec![Arg::V(mon)];
     a.extend(extra.iter().map(|&v| Arg::V(v)));
-    env.call(callee, &mut a);
+    env.callr(callee, &mut a, c);
     1
 }
 
@@ -152,11 +154,11 @@ pub fn cmd_exp_gain<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: &
     let server = rd32(c, ofs::SERVER);
     let pokecon = rd32(c, ofs::POKECON);
     let mon_by_id =
-        |env: &mut E| env.call(0x021B_98AC, &mut [Arg::V(pokecon), Arg::V(a(0) & 0xFF)]);
+        |env: &mut E| env.callr(0x021B_98AC, &mut [Arg::V(pokecon), Arg::V(a(0) & 0xFF)], c);
     match rd32(state, 0) {
         0 => {
             let p = view_pos(env, c, a(0) & 0xFF);
-            env.call(
+            env.callr(
                 0x021F_7CFC,
                 &mut [
                     Arg::V(p),
@@ -165,27 +167,28 @@ pub fn cmd_exp_gain<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: &
                     Arg::V(a(2)),
                     Arg::V(a(4)),
                 ],
+                c,
             );
             state_inc(state);
             0
         }
         1 => {
-            if fx_busy(env) {
+            if fx_busy(&mut Lend::r(env, c)) {
                 return 0;
             }
             if a(2) != 0 {
                 let mon = mon_by_id(env);
-                msg_set(env, 1, 0x41);
-                let lv = env.call(0x021D_5440, &mut [Arg::V(mon)]);
-                msg_arg(env, lv);
-                env.call(0x021F_883C, &mut [Arg::V(0x518)]);
+                msg_set(&mut Lend::r(env, c), 1, 0x41);
+                let lv = env.callr(0x021D_5440, &mut [Arg::V(mon)], c);
+                msg_arg(&mut Lend::r(env, c), lv);
+                env.callr(0x021F_883C, &mut [Arg::V(0x518)], c);
             } else {
                 let id = if a(1) < 4 {
                     EXP_MESSAGES[a(1) as usize] as u32
                 } else {
                     0x3D
                 };
-                msg_set(env, 1, id);
+                msg_set(&mut Lend::r(env, c), 1, id);
             }
             msg_show(env, c);
             state_inc(state);
@@ -199,24 +202,24 @@ pub fn cmd_exp_gain<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: &
                 return 1;
             }
             let mon = mon_by_id(env);
-            env.call(0x021B_A2D4, &mut [Arg::V(server), Arg::V(mon)]);
+            env.callr(0x021B_A2D4, &mut [Arg::V(server), Arg::V(mon)], c);
             state_inc(state);
             0
         }
         3 => {
-            if env.call(0x0200_5F38, &mut []) != 0 {
+            if env.callr(0x0200_5F38, &mut [], c) != 0 {
                 return 0;
             }
-            env.call(0x021F_7C0C, &mut []);
-            env.call(0x0200_5D90, &mut [Arg::V(0x47C), Arg::V(0xFFFF)]);
-            env.call(0x021B_92A0, &mut [Arg::V(server)]);
+            env.callr(0x021F_7C0C, &mut [], c);
+            env.callr(0x0200_5D90, &mut [Arg::V(0x47C), Arg::V(0xFFFF)], c);
+            env.callr(0x021B_92A0, &mut [Arg::V(server)], c);
             if a(3) == 0 {
                 return 1;
             }
             let mon = mon_by_id(env);
-            msg_set(env, 1, 0x42);
-            let lv = env.call(0x021D_5440, &mut [Arg::V(mon)]);
-            msg_arg(env, lv);
+            msg_set(&mut Lend::r(env, c), 1, 0x42);
+            let lv = env.callr(0x021D_5440, &mut [Arg::V(mon)], c);
+            msg_arg(&mut Lend::r(env, c), lv);
             msg_show(env, c);
             state_inc(state);
             0
@@ -237,13 +240,17 @@ pub fn cmd_gauge_message<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], ar
     match rd32(state, 0) {
         0 => {
             let p = view_pos(env, c, arg(args, 0) & 0xFF);
-            env.call(0x021F_7D44, &mut [Arg::V(p), Arg::V(arg(args, 1) & 0xFFFF)]);
+            env.callr(
+                0x021F_7D44,
+                &mut [Arg::V(p), Arg::V(arg(args, 1) & 0xFFFF)],
+                c,
+            );
             state_inc(state);
             0
         }
         1 => {
-            if !fx_busy(env) {
-                msg_set(env, 1, 0x43);
+            if !fx_busy(&mut Lend::r(env, c)) {
+                msg_set(&mut Lend::r(env, c), 1, 0x43);
                 msg_show(env, c);
                 state_inc(state);
             }
@@ -263,26 +270,32 @@ pub fn cmd_party_slot<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args:
         0 => {
             let k = arg(args, 0) & 0xFF;
             let slot = arg(args, 1) & 0xFF;
-            let party = env.call(0x021B_9AEC, &mut [Arg::V(rd32(c, ofs::POKECON)), Arg::V(k)]);
-            env.call(
+            let party = env.callr(
+                0x021B_9AEC,
+                &mut [Arg::V(rd32(c, ofs::POKECON)), Arg::V(k)],
+                c,
+            );
+            env.callr(
                 0x021B_9C50,
                 &mut [Arg::V(party), Arg::V(slot), Arg::V(0), Arg::V(0)],
+                c,
             );
-            env.call(0x021E_AA6C, &mut [Arg::V(view), Arg::V(k), Arg::V(slot)]);
+            env.callr(0x021E_AA6C, &mut [Arg::V(view), Arg::V(k), Arg::V(slot)], c);
             state_inc(state);
             0
         }
         1 => {
-            if env.call(0x021E_AAD8, &mut [Arg::V(view)]) == 0 {
+            if env.callr(0x021E_AAD8, &mut [Arg::V(view)], c) == 0 {
                 return 0;
             }
             let slot = arg(args, 1) & 0xFF;
             if slot == 1 {
                 return 1;
             }
-            let f = env.call(
+            let f = env.callr(
                 0x021B_9F70,
                 &mut [Arg::V(rd32(c, ofs::SERVER)), Arg::V(arg(args, 0) & 0xFF)],
+                c,
             ) & 0xFF;
             let id = match (slot == 3, f != 0) {
                 (true, true) => 0x26,
@@ -290,7 +303,7 @@ pub fn cmd_party_slot<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args:
                 (false, true) => 0x28,
                 (false, false) => 0x29,
             };
-            env.call(0x021E_A678, &mut [Arg::V(view), Arg::V(id), Arg::P]);
+            env.callr(0x021E_A678, &mut [Arg::V(view), Arg::V(id), Arg::P], c);
             state_inc(state);
             0
         }
@@ -308,26 +321,26 @@ pub fn cmd_ability_change<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], a
     let s = view_slot(env, c, k);
     match rd32(state, 0) {
         0 => {
-            if is_quiet(env) {
+            if is_quiet(&mut Lend::r(env, c)) {
                 let mon = mon_of(env, c, k);
-                env.call(0x021D_66D0, &mut [Arg::V(mon), Arg::V(arg(args, 1))]);
+                env.callr(0x021D_66D0, &mut [Arg::V(mon), Arg::V(arg(args, 1))], c);
                 return 1;
             }
-            env.call(0x021E_A768, &mut [Arg::V(view), Arg::V(s), Arg::V(0)]);
+            env.callr(0x021E_A768, &mut [Arg::V(view), Arg::V(s), Arg::V(0)], c);
             state_inc(state);
             0
         }
         1 => {
-            if env.call(0x021E_A778, &mut [Arg::V(view), Arg::V(s)]) != 0 {
+            if env.callr(0x021E_A778, &mut [Arg::V(view), Arg::V(s)], c) != 0 {
                 let mon = mon_of(env, c, k);
-                env.call(0x021D_66D0, &mut [Arg::V(mon), Arg::V(arg(args, 1))]);
-                env.call(0x021E_A7A8, &mut [Arg::V(view), Arg::V(s)]);
+                env.callr(0x021D_66D0, &mut [Arg::V(mon), Arg::V(arg(args, 1))], c);
+                env.callr(0x021E_A7A8, &mut [Arg::V(view), Arg::V(s)], c);
                 state_inc(state);
             }
             0
         }
         2 => {
-            if env.call(0x021E_A7B8, &mut [Arg::V(view), Arg::V(s)]) != 0 {
+            if env.callr(0x021E_A7B8, &mut [Arg::V(view), Arg::V(s)], c) != 0 {
                 state_inc(state);
             }
             0
@@ -367,29 +380,31 @@ pub fn cmd_ability_swap<E: FlowEnv>(
     };
     match rd32(state, 0) {
         0 => {
-            if is_quiet(env) || env.call(0x021B_9A24, &mut [Arg::V(a), Arg::V(b)]) != 0 {
+            if is_quiet(&mut Lend::r(env, c))
+                || env.callr(0x021B_9A24, &mut [Arg::V(a), Arg::V(b)], c) != 0
+            {
                 set_both(env);
                 return 1;
             }
-            env.call(0x021E_A768, &mut [Arg::V(view), Arg::V(s), Arg::V(0)]);
+            env.callr(0x021E_A768, &mut [Arg::V(view), Arg::V(s), Arg::V(0)], c);
             super::wr32(g, G_WAIT, 8);
             state_inc(state);
             0
         }
         1 => {
-            env.call(0x021E_A778, &mut [Arg::V(view), Arg::V(s)]);
+            env.callr(0x021E_A778, &mut [Arg::V(view), Arg::V(s)], c);
             let w = rd32(g, G_WAIT);
             if w != 0 {
                 super::wr32(g, G_WAIT, w - 1);
                 return 0;
             }
-            env.call(0x021E_A768, &mut [Arg::V(view), Arg::V(t), Arg::V(0)]);
+            env.callr(0x021E_A768, &mut [Arg::V(view), Arg::V(t), Arg::V(0)], c);
             state_inc(state);
             0
         }
         2 => {
-            let ra = env.call(0x021E_A778, &mut [Arg::V(view), Arg::V(s)]) & 0xFF;
-            let rb = env.call(0x021E_A778, &mut [Arg::V(view), Arg::V(t)]) & 0xFF;
+            let ra = env.callr(0x021E_A778, &mut [Arg::V(view), Arg::V(s)], c) & 0xFF;
+            let rb = env.callr(0x021E_A778, &mut [Arg::V(view), Arg::V(t)], c) & 0xFF;
             if ra != 0 && rb != 0 {
                 state_inc(state);
             }
@@ -405,20 +420,20 @@ pub fn cmd_ability_swap<E: FlowEnv>(
             let w = rd32(g, G_WAIT).wrapping_add(1);
             super::wr32(g, G_WAIT, w);
             if w > 8 {
-                env.call(0x021E_A7A8, &mut [Arg::V(view), Arg::V(s)]);
+                env.callr(0x021E_A7A8, &mut [Arg::V(view), Arg::V(s)], c);
                 state_inc(state);
             }
             0
         }
         5 => {
-            if env.call(0x021E_A7B8, &mut [Arg::V(view), Arg::V(s)]) != 0 {
-                env.call(0x021E_A7A8, &mut [Arg::V(view), Arg::V(t)]);
+            if env.callr(0x021E_A7B8, &mut [Arg::V(view), Arg::V(s)], c) != 0 {
+                env.callr(0x021E_A7A8, &mut [Arg::V(view), Arg::V(t)], c);
                 state_inc(state);
             }
             0
         }
         6 => {
-            if env.call(0x021E_A7B8, &mut [Arg::V(view), Arg::V(t)]) != 0 {
+            if env.callr(0x021E_A7B8, &mut [Arg::V(view), Arg::V(t)], c) != 0 {
                 state_inc(state);
             }
             0
@@ -436,14 +451,18 @@ pub fn cmd_illusion_break<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], a
             let k = arg(args, 0) & 0xFF;
             let s = view_slot(env, c, k);
             let mon = mon_of(env, c, k);
-            let quiet = env.call(IS_QUIET, &mut [Arg::P]);
-            env.call(0x021D_6C2C, &mut [Arg::V(mon)]);
-            env.call(0x021E_A868, &mut [Arg::V(view), Arg::V(s), Arg::V(quiet)]);
+            let quiet = env.callr(IS_QUIET, &mut [Arg::P], c);
+            env.callr(0x021D_6C2C, &mut [Arg::V(mon)], c);
+            env.callr(
+                0x021E_A868,
+                &mut [Arg::V(view), Arg::V(s), Arg::V(quiet)],
+                c,
+            );
             state_inc(state);
             0
         }
         1 => {
-            if env.call(0x021E_A878, &mut [Arg::V(view)]) != 0 {
+            if env.callr(0x021E_A878, &mut [Arg::V(view)], c) != 0 {
                 state_inc(state);
             }
             0
@@ -474,22 +493,23 @@ pub fn cmd_position_anim<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], ar
     let view = rd32(c, ofs::VIEW);
     let p = view_pos(env, c, arg(args, 0) & 0xFF);
     if rd32(state, 0) == 0 {
-        if is_quiet(env) {
+        if is_quiet(&mut Lend::r(env, c)) {
             return 1;
         }
-        if env.call(0x021B_8590, &mut [Arg::V(rd32(c, ofs::SERVER))]) == 0
-            && env.call(0x021D_3558, &mut [Arg::V(arg(args, 1) & 0xFFFF)]) != 0
+        if env.callr(0x021B_8590, &mut [Arg::V(rd32(c, ofs::SERVER))], c) == 0
+            && env.callr(0x021D_3558, &mut [Arg::V(arg(args, 1) & 0xFFFF)], c) != 0
         {
             return 1;
         }
-        env.call(
+        env.callr(
             0x021E_A3B8,
             &mut [Arg::V(view), Arg::V(p), Arg::V(arg(args, 1) & 0xFFFF)],
+            c,
         );
         state_inc(state);
         0
     } else {
-        (env.call(0x021E_A3D4, &mut [Arg::V(view)]) != 0) as u32
+        (env.callr(0x021E_A3D4, &mut [Arg::V(view)], c) != 0) as u32
     }
 }
 
@@ -498,12 +518,12 @@ pub fn cmd_position_anim<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], ar
 pub fn cmd_pair_anim<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: &[u8]) -> u32 {
     let view = rd32(c, ofs::VIEW);
     if rd32(state, 0) == 0 {
-        if is_quiet(env) {
+        if is_quiet(&mut Lend::r(env, c)) {
             return 1;
         }
         let p = view_pos(env, c, arg(args, 0) & 0xFF);
         let q = view_pos(env, c, arg(args, 1) & 0xFF);
-        env.call(
+        env.callr(
             0x021E_A3E8,
             &mut [
                 Arg::V(view),
@@ -511,11 +531,12 @@ pub fn cmd_pair_anim<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: 
                 Arg::V(q),
                 Arg::V(arg(args, 2) & 0xFFFF),
             ],
+            c,
         );
         state_inc(state);
         0
     } else {
-        (env.call(0x021E_A3F8, &mut [Arg::V(view)]) != 0) as u32
+        (env.callr(0x021E_A3F8, &mut [Arg::V(view)], c) != 0) as u32
     }
 }
 
@@ -528,13 +549,17 @@ pub fn cmd_form_change<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args
             let s = view_slot(env, c, arg(args, 0) & 0xFF);
             let p = view_pos(env, c, s);
             let mon = mon_of(env, c, arg(args, 0));
-            env.call(0x021D_66D8, &mut [Arg::V(mon), Arg::V(arg(args, 1) & 0xFF)]);
-            env.call(0x021E_A888, &mut [Arg::V(view), Arg::V(p)]);
+            env.callr(
+                0x021D_66D8,
+                &mut [Arg::V(mon), Arg::V(arg(args, 1) & 0xFF)],
+                c,
+            );
+            env.callr(0x021E_A888, &mut [Arg::V(view), Arg::V(p)], c);
             state_inc(state);
             0
         }
         1 => {
-            if env.call(0x021E_A8A4, &mut [Arg::V(view)]) != 0 {
+            if env.callr(0x021E_A8A4, &mut [Arg::V(view)], c) != 0 {
                 state_inc(state);
             }
             0
@@ -555,15 +580,15 @@ pub fn cmd_ability_window_open<E: FlowEnv>(
     let s = view_slot(env, c, arg(args, 0) & 0xFF);
     match rd32(state, 0) {
         0 => {
-            if is_quiet(env) {
+            if is_quiet(&mut Lend::r(env, c)) {
                 return 1;
             }
-            env.call(0x021E_A768, &mut [Arg::V(view), Arg::V(s), Arg::V(1)]);
+            env.callr(0x021E_A768, &mut [Arg::V(view), Arg::V(s), Arg::V(1)], c);
             state_inc(state);
             0
         }
         1 => {
-            if env.call(0x021E_A778, &mut [Arg::V(view), Arg::V(s)]) != 0 {
+            if env.callr(0x021E_A778, &mut [Arg::V(view), Arg::V(s)], c) != 0 {
                 state_inc(state);
             }
             0
@@ -584,11 +609,11 @@ pub fn cmd_ability_window_close<E: FlowEnv>(
     let s = view_slot(env, c, arg(args, 0) & 0xFF);
     match rd32(state, 0) {
         0 => {
-            env.call(0x021E_A788, &mut [Arg::V(view), Arg::V(s)]);
+            env.callr(0x021E_A788, &mut [Arg::V(view), Arg::V(s)], c);
             state_inc(state);
             0
         }
-        1 => (env.call(0x021E_A798, &mut [Arg::V(view), Arg::V(s)]) != 0) as u32,
+        1 => (env.callr(0x021E_A798, &mut [Arg::V(view), Arg::V(s)], c) != 0) as u32,
         _ => 0,
     }
 }
@@ -683,9 +708,10 @@ pub fn cmd_mon_lower_stage<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u3
 pub fn cmd_mon_set_stages<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32 {
     let mon = mon_of(env, c, arg(args, 0));
     for k in 1..=7 {
-        env.call(
+        env.callr(
             0x021D_5EA8,
             &mut [Arg::V(mon), Arg::V(k), Arg::V(arg(args, k as usize) & 0xFF)],
+            c,
         );
     }
     1
@@ -728,19 +754,24 @@ pub fn cmd_mon_cure_sick<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32 
 pub fn cmd_switch_in<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32 {
     let a = rd32(c, ofs::CMD_ARGS + 4) & 0xFF;
     let b = rd32(c, ofs::CMD_ARGS + 8) & 0xFF;
-    let party = env.call(
+    let party = env.callr(
         0x021B_9AEC,
         &mut [
             Arg::V(rd32(c, ofs::POKECON)),
             Arg::V(rd32(c, ofs::CMD_ARGS) & 0xFF),
         ],
+        c,
     );
     if a != b {
-        env.call(0x021B_9C10, &mut [Arg::V(party), Arg::V(a), Arg::V(b)]);
+        env.callr(0x021B_9C10, &mut [Arg::V(party), Arg::V(a), Arg::V(b)], c);
     }
-    let m = env.call(0x021B_9BF0, &mut [Arg::V(party), Arg::V(a)]);
-    env.call(0x021D_63EC, &mut [Arg::V(m), Arg::V(arg(args, 3) & 0xFFFF)]);
-    env.call(0x021D_6580, &mut [Arg::V(m)]);
+    let m = env.callr(0x021B_9BF0, &mut [Arg::V(party), Arg::V(a)], c);
+    env.callr(
+        0x021D_63EC,
+        &mut [Arg::V(m), Arg::V(arg(args, 3) & 0xFFFF)],
+        c,
+    );
+    env.callr(0x021D_6580, &mut [Arg::V(m)], c);
     1
 }
 
@@ -756,29 +787,32 @@ pub fn cmd_tick_sicks<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32 {
     let k = arg(args, 0);
     let n = arg(args, 1);
     let mut list = [0u8; 8];
-    env.call(
+    env.callr(
         0x021D_8090,
         &mut [Arg::V(arg(args, 2)), Arg::Out(&mut list)],
+        c,
     );
     let mut i = 0u32;
     while i < n {
-        let e = env.call(0x021D_3A10, &mut [Arg::V(i)]);
+        let e = env.callr(0x021D_3A10, &mut [Arg::V(i)], c);
         if e == 0 {
             break;
         }
         let mut j = 0u32;
         while j < k {
-            let m = env.call(
+            let m = env.callr(
                 MON_OF,
                 &mut [
                     Arg::V(rd32(c, ofs::POKECON)),
                     Arg::V(list[j as usize] as u32),
                 ],
+                c,
             );
-            if env.call(0x021D_5B68, &mut [Arg::V(m)]) == 0 {
-                env.call(
+            if env.callr(0x021D_5B68, &mut [Arg::V(m)], c) == 0 {
+                env.callr(
                     0x021D_6064,
                     &mut [Arg::V(m), Arg::V(e), Arg::V(0), Arg::V(0)],
+                    c,
                 );
             }
             j += 1;
@@ -854,7 +888,7 @@ pub fn cmd_mon_reset_on_battle_end<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8
 
 /// C: `FUN_overlay_d_93__021d3b74`: command 0x21: `021ef9f4(c.view_side, a0, a1, 0)`.
 pub fn cmd_view_side_ef9f4<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32 {
-    env.call(
+    env.callr(
         0x021E_F9F4,
         &mut [
             Arg::V(rd32(c, ofs::VIEW_SIDE)),
@@ -862,37 +896,41 @@ pub fn cmd_view_side_ef9f4<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u3
             Arg::V(arg(args, 1)),
             Arg::V(0),
         ],
+        c,
     );
     1
 }
 
 /// C: `FUN_overlay_d_93__021d3b88` (`sub_021d3b88`): command 0x22: `021efad8(c.view_side, a0, u8 a1)`.
 pub fn cmd_view_side_efad8<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32 {
-    env.call(
+    env.callr(
         0x021E_FAD8,
         &mut [
             Arg::V(rd32(c, ofs::VIEW_SIDE)),
             Arg::V(arg(args, 0)),
             Arg::V(arg(args, 1) & 0xFF),
         ],
+        c,
     );
     1
 }
 
 /// C: `FUN_overlay_d_93__021d3b9c`: command 0x23: `021efb34(c.view_side, u8 a0)`.
 pub fn cmd_view_side_efb34<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32 {
-    env.call(
+    env.callr(
         0x021E_FB34,
         &mut [Arg::V(rd32(c, ofs::VIEW_SIDE)), Arg::V(arg(args, 0) & 0xFF)],
+        c,
     );
     1
 }
 
 /// C: `sub_021d3bb0`: command 0x24: `021efa94(c.view_side, a0)`.
 pub fn cmd_view_side_efa94<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32 {
-    env.call(
+    env.callr(
         0x021E_FA94,
         &mut [Arg::V(rd32(c, ofs::VIEW_SIDE)), Arg::V(arg(args, 0))],
+        c,
     );
     1
 }
@@ -913,7 +951,7 @@ pub fn cmd_mon_set_u8_157<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32
 pub fn cmd_mon_copy_passable<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32 {
     let src = mon_of(env, c, arg(args, 0));
     let dst = mon_of(env, c, arg(args, 1));
-    env.call(0x021D_65C8, &mut [Arg::V(dst), Arg::V(src)]);
+    env.callr(0x021D_65C8, &mut [Arg::V(dst), Arg::V(src)], c);
     1
 }
 
@@ -935,7 +973,11 @@ pub fn cmd_counter_add<E: FlowEnv>(env: &mut E, c: &mut [u8], args: &[u8]) -> u3
     if id == c[ofs::CLIENT_ID] as u32 {
         super::client1::counter_add(c, n);
     } else {
-        env.call(0x021B_9B10, &mut [Arg::V(rd32(c, ofs::SERVER)), Arg::V(id)]);
+        env.callh(
+            0x021B_9B10,
+            &mut [Arg::V(rd32(c, ofs::SERVER)), Arg::V(id)],
+            c,
+        );
     }
     1
 }
@@ -943,10 +985,15 @@ pub fn cmd_counter_add<E: FlowEnv>(env: &mut E, c: &mut [u8], args: &[u8]) -> u3
 /// C: `sub_021d3c70`: command 0x2A: `021b9d10(server, 021b9aec(pokecon, u8 a0), u8 a0)`.
 pub fn cmd_party_9d10<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32 {
     let k = arg(args, 0) & 0xFF;
-    let x = env.call(0x021B_9AEC, &mut [Arg::V(rd32(c, ofs::POKECON)), Arg::V(k)]);
-    env.call(
+    let x = env.callr(
+        0x021B_9AEC,
+        &mut [Arg::V(rd32(c, ofs::POKECON)), Arg::V(k)],
+        c,
+    );
+    env.callr(
         0x021B_9D10,
         &mut [Arg::V(rd32(c, ofs::SERVER)), Arg::V(x), Arg::V(k)],
+        c,
     );
     1
 }
@@ -965,9 +1012,10 @@ pub fn cmd_mon_cure_linked<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u3
 /// `021d6848(mon, &{u16 args[4], u16 args[5], u8 args[3], u8 args[1], u8 args[2], pad})`. Returns 1 ("done").
 pub fn relay_mon_block<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32 {
     let w = |i: usize| super::rd32(args, 4 * i);
-    let mon = env.call(
+    let mon = env.callr(
         0x021B_9934,
         &mut [Arg::V(super::rd32(c, ofs::POKECON)), Arg::V(w(0) & 0xFF)],
+        c,
     );
     let mut block = [0u8; 8];
     block[0..2].copy_from_slice(&(w(4) as u16).to_le_bytes());
@@ -975,23 +1023,24 @@ pub fn relay_mon_block<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32 {
     block[4] = w(3) as u8;
     block[5] = w(1) as u8;
     block[6] = w(2) as u8;
-    env.call(0x021D_6848, &mut [Arg::V(mon), Arg::In(&block[..7])]);
+    env.callr(0x021D_6848, &mut [Arg::V(mon), Arg::In(&block[..7])], c);
     1
 }
 
 /// C: `sub_021d3cfc`: command 0x2E: `BattleMon::on_turn_start(mon)`, `BattleMon::clear_1f6(mon)`.
 pub fn cmd_mon_turn_start<E: FlowEnv>(env: &mut E, c: &[u8], args: &[u8]) -> u32 {
     let mon = mon_of(env, c, arg(args, 0));
-    env.call(0x021D_6408, &mut [Arg::V(mon)]);
-    env.call(0x021D_6E88, &mut [Arg::V(mon)]);
+    env.callr(0x021D_6408, &mut [Arg::V(mon)], c);
+    env.callr(0x021D_6E88, &mut [Arg::V(mon)], c);
     1
 }
 
 /// C: `sub_021d3d1c`: command 0x2F: `021efc78(c.view_side, 0, 0)`.
 pub fn cmd_view_side_efc78<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
-    env.call(
+    env.callr(
         0x021E_FC78,
         &mut [Arg::V(rd32(c, ofs::VIEW_SIDE)), Arg::V(0), Arg::V(0)],
+        c,
     );
     1
 }
@@ -1024,7 +1073,7 @@ pub fn party(c: &[u8]) -> u32 {
 
 /// C: `sub_021d3d84`: tail call `021ef9a8(c.view_side)` (view-side accessor; called from overlay 95).
 pub fn view_side_ef9a8<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
-    env.call(0x021E_F9A8, &mut [Arg::V(rd32(c, ofs::VIEW_SIDE))])
+    env.callr(0x021E_F9A8, &mut [Arg::V(rd32(c, ofs::VIEW_SIDE))], c)
 }
 
 /// C: `FUN_overlay_d_93__021d3d90`: the counter byte `c[0x1AB]`.
@@ -1035,13 +1084,14 @@ pub fn counter(c: &[u8]) -> u8 {
 /// C: `FUN_overlay_d_93__021d3d9c`: the four trainer items `c.u16[0xE8 + 2i] = 021b9f84(server, client id, i)`.
 pub fn load_trainer_items<E: FlowEnv>(env: &mut E, c: &mut [u8]) {
     for i in 0..4u32 {
-        let v = env.call(
+        let v = env.callh(
             0x021B_9F84,
             &mut [
                 Arg::V(rd32(c, ofs::SERVER)),
                 Arg::V(c[ofs::CLIENT_ID] as u32),
                 Arg::V(i),
             ],
+            c,
         );
         let o = ofs::ITEMS + 2 * i as usize;
         c[o..o + 2].copy_from_slice(&(v as u16).to_le_bytes());
@@ -1057,8 +1107,8 @@ const ITEM_MIN_PARTY: [u8; 4] = [6, 4, 2, 1];
 /// smaller entry) whose item `c.u16[0xE8 + 2i]` is set and fits: kind 0x29 (`021d805c`) -> HP (`021d59b4(mon, 0xD)`) <=
 /// `max_hp_div(mon, 4)`; else [`item_boosts_stat`] or [`item_cures_status`]. The slot is cleared and the item returned; 0 = none.
 pub fn pick_trainer_item<E: FlowEnv>(env: &mut E, c: &mut [u8], mon: u32, party: u32) -> u16 {
-    let count = env.call(0x021B_9B94, &mut [Arg::V(party)]);
-    if env.call(0x021D_62C4, &mut [Arg::V(mon), Arg::V(0x13)]) != 0 {
+    let count = env.callh(0x021B_9B94, &mut [Arg::V(party)], c);
+    if env.callh(0x021D_62C4, &mut [Arg::V(mon), Arg::V(0x13)], c) != 0 {
         return 0;
     }
     for (i, &min) in ITEM_MIN_PARTY.iter().enumerate() {
@@ -1070,11 +1120,12 @@ pub fn pick_trainer_item<E: FlowEnv>(env: &mut E, c: &mut [u8], mon: u32, party:
         if item == 0 {
             continue;
         }
-        let fits = if env.call(0x021D_805C, &mut [Arg::V(item), Arg::V(0x29)]) != 0 {
-            let hp = env.call(0x021D_59B4, &mut [Arg::V(mon), Arg::V(0xD)]);
-            hp <= env.call(0x021D_7B60, &mut [Arg::V(mon), Arg::V(4)])
+        let fits = if env.callh(0x021D_805C, &mut [Arg::V(item), Arg::V(0x29)], c) != 0 {
+            let hp = env.callh(0x021D_59B4, &mut [Arg::V(mon), Arg::V(0xD)], c);
+            hp <= env.callh(0x021D_7B60, &mut [Arg::V(mon), Arg::V(4)], c)
         } else {
-            item_boosts_stat(env, item, mon) != 0 || item_cures_status(env, item, mon) != 0
+            item_boosts_stat(&mut Lend::h(env, c), item, mon) != 0
+                || item_cures_status(&mut Lend::h(env, c), item, mon) != 0
         };
         if fits {
             c[o..o + 2].copy_from_slice(&0u16.to_le_bytes());

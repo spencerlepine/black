@@ -181,6 +181,22 @@ impl IdSet {
         self.count
     }
 
+    /// The original 8-byte image (`u32` count, four `u8` slots).
+    pub fn to_bytes(&self) -> [u8; 8] {
+        let mut b = [0u8; 8];
+        b[..4].copy_from_slice(&self.count.to_le_bytes());
+        b[4..].copy_from_slice(&self.ids);
+        b
+    }
+
+    /// From the 8-byte image.
+    pub fn from_bytes(b: &[u8]) -> Self {
+        IdSet {
+            count: u32::from_le_bytes(b[..4].try_into().unwrap()),
+            ids: b[4..8].try_into().unwrap(),
+        }
+    }
+
     /// C: `FUN_overlay_d_93__021d8270`: classifies the set against `client` (see
     /// [`is_partner_or_self`]): 4 if no member matches, 3 if all match (or, with `mixed_limit`
     /// at most 1, some match), 2 for a mix with `mixed_limit` above 1.

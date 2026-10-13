@@ -163,7 +163,7 @@ pub fn create<E: FlowEnv>(
     c: &mut [u8],
 ) -> u32 {
     let heap = a.heap;
-    let c_addr = env.call(
+    let c_addr = env.callh(
         0x0203_0734,
         &mut [
             Arg::V(heap),
@@ -172,17 +172,19 @@ pub fn create<E: FlowEnv>(
             Arg::V(SRC_FILE),
             Arg::V(0x209),
         ],
+        c,
     );
     let flag = (r2 != 0 && a.mode as u8 == 0) as u32;
     c[OFS_ID] = a.id as u8;
     wr16(c, OFS_HEAP_ID, heap as u16);
     c[OFS_MODE] = a.mode as u8;
-    let adapter = env.call(
+    let adapter = env.callh(
         0x021E_EA58,
         &mut [Arg::V(r3), Arg::V(a.id & 0xFF), Arg::V(flag), Arg::V(heap)],
+        c,
     );
     wr32(c, OFS_ADAPTER, adapter);
-    let party = env.call(0x021B_9AF8, &mut [Arg::V(pokecon), Arg::V(a.id)]);
+    let party = env.callh(0x021B_9AF8, &mut [Arg::V(pokecon), Arg::V(a.id)], c);
     wr32(c, OFS_PARTY, party);
     wr32(c, OFS_SERVER, server);
     wr32(c, OFS_POKECON, pokecon);
@@ -192,7 +194,7 @@ pub fn create<E: FlowEnv>(
     c[OFS_C4] = 0;
     wr32(c, OFS_VIEW, 0);
     wr16(c, OFS_HP_REF, 0);
-    let blk = env.call(
+    let blk = env.callh(
         0x0203_0734,
         &mut [
             Arg::V(heap),
@@ -201,6 +203,7 @@ pub fn create<E: FlowEnv>(
             Arg::V(SRC_FILE),
             Arg::V(0x21A),
         ],
+        c,
     );
     wr32(c, OFS_HEAP_BLOCK, blk);
     wr32(c, OFS_STEP, STEP_MAIN);
@@ -217,19 +220,19 @@ pub fn create<E: FlowEnv>(
     c[OFS_FLAGS] &= !FLAG_DONE;
     c[OFS_FLAGS] &= !FLAG_10;
     c[OFS_FLAGS] &= !FLAG_20;
-    let view_obj = env.call(0x021B_A08C, &mut [Arg::V(server)]);
+    let view_obj = env.callh(0x021B_A08C, &mut [Arg::V(server)], c);
     wr32(c, OFS_VIEW_OBJ, view_obj);
     c[OFS_1AA] = a.b1aa as u8;
-    env.call(0x021D_8230, &mut [Arg::P]);
-    env.call(0x021D_3F04, &mut [Arg::P]);
-    env.call(0x021D_3D9C, &mut [Arg::P]);
+    env.call(0x021D_8230, &mut [Arg::PBuf(&mut c[0x2C..0x34])]);
+    env.call(0x021D_3F04, &mut [Arg::PBuf(&mut c[0x18..0x28])]);
+    env.callh(0x021D_3D9C, &mut [Arg::P], c);
     c[OFS_AI_BLOCK..OFS_AI_BLOCK + 0x18].copy_from_slice(&block[..0x18]);
     let ai = if c[OFS_MODE] == 1 && a.no_ai == 0 {
         let srv = rd32(c, OFS_SERVER);
-        let r6 = env.call(0x021B_9FBC, &mut [Arg::V(srv), Arg::V(c[OFS_ID] as u32)]);
-        let r1 = env.call(0x021B_A820, &mut [Arg::V(srv)]);
+        let r6 = env.callh(0x021B_9FBC, &mut [Arg::V(srv), Arg::V(c[OFS_ID] as u32)], c);
+        let r1 = env.callh(0x021B_A820, &mut [Arg::V(srv)], c);
         let heap_id = rd16(c, OFS_HEAP_ID) as u32;
-        env.call(
+        env.callh(
             0x0218_7F00,
             &mut [
                 Arg::V(srv),
@@ -238,6 +241,7 @@ pub fn create<E: FlowEnv>(
                 Arg::V(r6),
                 Arg::V(heap_id),
             ],
+            c,
         )
     } else {
         0
@@ -245,8 +249,8 @@ pub fn create<E: FlowEnv>(
     wr32(c, OFS_AI, ai);
     c[OFS_112..OFS_112 + 4].fill(0);
     let record =
-        if c[OFS_MODE] == 0 && env.call(0x021B_90F8, &mut [Arg::V(rd32(c, OFS_SERVER))]) != 0 {
-            env.call(0x021E_E5E4, &mut [Arg::V(heap)])
+        if c[OFS_MODE] == 0 && env.callh(0x021B_90F8, &mut [Arg::V(rd32(c, OFS_SERVER))], c) != 0 {
+            env.callh(0x021E_E5E4, &mut [Arg::V(heap)], c)
         } else {
             0
         };
@@ -260,14 +264,16 @@ pub fn create<E: FlowEnv>(
 pub fn free<E: FlowEnv>(env: &mut E, c: &[u8], c_addr: u32) {
     let record = rd32(c, OFS_RECORD);
     if record != 0 {
-        env.call(0x021E_E600, &mut [Arg::V(record)]);
+        env.callr(0x021E_E600, &mut [Arg::V(record)], c);
     }
     if rd32(c, OFS_AI) != 0 {
-        env.call(0x0218_8080, &mut []);
+        // ai_delete(vm): the original passes the VM in r0 from an earlier load; the spec stub
+        // takes no arguments (B16: the integration reads it from the lent client object)
+        env.callr(0x0218_8080, &mut [], c);
     }
-    env.call(0x0203_07B0, &mut [Arg::V(rd32(c, OFS_HEAP_BLOCK))]);
-    env.call(0x0203_07B0, &mut [Arg::V(rd32(c, OFS_ADAPTER))]);
-    env.call(0x0203_07B0, &mut [Arg::V(c_addr)]);
+    env.callr(0x0203_07B0, &mut [Arg::V(rd32(c, OFS_HEAP_BLOCK))], c);
+    env.callr(0x0203_07B0, &mut [Arg::V(rd32(c, OFS_ADAPTER))], c);
+    env.callr(0x0203_07B0, &mut [Arg::V(c_addr)], c);
 }
 
 /// C: `FUN_overlay_d_93__021cd914`: sets flag bit 2 ("request done").
@@ -281,7 +287,7 @@ pub fn record_data<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
     if record == 0 {
         return 0;
     }
-    env.call(0x021E_E63C, &mut [Arg::V(record)])
+    env.callr(0x021E_E63C, &mut [Arg::V(record)], c)
 }
 
 /// C: `FUN_overlay_d_93__021cd938`: replays from `reader`: mode 2, reader at `+0x14`, cursor init (`021d3f48`) with the
@@ -289,8 +295,11 @@ pub fn record_data<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
 pub fn set_replay<E: FlowEnv>(env: &mut E, c: &mut [u8], reader: u32) {
     c[OFS_MODE] = MODE_REPLAY;
     wr32(c, OFS_READER, reader);
-    let size = env.call(0x021E_E830, &mut [Arg::V(reader)]);
-    env.call(0x021D_3F48, &mut [Arg::P, Arg::V(size)]);
+    let size = env.callh(0x021E_E830, &mut [Arg::V(reader)], c);
+    env.call(
+        0x021D_3F48,
+        &mut [Arg::PBuf(&mut c[0x18..0x28]), Arg::V(size)],
+    );
 }
 
 /// C: `FUN_overlay_d_93__021cd95c`: sets the view handle (`+0x54`).
@@ -310,23 +319,23 @@ pub fn adapter(c: &[u8]) -> u32 {
 }
 
 /// C: `FUN_overlay_d_93__021cd97c`: runs the current step function `(c->step)(c, c->step)` and returns its answer.
-pub fn run_step<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
+pub fn run_step<E: FlowEnv>(env: &mut E, c: &mut [u8]) -> u32 {
     let step = rd32(c, OFS_STEP);
-    env.call(step & !1, &mut [Arg::P, Arg::V(step)])
+    env.call_held(c, step & !1, &mut [Arg::P, Arg::V(step)])
 }
 
 /// C: `FUN_overlay_d_93__021cd984`: restarts the replay: reader reset (`021ee674`), adapter block reset (`021eebdc`),
 /// cursor reset with `n` (`021d3f64`), step = the wait-for-request step.
 pub fn replay_restart<E: FlowEnv>(env: &mut E, c: &mut [u8], n: u32) {
-    env.call(0x021E_E674, &mut [Arg::V(rd32(c, OFS_READER))]);
-    env.call(0x021E_EBDC, &mut [Arg::V(rd32(c, OFS_ADAPTER))]);
-    env.call(0x021D_3F64, &mut [Arg::P, Arg::V(n)]);
+    env.callh(0x021E_E674, &mut [Arg::V(rd32(c, OFS_READER))], c);
+    env.callh(0x021E_EBDC, &mut [Arg::V(rd32(c, OFS_ADAPTER))], c);
+    env.call(0x021D_3F64, &mut [Arg::PBuf(&mut c[0x18..0x28]), Arg::V(n)]);
     set_step(c, STEP_WAIT);
 }
 
 /// C: `FUN_overlay_d_93__021cd9b0`: cursor reset (`021d3f88`), step = the main step.
 pub fn restart_main<E: FlowEnv>(env: &mut E, c: &mut [u8]) {
-    env.call(0x021D_3F88, &mut [Arg::P]);
+    env.call(0x021D_3F88, &mut [Arg::PBuf(&mut c[0x18..0x28])]);
     set_step(c, STEP_MAIN);
 }
 
@@ -359,20 +368,22 @@ pub fn set_step(c: &mut [u8], step: u32) {
 
 /// Answers the request handler at `+0xC8` with the result block (`021eec4c(adapter, result ptr, result size)`).
 fn post_result<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
-    env.call(
+    env.callr(
         0x021E_EC4C,
         &mut [
             Arg::V(rd32(c, OFS_ADAPTER)),
             Arg::V(rd32(c, OFS_RESULT_PTR)),
             Arg::V(rd32(c, OFS_RESULT_SIZE)),
         ],
+        c,
     )
 }
 
 /// Runs the request handler at `+0xC8`: `(c->handler)(c, &c->handler_state)`.
-fn run_handler<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
+fn run_handler<E: FlowEnv>(env: &mut E, c: &mut [u8]) -> u32 {
     let h = rd32(c, OFS_HANDLER);
-    env.call(h & !1, &mut [Arg::P, Arg::P])
+    let state = c[OFS_HANDLER_STATE..].as_ptr() as usize;
+    env.call_held(c, h & !1, &mut [Arg::P, Arg::PHost(state)])
 }
 
 /// C: `sub_021cda18`: the main step (an 8-way jump table on the phase `+0x1A8`); `c_addr` is the object's address
@@ -390,24 +401,32 @@ fn run_handler<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
 /// * 5: once `02005e50()` is 0: `n = 021d3fa8(cursor)`, `02005ca4(0, 1)`, `021ba73c(server, n)`, `02006734(0)`.
 /// * 6: `021d3f4c(cursor)` -> phase 4.   7: 1.   Other phases: 0.
 pub fn main_step<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32) -> u32 {
-    env.call(0x021D_3FDC, &mut [Arg::P, Arg::P]);
+    let cursor = c[0x18..].as_ptr() as usize;
+    env.call_held(c, 0x021D_3FDC, &mut [Arg::P, Arg::PHost(cursor)]);
     let done = |c: &[u8]| (c[OFS_FLAGS] & FLAG_DONE != 0) as u32;
     match c[OFS_PHASE] {
         0 => {
-            let code = env.call(0x021E_EBE8, &mut [Arg::V(rd32(c, OFS_ADAPTER))]);
+            let code = env.callh(0x021E_EBE8, &mut [Arg::V(rd32(c, OFS_ADAPTER))], c);
             if c[OFS_MODE] == MODE_REPLAY && c[OFS_FLAGS] & (FLAG_10 | FLAG_20) != 0 && code == 0 {
                 return 0;
             }
             result_clear(c, c_addr);
             if code == 9 {
                 let mut p = [0u8; 4];
-                env.call(
+                env.callh(
                     0x021E_EC20,
                     &mut [Arg::V(rd32(c, OFS_ADAPTER)), Arg::Out(&mut p)],
+                    c,
                 );
-                // the adapter data lies in the block given to the client (`c`; the spec places it at `+0x1B8`)
-                let data = u32::from_le_bytes(p).wrapping_sub(c_addr) as usize;
-                let (w0, w1) = (rd32(c, data), rd32(c, data + 4));
+                // the adapter data lies in the block given to the client (`c`; the spec places it at `+0x1B8`);
+                // in the game it is the adapter's channel object (B16: read through `peek`)
+                let mut ext = [0u8; 8];
+                let (w0, w1) = if env.peek(u32::from_le_bytes(p), &mut ext) {
+                    (rd32(&ext, 0), rd32(&ext, 4))
+                } else {
+                    let data = u32::from_le_bytes(p).wrapping_sub(c_addr) as usize;
+                    (rd32(c, data), rd32(c, data + 4))
+                };
                 wr32(c, OFS_REQ_PAIR + 4, w1);
                 wr32(c, OFS_REQ_PAIR, w0);
                 wr32(c, OFS_HANDLER_STATE, 0);
@@ -418,15 +437,19 @@ pub fn main_step<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32) -> u32 {
                 return done(c);
             }
             let mut aux = [0u8; 4];
-            let h = env.call(0x021C_DD50, &mut [Arg::P, Arg::V(code), Arg::Out(&mut aux)]);
+            let h = env.callh(
+                0x021C_DD50,
+                &mut [Arg::P, Arg::V(code), Arg::Out(&mut aux)],
+                c,
+            );
             wr32(c, OFS_HANDLER, h);
             if u32::from_le_bytes(aux) != 0 {
-                if env.call(0x021D_3FAC, &mut [Arg::P]) == 0 {
+                if env.call(0x021D_3FAC, &mut [Arg::PBuf(&mut c[0x18..0x28])]) == 0 {
                     c[OFS_PHASE] = 6;
                     return 0;
                 }
             } else {
-                env.call(0x021D_3FC4, &mut [Arg::P]);
+                env.call(0x021D_3FC4, &mut [Arg::PBuf(&mut c[0x18..0x28])]);
             }
             wr32(c, OFS_HANDLER_STATE, 0);
             c[OFS_PHASE] = if rd32(c, OFS_HANDLER) != 0 { 1 } else { 2 };
@@ -439,7 +462,7 @@ pub fn main_step<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32) -> u32 {
             if c[OFS_FLAGS] & FLAG_DONE != 0 {
                 return 1;
             }
-            c[OFS_PHASE] = if env.call(0x021D_3F4C, &mut [Arg::P]) != 0 {
+            c[OFS_PHASE] = if env.call(0x021D_3F4C, &mut [Arg::PBuf(&mut c[0x18..0x28])]) != 0 {
                 4
             } else {
                 2
@@ -459,7 +482,7 @@ pub fn main_step<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32) -> u32 {
             done(c)
         }
         4 => {
-            if env.call(0x021D_3F60, &mut [Arg::P]) == 1 {
+            if env.call(0x021D_3F60, &mut [Arg::PBuf(&mut c[0x18..0x28])]) == 1 {
                 c[OFS_PHASE] = 7;
                 return 0;
             }
@@ -472,15 +495,19 @@ pub fn main_step<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32) -> u32 {
         }
         5 => {
             if env.sound(0x0200_5E50, &mut []) == 0 {
-                let n = env.call(0x021D_3FA8, &mut [Arg::P]);
+                let n = env.call(0x021D_3FA8, &mut [Arg::PBuf(&mut c[0x18..0x28])]);
                 env.sound(0x0200_5CA4, &mut [Arg::V(0), Arg::V(1)]);
-                env.call(0x021B_A73C, &mut [Arg::V(rd32(c, OFS_SERVER)), Arg::V(n)]);
+                env.callh(
+                    0x021B_A73C,
+                    &mut [Arg::V(rd32(c, OFS_SERVER)), Arg::V(n)],
+                    c,
+                );
                 env.sound(0x0200_6734, &mut [Arg::V(0)]);
             }
             0
         }
         6 => {
-            if env.call(0x021D_3F4C, &mut [Arg::P]) != 0 {
+            if env.call(0x021D_3F4C, &mut [Arg::PBuf(&mut c[0x18..0x28])]) != 0 {
                 c[OFS_PHASE] = 4;
             }
             0
@@ -502,11 +529,12 @@ pub fn main_step<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32) -> u32 {
 /// * 4: with a view, `021eae34(view)` and `02005e50() == 0`: `n = (u16) 021d3fa8(cursor)`, `021eae74(view, n, n)`,
 ///   `021ba7f8(server)`.
 pub fn wait_step<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32) -> u32 {
-    env.call(0x021D_3FDC, &mut [Arg::P, Arg::P]);
+    let cursor = c[0x18..].as_ptr() as usize;
+    env.call_held(c, 0x021D_3FDC, &mut [Arg::P, Arg::PHost(cursor)]);
     match c[OFS_PHASE] {
         0 | 1 => {
             c[OFS_PHASE] = 1;
-            if env.call(0x021D_3F98, &mut [Arg::P]) != 0 {
+            if env.call(0x021D_3F98, &mut [Arg::PBuf(&mut c[0x18..0x28])]) != 0 {
                 let view = rd32(c, OFS_VIEW);
                 if view != 0 {
                     env.sound(0x0200_5CA4, &mut [Arg::V(1), Arg::V(1)]);
@@ -518,11 +546,11 @@ pub fn wait_step<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32) -> u32 {
                 c[OFS_PHASE] = 4;
                 return 0;
             }
-            let code = env.call(0x021E_EBE8, &mut [Arg::V(rd32(c, OFS_ADAPTER))]);
+            let code = env.callh(0x021E_EBE8, &mut [Arg::V(rd32(c, OFS_ADAPTER))], c);
             if code == 0 {
                 return 0;
             }
-            let h = env.call(0x021C_DD50, &mut [Arg::P, Arg::V(code), Arg::V(0)]);
+            let h = env.callh(0x021C_DD50, &mut [Arg::P, Arg::V(code), Arg::V(0)], c);
             wr32(c, OFS_HANDLER, h);
             if h != 0 {
                 c[OFS_PHASE] = 2;
@@ -555,12 +583,12 @@ pub fn wait_step<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32) -> u32 {
                 && env.view(0x021E_AE34, &mut [Arg::V(view)]) != 0
                 && env.sound(0x0200_5E50, &mut []) == 0
             {
-                let n = env.call(0x021D_3FA8, &mut [Arg::P]) & 0xFFFF;
+                let n = env.call(0x021D_3FA8, &mut [Arg::PBuf(&mut c[0x18..0x28])]) & 0xFFFF;
                 env.view(
                     0x021E_AE74,
                     &mut [Arg::V(rd32(c, OFS_VIEW)), Arg::V(n), Arg::V(n)],
                 );
-                env.call(0x021B_A7F8, &mut [Arg::V(rd32(c, OFS_SERVER))]);
+                env.callh(0x021B_A7F8, &mut [Arg::V(rd32(c, OFS_SERVER))], c);
             }
             0
         }

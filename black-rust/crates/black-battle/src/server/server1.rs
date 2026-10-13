@@ -174,21 +174,27 @@ pub fn proc_init<E: FlowEnv>(
             let h = heap(mem, m);
             let v = env.call(0x021E_F958, &mut [Arg::V(h)]);
             mem.w32(m + 0x2BC, v);
-            env.call(0x021B_93E0, &mut [Arg::P, Arg::P, Arg::V(0)]);
-            env.call(0x021B_93E0, &mut [Arg::P, Arg::P, Arg::V(1)]);
-            env.call(0x021B_A82C, &mut [Arg::P]);
+            env.call(
+                0x021B_93E0,
+                &mut [Arg::PAt(m + 0xC8), Arg::PAt(m), Arg::V(0)],
+            );
+            env.call(
+                0x021B_93E0,
+                &mut [Arg::PAt(m + 0x1B0), Arg::PAt(m), Arg::V(1)],
+            );
+            env.call(0x021B_A82C, &mut [Arg::PAt(setup_p)]);
             mem.w32(m + 0x2C0, 0);
             mem.w32(m + 0x2C4, 0);
             if mem.r8(setup(mem, m) + 0x23) == 0 {
-                env.call(0x0203_F258, &mut [Arg::P]);
+                env.call(0x0203_F258, &mut [Arg::PAt(m + M_BLOCK18)]);
             } else {
-                let b = mem.bytes(setup_p + 0x9C, 0x18).to_vec();
-                mem.bytes_mut(m + M_BLOCK18, 0x18).copy_from_slice(&b);
+                let b = mem.read_vec(setup_p + 0x9C, 0x18);
+                mem.write_bytes(m + M_BLOCK18, &b);
             }
             let h = heap(mem, m);
-            env.call(0x021D_7840, &mut [Arg::P, Arg::V(h)]);
+            env.call(0x021D_7840, &mut [Arg::PAt(m + M_BLOCK18), Arg::V(h)]);
             env.call(0x021C_D6EC, &mut []);
-            let v = env.call(0x021D_7F88, &mut [Arg::P]);
+            let v = env.call(0x021D_7F88, &mut [Arg::PAt(setup_p)]);
             mem.w32(m + 0x430, v);
             mem.w32(m + 0x434, 0);
             mem.w32(m + 0x438, 0);
@@ -199,7 +205,7 @@ pub fn proc_init<E: FlowEnv>(
                     mem.w8(s + i + 0x44, 0);
                 }
             }
-            env.call(0x021D_8230, &mut [Arg::P]);
+            env.call(0x021D_8230, &mut [Arg::PAt(m + 0x448)]);
             let w = mem.r32(setup_p + 0x5C);
             let v = u8::from(env.call(0x0200_83C8, &mut [Arg::V(w)]) != 0);
             mem.w8(m + 0x46F, v);
@@ -542,12 +548,13 @@ pub fn own_party<E: FlowEnv>(env: &mut E, mem: &Mem, m: u32, k: u32) {
     let side = env.call(0x021B_A710, &mut [Arg::V(own), Arg::V(k)]);
     let base = s.wrapping_add(side.wrapping_mul(4));
     let p = mem.r32(base + 0x48);
+    let rec = m + 0x20 + 0x28 * k;
     if mem.r32(p) != 0 {
-        env.call(0x021B_9E7C, &mut [Arg::P, Arg::V(p)]);
+        env.call(0x021B_9E7C, &mut [Arg::PAt(rec), Arg::V(p)]);
     } else {
         let h = heap(mem, m);
         let w = mem.r32(base + 0x34);
-        env.call(0x021B_9E38, &mut [Arg::P, Arg::V(h), Arg::V(w)]);
+        env.call(0x021B_9E38, &mut [Arg::PAt(rec), Arg::V(h), Arg::V(w)]);
     }
 }
 
@@ -582,9 +589,9 @@ pub fn own_parties<E: FlowEnv>(env: &mut E, mem: &Mem, m: u32, setup_p: u32) {
     if mem.r8(setup_p + 0x23) == 0 {
         let h = heap(mem, m);
         let w = mem.r32(m + M_C0);
-        env.call(0x021B_9E38, &mut [Arg::P, Arg::V(h), Arg::V(w)]);
+        env.call(0x021B_9E38, &mut [Arg::PAt(m + 0x20), Arg::V(h), Arg::V(w)]);
         let p = mem.r32(setup_p + 0x4C);
-        env.call(0x021B_9E7C, &mut [Arg::P, Arg::V(p)]);
+        env.call(0x021B_9E7C, &mut [Arg::PAt(m + 0x48), Arg::V(p)]);
     } else {
         own_party(env, mem, m, 0);
         own_party(env, mem, m, 1);
@@ -616,7 +623,13 @@ pub fn view_create<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, setup_p: u32,
     };
     let v = env.call(
         0x021E_8F20,
-        &mut [Arg::P, Arg::V(c), Arg::P, Arg::V(mode), Arg::V(0x13)],
+        &mut [
+            Arg::PAt(m),
+            Arg::V(c),
+            Arg::PAt(m + 0xC8),
+            Arg::V(mode),
+            Arg::V(0x13),
+        ],
     );
     mem.w32(m + M_VIEW, v);
     env.call(0x021C_D95C, &mut [Arg::V(c), Arg::V(v)]);
@@ -624,11 +637,12 @@ pub fn view_create<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, setup_p: u32,
 
 /// The party-container setup shared by the local sub-procs: `021b93e0(M + 0xC8, M, 0)`, `021b9460(.., 0 / 1)`, then the same
 /// for `M + 0x1B0` with side 1.
-fn pokecon_init<E: FlowEnv>(env: &mut E) {
+fn pokecon_init<E: FlowEnv>(env: &mut E, m: u32) {
     for side in 0..2 {
-        env.call(0x021B_93E0, &mut [Arg::P, Arg::P, Arg::V(side)]);
-        env.call(0x021B_9460, &mut [Arg::P, Arg::P, Arg::V(0)]);
-        env.call(0x021B_9460, &mut [Arg::P, Arg::P, Arg::V(1)]);
+        let pc = m + if side == 0 { 0xC8 } else { 0x1B0 };
+        env.call(0x021B_93E0, &mut [Arg::PAt(pc), Arg::PAt(m), Arg::V(side)]);
+        env.call(0x021B_9460, &mut [Arg::PAt(pc), Arg::PAt(m), Arg::V(0)]);
+        env.call(0x021B_9460, &mut [Arg::PAt(pc), Arg::PAt(m), Arg::V(1)]);
     }
 }
 
@@ -637,7 +651,13 @@ fn server_create<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, mode: u32) {
     let h = heap(mem, m);
     let sv = env.call(
         0x021B_A9C8,
-        &mut [Arg::P, Arg::P, Arg::P, Arg::V(mode), Arg::V(h)],
+        &mut [
+            Arg::PAt(m),
+            Arg::PAt(m + M_BLOCK18),
+            Arg::PAt(m + 0x1B0),
+            Arg::V(mode),
+            Arg::V(h),
+        ],
     );
     mem.w32(m + M_SERVER, sv);
 }
@@ -660,8 +680,8 @@ fn client_create<E: FlowEnv>(
     env.call(
         0x021C_D6F0,
         &mut [
-            Arg::P,
-            Arg::P,
+            Arg::PAt(m),
+            Arg::PAt(m + 0xC8),
             Arg::V(0),
             Arg::V(w),
             Arg::V(id),
@@ -669,7 +689,7 @@ fn client_create<E: FlowEnv>(
             Arg::V(a6),
             Arg::V(mode),
             Arg::V(comm),
-            Arg::P,
+            Arg::PAt(m + M_BLOCK18),
             Arg::V(h),
         ],
     )
@@ -728,7 +748,7 @@ pub fn subproc_local_single<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, entr
     mem.w8(m + M_CLIENT_COUNT, 2);
     set_positions(mem, m, &[0, 1]);
     own_client_init(env, mem, m, s, entry_r3);
-    pokecon_init(env);
+    pokecon_init(env, m);
     server_create(env, mem, m, mode);
     mem.w8(m + M_IS_SERVER, 1);
     own_parties(env, mem, m, s);
@@ -749,8 +769,8 @@ pub fn subproc_exit<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
             env.call(0x021C_D8E0, &mut [Arg::V(c)]);
         }
     }
-    env.call(0x021B_9674, &mut [Arg::P]);
-    env.call(0x021B_9674, &mut [Arg::P]);
+    env.call(0x021B_9674, &mut [Arg::PAt(m + 0xC8)]);
+    env.call(0x021B_9674, &mut [Arg::PAt(m + 0x1B0)]);
     for ofs in [8, 0xC] {
         let sv = mem.r32(m + ofs);
         if sv != 0 {
@@ -770,7 +790,7 @@ pub fn subproc_local_double<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, entr
     mem.w8(m + M_CLIENT_COUNT, 2);
     set_positions(mem, m, &[0, 1, 0, 1]);
     own_client_init(env, mem, m, s, entry_r3);
-    pokecon_init(env);
+    pokecon_init(env, m);
     own_parties(env, mem, m, s);
     server_create(env, mem, m, mode);
     mem.w8(m + M_IS_SERVER, 1);
@@ -875,7 +895,7 @@ pub fn subproc_local_triple<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, entr
     mem.w8(m + M_IS_SERVER, 1);
     set_positions(mem, m, &[0, 1, 0, 1, 0, 1]);
     own_client_init(env, mem, m, s, entry_r3);
-    pokecon_init(env);
+    pokecon_init(env, m);
     own_parties(env, mem, m, s);
     server_create(env, mem, m, mode);
     mem.w8(m + M_IS_SERVER, 1);
@@ -896,7 +916,7 @@ pub fn subproc_local_rotation<E: FlowEnv>(
     mem.w8(m + M_CLIENT_COUNT, 2);
     set_positions(mem, m, &[0, 1, 0, 1, 0, 1]);
     own_client_init(env, mem, m, s, entry_r3);
-    pokecon_init(env);
+    pokecon_init(env, m);
     server_create(env, mem, m, mode);
     mem.w8(m + M_IS_SERVER, 1);
     own_parties(env, mem, m, s);

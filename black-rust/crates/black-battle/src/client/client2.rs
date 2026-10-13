@@ -17,7 +17,7 @@
 
 use super::{rd16, rd32, wr16, wr32, ClientUi};
 use crate::calc::u32_div;
-use crate::server_flow::env::{Arg, FlowEnv};
+use crate::server_flow::env::{Arg, FlowEnv, Lend};
 
 /// Functions of this area that are ported and checked by `tests::svflow_match_rom`.
 pub const PORTED: &[u32] = &[
@@ -151,19 +151,21 @@ fn answer_addr(c_addr: u32, i: u8) -> u32 {
 
 /// `021b990c(pokecon, client id, i)`: the `i`-th mon of this client.
 fn client_mon<E: FlowEnv>(env: &mut E, c: &[u8], i: u32) -> u32 {
-    env.call(
+    env.callr(
         0x021B_990C,
         &mut [
             Arg::V(rd32(c, OFS_POKECON)),
             Arg::V(c[OFS_ID] as u32),
             Arg::V(i),
         ],
+        c,
     )
 }
 
-/// `021d8434(rec)`: marks an answer record "skip".
-fn rec_skip<E: FlowEnv>(env: &mut E) {
-    env.call(0x021D_8434, &mut [Arg::P]);
+/// `021d8434(rec)`: marks the answer record at `c + ofs` "skip".
+fn rec_skip<E: FlowEnv>(env: &mut E, c: &mut [u8], ofs: usize) {
+    let rec = c[ofs..].as_ptr() as usize;
+    env.callh(0x021D_8434, &mut [Arg::PHost(rec)], c);
 }
 
 /// `021eaf18(buf, kind, id)`: starts a message in the message buffer at address `buf`.
@@ -198,7 +200,7 @@ fn msg_done<E: ClientUi>(env: &mut E, c: &[u8]) -> bool {
 pub fn req1_step<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u32 {
     match st(state) {
         0 => {
-            let four = env.call(0x021B_86B8, &mut [Arg::V(rd32(c, OFS_SERVER))]) == 4;
+            let four = env.callh(0x021B_86B8, &mut [Arg::V(rd32(c, OFS_SERVER))], c) == 4;
             env.view(0x021E_90A0, &mut [Arg::V(view(c)), Arg::V(four as u32)]);
             set_st(state, st(state).wrapping_add(1));
             0
@@ -208,9 +210,9 @@ pub fn req1_step<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u3
                 return 0;
             }
             let server = rd32(c, OFS_SERVER);
-            let bgm = env.call(0x021B_A5C4, &mut [Arg::V(server)]);
+            let bgm = env.callh(0x021B_A5C4, &mut [Arg::V(server)], c);
             wr16(c, OFS_BGM, bgm as u16);
-            let se = env.call(0x021B_A5D0, &mut [Arg::V(rd32(c, OFS_SERVER))]);
+            let se = env.callh(0x021B_A5D0, &mut [Arg::V(rd32(c, OFS_SERVER))], c);
             wr16(c, OFS_SE, se as u16);
             if rd16(c, OFS_BGM) != 0 || rd16(c, OFS_SE) != 0 {
                 env.sound(0x021F_84E8, &mut [Arg::V(rd16(c, OFS_SE) as u32)]);
@@ -219,8 +221,8 @@ pub fn req1_step<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u3
                 }
             }
             store_active_hp(env, c);
-            if env.call(0x021C_D9E0, &mut [Arg::P]) != 0 {
-                let n = env.call(0x021D_3FA8, &mut [Arg::P]) & 0xFFFF;
+            if env.call_held(c, 0x021C_D9E0, &mut [Arg::P]) != 0 {
+                let n = env.call(0x021D_3FA8, &mut [Arg::PBuf(&mut c[0x18..0x28])]) & 0xFFFF;
                 env.view(0x021E_AEA8, &mut [Arg::V(view(c)), Arg::V(n)]);
             }
             1
@@ -233,20 +235,22 @@ pub fn req1_step<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u3
 /// id)`, `021d3f54(cursor)`; returns `r`. Without a view: `021ee688(reader, client id)`, returns 1.
 pub fn req1_replay<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u32 {
     if view(c) == 0 {
-        env.call(
+        env.callh(
             0x021E_E688,
             &mut [Arg::V(rd32(c, OFS_READER)), Arg::V(c[OFS_ID] as u32)],
+            c,
         );
         return 1;
     }
     let r = req1_step(env, c, state);
     if r != 0
-        && env.call(
+        && env.callh(
             0x021E_E688,
             &mut [Arg::V(rd32(c, OFS_READER)), Arg::V(c[OFS_ID] as u32)],
+            c,
         ) != 0
     {
-        env.call(0x021D_3F54, &mut [Arg::P]);
+        env.call(0x021D_3F54, &mut [Arg::PBuf(&mut c[0x18..0x28])]);
     }
     r
 }
@@ -255,7 +259,7 @@ pub fn req1_replay<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> 
 pub fn store_active_hp<E: FlowEnv>(env: &mut E, c: &mut [u8]) {
     let mon = active_mon(env, c);
     if mon != 0 {
-        let hp = env.call(0x021D_59B4, &mut [Arg::V(mon), Arg::V(0xD)]);
+        let hp = env.callh(0x021D_59B4, &mut [Arg::V(mon), Arg::V(0xD)], c);
         wr16(c, OFS_HP_REF, hp as u16);
     }
 }
@@ -268,7 +272,7 @@ pub fn hp_drop_percent<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
     if mon == 0 {
         return 0;
     }
-    let hp = env.call(0x021D_59B4, &mut [Arg::V(mon), Arg::V(0xD)]);
+    let hp = env.callr(0x021D_59B4, &mut [Arg::V(mon), Arg::V(0xD)], c);
     let reference = rd16(c, OFS_HP_REF) as u32;
     if hp >= reference {
         return 0;
@@ -280,19 +284,21 @@ pub fn hp_drop_percent<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
 /// is nonzero, else `021b9920(pokecon, 021b9064(server, client id, 0) & 0xFF, 0)`.
 pub fn active_mon<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
     let server = rd32(c, OFS_SERVER);
-    if env.call(0x021B_8588, &mut [Arg::V(server)]) != 0 {
+    if env.callr(0x021B_8588, &mut [Arg::V(server)], c) != 0 {
         return 0;
     }
-    if env.call(0x021B_86C0, &mut [Arg::V(server)]) != 0 {
+    if env.callr(0x021B_86C0, &mut [Arg::V(server)], c) != 0 {
         return 0;
     }
-    let pos = env.call(
+    let pos = env.callr(
         0x021B_9064,
         &mut [Arg::V(server), Arg::V(c[OFS_ID] as u32), Arg::V(0)],
+        c,
     );
-    env.call(
+    env.callr(
         0x021B_9920,
         &mut [Arg::V(rd32(c, OFS_POKECON)), Arg::V(pos & 0xFF), Arg::V(0)],
+        c,
     )
 }
 
@@ -433,12 +439,12 @@ pub fn fade_end<E: ClientUi>(env: &mut E, c: &[u8]) {
 /// C: `FUN_overlay_d_93__021ce0f8`: the "what will `<mon>` do" message into the buffer `buf`: battle type 3 (`021b8588`) ->
 /// message 0x46 with the client id, else message 0x45 with `021d5440(mon)`; then `021eaf78(buf, 0)`.
 pub fn sent_out_message<E: ClientUi>(env: &mut E, c: &[u8], mon: u32, buf: u32) {
-    if env.call(0x021B_8588, &mut [Arg::V(rd32(c, OFS_SERVER))]) == 3 {
+    if env.callr(0x021B_8588, &mut [Arg::V(rd32(c, OFS_SERVER))], c) == 3 {
         env.view(0x021E_AF18, &mut [Arg::V(buf), Arg::V(1), Arg::V(0x46)]);
         env.view(0x021E_AF50, &mut [Arg::V(buf), Arg::V(c[OFS_ID] as u32)]);
     } else {
         env.view(0x021E_AF18, &mut [Arg::V(buf), Arg::V(1), Arg::V(0x45)]);
-        let name = env.call(0x021D_5440, &mut [Arg::V(mon)]);
+        let name = env.callr(0x021D_5440, &mut [Arg::V(mon)], c);
         env.view(0x021E_AF50, &mut [Arg::V(buf), Arg::V(name)]);
     }
     env.view(0x021E_AF78, &mut [Arg::V(buf), Arg::V(0)]);
@@ -451,9 +457,10 @@ pub fn set_callback(c: &mut [u8], cb: u32) {
 }
 
 /// C: `FUN_overlay_d_93__021ce160`: runs the pending callback `(c->cb)(c, &c->cb_state)`; returns its answer.
-pub fn run_callback<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
+pub fn run_callback<E: FlowEnv>(env: &mut E, c: &mut [u8]) -> u32 {
     let cb = rd32(c, OFS_CB);
-    env.call(cb & !1, &mut [Arg::P, Arg::P])
+    let state = c[OFS_CB_STATE..].as_ptr() as usize;
+    env.call_held(c, cb & !1, &mut [Arg::P, Arg::PHost(state)])
 }
 
 /// C: `sub_021ce170`: request 3, mode 0 (the action selection). State 0: callback [`select_start`], [`fade_start`], state 1.
@@ -495,7 +502,7 @@ pub fn req3_replay<E: ClientUi>(
                 return 1;
             }
             let (mut count, mut more) = ([0u8; 1], [0u8; 1]);
-            let rec = env.call(
+            let rec = env.callh(
                 0x021E_E6B8,
                 &mut [
                     Arg::V(rd32(c, OFS_READER)),
@@ -503,18 +510,19 @@ pub fn req3_replay<E: ClientUi>(
                     Arg::Out(&mut count),
                     Arg::Out(&mut more),
                 ],
+                c,
             );
             if more[0] != 0 {
-                env.call(0x021D_3F54, &mut [Arg::P]);
+                env.call(0x021D_3F54, &mut [Arg::PBuf(&mut c[0x18..0x28])]);
             }
             wr32(c, OFS_RESULT_PTR, rec);
             wr32(c, OFS_RESULT_SIZE, 4 * count[0] as u32);
             let kind = rd32(recs, rec.wrapping_sub(recs_addr) as usize) & 0xF;
             match kind {
                 8 => {
-                    env.call(0x021D_3FD0, &mut [Arg::P]);
+                    env.call(0x021D_3FD0, &mut [Arg::PBuf(&mut c[0x18..0x28])]);
                     if view(c) != 0 {
-                        msg_start(env, msg_buf(c_addr), 1, 0xB7);
+                        msg_start(&mut Lend::h(env, c), msg_buf(c_addr), 1, 0xB7);
                         env.view(0x021E_A614, &mut [Arg::V(view(c)), Arg::P]);
                         set_st(state, st(state).wrapping_add(1));
                         return 0;
@@ -525,9 +533,9 @@ pub fn req3_replay<E: ClientUi>(
                 }
                 9 => {
                     c[OFS_FLAGS] |= 0x20;
-                    env.call(0x021D_3FD0, &mut [Arg::P]);
+                    env.call(0x021D_3FD0, &mut [Arg::PBuf(&mut c[0x18..0x28])]);
                     if view(c) != 0 {
-                        msg_start(env, msg_buf(c_addr), 1, 0xB8);
+                        msg_start(&mut Lend::h(env, c), msg_buf(c_addr), 1, 0xB8);
                         env.view(0x021E_A614, &mut [Arg::V(view(c)), Arg::P]);
                         set_st(state, st(state).wrapping_add(2));
                         return 0;
@@ -561,7 +569,7 @@ pub fn req3_replay<E: ClientUi>(
 /// size 4.
 pub fn answer_skip<E: FlowEnv>(env: &mut E, c: &mut [u8], c_addr: u32) {
     wr32(c, OFS_REC, c_addr.wrapping_add(OFS_ANSWERS as u32));
-    rec_skip(env);
+    rec_skip(env, c, OFS_ANSWERS);
     wr32(c, OFS_RESULT_PTR, rd32(c, OFS_REC));
     wr32(c, OFS_RESULT_SIZE, 4);
 }
@@ -575,25 +583,28 @@ pub fn select_start<E: FlowEnv>(env: &mut E, c: &mut [u8]) -> u32 {
     c[OFS_SHOWN] = 0xFF;
     c[OFS_FIRST] = 0;
     c[OFS_FLAGS] &= !4;
-    env.call(
+    // (c, 0, count, &c[0x184] party view block, &c[0x190])
+    let (blk, extra) = (c[0x184..].as_ptr() as usize, c[0x190..].as_ptr() as usize);
+    env.callh(
         0x021D_0B10,
         &mut [
             Arg::P,
             Arg::V(0),
             Arg::V(c[OFS_COUNT] as u32),
-            Arg::P,
-            Arg::P,
+            Arg::PHost(blk),
+            Arg::PHost(extra),
         ],
+        c,
     );
     clear_130(c);
     clear_1a0(c);
-    for _ in 0..3 {
-        rec_skip(env);
+    for i in 0..3 {
+        rec_skip(env, c, OFS_ANSWERS + 4 * i);
     }
     let mut i = 0u32;
     while i < c[OFS_COUNT] as u32 {
         let mon = client_mon(env, c, i & 0xFF);
-        if mon_answered(env, mon, 0) == 0 {
+        if mon_answered(&mut Lend::h(env, c), mon, 0) == 0 {
             c[OFS_FIRST] = i as u8;
             break;
         }
@@ -628,24 +639,34 @@ pub fn select_finish<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state:
                 let mon = client_mon(env, c, c[OFS_CUR] as u32);
                 wr32(c, OFS_MON, mon);
                 wr32(c, OFS_REC, answer_addr(c_addr, c[OFS_CUR]));
-                rec_skip(env);
-                if mon_answered(env, rd32(c, OFS_MON), rd32(c, OFS_REC)) == 0 {
-                    let r = env.call(0x021C_F81C, &mut [Arg::P, Arg::V(rd32(c, OFS_MON)), Arg::P]);
+                let rec = rd32(c, OFS_REC);
+                rec_skip(env, c, rec.wrapping_sub(c_addr) as usize);
+                let mon = rd32(c, OFS_MON);
+                if mon_answered(&mut Lend::h(env, c), mon, rec) == 0 {
+                    let r = env.callh(
+                        0x021C_F81C,
+                        &mut [Arg::P, Arg::V(rd32(c, OFS_MON)), Arg::P],
+                        c,
+                    );
                     if r < 4 {
-                        let n = env.call(0x021D_54C0, &mut [Arg::V(rd32(c, OFS_MON)), Arg::V(r)]);
-                        let t = env.call(
+                        let n =
+                            env.callh(0x021D_54C0, &mut [Arg::V(rd32(c, OFS_MON)), Arg::V(r)], c);
+                        // the saved RNG context buffer at c + 0x38
+                        let sv = c[0x38..].as_ptr() as usize;
+                        let t = env.callh(
                             0x021D_81F8,
                             &mut [
                                 Arg::V(rd32(c, OFS_SERVER)),
                                 Arg::V(rd32(c, OFS_POKECON)),
                                 Arg::V(rd32(c, OFS_MON)),
                                 Arg::V(n),
-                                Arg::P,
+                                Arg::PHost(sv),
                             ],
+                            c,
                         );
-                        env.call(0x021D_82D0, &mut [Arg::P, Arg::V(n), Arg::V(t)]);
+                        env.callh(0x021D_82D0, &mut [Arg::PAt(rec), Arg::V(n), Arg::V(t)], c);
                     } else {
-                        struggle(env, c, rd32(c, OFS_MON));
+                        struggle(env, rec, c, rd32(c, OFS_MON));
                     }
                 }
                 c[OFS_CUR] = c[OFS_CUR].wrapping_add(1);
@@ -689,8 +710,10 @@ pub fn select_loop<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &
             wr32(c, OFS_MON, mon);
             wr32(c, OFS_REC, answer_addr(c_addr, c[OFS_CUR]));
             c[OFS_1AF] = 0;
-            rec_skip(env);
-            if mon_answered(env, rd32(c, OFS_MON), rd32(c, OFS_REC)) != 0 {
+            let rec = rd32(c, OFS_REC);
+            rec_skip(env, c, rec.wrapping_sub(c_addr) as usize);
+            let mon = rd32(c, OFS_MON);
+            if mon_answered(&mut Lend::h(env, c), mon, rec) != 0 {
                 set_callback(c, CB_NEXT);
                 return 0;
             }
@@ -742,10 +765,15 @@ pub fn select_loop<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &
                     set_callback(c, CB_FIGHT);
                 }
                 2 => {
-                    if env.call(0x021D_62C4, &mut [Arg::V(rd32(c, OFS_MON)), Arg::V(0x21)]) != 0 {
+                    if env.callh(
+                        0x021D_62C4,
+                        &mut [Arg::V(rd32(c, OFS_MON)), Arg::V(0x21)],
+                        c,
+                    ) != 0
+                    {
                         set_st(state, 6);
                     } else if c[OFS_1AA] == 1
-                        && env.call(0x021B_A1EC, &mut [Arg::V(rd32(c, OFS_SERVER))]) == 0
+                        && env.callh(0x021B_A1EC, &mut [Arg::V(rd32(c, OFS_SERVER))], c) == 0
                     {
                         env.view(0x021E_9964, &mut [Arg::V(view(c))]);
                         set_st(state, 5);
@@ -754,7 +782,12 @@ pub fn select_loop<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &
                     }
                 }
                 3 => {
-                    if env.call(0x021D_62C4, &mut [Arg::V(rd32(c, OFS_MON)), Arg::V(0x21)]) != 0 {
+                    if env.callh(
+                        0x021D_62C4,
+                        &mut [Arg::V(rd32(c, OFS_MON)), Arg::V(0x21)],
+                        c,
+                    ) != 0
+                    {
                         env.view(0x021E_9964, &mut [Arg::V(view(c))]);
                         set_st(state, 6);
                     } else {
@@ -764,8 +797,12 @@ pub fn select_loop<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &
                 }
                 4 => {
                     if c[OFS_CUR] == c[OFS_FIRST] {
-                        if env.call(0x021D_62C4, &mut [Arg::V(rd32(c, OFS_MON)), Arg::V(0x21)]) != 0
-                            && env.call(0x021B_86E4, &mut [Arg::V(rd32(c, OFS_SERVER))]) != 2
+                        if env.callh(
+                            0x021D_62C4,
+                            &mut [Arg::V(rd32(c, OFS_MON)), Arg::V(0x21)],
+                            c,
+                        ) != 0
+                            && env.callh(0x021B_86E4, &mut [Arg::V(rd32(c, OFS_SERVER))], c) != 2
                         {
                             set_st(state, 6);
                         } else {
@@ -780,7 +817,7 @@ pub fn select_loop<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &
                     loop {
                         c[OFS_CUR] = c[OFS_CUR].wrapping_sub(1);
                         let mon = client_mon(env, c, c[OFS_CUR] as u32);
-                        if mon_answered(env, mon, 0) == 0 {
+                        if mon_answered(&mut Lend::h(env, c), mon, 0) == 0 {
                             break;
                         }
                         if c[OFS_CUR] == 0 {
@@ -789,10 +826,13 @@ pub fn select_loop<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &
                     }
                     let used = get_130(c, c[OFS_CUR] as u32);
                     c[OFS_COUNTER] = c[OFS_COUNTER].wrapping_add(used);
-                    if env.call(0x021D_8454, &mut [Arg::P]) == 3 {
-                        env.call(0x021C_E7C4, &mut [Arg::P]);
+                    let rec = answer_addr(c_addr, c[OFS_CUR]);
+                    if env.callh(0x021D_8454, &mut [Arg::PAt(rec)], c) == 3 {
+                        let p = c[0x190..].as_ptr() as usize;
+                        env.callh(0x021C_E7C4, &mut [Arg::PHost(p)], c);
                     }
-                    if env.call(0x021D_8454, &mut [Arg::P]) == 2 {
+                    let rec = answer_addr(c_addr, c[OFS_CUR]);
+                    if env.callh(0x021D_8454, &mut [Arg::PAt(rec)], c) == 2 {
                         clear_1a0_slot(env, c, c[OFS_CUR] as u32);
                     }
                     set_callback(c, CB_SELECT);
@@ -811,9 +851,9 @@ pub fn select_loop<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &
         }
         7 => {
             if env.view(0x021E_9974, &mut [Arg::V(view(c))]) != 0 {
-                msg_start(env, msg_buf(c_addr), 1, 0xC5);
-                let name = env.call(0x021D_5440, &mut [Arg::V(rd32(c, OFS_MON))]);
-                msg_arg(env, msg_buf(c_addr), name);
+                msg_start(&mut Lend::h(env, c), msg_buf(c_addr), 1, 0xC5);
+                let name = env.callh(0x021D_5440, &mut [Arg::V(rd32(c, OFS_MON))], c);
+                msg_arg(&mut Lend::h(env, c), msg_buf(c_addr), name);
                 print_message(env, c);
                 next(state);
             }
@@ -834,9 +874,17 @@ pub fn item_anim<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u3
     match st(state) {
         0 => {
             let server = rd32(c, OFS_SERVER);
-            let id = env.call(0x021B_904C, &mut [Arg::V(server), Arg::V(0)]);
-            let bag = env.call(0x021B_A004, &mut [Arg::V(rd32(c, OFS_SERVER)), Arg::V(id)]);
-            let who = env.call(0x021B_A020, &mut [Arg::V(rd32(c, OFS_SERVER)), Arg::V(id)]);
+            let id = env.callh(0x021B_904C, &mut [Arg::V(server), Arg::V(0)], c);
+            let bag = env.callh(
+                0x021B_A004,
+                &mut [Arg::V(rd32(c, OFS_SERVER)), Arg::V(id)],
+                c,
+            );
+            let who = env.callh(
+                0x021B_A020,
+                &mut [Arg::V(rd32(c, OFS_SERVER)), Arg::V(id)],
+                c,
+            );
             env.sound(
                 0x021F_7F58,
                 &mut [Arg::V(who), Arg::V(9), Arg::V(0), Arg::V(0), Arg::V(0)],
@@ -852,8 +900,12 @@ pub fn item_anim<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u3
             );
             let mut next = 2;
             if (rd16(c, OFS_ITEM).wrapping_sub(0x13)) <= 1 {
-                let who = env.call(0x021B_A020, &mut [Arg::V(rd32(c, OFS_SERVER)), Arg::V(id)]);
-                if env.call(0x021D_7F38, &mut [Arg::V(who)]) != 0 && c[OFS_FLAGS] & 1 == 0 {
+                let who = env.callh(
+                    0x021B_A020,
+                    &mut [Arg::V(rd32(c, OFS_SERVER)), Arg::V(id)],
+                    c,
+                );
+                if env.callh(0x021D_7F38, &mut [Arg::V(who)], c) != 0 && c[OFS_FLAGS] & 1 == 0 {
                     env.sound(0x021F_87EC, &mut [Arg::V(0x47B)]);
                     if env.sound(0x021F_8774, &mut []) == 0 {
                         env.sound(0x0200_5E30, &mut [Arg::V(8)]);
@@ -891,26 +943,31 @@ pub fn item_anim<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u3
 /// pointer and answers 1), else `None` (0).
 pub fn item_shortcut<E: FlowEnv>(env: &mut E, c: &mut [u8]) -> Option<u16> {
     let server = rd32(c, OFS_SERVER);
-    if env.call(0x021B_86B8, &mut [Arg::V(server)]) != 1 {
+    if env.callh(0x021B_86B8, &mut [Arg::V(server)], c) != 1 {
         return None;
     }
-    let id = env.call(0x021B_904C, &mut [Arg::V(server), Arg::V(0)]);
-    let bag = env.call(0x021B_A004, &mut [Arg::V(server), Arg::V(id)]);
+    let id = env.callh(0x021B_904C, &mut [Arg::V(server), Arg::V(0)], c);
+    let bag = env.callh(0x021B_A004, &mut [Arg::V(server), Arg::V(id)], c);
     if bag == 0 {
         return None;
     }
     let pokecon = rd32(c, OFS_POKECON);
-    let party = env.call(0x021B_9AEC, &mut [Arg::V(pokecon), Arg::V(id)]);
-    let mut mon = env.call(0x021B_990C, &mut [Arg::V(pokecon), Arg::V(id), Arg::V(0)]);
-    if env.call(0x021D_5B68, &mut [Arg::V(mon)]) != 0 {
-        let n = env.call(0x021B_99B8, &mut [Arg::V(server), Arg::V(id)]);
+    let party = env.callh(0x021B_9AEC, &mut [Arg::V(pokecon), Arg::V(id)], c);
+    let mut mon = env.callh(
+        0x021B_990C,
+        &mut [Arg::V(pokecon), Arg::V(id), Arg::V(0)],
+        c,
+    );
+    if env.callh(0x021D_5B68, &mut [Arg::V(mon)], c) != 0 {
+        let n = env.callh(0x021B_99B8, &mut [Arg::V(server), Arg::V(id)], c);
         let mut i = 1u32;
         while i < n {
-            mon = env.call(
+            mon = env.callh(
                 0x021B_990C,
                 &mut [Arg::V(pokecon), Arg::V(id), Arg::V(i & 0xFF)],
+                c,
             );
-            if env.call(0x021D_5B68, &mut [Arg::V(mon)]) == 0 {
+            if env.callh(0x021D_5B68, &mut [Arg::V(mon)], c) == 0 {
                 break;
             }
             i += 1;
@@ -930,16 +987,17 @@ pub fn item_shortcut<E: FlowEnv>(env: &mut E, c: &mut [u8]) -> Option<u16> {
             continue;
         }
         let heap = rd16(c, OFS_HEAP_ID) as u32;
-        if env.call(
+        if env.callh(
             0x0202_A298,
             &mut [Arg::V(bag), Arg::V(item as u32), Arg::V(heap)],
+            c,
         ) == 0
         {
             c[OFS_ITEM_FLAGS + i] = 1;
             continue;
         }
         let hit = match (item as u32).wrapping_sub(0x11) {
-            0 => env.call(0x021D_5B48, &mut [Arg::V(mon)]) == 0,
+            0 => env.callh(0x021D_5B48, &mut [Arg::V(mon)], c) == 0,
             1 => hp_low(env),
             2 => party_ok(env),
             3 => party_ok(env) && hp_low(env),
@@ -978,12 +1036,12 @@ pub fn fight_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &m
     let server = rd32(c, OFS_SERVER);
     match st(state) {
         0 => {
-            if env.call(0x021B_8588, &mut [Arg::V(server)]) == 3 {
+            if env.callh(0x021B_8588, &mut [Arg::V(server)], c) == 3 {
                 let mut table = [0u8; FIGHT_TABLE_SIZE];
                 fight_table(env, c, &mut table);
                 c[OFS_FIGHT..OFS_FIGHT + FIGHT_TABLE_SIZE].copy_from_slice(&table);
                 set_st(state, 2);
-            } else if struggle_if_stuck(env, c, rd32(c, OFS_MON)) != 0 {
+            } else if struggle_if_stuck(env, c, rd32(c, OFS_MON), rd32(c, OFS_REC)) != 0 {
                 set_callback(c, CB_NEXT);
             } else {
                 set_st(state, 1);
@@ -992,12 +1050,24 @@ pub fn fight_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &m
         1 => {
             env.view(
                 0x021E_97BC,
-                &mut [Arg::V(view(c)), Arg::V(rd32(c, OFS_MON)), Arg::P],
+                &mut [
+                    Arg::V(view(c)),
+                    Arg::V(rd32(c, OFS_MON)),
+                    Arg::PAt(rd32(c, OFS_REC)),
+                ],
             );
             set_st(state, 3);
         }
         2 => {
-            env.view(0x021E_9808, &mut [Arg::V(view(c)), Arg::P, Arg::P]);
+            // (view, &c[0xA4], rec)
+            env.view(
+                0x021E_9808,
+                &mut [
+                    Arg::V(view(c)),
+                    Arg::PAt(c_addr.wrapping_add(0xA4)),
+                    Arg::PAt(rd32(c, OFS_REC)),
+                ],
+            );
             set_st(state, 3);
         }
         3 => {
@@ -1005,10 +1075,10 @@ pub fn fight_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &m
                 env.view(0x021E_98AC, &mut [Arg::V(view(c))]);
                 return 0;
             }
-            if env.view(0x021E_98B4, &mut [Arg::V(view(c))]) == 0 {
+            if env.view_h(0x021E_98B4, &mut [Arg::V(view(c))], c) == 0 {
                 return 0;
             }
-            match env.call(0x021D_8454, &mut [Arg::P]) {
+            match env.callh(0x021D_8454, &mut [Arg::PAt(rd32(c, OFS_REC))], c) {
                 0 => {
                     set_callback(c, CB_SELECT);
                     return 0;
@@ -1023,48 +1093,55 @@ pub fn fight_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &m
             let rec = rd32(c, OFS_REC);
             let mut slot = c[OFS_CUR] as u32;
             let mut side = 0u32;
-            if env.call(0x021B_8588, &mut [Arg::V(server)]) == 3 {
+            if env.callh(0x021B_8588, &mut [Arg::V(server)], c) == 3 {
                 side = (rd32(c, OFS_BC) >> 4) & 7;
-                slot = env.call(0x021B_9AB0, &mut [Arg::V(side)]);
+                slot = env.callh(0x021B_9AB0, &mut [Arg::V(side)], c);
                 mon = rd32(c, OFS_FIGHT + 8 * slot as usize);
             }
             let rec_word = |c: &[u8]| rd32(c, rec.wrapping_sub(c_addr) as usize);
-            if env.call(0x021D_832C, &mut [Arg::P]) != 0 {
+            if env.callh(0x021D_832C, &mut [Arg::PAt(rec)], c) != 0 {
                 c[OFS_1B0] = slot as u8;
                 let mv = (rec_word(c) >> 7) & 0xFFFF;
-                c[OFS_1B1] = env.call(0x021D_5778, &mut [Arg::V(mon), Arg::V(mv)]) as u8;
+                c[OFS_1B1] = env.callh(0x021D_5778, &mut [Arg::V(mon), Arg::V(mv)], c) as u8;
                 if c[OFS_1B1] != 4 {
                     set_callback(c, CB_TARGET);
                     return 0;
                 }
             }
             let mv = (rec_word(c) >> 7) & 0xFFFF;
-            if env.call(
+            if env.callh(
                 0x021C_F5B0,
                 &mut [Arg::P, Arg::V(mon), Arg::V(mv), Arg::V(msg_buf(c_addr))],
+                c,
             ) != 0
             {
-                msg_end(env, msg_buf(c_addr), 0xFF);
+                msg_end(&mut Lend::h(env, c), msg_buf(c_addr), 0xFF);
                 print_message(env, c);
                 set_st(state, 7);
                 return 0;
             }
-            if env.call(0x021B_8588, &mut [Arg::V(server)]) == 3
+            if env.callh(0x021B_8588, &mut [Arg::V(server)], c) == 3
                 && side != 0
                 && side != 1
-                && env.call(0x021D_5B68, &mut [Arg::V(mon)]) == 0
+                && env.callh(0x021D_5B68, &mut [Arg::V(mon)], c) == 0
             {
-                let x = env.call(0x021D_8340, &mut [Arg::P]);
-                wr32(c, OFS_REC, rd32(c, OFS_REC).wrapping_add(4));
-                env.call(0x021D_83FC, &mut [Arg::P, Arg::V(side)]);
-                env.call(0x021D_82D0, &mut [Arg::P, Arg::V(x), Arg::V(6)]);
+                // `021d8340(c + 0xC0)` (as the original)
+                let x = env.callh(0x021D_8340, &mut [Arg::PAt(c_addr.wrapping_add(0xC0))], c);
+                let old = rd32(c, OFS_REC);
+                wr32(c, OFS_REC, old.wrapping_add(4));
+                env.callh(0x021D_83FC, &mut [Arg::PAt(old), Arg::V(side)], c);
+                env.callh(
+                    0x021D_82D0,
+                    &mut [Arg::PAt(old.wrapping_add(4)), Arg::V(x), Arg::V(6)],
+                    c,
+                );
                 c[OFS_1AF] = c[OFS_1AF].wrapping_add(1);
             }
             set_st(state, 4);
         }
         4 => {
-            let t = env.call(0x021B_8588, &mut [Arg::V(server)]);
-            if env.call(0x021D_7EF0, &mut [Arg::V(t)]) != 0 {
+            let t = env.callh(0x021B_8588, &mut [Arg::V(server)], c);
+            if env.callh(0x021D_7EF0, &mut [Arg::V(t)], c) != 0 {
                 set_st(state, 5);
             } else {
                 set_callback(c, CB_NEXT);
@@ -1103,23 +1180,25 @@ pub fn fight_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &m
 /// 021d54c0(mon, j), 0)` == 0).
 pub fn fight_table<E: FlowEnv>(env: &mut E, c: &[u8], out: &mut [u8]) {
     for i in 0..3usize {
-        let mon = env.call(
+        let mon = env.callr(
             0x021B_9C00,
             &mut [Arg::V(rd32(c, OFS_PARTY)), Arg::V(i as u32)],
+            c,
         );
         wr32(out, 8 * i, mon);
         out[8 * i + 4..8 * i + 8].fill(0);
-        if env.call(0x021D_5B68, &mut [Arg::V(mon)]) != 0 {
+        if env.callr(0x021D_5B68, &mut [Arg::V(mon)], c) != 0 {
             continue;
         }
-        let n = env.call(0x021D_5448, &mut [Arg::V(mon)]);
+        let n = env.callr(0x021D_5448, &mut [Arg::V(mon)], c);
         let mut j = 0u32;
         while j < n {
-            let ok = env.call(0x021D_5584, &mut [Arg::V(mon), Arg::V(j & 0xFF)]) != 0 && {
-                let mv = env.call(0x021D_54C0, &mut [Arg::V(mon), Arg::V(j & 0xFF)]);
-                env.call(
+            let ok = env.callr(0x021D_5584, &mut [Arg::V(mon), Arg::V(j & 0xFF)], c) != 0 && {
+                let mv = env.callr(0x021D_54C0, &mut [Arg::V(mon), Arg::V(j & 0xFF)], c);
+                env.callr(
                     0x021C_F5B0,
                     &mut [Arg::P, Arg::V(mon), Arg::V(mv), Arg::V(0)],
+                    c,
                 ) == 0
             };
             out[8 * i + 4 + j as usize] = ok as u8;
@@ -1167,7 +1246,7 @@ pub fn party_page<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u
     match st(state) {
         0 => {
             let (mut a, mut b) = ([0u8; 2], [0u8; 2]);
-            let r = env.call(
+            let r = env.callh(
                 0x021C_F8D4,
                 &mut [
                     Arg::P,
@@ -1175,9 +1254,10 @@ pub fn party_page<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u
                     Arg::Out(&mut a),
                     Arg::Out(&mut b),
                 ],
+                c,
             );
             let f = if r & 0xFF == 4 {
-                let name = env.call(0x021D_5440, &mut [Arg::V(rd32(c, OFS_MON))]);
+                let name = env.callh(0x021D_5440, &mut [Arg::V(rd32(c, OFS_MON))], c);
                 (a[0] as u32 == name) as u32
             } else {
                 1
@@ -1199,16 +1279,17 @@ pub fn party_page<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u
                 env.view(0x021E_9B14, &mut [Arg::V(view(c))]);
                 set_st(state, 2);
             } else if env.view(0x021E_9B20, &mut [Arg::V(view(c))]) != 0 {
-                if env.call(0x021C_EE98, &mut [Arg::P]) != 0 {
+                if env.callh(0x021C_EE98, &mut [Arg::P], c) != 0 {
                     set_callback(c, CB_SELECT);
                 } else {
-                    let n = env.call(0x021C_EEA8, &mut [Arg::P]);
+                    let n = env.callh(0x021C_EEA8, &mut [Arg::P], c);
                     if n >= 6 {
                         set_callback(c, CB_SELECT);
                     } else {
-                        env.call(
+                        env.callh(
                             0x021D_8394,
                             &mut [Arg::P, Arg::V(c[OFS_CUR] as u32), Arg::V(n)],
+                            c,
                         );
                         set_callback(c, CB_NEXT);
                     }
@@ -1271,12 +1352,13 @@ pub fn bag_page<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u32
                 n = 0;
             }
             set_130(c, c[OFS_CUR] as u32, n);
-            env.call(
+            env.callh(
                 0x021D_8358,
                 &mut [Arg::P, Arg::V(item), Arg::V(page & 0xFF), Arg::V(k & 0xFF)],
+                c,
             );
             env.view(0x021E_A058, &mut [Arg::V(view(c))]);
-            if env.call(0x021D_805C, &mut [Arg::V(item), Arg::V(0xF)]) == 4 {
+            if env.callh(0x021D_805C, &mut [Arg::V(item), Arg::V(0xF)], c) == 4 {
                 c[OFS_FLAGS] |= 4;
             }
             set_1a0_slot(env, c, c[OFS_CUR] as u32, item);
@@ -1291,21 +1373,25 @@ pub fn bag_page<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u32
 /// C: `FUN_021ceffc`: only when `021b86b8(server) == 0`: of the first `min(021b9b94(party), 021b8670(server))` mons of party 1
 /// (`021b9af8(pokecon, 1)`, `021b9c00`), exactly one is alive (`021d5b68 == 0`) and some live one passes `021d5c30`.
 pub fn single_live_mon<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
-    if env.call(0x021B_86B8, &mut [Arg::V(rd32(c, OFS_SERVER))]) != 0 {
+    if env.callr(0x021B_86B8, &mut [Arg::V(rd32(c, OFS_SERVER))], c) != 0 {
         return 0;
     }
-    let party = env.call(0x021B_9AF8, &mut [Arg::V(rd32(c, OFS_POKECON)), Arg::V(1)]);
-    let n = env.call(0x021B_9B94, &mut [Arg::V(party)]);
-    let mut m = env.call(0x021B_8670, &mut [Arg::V(rd32(c, OFS_SERVER))]);
+    let party = env.callr(
+        0x021B_9AF8,
+        &mut [Arg::V(rd32(c, OFS_POKECON)), Arg::V(1)],
+        c,
+    );
+    let n = env.callr(0x021B_9B94, &mut [Arg::V(party)], c);
+    let mut m = env.callr(0x021B_8670, &mut [Arg::V(rd32(c, OFS_SERVER))], c);
     if m > n {
         m = n;
     }
     let (mut live, mut any) = (0u32, false);
     for i in 0..m {
-        let mon = env.call(0x021B_9C00, &mut [Arg::V(party), Arg::V(i & 0xFF)]);
-        if env.call(0x021D_5B68, &mut [Arg::V(mon)]) == 0 {
+        let mon = env.callr(0x021B_9C00, &mut [Arg::V(party), Arg::V(i & 0xFF)], c);
+        if env.callr(0x021D_5B68, &mut [Arg::V(mon)], c) == 0 {
             live += 1;
-            if env.call(0x021D_5C30, &mut [Arg::V(mon)]) != 0 {
+            if env.callr(0x021D_5C30, &mut [Arg::V(mon)], c) != 0 {
                 any = true;
             }
         }
@@ -1324,23 +1410,24 @@ pub fn single_live_mon<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
 pub fn run_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &mut [u8]) -> u32 {
     let buf = msg_buf(c_addr);
     match st(state) {
-        0 => match env.call(0x021B_86E4, &mut [Arg::V(rd32(c, OFS_SERVER))]) {
+        0 => match env.callh(0x021B_86E4, &mut [Arg::V(rd32(c, OFS_SERVER))], c) {
             1 => {
-                msg_start(env, buf, 1, 0x4C);
+                msg_start(&mut Lend::h(env, c), buf, 1, 0x4C);
                 print_message(env, c);
                 set_st(state, 1);
             }
             2 => {
-                msg_start(env, buf, 1, 0x4D);
-                msg_end(env, buf, 0xFF);
+                msg_start(&mut Lend::h(env, c), buf, 1, 0x4D);
+                msg_end(&mut Lend::h(env, c), buf, 0xFF);
                 print_message(env, c);
                 set_st(state, 3);
             }
             _ => {
                 let (mut a, mut b) = ([0u8; 2], [0u8; 2]);
-                let r = env.call(
+                let r = env.callh(
                     0x021C_F918,
                     &mut [Arg::P, Arg::Out(&mut a), Arg::Out(&mut b)],
+                    c,
                 );
                 if r == 4 {
                     set_st(state, 5);
@@ -1348,11 +1435,11 @@ pub fn run_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &mut
                 }
                 let b = u16::from_le_bytes(b) as u32;
                 if b != 0 {
-                    msg_start(env, buf, 2, 0x365);
-                    msg_arg(env, buf, a[0] as u32);
-                    msg_arg(env, buf, b);
+                    msg_start(&mut Lend::h(env, c), buf, 2, 0x365);
+                    msg_arg(&mut Lend::h(env, c), buf, a[0] as u32);
+                    msg_arg(&mut Lend::h(env, c), buf, b);
                 } else {
-                    msg_start(env, buf, 1, 0x4A);
+                    msg_start(&mut Lend::h(env, c), buf, 1, 0x4A);
                 }
                 print_message(env, c);
                 set_st(state, 1);
@@ -1373,8 +1460,13 @@ pub fn run_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &mut
         3 => {
             msg_done(env, c);
             if env.view(0x021E_A720, &mut [Arg::V(view(c))]) != 0 {
-                msg_start(env, buf, 3, 8);
-                msg_start(env, c_addr.wrapping_add(OFS_MSG2 as u32), 3, 9);
+                msg_start(&mut Lend::h(env, c), buf, 3, 8);
+                msg_start(
+                    &mut Lend::h(env, c),
+                    c_addr.wrapping_add(OFS_MSG2 as u32),
+                    3,
+                    9,
+                );
                 env.view(
                     0x021E_ABC4,
                     &mut [Arg::V(view(c)), Arg::P, Arg::P, Arg::V(1)],
@@ -1398,7 +1490,7 @@ pub fn run_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &mut
             }
         }
         5 => {
-            env.call(0x021D_8414, &mut [Arg::P]);
+            env.callh(0x021D_8414, &mut [Arg::P], c);
             c[OFS_FLAGS] |= 4;
             set_callback(c, CB_NEXT);
         }
@@ -1430,8 +1522,9 @@ pub fn select_next<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &
                 }
                 while c[OFS_CUR] < c[OFS_COUNT] {
                     let mon = client_mon(env, c, c[OFS_CUR] as u32);
-                    if mon_answered(env, mon, answer_addr(c_addr, c[OFS_CUR])) == 0 {
-                        rec_skip(env);
+                    let rec = answer_addr(c_addr, c[OFS_CUR]);
+                    if mon_answered(&mut Lend::h(env, c), mon, rec) == 0 {
+                        rec_skip(env, c, rec.wrapping_sub(c_addr) as usize);
                     }
                     c[OFS_CUR] = c[OFS_CUR].wrapping_add(1);
                 }
@@ -1454,7 +1547,7 @@ pub fn select_end<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u
     match st(state) {
         0 => {
             clear_1a0_all(env, c);
-            if env.call(0x021B_86C0, &mut [Arg::V(rd32(c, OFS_SERVER))]) != 0 {
+            if env.callh(0x021B_86C0, &mut [Arg::V(rd32(c, OFS_SERVER))], c) != 0 {
                 c[OFS_1A9] = 1;
                 env.view(0x021E_A7FC, &mut [Arg::V(view(c))]);
                 set_st(state, st(state).wrapping_add(1));
@@ -1494,7 +1587,7 @@ pub fn set_1a0_slot<E: FlowEnv>(env: &mut E, c: &mut [u8], i: u32, v: u32) {
     if c[OFS_1AA] != 0 {
         return;
     }
-    if c[OFS_ID] as u32 != env.call(0x021B_8FF4, &mut [Arg::V(rd32(c, OFS_SERVER))]) {
+    if c[OFS_ID] as u32 != env.callh(0x021B_8FF4, &mut [Arg::V(rd32(c, OFS_SERVER))], c) {
         return;
     }
     wr16(
@@ -1502,13 +1595,14 @@ pub fn set_1a0_slot<E: FlowEnv>(env: &mut E, c: &mut [u8], i: u32, v: u32) {
         (OFS_1A0 as u32).wrapping_add(i.wrapping_mul(2)) as usize,
         v as u16,
     );
-    env.call(
+    env.callh(
         0x021B_9090,
         &mut [
             Arg::V(rd32(c, OFS_SERVER)),
             Arg::V(c[OFS_ID] as u32),
             Arg::V(v),
         ],
+        c,
     );
 }
 
@@ -1518,7 +1612,7 @@ pub fn clear_1a0_slot<E: FlowEnv>(env: &mut E, c: &mut [u8], i: u32) {
     if c[OFS_1AA] != 0 {
         return;
     }
-    if c[OFS_ID] as u32 != env.call(0x021B_8FF4, &mut [Arg::V(rd32(c, OFS_SERVER))]) {
+    if c[OFS_ID] as u32 != env.callh(0x021B_8FF4, &mut [Arg::V(rd32(c, OFS_SERVER))], c) {
         return;
     }
     let ofs = (OFS_1A0 as u32).wrapping_add(i.wrapping_mul(2)) as usize;
@@ -1526,9 +1620,10 @@ pub fn clear_1a0_slot<E: FlowEnv>(env: &mut E, c: &mut [u8], i: u32) {
         return;
     }
     wr16(c, ofs, 0);
-    env.call(
+    env.callh(
         0x021B_90BC,
         &mut [Arg::V(rd32(c, OFS_SERVER)), Arg::V(c[OFS_ID] as u32)],
+        c,
     );
 }
 
@@ -1573,13 +1668,13 @@ pub fn sum_130(c: &[u8]) -> u32 {
 pub fn mon_answered<E: FlowEnv>(env: &mut E, mon: u32, rec: u32) -> u32 {
     if env.call(0x021D_5B68, &mut [Arg::V(mon)]) != 0 {
         if rec != 0 {
-            env.call(0x021D_8434, &mut [Arg::P]);
+            env.call(0x021D_8434, &mut [Arg::PAt(rec)]);
         }
         return 1;
     }
     if env.call(0x021D_5BDC, &mut [Arg::V(mon), Arg::V(0xC)]) != 0 {
         if rec != 0 {
-            env.call(0x021D_8444, &mut [Arg::P]);
+            env.call(0x021D_8444, &mut [Arg::PAt(rec)]);
         }
         return 1;
     }
@@ -1588,7 +1683,7 @@ pub fn mon_answered<E: FlowEnv>(env: &mut E, mon: u32, rec: u32) -> u32 {
         let m = env.call(0x021E_8B80, &mut [Arg::V(w)]);
         let t = env.call(0x021D_67C4, &mut [Arg::V(mon)]);
         if rec != 0 {
-            env.call(0x021D_82D0, &mut [Arg::P, Arg::V(m), Arg::V(t)]);
+            env.call(0x021D_82D0, &mut [Arg::PAt(rec), Arg::V(m), Arg::V(t)]);
         }
         return 1;
     }
@@ -1597,7 +1692,7 @@ pub fn mon_answered<E: FlowEnv>(env: &mut E, mon: u32, rec: u32) -> u32 {
         let t = env.call(0x021D_67C4, &mut [Arg::V(mon)]);
         env.call(0x021D_5778, &mut [Arg::V(mon), Arg::V(m)]);
         if rec != 0 {
-            env.call(0x021D_82D0, &mut [Arg::P, Arg::V(m), Arg::V(t)]);
+            env.call(0x021D_82D0, &mut [Arg::PAt(rec), Arg::V(m), Arg::V(t)]);
         }
         return 1;
     }
@@ -1606,24 +1701,25 @@ pub fn mon_answered<E: FlowEnv>(env: &mut E, mon: u32, rec: u32) -> u32 {
 
 /// C: `FUN_overlay_d_93__021cf524`: no usable move (for `j < 021d5448(mon)`: not blocked, `021cf5b0(c, mon, 021d54c0(mon, j),
 /// 0)` == 0, and `021d5584(mon, j)`): [`struggle`] into `rec`, returns 1; else 0.
-pub fn struggle_if_stuck<E: FlowEnv>(env: &mut E, c: &[u8], mon: u32) -> u32 {
-    let n = env.call(0x021D_5448, &mut [Arg::V(mon)]);
+pub fn struggle_if_stuck<E: FlowEnv>(env: &mut E, c: &mut [u8], mon: u32, rec: u32) -> u32 {
+    let n = env.callh(0x021D_5448, &mut [Arg::V(mon)], c);
     let mut usable = 0u32;
     let mut j = 0u32;
     while j < n {
-        let mv = env.call(0x021D_54C0, &mut [Arg::V(mon), Arg::V(j & 0xFF)]);
-        if env.call(
+        let mv = env.callh(0x021D_54C0, &mut [Arg::V(mon), Arg::V(j & 0xFF)], c);
+        if env.callh(
             0x021C_F5B0,
             &mut [Arg::P, Arg::V(mon), Arg::V(mv), Arg::V(0)],
+            c,
         ) == 0
-            && env.call(0x021D_5584, &mut [Arg::V(mon), Arg::V(j & 0xFF)]) != 0
+            && env.callh(0x021D_5584, &mut [Arg::V(mon), Arg::V(j & 0xFF)], c) != 0
         {
             usable += 1;
         }
         j += 1;
     }
     if usable == 0 {
-        struggle(env, c, mon);
+        struggle(env, rec, c, mon);
         return 1;
     }
     0
@@ -1631,18 +1727,24 @@ pub fn struggle_if_stuck<E: FlowEnv>(env: &mut E, c: &[u8], mon: u32) -> u32 {
 
 /// C: `FUN_overlay_d_93__021cf58c`: the struggle answer into the record: `021d82d0(rec, 0xA5, 021d81f8(server, pokecon, mon,
 /// 0xA5, c+0x38))` (the record is only passed on).
-pub fn struggle<E: FlowEnv>(env: &mut E, c: &[u8], mon: u32) {
-    let t = env.call(
+pub fn struggle<E: FlowEnv>(env: &mut E, rec: u32, c: &mut [u8], mon: u32) {
+    let c38 = c[0x38..].as_ptr() as usize;
+    let t = env.callh(
         0x021D_81F8,
         &mut [
             Arg::V(rd32(c, OFS_SERVER)),
             Arg::V(rd32(c, OFS_POKECON)),
             Arg::V(mon),
             Arg::V(MOVE_STRUGGLE),
-            Arg::P,
+            Arg::PHost(c38),
         ],
+        c,
     );
-    env.call(0x021D_82D0, &mut [Arg::P, Arg::V(MOVE_STRUGGLE), Arg::V(t)]);
+    env.callh(
+        0x021D_82D0,
+        &mut [Arg::PAt(rec), Arg::V(MOVE_STRUGGLE), Arg::V(t)],
+        c,
+    );
 }
 
 #[cfg(test)]

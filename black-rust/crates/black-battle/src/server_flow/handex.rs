@@ -14,7 +14,7 @@ use super::cmd_queue::{
     self, advance_fields, put_cmd, put_cmd_at, put_cmd_list, put_cmd_placeholder, set_mode_flag30,
     set_word, word_bits28_29, word_flag30, word_low10,
 };
-use super::env::{Arg, FlowEnv};
+use super::env::{Arg, FlowEnv, Lend, Lent};
 use super::hem::HANDEX_MGR;
 use super::SvFlowWork;
 
@@ -46,7 +46,7 @@ fn str_at(rec: &[u8], ofs: usize) -> &[u8] {
 
 /// `021b9934(work[8], id)`: the BattleMon of a pokeID.
 fn mon_of<E: FlowEnv>(env: &mut E, w: &SvFlowWork, id: u32) -> u32 {
-    env.call(0x021B_9934, &mut [Arg::V(w.u32_at(8)), Arg::V(id)])
+    env.callwr(0x021B_9934, &mut [Arg::V(w.u32_at(8)), Arg::V(id)], w)
 }
 
 /// `021d5b68(mon)`: nonzero when the mon has fainted.
@@ -55,8 +55,10 @@ fn fainted<E: FlowEnv>(env: &mut E, mon: u32) -> bool {
 }
 
 /// A `bx pc` veneer into overlay 95 taking `(work + 0x1AB8, id)`.
-fn veneer_ab8<E: FlowEnv>(env: &mut E, addr: u32, id: u32) -> bool {
-    env.call(addr, &mut [Arg::P, Arg::V(id)]) != 0
+///
+/// `helper`: the host pointer of `work + 0x1AB8` (B16: the veneer's first argument).
+fn veneer_ab8<E: FlowEnv>(env: &mut E, addr: u32, id: u32, helper: usize) -> bool {
+    env.call(addr, &mut [Arg::PHost(helper), Arg::V(id)]) != 0
 }
 
 /// core5 `021c5a1c(work, mon)` (opens the effect bracket of header bit 23).
@@ -105,74 +107,75 @@ pub fn execute<E: FlowEnv>(
         return;
     }
     if (h >> 25) & 1 != 0 {
-        let mon = env.call(
+        let mon = env.call_l(
             0x021B_9940,
             &mut [Arg::V(w.u32_at(8)), Arg::V(rec_poke_id(rec))],
+            Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
         );
-        if fainted(env, mon) {
+        if fainted(&mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]), mon) {
             return;
         }
     }
     let id = h & 0xFF;
     if id <= 0x3B {
         st = match id {
-            0x00 => proc_00(env, w, rec),
-            0x01 => proc_01(env, w, rec),
-            0x02 => proc_02(env, w, rec),
-            0x03 => proc_03(env, w, rec),
-            0x04 => proc_04(env, w, rec),
+            0x00 => proc_00(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x01 => proc_01(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x02 => proc_02(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x03 => proc_03(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x04 => proc_04(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
             0x05 => proc_05(env, w, rec, v, q),
-            0x06 => proc_06(env, w, rec),
-            0x07 => proc_07(env, w, rec),
-            0x08 => proc_08(env, w, rec),
-            0x09 => proc_09(env, w, rec),
-            0x0A => proc_0a(env, w, rec),
-            0x0B => proc_0b(env, w, rec, v),
-            0x0C => proc_0c(env, w, rec, ra),
+            0x06 => proc_06(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x07 => proc_07(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x08 => proc_08(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x09 => proc_09(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x0A => proc_0a(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x0B => proc_0b(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec, v),
+            0x0C => proc_0c(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec, ra),
             0x0D => st,
-            0x0E => proc_0e(env, w, rec, v),
+            0x0E => proc_0e(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec, v),
             0x0F => proc_0f(env, w, rec, q, scratch),
             0x10 => proc_10(env, w, rec, q, scratch),
             0x11 => proc_11(env, w, rec, q, scratch),
             0x12 => proc_12(env, w, rec, q, scratch),
-            0x13 => proc_13(env, w, rec),
+            0x13 => proc_13(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
             0x14 => proc_14(env, w, rec, q, scratch),
-            0x15 => proc_15(env, w, rec),
-            0x16 => proc_16(env, w, rec),
-            0x17 => proc_17(env, w, rec),
-            0x18 => proc_18(env, w, rec),
-            0x19 => proc_19(env, rec),
-            0x1A => proc_1a(env, rec),
-            0x1B => proc_1b(env, rec),
-            0x1C => proc_1c(env, rec),
-            0x1D => proc_1d(env, w, rec),
-            0x1E => proc_1e(env, rec),
+            0x15 => proc_15(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x16 => proc_16(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x17 => proc_17(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x18 => proc_18(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x19 => proc_19(&mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]), rec),
+            0x1A => proc_1a(&mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]), rec),
+            0x1B => proc_1b(&mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]), rec),
+            0x1C => proc_1c(&mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]), rec),
+            0x1D => proc_1d(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x1E => proc_1e(&mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]), rec),
             0x1F => proc_1f(env, w, rec, q, scratch),
             0x20 => proc_20(env, w, rec, q, scratch),
-            0x21 => proc_21(env, w, rec),
+            0x21 => proc_21(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
             0x22 => proc_22(env, w, rec, q, scratch),
-            0x23 => proc_23(env, w, rec),
-            0x24 => proc_24(env, w, rec),
+            0x23 => proc_23(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x24 => proc_24(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
             0x25 => proc_25(env, w, rec, q, scratch),
-            0x26 => proc_26(env, w, rec),
-            0x27 => proc_27(env, w, rec, d),
-            0x28 => proc_28(env, w, rec),
-            0x29 => proc_29(env, w, rec),
+            0x26 => proc_26(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x27 => proc_27(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec, d),
+            0x28 => proc_28(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x29 => proc_29(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
             0x2A => proc_2a(env, w, rec, q, scratch),
-            0x2B => proc_2b(env, w, rec),
+            0x2B => proc_2b(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
             0x2C => proc_2c(env, w, rec, q, scratch),
             0x2D => proc_2d(env, w, rec, q, scratch),
-            0x2E => proc_2e(env, w, rec),
-            0x2F => proc_2f(env, rec),
-            0x30 => proc_30(env, rec),
-            0x31 => proc_31(env, rec),
-            0x32 => proc_32(env, w, rec),
+            0x2E => proc_2e(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x2F => proc_2f(&mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]), rec),
+            0x30 => proc_30(&mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]), rec),
+            0x31 => proc_31(&mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]), rec),
+            0x32 => proc_32(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
             0x33 => proc_33(env, w, rec, q, scratch),
             0x34 => proc_34(env, w, rec, q, scratch),
             0x35 => proc_35(env, w, rec, q),
-            0x36 => proc_36(env, w, rec),
-            0x37 => proc_37(env, rec, q, scratch),
-            0x38 => proc_38(env, q, scratch),
+            0x36 => proc_36(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, rec),
+            0x37 => proc_37(&mut Lend::new(env, w), rec, q, scratch),
+            0x38 => proc_38(&mut Lend::new(env, w), q, scratch),
             0x39 => proc_39(env, w, rec, q, scratch),
             0x3A => proc_3a(rec, d),
             _ => proc_3b(d),
@@ -187,34 +190,44 @@ pub fn execute<E: FlowEnv>(
 pub fn proc_00<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let mon = mon_of(env, w, rec_poke_id(rec));
     let f = rd32(rec, 4);
-    if fainted(env, mon) && f & 2 == 0 {
+    if fainted(&mut Lend::new_ref(env, w), mon) && f & 2 == 0 {
         return 0;
     }
-    if f & 1 != 0 && env.call(0x021D_5B48, &mut [Arg::V(mon)]) != 0 {
+    if f & 1 != 0 && env.callwr(0x021D_5B48, &mut [Arg::V(mon)], w) != 0 {
         return 0;
     }
-    (env.call(0x021C_2128, &mut [Arg::P, Arg::V(mon)]) != 0) as u32
+    (env.callwr(0x021C_2128, &mut [Arg::P, Arg::V(mon)], w) != 0) as u32
 }
 
 /// C: `FUN_overlay_d_93__021c8c6c`: HANDEX proc 0x01: when the veneer `8cac(work + 0x1AB8,
 /// pokeID)` agrees, core6 `021c60d4(work, mon)`; returns 1, else 0.
 pub fn proc_01<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
-    if !veneer_ab8(env, 0x021C_8CAC, rec_poke_id(rec)) {
+    if !veneer_ab8(
+        &mut Lend::new_ref(env, w),
+        0x021C_8CAC,
+        rec_poke_id(rec),
+        w.mem[0x1AB8..].as_ptr() as usize,
+    ) {
         return 0;
     }
     let mon = mon_of(env, w, rec_poke_id(rec));
-    env.call(0x021C_60D4, &mut [Arg::P, Arg::V(mon)]);
+    env.callwr(0x021C_60D4, &mut [Arg::P, Arg::V(mon)], w);
     1
 }
 
 /// C: `FUN_overlay_d_93__021c8cbc`: HANDEX proc 0x02: when the veneer `8cfc(work + 0x1AB8,
 /// pokeID)` agrees, core5 `021c5a1c(work, mon)`; returns 1, else 0.
 pub fn proc_02<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
-    if !veneer_ab8(env, 0x021C_8CFC, rec_poke_id(rec)) {
+    if !veneer_ab8(
+        &mut Lend::new_ref(env, w),
+        0x021C_8CFC,
+        rec_poke_id(rec),
+        w.mem[0x1AB8..].as_ptr() as usize,
+    ) {
         return 0;
     }
     let mon = mon_of(env, w, rec_poke_id(rec));
-    bracket_open(env, mon);
+    bracket_open(&mut Lend::new_ref(env, w), mon);
     1
 }
 
@@ -222,7 +235,7 @@ pub fn proc_02<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
 /// record's pokeID; returns 1.
 pub fn proc_03<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let mon = mon_of(env, w, rec_poke_id(rec));
-    bracket_close(env, mon);
+    bracket_close(&mut Lend::new_ref(env, w), mon);
     1
 }
 
@@ -231,11 +244,11 @@ pub fn proc_03<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
 pub fn proc_04<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let a = mon_or_none(env, w, rec_poke_id(rec));
     if bit23(rec) && a != 0 {
-        bracket_open(env, a);
+        bracket_open(&mut Lend::new_ref(env, w), a);
     }
-    message(env, str_at(rec, 4));
+    message(&mut Lend::new_ref(env, w), str_at(rec, 4));
     if bit23(rec) && a != 0 {
-        bracket_close(env, a);
+        bracket_close(&mut Lend::new_ref(env, w), a);
     }
     1
 }
@@ -246,29 +259,48 @@ pub fn proc_04<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
 /// the message at +8 if it is set, or command list 0x5B (0x38C, rec[6], v) when `v` != 0.
 /// Returns ok.
 pub fn proc_05<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32, q: &mut [u8]) -> u32 {
-    let a = mon_of(env, w, rec_poke_id(rec));
-    let t = mon_of(env, w, rec[6] as u32);
-    if env.call(0x021C_3370, &mut [Arg::P, Arg::V(t)]) != 0 {
+    let a = mon_of(&mut Lend::hv(env, vec![&mut *q]), w, rec_poke_id(rec));
+    let t = mon_of(&mut Lend::hv(env, vec![&mut *q]), w, rec[6] as u32);
+    if env.call_l(
+        0x021C_3370,
+        &mut [Arg::P, Arg::V(t)],
+        Lent::of(None, Some(w), vec![&mut *q]),
+    ) != 0
+    {
         return 0;
     }
     if bit23(rec) {
-        bracket_open(env, a);
+        bracket_open(&mut Lend::whr(env, w, vec![&mut *q]), a);
     }
     let ok = if rec[7] == 0 {
-        env.call(0x021C_3394, &mut [Arg::P, Arg::V(t), Arg::V(1)]) == 0
+        env.call_l(
+            0x021C_3394,
+            &mut [Arg::P, Arg::V(t), Arg::V(1)],
+            Lent::of(None, Some(w), vec![&mut *q]),
+        ) == 0
     } else {
         true
     };
     if ok {
-        env.call(0x021C_33E8, &mut [Arg::P, Arg::V(t), Arg::V(rd16(rec, 4))]);
+        env.call_l(
+            0x021C_33E8,
+            &mut [Arg::P, Arg::V(t), Arg::V(rd16(rec, 4))],
+            Lent::of(None, Some(w), vec![&mut *q]),
+        );
         if rec[0xA] != 0 {
-            message(env, str_at(rec, 8));
+            message(&mut Lend::whr(env, w, vec![&mut *q]), str_at(rec, 8));
         } else if v != 0 {
-            put_cmd_list(env, q, 0x5B, 0x38C, &[rec[6] as u32, v, END]);
+            put_cmd_list(
+                &mut Lend::new_ref(env, w),
+                q,
+                0x5B,
+                0x38C,
+                &[rec[6] as u32, v, END],
+            );
         }
     }
     if bit23(rec) {
-        bracket_close(env, a);
+        bracket_close(&mut Lend::whr(env, w, vec![&mut *q]), a);
     }
     ok as u32
 }
@@ -279,22 +311,28 @@ pub fn proc_05<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32, q: &
 /// message at +8 if it is set, returns 1. Else 0.
 pub fn proc_06<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let a = mon_or_none(env, w, rec[7] as u32);
-    if !veneer_ab8(env, 0x021C_8E48, rec[6] as u32) {
+    if !veneer_ab8(
+        &mut Lend::new_ref(env, w),
+        0x021C_8E48,
+        rec[6] as u32,
+        w.mem[0x1AB8..].as_ptr() as usize,
+    ) {
         return 0;
     }
     let t = mon_of(env, w, rec[6] as u32);
-    if fainted(env, t) {
+    if fainted(&mut Lend::new_ref(env, w), t) {
         return 0;
     }
-    if env.call(
+    if env.callwr(
         0x021C_1E14,
         &mut [Arg::P, Arg::V(t), Arg::V(a), Arg::V(rd16(rec, 4))],
+        w,
     ) == 0
     {
         return 0;
     }
     if rec[0xA] != 0 {
-        message(env, str_at(rec, 8));
+        message(&mut Lend::new_ref(env, w), str_at(rec, 8));
     }
     1
 }
@@ -305,25 +343,35 @@ pub fn proc_06<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
 /// with `rec[7]` bit 1 core6 `70e4(work, u16 rec[8], rec[0xA], rec[0xB], 0, 0)`, then
 /// `20d0(work, t, u16 rec[4], rec + 0xC)`; returns 1. Else 0.
 pub fn proc_07<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
-    if !veneer_ab8(env, 0x021C_8F14, rec[6] as u32) {
+    if !veneer_ab8(
+        &mut Lend::new_ref(env, w),
+        0x021C_8F14,
+        rec[6] as u32,
+        w.mem[0x1AB8..].as_ptr() as usize,
+    ) {
         return 0;
     }
     let t = mon_of(env, w, rec[6] as u32);
     let a = mon_or_none(env, w, rec_poke_id(rec));
-    if fainted(env, t) {
+    if fainted(&mut Lend::new_ref(env, w), t) {
         return 0;
     }
-    if rec[7] & 1 != 0 && env.call(0x021D_5C30, &mut [Arg::V(t)]) != 0 {
+    if rec[7] & 1 != 0 && env.callwr(0x021D_5C30, &mut [Arg::V(t)], w) != 0 {
         return 0;
     }
-    if env.call(0x021C_20BC, &mut [Arg::P, Arg::V(t), Arg::V(rd16(rec, 4))]) == 0 {
+    if env.callwr(
+        0x021C_20BC,
+        &mut [Arg::P, Arg::V(t), Arg::V(rd16(rec, 4))],
+        w,
+    ) == 0
+    {
         return 0;
     }
     if bit23(rec) {
-        bracket_open(env, a);
+        bracket_open(&mut Lend::new_ref(env, w), a);
     }
     if rec[7] & 2 != 0 {
-        env.call(
+        env.callwr(
             0x021C_70E4,
             &mut [
                 Arg::P,
@@ -333,14 +381,16 @@ pub fn proc_07<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
                 Arg::V(0),
                 Arg::V(0),
             ],
+            w,
         );
     }
-    env.call(
+    env.callwr(
         0x021C_20D0,
         &mut [Arg::P, Arg::V(t), Arg::V(rd16(rec, 4)), Arg::P],
+        w,
     );
     if bit23(rec) {
-        bracket_close(env, a);
+        bracket_close(&mut Lend::new_ref(env, w), a);
     }
     1
 }
@@ -354,10 +404,15 @@ pub fn proc_08<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let mut i = 0usize;
     while i < rec[4] as usize {
         let id = rec[7 + i] as u32;
-        if veneer_ab8(env, 0x021C_8F94, id) {
+        if veneer_ab8(
+            &mut Lend::new_ref(env, w),
+            0x021C_8F94,
+            id,
+            w.mem[0x1AB8..].as_ptr() as usize,
+        ) {
             let mon = mon_of(env, w, id);
-            if !fainted(env, mon) {
-                env.call(
+            if !fainted(&mut Lend::new_ref(env, w), mon) {
+                env.callwr(
                     0x021C_5B74,
                     &mut [
                         Arg::P,
@@ -365,9 +420,10 @@ pub fn proc_08<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
                         Arg::V(rd32(rec, 0x10 + 4 * i)),
                         Arg::V((rec[5] == 0) as u32),
                     ],
+                    w,
                 );
                 if rec[6] == 0 {
-                    env.call(0x021C_195C, &mut [Arg::P, Arg::V(mon), Arg::V(1)]);
+                    env.callwr(0x021C_195C, &mut [Arg::P, Arg::V(mon), Arg::V(1)], w);
                 }
                 r = 1;
             }
@@ -384,18 +440,19 @@ pub fn proc_08<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
 pub fn proc_09<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     mon_of(env, w, rec_poke_id(rec));
     let t = mon_of(env, w, rec[5] as u32);
-    if env.call(0x021D_5B7C, &mut [Arg::V(t)]) == 0 && rec[7] & 2 == 0 {
+    if env.callwr(0x021D_5B7C, &mut [Arg::V(t)], w) == 0 && rec[7] & 2 == 0 {
         return 0;
     }
     let f = (rec[7] & 1 == 0) as u32;
-    if env.call(
+    if env.callwr(
         0x021D_55D8,
         &mut [Arg::V(t), Arg::V(rec[6] as u32), Arg::V(f)],
+        w,
     ) != 0
     {
         return 0;
     }
-    env.call(
+    env.callwr(
         0x021C_6080,
         &mut [
             Arg::P,
@@ -404,8 +461,9 @@ pub fn proc_09<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
             Arg::V(rec[4] as u32),
             Arg::V(f),
         ],
+        w,
     );
-    message(env, str_at(rec, 8));
+    message(&mut Lend::new_ref(env, w), str_at(rec, 8));
     1
 }
 
@@ -414,10 +472,10 @@ pub fn proc_09<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
 /// +8 and (when core6 `7194(work, t, rec[6])` says so) core4 `2128(work, t)`; returns 1. Else 0.
 pub fn proc_0a<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let t = mon_of(env, w, rec[5] as u32);
-    if fainted(env, t) && rec[7] & 2 == 0 {
+    if fainted(&mut Lend::new_ref(env, w), t) && rec[7] & 2 == 0 {
         return 0;
     }
-    if env.call(
+    if env.callwr(
         0x021C_0898,
         &mut [
             Arg::P,
@@ -425,11 +483,17 @@ pub fn proc_0a<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
             Arg::V(rec[6] as u32),
             Arg::V(rec[4] as u32),
         ],
+        w,
     ) != 0
     {
-        message(env, str_at(rec, 8));
-        if env.call(0x021C_7194, &mut [Arg::P, Arg::V(t), Arg::V(rec[6] as u32)]) != 0 {
-            env.call(0x021C_2128, &mut [Arg::P, Arg::V(t)]);
+        message(&mut Lend::new_ref(env, w), str_at(rec, 8));
+        if env.callwr(
+            0x021C_7194,
+            &mut [Arg::P, Arg::V(t), Arg::V(rec[6] as u32)],
+            w,
+        ) != 0
+        {
+            env.callwr(0x021C_2128, &mut [Arg::P, Arg::V(t)], w);
         }
     }
     1
@@ -446,23 +510,24 @@ pub fn proc_0b<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32) -> u
     let a = mon_of(env, w, rec_poke_id(rec));
     let mut r = 0;
     if bit23(rec) {
-        bracket_open(env, a);
+        bracket_open(&mut Lend::new_ref(env, w), a);
     }
     let mut i = 0usize;
     while i < rec[0x14] as usize {
         let t = mon_of(env, w, rec[8 + i] as u32);
-        if env.call(0x021D_5B7C, &mut [Arg::V(t)]) != 0 {
+        if env.callwr(0x021D_5B7C, &mut [Arg::V(t)], w) != 0 {
             let cursor = rec[4..8].to_vec();
-            let mut k = env.call(0x021C_56A8, &mut [Arg::V(t), Arg::In(&cursor)]);
+            let mut k = env.callwr(0x021C_56A8, &mut [Arg::V(t), Arg::In(&cursor)], w);
             while k != 0 {
                 r = 1;
                 let mut x = [0u8; 4];
-                env.call(
+                env.callwr(
                     0x021C_5620,
                     &mut [Arg::P, Arg::V(t), Arg::V(k), Arg::Out(&mut x)],
+                    w,
                 );
                 if rec[0x15] == 0 {
-                    if env.call(
+                    if env.callwr(
                         0x021C_9168,
                         &mut [
                             Arg::V(k),
@@ -471,24 +536,25 @@ pub fn proc_0b<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32) -> u
                             Arg::V(v),
                             Arg::P,
                         ],
+                        w,
                     ) != 0
                     {
                         message(env, &w.mem[0x1AE4..0x1AE4 + 0x24]);
-                        env.call(0x021C_8810, &mut [Arg::P]);
+                        env.callwr(0x021C_8810, &mut [Arg::P], w);
                     }
                 } else {
-                    message(env, str_at(rec, 0x18));
+                    message(&mut Lend::new_ref(env, w), str_at(rec, 0x18));
                 }
                 if k == 0x13 {
-                    env.call(0x021C_195C, &mut [Arg::P, Arg::V(t), Arg::V(0)]);
+                    env.callwr(0x021C_195C, &mut [Arg::P, Arg::V(t), Arg::V(0)], w);
                 }
-                k = env.call(0x021C_56A8, &mut [Arg::V(t), Arg::In(&cursor)]);
+                k = env.callwr(0x021C_56A8, &mut [Arg::V(t), Arg::In(&cursor)], w);
             }
         }
         i += 1;
     }
     if bit23(rec) {
-        bracket_close(env, a);
+        bracket_close(&mut Lend::new_ref(env, w), a);
     }
     r
 }
@@ -501,15 +567,20 @@ pub fn proc_0b<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32) -> u
 /// address (2910 gets `rec + 0x14` as a value).
 pub fn proc_0c<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], ra: u32) -> u32 {
     let a = mon_or_none(env, w, rec_poke_id(rec));
-    let f = (env.call(0x021C_8828, &mut [Arg::P]) == 0 && rec[0xD] == 0) as u32;
-    if !veneer_ab8(env, 0x021C_9240, rec[0xF] as u32) {
+    let f = (env.callwr(0x021C_8828, &mut [Arg::P], w) == 0 && rec[0xD] == 0) as u32;
+    if !veneer_ab8(
+        &mut Lend::new_ref(env, w),
+        0x021C_9240,
+        rec[0xF] as u32,
+        w.mem[0x1AB8..].as_ptr() as usize,
+    ) {
         return 0;
     }
     let t = mon_of(env, w, rec[0xF] as u32);
-    if fainted(env, t) {
+    if fainted(&mut Lend::new_ref(env, w), t) {
         return 0;
     }
-    if env.call(
+    if env.callwr(
         0x021C_27A0,
         &mut [
             Arg::P,
@@ -520,14 +591,15 @@ pub fn proc_0c<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], ra: u32) -> 
             Arg::V(rec[0x10] as u32),
             Arg::V(rec[0xC] as u32),
         ],
+        w,
     ) != 0
     {
         return 0;
     }
     if bit23(rec) {
-        bracket_open(env, a);
+        bracket_open(&mut Lend::new_ref(env, w), a);
     }
-    env.call(
+    env.callwr(
         0x021C_2910,
         &mut [
             Arg::P,
@@ -539,9 +611,10 @@ pub fn proc_0c<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], ra: u32) -> 
             Arg::V(rec[0xE] as u32),
             Arg::V(ra.wrapping_add(0x14)),
         ],
+        w,
     );
     if bit23(rec) {
-        bracket_close(env, a);
+        bracket_close(&mut Lend::new_ref(env, w), a);
     }
     1
 }
@@ -560,12 +633,18 @@ pub fn proc_0e<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32) -> u
     let mut i = 0usize;
     while i < rec[0xF] as usize {
         let id = rec[0x10 + i] as u32;
-        if veneer_ab8(env, 0x021C_9374, id) {
+        if veneer_ab8(
+            &mut Lend::new_ref(env, w),
+            0x021C_9374,
+            id,
+            w.mem[0x1AB8..].as_ptr() as usize,
+        ) {
             let mon = mon_of(env, w, id);
-            if !fainted(env, mon)
-                && env.call(
+            if !fainted(&mut Lend::new_ref(env, w), mon)
+                && env.callwr(
                     0x021D_5D14,
                     &mut [Arg::V(mon), Arg::V(rd32(rec, 4)), Arg::V(sv)],
+                    w,
                 ) != 0
             {
                 any = true;
@@ -575,16 +654,21 @@ pub fn proc_0e<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32) -> u
         i += 1;
     }
     if any && bit23(rec) {
-        bracket_open(env, a);
+        bracket_open(&mut Lend::new_ref(env, w), a);
     }
     let mut i = 0usize;
     while i < rec[0xF] as usize {
         let id = rec[0x10 + i] as u32;
-        if veneer_ab8(env, 0x021C_9384, id) {
+        if veneer_ab8(
+            &mut Lend::new_ref(env, w),
+            0x021C_9384,
+            id,
+            w.mem[0x1AB8..].as_ptr() as usize,
+        ) {
             let mon = mon_of(env, w, id);
-            if !fainted(env, mon) {
+            if !fainted(&mut Lend::new_ref(env, w), mon) {
                 let f = (rec[0xD] == 0) as u32;
-                if env.call(
+                if env.callwr(
                     0x021C_3008,
                     &mut [
                         Arg::P,
@@ -598,9 +682,10 @@ pub fn proc_0e<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32) -> u
                         Arg::V(rec[0xE] as u32),
                         Arg::V(f),
                     ],
+                    w,
                 ) != 0
                 {
-                    message(env, str_at(rec, 0x18));
+                    message(&mut Lend::new_ref(env, w), str_at(rec, 0x18));
                     r = 1;
                 }
             }
@@ -608,7 +693,7 @@ pub fn proc_0e<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32) -> u
         i += 1;
     }
     if any && bit23(rec) {
-        bracket_close(env, a);
+        bracket_close(&mut Lend::new_ref(env, w), a);
     }
     r
 }
@@ -623,21 +708,31 @@ pub fn proc_0f<E: FlowEnv>(
     q: &mut [u8],
     scratch: &mut [u8],
 ) -> u32 {
-    if !veneer_ab8(env, 0x021C_9438, rec[4] as u32) {
+    if !veneer_ab8(
+        &mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]),
+        0x021C_9438,
+        rec[4] as u32,
+        w.mem[0x1AB8..].as_ptr() as usize,
+    ) {
         return 0;
     }
-    let mon = mon_of(env, w, rec[4] as u32);
-    if fainted(env, mon) {
+    let mon = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[4] as u32,
+    );
+    if fainted(&mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]), mon) {
         return 0;
     }
     for k in 1..=7u32 {
-        env.call(
+        env.call_l(
             0x021D_5EA8,
             &mut [Arg::V(mon), Arg::V(k), Arg::V(rec[4 + k as usize] as u32)],
+            Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
         );
     }
     let args: Vec<u32> = rec[4..0xC].iter().map(|&b| b as u32).collect();
-    put_cmd(env, q, 0x0B, &args, scratch);
+    put_cmd(&mut Lend::new_ref(env, w), q, 0x0B, &args, scratch);
     1
 }
 
@@ -653,10 +748,24 @@ pub fn proc_10<E: FlowEnv>(
     let mut r = 0;
     let mut i = 0usize;
     while i < rec[4] as usize {
-        let mon = mon_of(env, w, rec[5 + i] as u32);
-        if !fainted(env, mon) {
-            put_cmd(env, q, 0x0D, &[rec[5 + i] as u32], scratch);
-            env.call(0x021D_5F08, &mut [Arg::V(mon)]);
+        let mon = mon_of(
+            &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+            w,
+            rec[5 + i] as u32,
+        );
+        if !fainted(&mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]), mon) {
+            put_cmd(
+                &mut Lend::new_ref(env, w),
+                q,
+                0x0D,
+                &[rec[5 + i] as u32],
+                scratch,
+            );
+            env.call_l(
+                0x021D_5F08,
+                &mut [Arg::V(mon)],
+                Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+            );
             r = 1;
         }
         i += 1;
@@ -675,19 +784,41 @@ pub fn proc_11<E: FlowEnv>(
     q: &mut [u8],
     scratch: &mut [u8],
 ) -> u32 {
-    if !veneer_ab8(env, 0x021C_95C0, rec[0xE] as u32) {
+    if !veneer_ab8(
+        &mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]),
+        0x021C_95C0,
+        rec[0xE] as u32,
+        w.mem[0x1AB8..].as_ptr() as usize,
+    ) {
         return 0;
     }
-    let mon = mon_of(env, w, rec[0xE] as u32);
+    let mon = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[0xE] as u32,
+    );
     for k in 0..5usize {
         if (rec[0xF] >> k) & 1 != 0 {
             let val = rd16(rec, 4 + 2 * k);
             let field = 8 + k as u32;
-            env.call(0x021D_5970, &mut [Arg::V(mon), Arg::V(field), Arg::V(val)]);
-            put_cmd(env, q, 0x13, &[rec[0xE] as u32, field, val & 0xFF], scratch);
+            env.call_l(
+                0x021D_5970,
+                &mut [Arg::V(mon), Arg::V(field), Arg::V(val)],
+                Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+            );
+            put_cmd(
+                &mut Lend::new_ref(env, w),
+                q,
+                0x13,
+                &[rec[0xE] as u32, field, val & 0xFF],
+                scratch,
+            );
         }
     }
-    message(env, str_at(rec, 0x10));
+    message(
+        &mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]),
+        str_at(rec, 0x10),
+    );
     1
 }
 
@@ -700,27 +831,46 @@ pub fn proc_12<E: FlowEnv>(
     q: &mut [u8],
     scratch: &mut [u8],
 ) -> u32 {
-    let mon = mon_of(env, w, rec[4] as u32);
-    if fainted(env, mon) {
+    let mon = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[4] as u32,
+    );
+    if fainted(&mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]), mon) {
         return 0;
     }
-    put_cmd(env, q, 0x0C, &[rec[4] as u32], scratch);
-    env.call(0x021D_5EFC, &mut [Arg::V(mon)]) & 0xFF
+    put_cmd(
+        &mut Lend::new_ref(env, w),
+        q,
+        0x0C,
+        &[rec[4] as u32],
+        scratch,
+    );
+    env.call_l(
+        0x021D_5EFC,
+        &mut [Arg::V(mon)],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+    ) & 0xFF
 }
 
 /// C: `FUN_overlay_d_93__021c95d0`: HANDEX proc 0x13: when the veneer `961c(work + 0x1AB8,
 /// rec[4])` agrees and `mon(rec[4])` is alive or `rec[5]` != 0: the message at +8 and core4
 /// `2314(work, mon)`; returns 1. Else 0.
 pub fn proc_13<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
-    if !veneer_ab8(env, 0x021C_961C, rec[4] as u32) {
+    if !veneer_ab8(
+        &mut Lend::new_ref(env, w),
+        0x021C_961C,
+        rec[4] as u32,
+        w.mem[0x1AB8..].as_ptr() as usize,
+    ) {
         return 0;
     }
     let mon = mon_of(env, w, rec[4] as u32);
-    if fainted(env, mon) && rec[5] == 0 {
+    if fainted(&mut Lend::new_ref(env, w), mon) && rec[5] == 0 {
         return 0;
     }
-    message(env, str_at(rec, 8));
-    env.call(0x021C_2314, &mut [Arg::P, Arg::V(mon)]);
+    message(&mut Lend::new_ref(env, w), str_at(rec, 8));
+    env.callwr(0x021C_2314, &mut [Arg::P, Arg::V(mon)], w);
     1
 }
 
@@ -735,23 +885,67 @@ pub fn proc_14<E: FlowEnv>(
     q: &mut [u8],
     scratch: &mut [u8],
 ) -> u32 {
-    if !veneer_ab8(env, 0x021C_96B4, rec[6] as u32) {
+    if !veneer_ab8(
+        &mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]),
+        0x021C_96B4,
+        rec[6] as u32,
+        w.mem[0x1AB8..].as_ptr() as usize,
+    ) {
         return 0;
     }
-    let mon = mon_of(env, w, rec[6] as u32);
-    if fainted(env, mon) {
+    let mon = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[6] as u32,
+    );
+    if fainted(&mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]), mon) {
         return 0;
     }
-    let s = env.call(0x021D_5444, &mut [Arg::V(mon)]);
-    if env.call(0x021C_96C4, &mut [Arg::V(s)]) != 0 {
+    let s = env.call_l(
+        0x021D_5444,
+        &mut [Arg::V(mon)],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+    );
+    if env.call_l(
+        0x021C_96C4,
+        &mut [Arg::V(s)],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+    ) != 0
+    {
         return 0;
     }
     let mv = rd16(rec, 4);
-    put_cmd(env, q, 0x16, &[rec[6] as u32, mv], scratch);
-    env.call(0x021D_66B0, &mut [Arg::V(mon), Arg::V(mv)]);
-    if rec[7] == 0 && env.call(0x021E_8DA8, &mut [Arg::V(mv)]) != 0 {
-        let x = env.call(0x021E_8CFC, &mut [Arg::V(mv)]);
-        put_cmd_list(env, q, 0x5B, 0x380, &[rec[6] as u32, x, END]);
+    put_cmd(
+        &mut Lend::new_ref(env, w),
+        q,
+        0x16,
+        &[rec[6] as u32, mv],
+        scratch,
+    );
+    env.call_l(
+        0x021D_66B0,
+        &mut [Arg::V(mon), Arg::V(mv)],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+    );
+    if rec[7] == 0
+        && env.call_l(
+            0x021E_8DA8,
+            &mut [Arg::V(mv)],
+            Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+        ) != 0
+    {
+        let x = env.call_l(
+            0x021E_8CFC,
+            &mut [Arg::V(mv)],
+            Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+        );
+        put_cmd_list(
+            &mut Lend::new_ref(env, w),
+            q,
+            0x5B,
+            0x380,
+            &[rec[6] as u32, x, END],
+        );
     }
     1
 }
@@ -760,10 +954,10 @@ pub fn proc_14<E: FlowEnv>(
 /// `addr(mon, u32 rec[4])`; returns 1. Else 0.
 fn mon_word_call<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], addr: u32) -> u32 {
     let mon = mon_of(env, w, rec[8] as u32);
-    if fainted(env, mon) {
+    if fainted(&mut Lend::new_ref(env, w), mon) {
         return 0;
     }
-    env.call(addr, &mut [Arg::V(mon), Arg::V(rd32(rec, 4))]);
+    env.callwr(addr, &mut [Arg::V(mon), Arg::V(rd32(rec, 4))], w);
     1
 }
 
@@ -771,10 +965,10 @@ fn mon_word_call<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], addr: u32)
 /// `addr(work, mon, u32 rec[4])`; returns 1. Else 0.
 fn work_mon_word_call<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], addr: u32) -> u32 {
     let mon = mon_of(env, w, rec[8] as u32);
-    if fainted(env, mon) {
+    if fainted(&mut Lend::new_ref(env, w), mon) {
         return 0;
     }
-    env.call(addr, &mut [Arg::P, Arg::V(mon), Arg::V(rd32(rec, 4))]);
+    env.callwr(addr, &mut [Arg::P, Arg::V(mon), Arg::V(rd32(rec, 4))], w);
     1
 }
 
@@ -885,35 +1079,37 @@ pub fn proc_1c<E: FlowEnv>(env: &mut E, rec: &[u8]) -> u32 {
 pub fn proc_1d<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, rec: &[u8]) -> u32 {
     let a = mon_of(env, w, rec_poke_id(rec));
     if rec[4] != 0 {
-        if env.call(
+        if env.callw(
             0x021C_3B8C,
             &mut [Arg::P, Arg::V(rec[4] as u32), Arg::V(rec[5] as u32)],
+            w,
         ) == 0
         {
             return 0;
         }
         if bit23(rec) {
-            bracket_open(env, a);
+            bracket_open(&mut Lend::new(env, w), a);
         }
-        env.call(
+        env.callw(
             0x021C_3BB8,
             &mut [Arg::P, Arg::V(rec[4] as u32), Arg::V(rec[5] as u32)],
+            w,
         );
-        message(env, str_at(rec, 8));
+        message(&mut Lend::new(env, w), str_at(rec, 8));
     } else {
         if rec[6] == 0 {
             return 0;
         }
         if bit23(rec) {
-            bracket_open(env, a);
+            bracket_open(&mut Lend::new(env, w), a);
         }
-        message(env, str_at(rec, 8));
+        message(&mut Lend::new(env, w), str_at(rec, 8));
         let old = advance_fields(&mut w.mem[HANDEX_MGR..]);
-        env.call(0x021C_7BF8, &mut [Arg::P]);
+        env.callw(0x021C_7BF8, &mut [Arg::P], w);
         set_word(&mut w.mem[HANDEX_MGR..], old);
     }
     if bit23(rec) {
-        bracket_close(env, a);
+        bracket_close(&mut Lend::new(env, w), a);
     }
     1
 }
@@ -949,12 +1145,25 @@ pub fn proc_1f<E: FlowEnv>(
     q: &mut [u8],
     scratch: &mut [u8],
 ) -> u32 {
-    let t = mon_of(env, w, rec[6] as u32);
-    let cur = env.call(0x021D_59B4, &mut [Arg::V(t), Arg::V(0x10)]) & 0xFFFF;
-    if env.call(0x021C_9BA8, &mut [Arg::V(cur)]) != 0 {
+    let t = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[6] as u32,
+    );
+    let cur = env.call_l(
+        0x021D_59B4,
+        &mut [Arg::V(t), Arg::V(0x10)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    ) & 0xFFFF;
+    if env.call_l(
+        0x021C_9BA8,
+        &mut [Arg::V(cur)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    ) != 0
+    {
         return 0;
     }
-    if fainted(env, t) {
+    if fainted(&mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]), t) {
         return 0;
     }
     let new = rd16(rec, 4);
@@ -962,35 +1171,92 @@ pub fn proc_1f<E: FlowEnv>(
         return 0;
     }
     if bit23(rec) {
-        put_cmd(env, q, 0x57, &[rec_poke_id(rec)], scratch);
+        put_cmd(
+            &mut Lend::new(env, w),
+            q,
+            0x57,
+            &[rec_poke_id(rec)],
+            scratch,
+        );
     }
-    put_cmd(env, q, 0x49, &[rec[6] as u32, new], scratch);
-    message(env, str_at(rec, 0xC));
+    put_cmd(
+        &mut Lend::new(env, w),
+        q,
+        0x49,
+        &[rec[6] as u32, new],
+        scratch,
+    );
+    message(
+        &mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]),
+        str_at(rec, 0xC),
+    );
     let old = advance_fields(&mut w.mem[HANDEX_MGR..]);
-    env.call(
+    env.call_l(
         0x021C_7B3C,
         &mut [Arg::P, Arg::V(rec[6] as u32), Arg::V(cur), Arg::V(new)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
     );
     set_word(&mut w.mem[HANDEX_MGR..], old);
-    env.call(0x021D_8510, &mut [Arg::V(t)]);
-    env.call(0x021D_66D0, &mut [Arg::V(t), Arg::V(new)]);
-    put_cmd(env, q, 0x1D, &[rec[6] as u32, new], scratch);
-    env.call(0x021D_8484, &mut [Arg::V(t)]);
-    put_cmd(env, q, 0x58, &[rec[6] as u32], scratch);
+    env.call_l(
+        0x021D_8510,
+        &mut [Arg::V(t)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    );
+    env.call_l(
+        0x021D_66D0,
+        &mut [Arg::V(t), Arg::V(new)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    );
+    put_cmd(
+        &mut Lend::new(env, w),
+        q,
+        0x1D,
+        &[rec[6] as u32, new],
+        scratch,
+    );
+    env.call_l(
+        0x021D_8484,
+        &mut [Arg::V(t)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    );
+    put_cmd(&mut Lend::new(env, w), q, 0x58, &[rec[6] as u32], scratch);
     if cur != new {
         let old = advance_fields(&mut w.mem[HANDEX_MGR..]);
-        env.call(0x021C_7B7C, &mut [Arg::P, Arg::V(rec[6] as u32)]);
+        env.call_l(
+            0x021C_7B7C,
+            &mut [Arg::P, Arg::V(rec[6] as u32)],
+            Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+        );
         set_word(&mut w.mem[HANDEX_MGR..], old);
     }
     if bit23(rec) {
-        put_cmd(env, q, 0x58, &[rec_poke_id(rec)], scratch);
+        put_cmd(
+            &mut Lend::new(env, w),
+            q,
+            0x58,
+            &[rec_poke_id(rec)],
+            scratch,
+        );
     }
-    if env.call(0x021D_62C4, &mut [Arg::V(t), Arg::V(0x10)]) == 0 {
+    if env.call_l(
+        0x021D_62C4,
+        &mut [Arg::V(t), Arg::V(0x10)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    ) == 0
+    {
         if cur == 0x67 {
-            env.call(0x021C_195C, &mut [Arg::P, Arg::V(t), Arg::V(0)]);
+            env.call_l(
+                0x021C_195C,
+                &mut [Arg::P, Arg::V(t), Arg::V(0)],
+                Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+            );
         }
         if cur == 0x7F {
-            env.call(0x021C_3FDC, &mut [Arg::P, Arg::V(t)]);
+            env.call_l(
+                0x021C_3FDC,
+                &mut [Arg::P, Arg::V(t)],
+                Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+            );
         }
     }
     1
@@ -1009,39 +1275,83 @@ pub fn proc_20<E: FlowEnv>(
     q: &mut [u8],
     scratch: &mut [u8],
 ) -> u32 {
-    let t = mon_of(env, w, rec[6] as u32);
+    let t = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[6] as u32,
+    );
     if rec_poke_id(rec) != rec[6] as u32 {
         let old = advance_fields(&mut w.mem[HANDEX_MGR..]);
-        let yes = env.call(0x021C_7A54, &mut [Arg::P, Arg::V(t), Arg::V(rd16(rec, 4))]) & 0xFF;
+        let yes = env.call_l(
+            0x021C_7A54,
+            &mut [Arg::P, Arg::V(t), Arg::V(rd16(rec, 4))],
+            Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+        ) & 0xFF;
         set_word(&mut w.mem[HANDEX_MGR..], old);
         if yes != 0 {
             let old = advance_fields(&mut w.mem[HANDEX_MGR..]);
-            env.call(0x021C_7AA0, &mut [Arg::P, Arg::V(t)]);
+            env.call_l(
+                0x021C_7AA0,
+                &mut [Arg::P, Arg::V(t)],
+                Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+            );
             set_word(&mut w.mem[HANDEX_MGR..], old);
             return 0;
         }
     }
     if bit23(rec) {
-        put_cmd(env, q, 0x57, &[rec_poke_id(rec)], scratch);
+        put_cmd(
+            &mut Lend::new(env, w),
+            q,
+            0x57,
+            &[rec_poke_id(rec)],
+            scratch,
+        );
     }
-    message(env, str_at(rec, 0xC));
-    env.call(
+    message(
+        &mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]),
+        str_at(rec, 0xC),
+    );
+    env.call_l(
         0x021C_2250,
         &mut [Arg::P, Arg::V(t), Arg::V(rd16(rec, 4)), Arg::V(0)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
     );
     if bit23(rec) {
-        put_cmd(env, q, 0x58, &[rec_poke_id(rec)], scratch);
+        put_cmd(
+            &mut Lend::new(env, w),
+            q,
+            0x58,
+            &[rec_poke_id(rec)],
+            scratch,
+        );
     }
     if rec[7] != 0 {
-        env.call(0x021D_6738, &mut [Arg::V(t)]);
-        put_cmd(env, q, 0x2B, &[rec[6] as u32], scratch);
+        env.call_l(
+            0x021D_6738,
+            &mut [Arg::V(t)],
+            Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+        );
+        put_cmd(&mut Lend::new(env, w), q, 0x2B, &[rec[6] as u32], scratch);
     }
     if rec[8] != 0 {
-        let m2 = mon_of(env, w, rec[9] as u32);
-        env.call(0x021D_6738, &mut [Arg::V(m2)]);
-        put_cmd(env, q, 0x2B, &[rec[9] as u32], scratch);
+        let m2 = mon_of(
+            &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+            w,
+            rec[9] as u32,
+        );
+        env.call_l(
+            0x021D_6738,
+            &mut [Arg::V(m2)],
+            Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+        );
+        put_cmd(&mut Lend::new(env, w), q, 0x2B, &[rec[9] as u32], scratch);
     }
-    env.call(0x021C_195C, &mut [Arg::P, Arg::V(t), Arg::V(0)]);
+    env.call_l(
+        0x021C_195C,
+        &mut [Arg::P, Arg::V(t), Arg::V(0)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    );
     1
 }
 
@@ -1049,9 +1359,10 @@ pub fn proc_20<E: FlowEnv>(
 /// rec[8])`; returns 1.
 pub fn proc_21<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let mon = mon_of(env, w, rec[4] as u32);
-    env.call(
+    env.callwr(
         0x021C_195C,
         &mut [Arg::P, Arg::V(mon), Arg::V(rd32(rec, 8))],
+        w,
     );
     1
 }
@@ -1068,25 +1379,50 @@ pub fn proc_22<E: FlowEnv>(
     q: &mut [u8],
     scratch: &mut [u8],
 ) -> u32 {
-    let t = mon_of(env, w, rec[4] as u32);
-    if fainted(env, t) {
+    let t = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[4] as u32,
+    );
+    if fainted(&mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]), t) {
         return 0;
     }
-    let p = env.call(0x021D_CF78, &mut [Arg::V(t), Arg::V(rd16(rec, 6))]);
+    let p = env.call_l(
+        0x021D_CF78,
+        &mut [Arg::V(t), Arg::V(rd16(rec, 6))],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    );
     if p == 0 {
         return 0;
     }
-    let pos = put_cmd_placeholder(env, q, 0x42, scratch);
+    let pos = put_cmd_placeholder(&mut Lend::new(env, w), q, 0x42, scratch);
     let old = advance_fields(&mut w.mem[HANDEX_MGR..]);
-    env.call(
+    env.call_l(
         0x021C_6E00,
         &mut [Arg::P, Arg::V(t), Arg::V(rec_poke_id(rec))],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
     );
-    if env.call(0x021C_88E4, &mut [Arg::P]) == 2 {
-        put_cmd_at(env, q, pos, 0x42, &[rec[4] as u32], scratch);
+    if env.call_l(
+        0x021C_88E4,
+        &mut [Arg::P],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    ) == 2
+    {
+        put_cmd_at(
+            &mut Lend::new(env, w),
+            q,
+            pos,
+            0x42,
+            &[rec[4] as u32],
+            scratch,
+        );
     }
     set_word(&mut w.mem[HANDEX_MGR..], old);
-    env.call(0x021D_7040, &mut [Arg::V(p)]);
+    env.call_l(
+        0x021D_7040,
+        &mut [Arg::V(p)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    );
     1
 }
 
@@ -1096,12 +1432,13 @@ pub fn proc_22<E: FlowEnv>(
 pub fn proc_23<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let mon = mon_of(env, w, rec_poke_id(rec));
     if rd32(rec, 4) == 0 {
-        env.call(0x021C_60D4, &mut [Arg::P, Arg::V(mon)]);
-        message(env, str_at(rec, 8));
+        env.callwr(0x021C_60D4, &mut [Arg::P, Arg::V(mon)], w);
+        message(&mut Lend::new_ref(env, w), str_at(rec, 8));
     }
-    env.call(
+    env.callwr(
         0x021C_2250,
         &mut [Arg::P, Arg::V(mon), Arg::V(0), Arg::V(1)],
+        w,
     );
     1
 }
@@ -1114,30 +1451,38 @@ pub fn proc_23<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
 pub fn proc_24<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, rec: &[u8]) -> u32 {
     let a = mon_of(env, w, rec[4] as u32);
     let b = mon_of(env, w, rec_poke_id(rec));
-    let vb = env.call(0x021D_5B40, &mut [Arg::V(b)]) & 0xFFFF;
-    let va = env.call(0x021D_5B40, &mut [Arg::V(a)]) & 0xFFFF;
+    let vb = env.callw(0x021D_5B40, &mut [Arg::V(b)], w) & 0xFFFF;
+    let va = env.callw(0x021D_5B40, &mut [Arg::V(a)], w) & 0xFFFF;
     let old = advance_fields(&mut w.mem[HANDEX_MGR..]);
-    let yes = env.call(0x021C_7A54, &mut [Arg::P, Arg::V(a), Arg::V(vb)]) & 0xFF;
+    let yes = env.callw(0x021C_7A54, &mut [Arg::P, Arg::V(a), Arg::V(vb)], w) & 0xFF;
     set_word(&mut w.mem[HANDEX_MGR..], old);
     if yes != 0 {
         let old = advance_fields(&mut w.mem[HANDEX_MGR..]);
-        env.call(0x021C_7AA0, &mut [Arg::P, Arg::V(a)]);
+        env.callw(0x021C_7AA0, &mut [Arg::P, Arg::V(a)], w);
         set_word(&mut w.mem[HANDEX_MGR..], old);
         return 0;
     }
     if bit23(rec) {
-        bracket_open(env, b);
+        bracket_open(&mut Lend::new(env, w), b);
     }
-    message(env, str_at(rec, 8));
-    message(env, str_at(rec, 0x2C));
-    message(env, str_at(rec, 0x50));
+    message(&mut Lend::new(env, w), str_at(rec, 8));
+    message(&mut Lend::new(env, w), str_at(rec, 0x2C));
+    message(&mut Lend::new(env, w), str_at(rec, 0x50));
     if bit23(rec) {
-        bracket_close(env, b);
+        bracket_close(&mut Lend::new(env, w), b);
     }
-    env.call(0x021C_2250, &mut [Arg::P, Arg::V(b), Arg::V(va), Arg::V(0)]);
-    env.call(0x021C_2250, &mut [Arg::P, Arg::V(a), Arg::V(vb), Arg::V(0)]);
-    env.call(0x021C_195C, &mut [Arg::P, Arg::V(b), Arg::V(0)]);
-    env.call(0x021C_195C, &mut [Arg::P, Arg::V(a), Arg::V(0)]);
+    env.callw(
+        0x021C_2250,
+        &mut [Arg::P, Arg::V(b), Arg::V(va), Arg::V(0)],
+        w,
+    );
+    env.callw(
+        0x021C_2250,
+        &mut [Arg::P, Arg::V(a), Arg::V(vb), Arg::V(0)],
+        w,
+    );
+    env.callw(0x021C_195C, &mut [Arg::P, Arg::V(b), Arg::V(0)], w);
+    env.callw(0x021C_195C, &mut [Arg::P, Arg::V(a), Arg::V(0)], w);
     1
 }
 
@@ -1151,7 +1496,11 @@ pub fn proc_25<E: FlowEnv>(
     q: &mut [u8],
     scratch: &mut [u8],
 ) -> u32 {
-    let mon = mon_of(env, w, rec[4] as u32);
+    let mon = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[4] as u32,
+    );
     let v8 = rd16(rec, 8);
     let args = [
         rec[4] as u32,
@@ -1160,8 +1509,8 @@ pub fn proc_25<E: FlowEnv>(
         rec[7] as u32,
         v8,
     ];
-    cmd_queue::put_cmd(env, q, 0x1F, &args, scratch);
-    env.call(
+    cmd_queue::put_cmd(&mut Lend::new_ref(env, w), q, 0x1F, &args, scratch);
+    env.call_l(
         0x021D_5734,
         &mut [
             Arg::V(mon),
@@ -1170,6 +1519,7 @@ pub fn proc_25<E: FlowEnv>(
             Arg::V(rec[6] as u32),
             Arg::V(rec[7] as u32),
         ],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
     );
     1
 }
@@ -1178,7 +1528,7 @@ pub fn proc_25<E: FlowEnv>(
 /// rec[6])`; returns 1.
 pub fn proc_26<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let mon = mon_of(env, w, rec[4] as u32);
-    env.call(
+    env.callwr(
         0x021C_0780,
         &mut [
             Arg::P,
@@ -1186,6 +1536,7 @@ pub fn proc_26<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
             Arg::V(rec[5] as u32),
             Arg::V(rec[6] as u32),
         ],
+        w,
     );
     1
 }
@@ -1202,50 +1553,56 @@ pub fn proc_27<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], d: &mut [u8]
     let a = mon_of(env, w, rec[4] as u32);
     let b = mon_of(env, w, rec[5] as u32);
     let mut m = [0u8; 0x14];
-    env.call(
+    env.callwr(
         0x021C_64B4,
         &mut [Arg::P, Arg::V(rd16(rec, 6)), Arg::V(a), Arg::Out(&mut m)],
+        w,
     );
-    env.call(0x021C_A0B8, &mut [Arg::V(w.u32_at(0x860))]);
+    env.callwr(0x021C_A0B8, &mut [Arg::V(w.u32_at(0x860))], w);
     let o = w.u32_at(0x868);
-    env.call(0x021C_A0C8, &mut [Arg::V(o)]);
-    env.call(0x021C_A0D8, &mut [Arg::V(o), Arg::V(b)]);
-    env.call(0x021C_A0E8, &mut [Arg::V(o), Arg::V(1)]);
-    env.call(0x021C_A0F8, &mut [Arg::V(o)]);
-    if env.call(0x021C_A108, &mut [Arg::V(o)]) != 0 {
-        env.call(0x021C_5718, &mut [Arg::P]);
+    env.callwr(0x021C_A0C8, &mut [Arg::V(o)], w);
+    env.callwr(0x021C_A0D8, &mut [Arg::V(o), Arg::V(b)], w);
+    env.callwr(0x021C_A0E8, &mut [Arg::V(o), Arg::V(1)], w);
+    env.callwr(0x021C_A0F8, &mut [Arg::V(o)], w);
+    if env.callwr(0x021C_A108, &mut [Arg::V(o)], w) != 0 {
+        env.callwr(0x021C_5718, &mut [Arg::P], w);
         return 0;
     }
     let mr = &m[..0x10];
-    env.call(
+    env.callwr(
         0x021B_F83C,
         &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o)],
+        w,
     );
-    env.call(
+    env.callwr(
         0x021B_F3D8,
         &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o), Arg::P],
+        w,
     );
-    env.call(
+    env.callwr(
         0x021B_F4AC,
         &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o), Arg::P],
+        w,
     );
-    env.call(
+    env.callwr(
         0x021B_F8D4,
         &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o)],
+        w,
     );
-    if env.call(0x021C_A118, &mut [Arg::V(o)]) != 0 {
+    if env.callwr(0x021C_A118, &mut [Arg::V(o)], w) != 0 {
         return 0;
     }
     let mut save = [0u8; 6];
     save.copy_from_slice(&d[..6]);
-    env.call(0x021B_D1E0, &mut [Arg::Out(&mut d[..6])]);
-    env.call(
+    env.callwr(0x021B_D1E0, &mut [Arg::Out(&mut d[..6])], w);
+    env.callwr(
         0x021B_D200,
         &mut [Arg::Out(&mut d[..6]), Arg::P, Arg::V(a), Arg::V(o)],
+        w,
     );
     d[4] = 1;
     // the original passes work; c091c reaches `d` through work + 0x4A8 (the spec's `outki`)
-    env.call(
+    env.callwr(
         0x021C_091C,
         &mut [
             Arg::Out(&mut d[..6]),
@@ -1255,6 +1612,7 @@ pub fn proc_27<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], d: &mut [u8]
             Arg::P,
             Arg::V(1),
         ],
+        w,
     );
     let f = (d[5] & 1) as u32;
     d[..6].copy_from_slice(&save);
@@ -1265,7 +1623,7 @@ pub fn proc_27<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], d: &mut [u8]
 /// agrees, `work[0x14] = 5` and 1. Else 0.
 pub fn proc_28<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, rec: &[u8]) -> u32 {
     let mon = mon_of(env, w, rec_poke_id(rec));
-    if env.call(0x021B_D60C, &mut [Arg::P, Arg::V(mon), Arg::V(1)]) == 0 {
+    if env.callw(0x021B_D60C, &mut [Arg::P, Arg::V(mon), Arg::V(1)], w) == 0 {
         return 0;
     }
     w.set_u32_at(0x14, 5);
@@ -1279,29 +1637,31 @@ pub fn proc_28<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, rec: &[u8]) -> u32 {
 pub fn proc_29<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, rec: &[u8]) -> u32 {
     let id = rec[0x4C] as u32;
     let t = mon_of(env, w, id);
-    if env.call(0x021B_C2B0, &mut [Arg::P]) != 0 {
+    if env.callw(0x021B_C2B0, &mut [Arg::P], w) != 0 {
         return 0;
     }
-    if env.call(0x021C_8374, &mut [Arg::P, Arg::V(id)]) != 0 {
+    if env.callw(0x021C_8374, &mut [Arg::P, Arg::V(id)], w) != 0 {
         return 0;
     }
     if w.u32_at(0x14) != 0 {
         return 0;
     }
-    message(env, str_at(rec, 4));
-    if env.call(
+    message(&mut Lend::new(env, w), str_at(rec, 4));
+    if env.callw(
         0x021B_DD00,
         &mut [Arg::P, Arg::V(t), Arg::V(rec[0x4D] as u32)],
+        w,
     ) == 0
     {
         return 0;
     }
-    let pos = env.call(
+    let pos = env.callw(
         0x021B_8D8C,
         &mut [Arg::V(w.u32_at(4)), Arg::V(w.u32_at(8)), Arg::V(id)],
+        w,
     );
-    env.call(0x021B_B930, &mut [Arg::P, Arg::V(pos)]);
-    message(env, str_at(rec, 0x28));
+    env.callw(0x021B_B930, &mut [Arg::P, Arg::V(pos)], w);
+    message(&mut Lend::new(env, w), str_at(rec, 0x28));
     w.set_u32_at(0x14, 1);
     1
 }
@@ -1316,16 +1676,55 @@ pub fn proc_2a<E: FlowEnv>(
     q: &mut [u8],
     scratch: &mut [u8],
 ) -> u32 {
-    let a = mon_of(env, w, rec[4] as u32);
-    let b = mon_of(env, w, rec[5] as u32);
-    if env.call(0x021D_62C4, &mut [Arg::V(a), Arg::V(0x10)]) != 0 {
-        env.call(0x021C_2CA8, &mut [Arg::P, Arg::V(b)]);
+    let a = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[4] as u32,
+    );
+    let b = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[5] as u32,
+    );
+    if env.call_l(
+        0x021D_62C4,
+        &mut [Arg::V(a), Arg::V(0x10)],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+    ) != 0
+    {
+        env.call_l(
+            0x021C_2CA8,
+            &mut [Arg::P, Arg::V(b)],
+            Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+        );
     }
-    env.call(0x021D_65C8, &mut [Arg::V(b), Arg::V(a)]);
-    put_cmd(env, q, 0x26, &[rec[4] as u32, rec[5] as u32], scratch);
-    if env.call(0x021D_6D7C, &mut [Arg::V(b)]) != 0 {
-        let x = env.call(0x021C_A238, &mut [Arg::P, Arg::V(rec[5] as u32)]);
-        put_cmd(env, q, 0x51, &[x], scratch);
+    env.call_l(
+        0x021D_65C8,
+        &mut [Arg::V(b), Arg::V(a)],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+    );
+    put_cmd(
+        &mut Lend::new_ref(env, w),
+        q,
+        0x26,
+        &[rec[4] as u32, rec[5] as u32],
+        scratch,
+    );
+    if env.call_l(
+        0x021D_6D7C,
+        &mut [Arg::V(b)],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+    ) != 0
+    {
+        let x = env.call_l(
+            0x021C_A238,
+            &mut [
+                Arg::PHost(w.mem[0x1AB8..].as_ptr() as usize),
+                Arg::V(rec[5] as u32),
+            ],
+            Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+        );
+        put_cmd(&mut Lend::new_ref(env, w), q, 0x51, &[x], scratch);
     }
     1
 }
@@ -1334,9 +1733,10 @@ pub fn proc_2a<E: FlowEnv>(
 /// rec[5])` is nonzero.
 pub fn proc_2b<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let mon = mon_of(env, w, rec[4] as u32);
-    (env.call(
+    (env.callwr(
         0x021C_1D60,
         &mut [Arg::P, Arg::V(mon), Arg::V(rec[5] as u32)],
+        w,
     ) != 0) as u32
 }
 
@@ -1352,23 +1752,44 @@ pub fn proc_2c<E: FlowEnv>(
     scratch: &mut [u8],
 ) -> u32 {
     let id = rec[4] as u32;
-    let mon = mon_of(env, w, id);
-    env.call(0x021D_5FA4, &mut [Arg::V(mon), Arg::V(rd16(rec, 6))]);
-    put_cmd(env, q, 2, &[id, rd16(rec, 6)], scratch);
+    let mon = mon_of(&mut Lend::hv(env, vec![&mut *q, &mut *scratch]), w, id);
+    env.call_l(
+        0x021D_5FA4,
+        &mut [Arg::V(mon), Arg::V(rd16(rec, 6))],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    );
+    put_cmd(&mut Lend::new(env, w), q, 2, &[id, rd16(rec, 6)], scratch);
     w.set_u8_at(0x7A9 + id as usize, 0);
-    message(env, str_at(rec, 8));
-    let pos = env.call(
+    message(
+        &mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]),
+        str_at(rec, 8),
+    );
+    let pos = env.call_l(
         0x021B_8D8C,
         &mut [Arg::V(w.u32_at(4)), Arg::V(w.u32_at(8)), Arg::V(id)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
     );
     if pos != 6 {
-        let c = env.call(0x021B_8D08, &mut [Arg::V(id)]);
-        let x = env.call(0x021B_8DEC, &mut [Arg::V(w.u32_at(4)), Arg::V(pos)]);
-        env.call(
+        let c = env.call_l(
+            0x021B_8D08,
+            &mut [Arg::V(id)],
+            Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+        );
+        let x = env.call_l(
+            0x021B_8DEC,
+            &mut [Arg::V(w.u32_at(4)), Arg::V(pos)],
+            Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+        );
+        env.call_l(
             0x021B_D9D4,
             &mut [Arg::P, Arg::V(c), Arg::V(x), Arg::V(x), Arg::V(1)],
+            Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
         );
-        env.call(0x021B_DA00, &mut [Arg::P]);
+        env.call_l(
+            0x021B_DA00,
+            &mut [Arg::P],
+            Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+        );
     }
     1
 }
@@ -1382,10 +1803,27 @@ pub fn proc_2d<E: FlowEnv>(
     q: &mut [u8],
     scratch: &mut [u8],
 ) -> u32 {
-    let mon = mon_of(env, w, rec[4] as u32);
-    env.call(0x021D_67D8, &mut [Arg::V(mon), Arg::V(rd16(rec, 6))]);
-    put_cmd(env, q, 0x14, &[rec[4] as u32, rd16(rec, 6)], scratch);
-    message(env, str_at(rec, 8));
+    let mon = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[4] as u32,
+    );
+    env.call_l(
+        0x021D_67D8,
+        &mut [Arg::V(mon), Arg::V(rd16(rec, 6))],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+    );
+    put_cmd(
+        &mut Lend::new_ref(env, w),
+        q,
+        0x14,
+        &[rec[4] as u32, rd16(rec, 6)],
+        scratch,
+    );
+    message(
+        &mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]),
+        str_at(rec, 8),
+    );
     1
 }
 
@@ -1395,7 +1833,7 @@ pub fn proc_2e<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let t = mon_of(env, w, rec[6] as u32);
     let p = mon_of(env, w, rec_poke_id(rec));
     let mut out = [0u8; 4];
-    (env.call(
+    (env.callwr(
         0x021C_3810,
         &mut [
             Arg::P,
@@ -1407,6 +1845,7 @@ pub fn proc_2e<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
             Arg::V((rec[7] >> 4) as u32),
             Arg::In(&rec[8..0x2C]),
         ],
+        w,
     ) != 0) as u32
 }
 
@@ -1446,29 +1885,34 @@ pub fn proc_32<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     if rec[4] == rec[5] {
         return 0;
     }
-    let c = env.call(0x021B_8D08, &mut [Arg::V(rec[4] as u32)]);
-    let c2 = env.call(0x021B_8D08, &mut [Arg::V(rec[5] as u32)]);
+    let c = env.callwr(0x021B_8D08, &mut [Arg::V(rec[4] as u32)], w);
+    let c2 = env.callwr(0x021B_8D08, &mut [Arg::V(rec[5] as u32)], w);
     if c != c2 {
         return 0;
     }
     let a = mon_of(env, w, rec[4] as u32);
     let b = mon_of(env, w, rec[5] as u32);
-    if fainted(env, a) || fainted(env, b) {
+    if fainted(&mut Lend::new_ref(env, w), a) || fainted(&mut Lend::new_ref(env, w), b) {
         return 0;
     }
-    let party = env.call(0x021B_9AEC, &mut [Arg::V(w.u32_at(8)), Arg::V(c)]);
-    let i = env.call(0x021B_9C98, &mut [Arg::V(party), Arg::V(a)]) as u16 as i16;
-    let j = env.call(0x021B_9C98, &mut [Arg::V(party), Arg::V(b)]) as u16 as i16;
+    let party = env.callwr(0x021B_9AEC, &mut [Arg::V(w.u32_at(8)), Arg::V(c)], w);
+    let i = env.callwr(0x021B_9C98, &mut [Arg::V(party), Arg::V(a)], w) as u16 as i16;
+    let j = env.callwr(0x021B_9C98, &mut [Arg::V(party), Arg::V(b)], w) as u16 as i16;
     if i < 0 || j < 0 {
         return 0;
     }
     let (i, j) = ((i as u32) & 0xFF, (j as u32) & 0xFF);
-    env.call(
+    env.callwr(
         0x021B_D43C,
         &mut [Arg::P, Arg::V(c), Arg::V(i), Arg::V(j), Arg::V(0)],
+        w,
     );
-    message(env, str_at(rec, 8));
-    env.call(0x021B_D4E4, &mut [Arg::P, Arg::V(c), Arg::V(i), Arg::V(j)]);
+    message(&mut Lend::new_ref(env, w), str_at(rec, 8));
+    env.callwr(
+        0x021B_D4E4,
+        &mut [Arg::P, Arg::V(c), Arg::V(i), Arg::V(j)],
+        w,
+    );
     1
 }
 
@@ -1485,37 +1929,102 @@ pub fn proc_33<E: FlowEnv>(
     q: &mut [u8],
     scratch: &mut [u8],
 ) -> u32 {
-    let a = mon_of(env, w, rec_poke_id(rec));
-    let b = mon_of(env, w, rec[4] as u32);
-    if env.call(0x021D_6C24, &mut [Arg::V(a)]) != 0 {
+    let a = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec_poke_id(rec),
+    );
+    let b = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[4] as u32,
+    );
+    if env.call_l(
+        0x021D_6C24,
+        &mut [Arg::V(a)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    ) != 0
+    {
         return 0;
     }
-    if env.call(0x021D_6C24, &mut [Arg::V(b)]) != 0 {
+    if env.call_l(
+        0x021D_6C24,
+        &mut [Arg::V(b)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    ) != 0
+    {
         return 0;
     }
-    if env.call(0x021D_5C30, &mut [Arg::V(a)]) != 0 {
+    if env.call_l(
+        0x021D_5C30,
+        &mut [Arg::V(a)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    ) != 0
+    {
         return 0;
     }
-    let cur = env.call(0x021D_59B4, &mut [Arg::V(a), Arg::V(0x10)]) & 0xFFFF;
-    if env.call(0x021D_6C50, &mut [Arg::V(a), Arg::V(b)]) == 0 {
+    let cur = env.call_l(
+        0x021D_59B4,
+        &mut [Arg::V(a), Arg::V(0x10)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    ) & 0xFFFF;
+    if env.call_l(
+        0x021D_6C50,
+        &mut [Arg::V(a), Arg::V(b)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    ) == 0
+    {
         return 0;
     }
-    let ia = env.call(0x021D_5440, &mut [Arg::V(a)]);
-    let ib = env.call(0x021D_5440, &mut [Arg::V(b)]);
+    let ia = env.call_l(
+        0x021D_5440,
+        &mut [Arg::V(a)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    );
+    let ib = env.call_l(
+        0x021D_5440,
+        &mut [Arg::V(b)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    );
     if bit23(rec) {
-        bracket_open(env, a);
+        bracket_open(&mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]), a);
     }
-    env.call(0x021E_0434, &mut [Arg::V(a)]);
-    env.call(0x021D_8510, &mut [Arg::V(a)]);
-    env.call(0x021D_8484, &mut [Arg::V(a)]);
-    put_cmd(env, q, 0x53, &[ia, ib], scratch);
-    message(env, str_at(rec, 8));
+    env.call_l(
+        0x021E_0434,
+        &mut [Arg::V(a)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    );
+    env.call_l(
+        0x021D_8510,
+        &mut [Arg::V(a)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    );
+    env.call_l(
+        0x021D_8484,
+        &mut [Arg::V(a)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    );
+    put_cmd(&mut Lend::new(env, w), q, 0x53, &[ia, ib], scratch);
+    message(
+        &mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]),
+        str_at(rec, 8),
+    );
     if bit23(rec) {
-        bracket_close(env, a);
+        bracket_close(&mut Lend::wh(env, w, vec![&mut *q, &mut *scratch]), a);
     }
-    if cur != env.call(0x021D_59B4, &mut [Arg::V(a), Arg::V(0x11)]) {
+    if cur
+        != env.call_l(
+            0x021D_59B4,
+            &mut [Arg::V(a), Arg::V(0x11)],
+            Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+        )
+    {
         let old = advance_fields(&mut w.mem[HANDEX_MGR..]);
-        env.call(0x021C_7B7C, &mut [Arg::P, Arg::V(ia)]);
+        env.call_l(
+            0x021C_7B7C,
+            &mut [Arg::P, Arg::V(ia)],
+            Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+        );
         set_word(&mut w.mem[HANDEX_MGR..], old);
     }
     1
@@ -1531,16 +2040,43 @@ pub fn proc_34<E: FlowEnv>(
     q: &mut [u8],
     scratch: &mut [u8],
 ) -> u32 {
-    if !veneer_ab8(env, 0x021C_A5BC, rec[4] as u32) {
+    if !veneer_ab8(
+        &mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]),
+        0x021C_A5BC,
+        rec[4] as u32,
+        w.mem[0x1AB8..].as_ptr() as usize,
+    ) {
         return 0;
     }
-    let mon = mon_of(env, w, rec[4] as u32);
-    if env.call(0x021D_6C24, &mut [Arg::V(mon)]) == 0 {
+    let mon = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[4] as u32,
+    );
+    if env.call_l(
+        0x021D_6C24,
+        &mut [Arg::V(mon)],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+    ) == 0
+    {
         return 0;
     }
-    env.call(0x021D_6C2C, &mut [Arg::V(mon)]);
-    put_cmd(env, q, 0x4B, &[rec[4] as u32], scratch);
-    message(env, str_at(rec, 8));
+    env.call_l(
+        0x021D_6C2C,
+        &mut [Arg::V(mon)],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+    );
+    put_cmd(
+        &mut Lend::new_ref(env, w),
+        q,
+        0x4B,
+        &[rec[4] as u32],
+        scratch,
+    );
+    message(
+        &mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]),
+        str_at(rec, 8),
+    );
     1
 }
 
@@ -1550,27 +2086,42 @@ pub fn proc_34<E: FlowEnv>(
 /// 1)`; `62c4(mon, 0x1E)` / `62c4(mon, 0x20)` -> core5 `5620(work, mon, 0x1E / 0x20, null)`; any
 /// of these -> command list 0x5B (0x43B, id). Returns 1.
 pub fn proc_35<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], q: &mut [u8]) -> u32 {
-    let pos = env.call(
+    let pos = env.call_l(
         0x021B_8D8C,
         &mut [
             Arg::V(w.u32_at(4)),
             Arg::V(w.u32_at(8)),
             Arg::V(rec_poke_id(rec)),
         ],
+        Lent::of(None, Some(w), vec![&mut *q]),
     );
     let mut ids = [0u8; 4];
-    let n = env.call(
+    let n = env.call_l(
         0x021C_7F68,
         &mut [Arg::P, Arg::V((0x800 | pos) & 0xFFFF), Arg::Out(&mut ids)],
+        Lent::of(None, Some(w), vec![&mut *q]),
     );
     let mut i = 0u32;
     while i < n {
         let id = ids[i as usize] as u32;
-        let mon = mon_of(env, w, id);
+        let mon = mon_of(&mut Lend::hv(env, vec![&mut *q]), w, id);
         let mut any = false;
-        if env.call(0x021D_5BDC, &mut [Arg::V(mon), Arg::V(3)]) != 0 {
-            env.call(0x021C_5418, &mut [Arg::P, Arg::V(mon), Arg::V(3)]);
-            let s = env.call(0x021D_69AC, &mut [Arg::V(mon), Arg::V(4)]);
+        if env.call_l(
+            0x021D_5BDC,
+            &mut [Arg::V(mon), Arg::V(3)],
+            Lent::of(None, Some(w), vec![&mut *q]),
+        ) != 0
+        {
+            env.call_l(
+                0x021C_5418,
+                &mut [Arg::P, Arg::V(mon), Arg::V(3)],
+                Lent::of(None, Some(w), vec![&mut *q]),
+            );
+            let s = env.call_l(
+                0x021D_69AC,
+                &mut [Arg::V(mon), Arg::V(4)],
+                Lent::of(None, Some(w), vec![&mut *q]),
+            );
             let s = if s == 0 {
                 0x1F
             } else {
@@ -1582,24 +2133,39 @@ pub fn proc_35<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], q: &mut [u8]
                 }
             };
             if s != 0x1F {
-                env.call(0x0203_EFC8, &mut [Arg::P, Arg::V(mon), Arg::V(1)]);
+                env.call_l(
+                    0x0203_EFC8,
+                    &mut [Arg::P, Arg::V(mon), Arg::V(1)],
+                    Lent::of(None, Some(w), vec![&mut *q]),
+                );
             }
             any = true;
         }
-        if env.call(0x021C_6F34, &mut [Arg::P, Arg::V(mon), Arg::V(1)]) != 0 {
+        if env.call_l(
+            0x021C_6F34,
+            &mut [Arg::P, Arg::V(mon), Arg::V(1)],
+            Lent::of(None, Some(w), vec![&mut *q]),
+        ) != 0
+        {
             any = true;
         }
         for st in [0x1Eu32, 0x20] {
-            if env.call(0x021D_62C4, &mut [Arg::V(mon), Arg::V(st)]) != 0 {
-                env.call(
+            if env.call_l(
+                0x021D_62C4,
+                &mut [Arg::V(mon), Arg::V(st)],
+                Lent::of(None, Some(w), vec![&mut *q]),
+            ) != 0
+            {
+                env.call_l(
                     0x021C_5620,
                     &mut [Arg::P, Arg::V(mon), Arg::V(st), Arg::V(0)],
+                    Lent::of(None, Some(w), vec![&mut *q]),
                 );
                 any = true;
             }
         }
         if any {
-            put_cmd_list(env, q, 0x5B, 0x43B, &[id, END]);
+            put_cmd_list(&mut Lend::new_ref(env, w), q, 0x5B, 0x43B, &[id, END]);
         }
         i = (i + 1) & 0xFF;
     }
@@ -1610,17 +2176,18 @@ pub fn proc_35<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], q: &mut [u8]
 /// `5418(work, mon, u32 rec[8])` agrees, the message at +0xC and 1. Else 0.
 pub fn proc_36<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let mon = mon_of(env, w, rec[4] as u32);
-    if fainted(env, mon) {
+    if fainted(&mut Lend::new_ref(env, w), mon) {
         return 0;
     }
-    if env.call(
+    if env.callwr(
         0x021C_5418,
         &mut [Arg::P, Arg::V(mon), Arg::V(rd32(rec, 8))],
+        w,
     ) == 0
     {
         return 0;
     }
-    message(env, str_at(rec, 0xC));
+    message(&mut Lend::new_ref(env, w), str_at(rec, 0xC));
     1
 }
 
@@ -1631,7 +2198,7 @@ pub fn proc_37<E: FlowEnv>(env: &mut E, rec: &[u8], q: &mut [u8], scratch: &mut 
     if rec[0xB] != 0 {
         put_cmd(env, q, 0x56, &[0], scratch);
     }
-    env.call(
+    env.call_l(
         0x021C_70E4,
         &mut [
             Arg::P,
@@ -1641,8 +2208,12 @@ pub fn proc_37<E: FlowEnv>(env: &mut E, rec: &[u8], q: &mut [u8], scratch: &mut 
             Arg::V(rec[0xA] as u32),
             Arg::V(rd16(rec, 8)),
         ],
+        Lent::of(None, None, vec![&mut *q, &mut *scratch]),
     );
-    message(env, str_at(rec, 0xC));
+    message(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        str_at(rec, 0xC),
+    );
     1
 }
 
@@ -1663,24 +2234,52 @@ pub fn proc_39<E: FlowEnv>(
     q: &mut [u8],
     scratch: &mut [u8],
 ) -> u32 {
-    let t = mon_of(env, w, rec[4] as u32);
-    if fainted(env, t) {
+    let t = mon_of(
+        &mut Lend::hv(env, vec![&mut *q, &mut *scratch]),
+        w,
+        rec[4] as u32,
+    );
+    if fainted(&mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]), t) {
         return 0;
     }
-    if env.call(0x021D_6D54, &mut [Arg::V(t)]) != 0 {
+    if env.call_l(
+        0x021D_6D54,
+        &mut [Arg::V(t)],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+    ) != 0
+    {
         return 0;
     }
-    if env.call(0x021D_59B4, &mut [Arg::V(t), Arg::V(0x13)]) & 0xFF == rec[5] as u32 {
+    if env.call_l(
+        0x021D_59B4,
+        &mut [Arg::V(t), Arg::V(0x13)],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+    ) & 0xFF
+        == rec[5] as u32
+    {
         return 0;
     }
     if bit23(rec) {
-        bracket_open(env, t);
+        bracket_open(&mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]), t);
     }
-    env.call(0x021D_66D8, &mut [Arg::V(t), Arg::V(rec[5] as u32)]);
-    put_cmd(env, q, 0x4F, &[rec[4] as u32, rec[5] as u32], scratch);
-    message(env, str_at(rec, 8));
+    env.call_l(
+        0x021D_66D8,
+        &mut [Arg::V(t), Arg::V(rec[5] as u32)],
+        Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
+    );
+    put_cmd(
+        &mut Lend::new_ref(env, w),
+        q,
+        0x4F,
+        &[rec[4] as u32, rec[5] as u32],
+        scratch,
+    );
+    message(
+        &mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]),
+        str_at(rec, 8),
+    );
     if bit23(rec) {
-        bracket_close(env, t);
+        bracket_close(&mut Lend::whr(env, w, vec![&mut *q, &mut *scratch]), t);
     }
     1
 }
@@ -1744,15 +2343,15 @@ pub fn rule_dispatch<E: FlowEnv>(
     ra: u32,
     s: u32,
 ) -> u32 {
-    let rule = env.call(0x021B_8588, &mut [Arg::V(w.u32_at(4))]);
+    let rule = env.callw(0x021B_8588, &mut [Arg::V(w.u32_at(4))], w);
     let mut extra = 0x1F;
     if rd32(rec, 0x10) & 1 == 0 {
-        extra = env.call(0x021C_B214, &mut [Arg::P, Arg::V(a), Arg::V(ra)]);
+        extra = env.callw(0x021C_B214, &mut [Arg::P, Arg::V(a), Arg::V(ra)], w);
     }
-    env.call(0x021C_A8C8, &mut [Arg::V(s)]);
+    env.callw(0x021C_A8C8, &mut [Arg::V(s)], w);
     w.set_u8_at(0x77F, 6);
     let mut r = match rule {
-        1 => env.call(
+        1 => env.callw(
             0x021C_AA58,
             &mut [
                 Arg::P,
@@ -1763,8 +2362,9 @@ pub fn rule_dispatch<E: FlowEnv>(
                 Arg::V(s),
                 Arg::V(a),
             ],
+            w,
         ),
-        2 => env.call(
+        2 => env.callw(
             0x021C_ACF4,
             &mut [
                 Arg::P,
@@ -1776,8 +2376,9 @@ pub fn rule_dispatch<E: FlowEnv>(
                 Arg::V(a),
                 Arg::V(b),
             ],
+            w,
         ),
-        _ => env.call(
+        _ => env.callw(
             0x021C_A8F8,
             &mut [
                 Arg::P,
@@ -1787,16 +2388,21 @@ pub fn rule_dispatch<E: FlowEnv>(
                 Arg::V(extra),
                 Arg::V(s),
             ],
+            w,
         ),
     };
     if r == 1 {
-        let m = env.call(0x021C_A8D8, &mut [Arg::V(s), Arg::V(0)]);
+        let m = env.callw(0x021C_A8D8, &mut [Arg::V(s), Arg::V(0)], w);
         if m != 0 {
-            let id = env.call(0x021D_5440, &mut [Arg::V(m)]);
-            let z = env.call(0x021C_A8E8, &mut [Arg::P, Arg::V(id)]);
+            let id = env.callw(0x021D_5440, &mut [Arg::V(m)], w);
+            let z = env.callw(
+                0x021C_A8E8,
+                &mut [Arg::PHost(w.mem[0x1AB8..].as_ptr() as usize), Arg::V(id)],
+                w,
+            );
             w.set_u8_at(0x77F, z as u8);
         }
-        if env.call(
+        if env.callw(
             0x021C_AFD8,
             &mut [
                 Arg::P,
@@ -1808,6 +2414,7 @@ pub fn rule_dispatch<E: FlowEnv>(
                 Arg::V(a),
                 Arg::V(b),
             ],
+            w,
         ) == 0
         {
             r = 0;
@@ -1829,4 +2436,4 @@ pub const PORTED: &[u32] = &[
 ];
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

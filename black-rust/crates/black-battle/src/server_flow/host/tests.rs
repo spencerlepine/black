@@ -38,7 +38,7 @@ impl FlowEnv for RecEnv {
                     self.log.push(*v);
                     h = mix(h, *v);
                 }
-                Arg::P => self.log.push(PTR),
+                Arg::P | Arg::PBuf(_) | Arg::PHost(_) | Arg::PAt(_) => self.log.push(PTR),
                 Arg::In(b) => {
                     self.log.push(PTR);
                     self.log.extend(b.iter().map(|&x| x as u32));

@@ -26,7 +26,7 @@ impl FlowEnv for TestEnv {
             .iter_mut()
             .map(|a| match a {
                 Arg::V(v) => fnd::Arg::V(*v),
-                Arg::P => fnd::Arg::P,
+                Arg::P | Arg::PBuf(_) | Arg::PHost(_) | Arg::PAt(_) => fnd::Arg::P,
                 Arg::In(b) => fnd::Arg::In(b),
                 Arg::Out(b) => fnd::Arg::Out(b),
             })
@@ -43,7 +43,7 @@ impl TestEnv {
             .iter_mut()
             .map(|a| match a {
                 Arg::V(v) => fnd::Arg::V(*v),
-                Arg::P => fnd::Arg::P,
+                Arg::P | Arg::PBuf(_) | Arg::PHost(_) | Arg::PAt(_) => fnd::Arg::P,
                 Arg::In(b) => fnd::Arg::In(b),
                 Arg::Out(b) => fnd::Arg::Out(b),
             })
@@ -55,7 +55,10 @@ impl TestEnv {
 /// One generated input. `vals[i]` is argument `i` as passed to the original (a scalar, or the
 /// fixed emulator address of a pointer argument); `bufs[i]` holds the bytes behind a `buf`/`bpp`
 /// argument (empty for scalars). The port runs on these and the testkit hashes them afterwards.
-pub struct Case {
+///
+/// B16: generic over the environment so the battle integration (`crate::integration`) can run the
+/// same `call` tables on its own environment; the differential tests use `Case<TestEnv>`.
+pub struct Case<E = TestEnv> {
     pub work: SvFlowWork,
     pub vals: Vec<u32>,
     pub bufs: Vec<Vec<u8>>,
@@ -63,10 +66,10 @@ pub struct Case {
     /// `region NAME SIZE` blocks of the spec, in declaration order (B10f-spec); region k is at
     /// `0x02F1_0000 + k * 0x10000` in `vals`.
     pub regions: Vec<Vec<u8>>,
-    pub env: TestEnv,
+    pub env: E,
 }
 
-impl Case {
+impl<E> Case<E> {
     /// Argument word `i` as the original sees it at entry: `vals[i]` for a declared argument, 0
     /// for r0-r3 or a stack word past the declared ones (Z19: the emulator zeroes r0-r12 and the
     /// stack window before every call, see [`fnd::UNSET_WORD`]). E.g. a caller's saved r3 that

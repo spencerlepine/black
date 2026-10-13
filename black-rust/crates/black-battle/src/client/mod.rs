@@ -93,6 +93,16 @@ pub trait ClientUi: FlowEnv {
         self.call(addr, args)
     }
 
+    /// [`Self::view`] lending the client object `held` (the view writes an answer record the
+    /// client handed it earlier, e.g. the move menu's `021e98b4`; B16).
+    fn view_h(&mut self, addr: u32, args: &mut [Arg<'_>], held: &mut [u8]) -> u32 {
+        debug_assert!(
+            (0x021E_9000..0x021E_B000).contains(&addr),
+            "{addr:#x} is not a view entry point"
+        );
+        self.call_held(held, addr, args)
+    }
+
     /// The view-side object at `c+0x34`: 0x021EF9A8-0x021EFC78.
     fn view_obj(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u32 {
         debug_assert!(
@@ -115,6 +125,23 @@ pub trait ClientUi: FlowEnv {
 
 #[cfg(test)]
 impl ClientUi for crate::server_flow::testkit::TestEnv {}
+
+/// A lending wrapper (B16) forwards the UI calls to the environment it wraps (the UI does not
+/// take the lent objects; a call that writes into one uses [`ClientUi::view_h`]).
+impl<E: ClientUi + ?Sized> ClientUi for crate::server_flow::env::Lend<'_, E> {
+    fn view(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u32 {
+        self.env.view(addr, args)
+    }
+    fn view_h(&mut self, addr: u32, args: &mut [Arg<'_>], held: &mut [u8]) -> u32 {
+        self.env.view_h(addr, args, held)
+    }
+    fn view_obj(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u32 {
+        self.env.view_obj(addr, args)
+    }
+    fn sound(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u32 {
+        self.env.sound(addr, args)
+    }
+}
 
 /// Stores a little-endian halfword at `ofs`.
 pub(crate) fn wr16(b: &mut [u8], ofs: usize, v: u16) {

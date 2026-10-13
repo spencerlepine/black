@@ -122,7 +122,7 @@ macro_rules! cx {
     };
 }
 
-fn call(addr: u32, c: &mut Case) -> u64 {
+pub(crate) fn call<E: crate::server_flow::env::FlowEnv>(addr: u32, c: &mut Case<E>) -> u64 {
     let v = c.vals.clone();
     match addr {
         0x021C_1184 => super::byte1_is_zero(&c.bufs[0]) as u64,
@@ -143,7 +143,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             0
         }
         0x021C_14E0 => {
-            super::list_apply_6b5c(&mut c.env, &mut c.work, &mut c.regions[0], v[1], v[3]);
+            super::list_apply_6b5c(&mut c.env, &mut c.work, &mut c.regions[0], v[1], v[3], v[2]);
             0
         }
         0x021C_15D4 => super::min_with_hp(&mut c.env, v[0], v[1]) as u64,
@@ -237,7 +237,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x021C_1E74 => {
             let (a, b) = c.bufs.split_at_mut(8);
             super::base_damage(
-                &mut c.env, &c.work, v[1], v[2], &a[3], v[4], v[5], v[6], v[7], &mut b[0],
+                &mut c.env, &c.work, v[1], v[2], &a[3], v[3], v[4], v[5], v[6], v[7], &mut b[0],
             ) as u64
         }
         0x021C_2048 => {
@@ -458,6 +458,8 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 &c.bufs[1],
                 v[2],
                 v[3],
+                v[1],
+                v[4],
             ) as u64
         }
         0x021C_11A4 => {
@@ -472,6 +474,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 v[4],
                 &mut b[0],
                 v[7],
+                v[1],
             ) as u64
         }
         0x021C_11F0 => {
@@ -485,6 +488,8 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 &a[4],
                 &mut b[0],
                 v[7],
+                v[3],
+                v[4],
             ) as u64
         }
         0x021C_3184 => {

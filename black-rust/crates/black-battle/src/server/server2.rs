@@ -833,8 +833,8 @@ fn seq_next(mem: &mut Mem, seq: u32) {
 
 /// Copies `n` bytes from `src` to `dst` (an `ldm`/`stm` block copy or `MI_CpuCopy8`).
 fn copy(mem: &mut Mem, src: u32, dst: u32, n: usize) {
-    let tmp = mem.bytes(src, n).to_vec();
-    mem.bytes_mut(dst, n).copy_from_slice(&tmp);
+    let tmp = mem.read_vec(src, n);
+    mem.write_bytes(dst, &tmp);
 }
 
 /// C: `sub_021b75a8`: comm handshake step. 0: send the own client id (`021d4294(M[0x46C])`), next when sent; 1: when
@@ -891,14 +891,18 @@ pub fn step_handshake<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, seq: u32) 
             mem.w8(r + 0x1E, lo);
             let b = mem.r8(r + 0x1F);
             mem.w8(r + 0x1F, (b & !0xF) | hi);
-            if env.call(0x021D_43B8, &mut [Arg::In(mem.bytes(r, 0x20))]) != 0 {
+            let rec = mem.read_vec(r, 0x20);
+            if env.call(0x021D_43B8, &mut [Arg::In(&rec)]) != 0 {
                 seq_next(mem, seq);
             }
             0
         }
         3 => {
             let r = m + M_RECORD;
-            if env.call(0x021D_440C, &mut [Arg::Out(mem.bytes_mut(r, 0x20))]) == 0 {
+            let mut rec = mem.read_vec(r, 0x20);
+            let got = env.call(0x021D_440C, &mut [Arg::Out(&mut rec)]);
+            mem.write_bytes(r, &rec);
+            if got == 0 {
                 return 0;
             }
             let s = setup(mem, m);
@@ -1488,10 +1492,9 @@ fn clients_frame<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
         let c = mem.r32(m + M_CLIENTS + 4 * i);
         if c != 0 && env.call(0x021C_D97C, &mut [Arg::V(c)]) != 0 {
             let c = mem.r32(m + M_CLIENTS + 4 * i);
-            env.call(
-                0x021C_DD94,
-                &mut [Arg::V(c), Arg::Out(mem.bytes_mut(m + M_RESULT, 8))],
-            );
+            let mut res = mem.read_vec(m + M_RESULT, 8);
+            env.call(0x021C_DD94, &mut [Arg::V(c), Arg::Out(&mut res)]);
+            mem.write_bytes(m + M_RESULT, &res);
             r = 1;
         }
     }
@@ -1534,10 +1537,9 @@ pub fn main_loop_server<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
     let mut r = env.call(0x021B_AB9C, &mut [Arg::V(sv)]);
     if r != 0 {
         let sv = mem.r32(m + 8);
-        env.call(
-            0x021B_ABDC,
-            &mut [Arg::V(sv), Arg::Out(mem.bytes_mut(m + M_RESULT, 8))],
-        );
+        let mut res = mem.read_vec(m + M_RESULT, 8);
+        env.call(0x021B_ABDC, &mut [Arg::V(sv), Arg::Out(&mut res)]);
+        mem.write_bytes(m + M_RESULT, &res);
     }
     for i in 0..4 {
         let c = mem.r32(m + M_CLIENTS + 4 * i);
@@ -1548,10 +1550,9 @@ pub fn main_loop_server<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
     }
     if all_clients_done(mem, m) != 0 {
         let c = mem.r32(m + M_CLIENTS + 4 * u32::from(mem.r8(m + M_OWN_ID)));
-        env.call(
-            0x021C_DD94,
-            &mut [Arg::V(c), Arg::Out(mem.bytes_mut(m + M_RESULT, 8))],
-        );
+        let mut res = mem.read_vec(m + M_RESULT, 8);
+        env.call(0x021C_DD94, &mut [Arg::V(c), Arg::Out(&mut res)]);
+        mem.write_bytes(m + M_RESULT, &res);
         r = 1;
     }
     let view = mem.r32(m + 4);

@@ -24,4 +24,6 @@ pub mod calc_action;
 pub mod calc_leftovers2;
 pub mod calc_target;
 #[cfg(test)]
+mod integration;
+#[cfg(test)]
 mod testutil;

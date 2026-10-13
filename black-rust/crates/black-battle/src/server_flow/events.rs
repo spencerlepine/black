@@ -3,7 +3,7 @@
 use super::cmd_queue::{
     advance_fields, put_cmd, put_cmd_at, put_cmd_list, put_cmd_placeholder, set_word,
 };
-use super::env::{Arg, FlowEnv};
+use super::env::{Arg, FlowEnv, Lend, Lent};
 use super::SvFlowWork;
 use crate::battle_mon::{value, BattleMon, BppEnv};
 use crate::sick_cont::SickCont;
@@ -239,10 +239,17 @@ fn slot_party<E: FlowEnv>(env: &mut E, getter: u32, p_addr: u32, p: &[u8]) -> u3
         0x021B_8E28,
         &mut [Arg::V(main), Arg::V(id), Arg::Out(&mut a), Arg::Out(&mut b)],
     );
-    let sbase = server.wrapping_sub(p_addr) as usize;
-    let slot = super::server_side::slot_checked(&p[sbase..], a[0] as u32)
+    // B16: in the game the server object is not inside the work: its slot table (S + 0x14,
+    // 4 x 12 bytes) is read through `peek`
+    let mut st = [0u8; 0x44];
+    let (sv, sbase): (&[u8], usize) = if env.peek(server, &mut st) {
+        (&st[..], 0)
+    } else {
+        (p, server.wrapping_sub(p_addr) as usize)
+    };
+    let slot = super::server_side::slot_checked(&sv[sbase..], a[0] as u32)
         .expect("021bb85c returned null: the original reads address 4");
-    let party = rd32(&p[sbase + slot + 4..]);
+    let party = rd32(&sv[sbase + slot + 4..]);
     env.call(0x021B_9BF0, &mut [Arg::V(party), Arg::V(b[0] as u32)])
 }
 
@@ -287,7 +294,7 @@ pub fn dispatch_value_bracketed<E: FlowEnv>(
     value: u32,
 ) -> u32 {
     let head = advance_fields(&mut w.mem[OFS_QHEAD..]);
-    let r = dispatch_value(env, waddr, mon, rec, value);
+    let r = dispatch_value(&mut Lend::new(env, w), waddr, mon, rec, value);
     set_word(&mut w.mem[OFS_QHEAD..], head);
     r
 }
@@ -299,14 +306,14 @@ pub fn dispatch_value_bracketed<E: FlowEnv>(
 pub fn msg_side<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, waddr: u32, mon: &BattleMon) -> u32 {
     let side = u32::from(mon.poke_id() as u32 >= 12);
     let cont = SickCont::turn(5).0;
-    let hit = env.call(0x021C_BFF8, &mut [Arg::V(side), Arg::V(3), Arg::V(cont)]);
+    let hit = env.callw(0x021C_BFF8, &mut [Arg::V(side), Arg::V(3), Arg::V(cont)], w);
     if hit == 0 {
         return 0;
     }
-    let rec = rec_new(env, waddr, 4, 0x1F);
+    let rec = rec_new(&mut Lend::new(env, w), waddr, 4, 0x1F);
     str_init(&mut w.mem[..], rec + 4, 1, 0x88);
     str_push(&mut w.mem[..], rec + 4, side);
-    rec_commit(env, waddr, rec);
+    rec_commit(&mut Lend::new(env, w), waddr, rec);
     1
 }
 
@@ -323,14 +330,14 @@ pub fn revive<E: FlowEnv + BppEnv>(
         return 0;
     }
     let id = mon.poke_id() as u32;
-    let rec = rec_new(env, waddr, 0x2C, id);
+    let rec = rec_new(&mut Lend::new(env, w), waddr, 0x2C, id);
     w.mem[rec + 4] = id as u8;
-    let hp = heal_amount(env, mon, item, true);
+    let hp = heal_amount(&mut Lend::new(env, w), mon, item, true);
     w.mem[rec + 6..rec + 8].copy_from_slice(&(hp as u16).to_le_bytes());
     str_init(&mut w.mem[..], rec + 8, 2, 3);
     str_push(&mut w.mem[..], rec + 8, id);
-    rec_commit(env, waddr, rec);
-    env.call(0x021C_84F4, &mut [Arg::V(waddr), Arg::V(id)]);
+    rec_commit(&mut Lend::new(env, w), waddr, rec);
+    env.callw(0x021C_84F4, &mut [Arg::V(waddr), Arg::V(id)], w);
     1
 }
 
@@ -383,14 +390,14 @@ pub fn pp_restore_one<E: FlowEnv>(
     }
     let id = mon.poke_id() as u32;
     let mut n = mon.orig_move_pp_missing(slot) as u32;
-    let lim = item_param(env, item, 0x3B) & 0xFF;
+    let lim = item_param(&mut Lend::new(env, w), item, 0x3B) & 0xFF;
     if lim != 0x7F && n > lim {
         n = lim;
     }
     if n == 0 {
         return 0;
     }
-    let rec = rec_new(env, waddr, 9, id);
+    let rec = rec_new(&mut Lend::new(env, w), waddr, 9, id);
     w.mem[rec + 4] = n as u8;
     w.mem[rec + 5] = id as u8;
     w.mem[rec + 6] = slot as u8;
@@ -398,7 +405,7 @@ pub fn pp_restore_one<E: FlowEnv>(
     str_init(&mut w.mem[..], rec + 8, 2, 0x186);
     str_push(&mut w.mem[..], rec + 8, id);
     str_push(&mut w.mem[..], rec + 8, mon.orig_move_id(slot) as u32);
-    rec_commit(env, waddr, rec);
+    rec_commit(&mut Lend::new(env, w), waddr, rec);
     1
 }
 
@@ -413,7 +420,7 @@ pub fn pp_restore_all<E: FlowEnv>(
     item: u32,
 ) -> u32 {
     let id = mon.poke_id() as u32;
-    let lim = item_param(env, item, 0x3B) & 0xFF;
+    let lim = item_param(&mut Lend::new(env, w), item, 0x3B) & 0xFF;
     let mut any = 0;
     for i in 0..mon.orig_move_count() as u32 {
         let mut n = mon.orig_move_pp_missing(i) as u32;
@@ -421,20 +428,20 @@ pub fn pp_restore_all<E: FlowEnv>(
             n = lim;
         }
         if n != 0 {
-            let rec = rec_new(env, waddr, 9, id);
+            let rec = rec_new(&mut Lend::new(env, w), waddr, 9, id);
             w.mem[rec + 6] = i as u8;
             w.mem[rec + 5] = id as u8;
             w.mem[rec + 4] = n as u8;
             w.mem[rec + 7] |= 2;
-            rec_commit(env, waddr, rec);
+            rec_commit(&mut Lend::new(env, w), waddr, rec);
             any = 1;
         }
     }
     if any != 0 {
-        let rec = rec_new(env, waddr, 4, id);
+        let rec = rec_new(&mut Lend::new(env, w), waddr, 4, id);
         str_init(&mut w.mem[..], rec + 4, 2, 0x189);
         str_push(&mut w.mem[..], rec + 4, id);
-        rec_commit(env, waddr, rec);
+        rec_commit(&mut Lend::new(env, w), waddr, rec);
     }
     any
 }
@@ -452,24 +459,24 @@ pub fn heal<E: FlowEnv + BppEnv>(
         return 0;
     }
     let id = mon.poke_id() as u32;
-    let rec = rec_new(env, waddr, 5, id);
+    let rec = rec_new(&mut Lend::new(env, w), waddr, 5, id);
     w.mem[rec + 6] = id as u8;
     w.mem[rec + 7] = 1;
-    let hp = heal_amount(env, mon, item, false);
+    let hp = heal_amount(&mut Lend::new(env, w), mon, item, false);
     w.mem[rec + 4..rec + 6].copy_from_slice(&(hp as u16).to_le_bytes());
     str_init(&mut w.mem[..], rec + 8, 2, 0x183);
     str_push(&mut w.mem[..], rec + 8, id);
-    rec_commit(env, waddr, rec);
+    rec_commit(&mut Lend::new(env, w), waddr, rec);
     1
 }
 
 /// Record kind 0xB: cure condition `sick` of pokemon `id`.
 fn cure_record<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, waddr: u32, id: u32, sick: u32) {
-    let rec = rec_new(env, waddr, 0xB, id);
+    let rec = rec_new(&mut Lend::new(env, w), waddr, 0xB, id);
     w.mem[rec + 0x14] = 1;
     w.mem[rec + 8] = id as u8;
     wr32(&mut w.mem[rec + 4..], sick);
-    rec_commit(env, waddr, rec);
+    rec_commit(&mut Lend::new(env, w), waddr, rec);
 }
 
 /// C: `FUN_overlay_d_93__021cc350`: cures condition `sick` of a living `mon` that has it.
@@ -500,13 +507,13 @@ pub fn cure_all_statuses<E: FlowEnv + BppEnv>(
         return 0;
     }
     let id = mon.poke_id() as u32;
-    if env.call(0x021C_C418, &mut [Arg::V(waddr + OFS_TABLE), Arg::V(id)]) != 0 {
+    if env.callw(0x021C_C418, &mut [Arg::V(waddr + OFS_TABLE), Arg::V(id)], w) != 0 {
         return 0;
     }
     let mut any = 0;
     let mut i = 0;
     loop {
-        let sick = env.call(0x021C_C428, &mut [Arg::V(i)]);
+        let sick = env.callw(0x021C_C428, &mut [Arg::V(i)], w);
         i += 1;
         if sick == 0 {
             break;
@@ -531,19 +538,19 @@ pub fn change_stage<E: FlowEnv + BppEnv>(
     stat: u32,
 ) -> u32 {
     let id = mon.poke_id() as u32;
-    if env.call(0x021C_C49C, &mut [Arg::V(waddr + OFS_TABLE), Arg::V(id)]) == 6 {
+    if env.callw(0x021C_C49C, &mut [Arg::V(waddr + OFS_TABLE), Arg::V(id)], w) == 6 {
         return 0;
     }
     if mon.is_fainted(env) || !mon.can_change_stage(stat, amount as i32) {
         return 0;
     }
-    let rec = rec_new(env, waddr, 0xE, id);
+    let rec = rec_new(&mut Lend::new(env, w), waddr, 0xE, id);
     w.mem[rec + 0xF] = 1;
     w.mem[rec + 0x10] = id as u8;
     wr32(&mut w.mem[rec + 4..], stat);
     w.mem[rec + 0xC] = amount as u8;
     w.mem[rec + 0xE] = 1;
-    rec_commit(env, waddr, rec);
+    rec_commit(&mut Lend::new(env, w), waddr, rec);
     1
 }
 
@@ -580,8 +587,8 @@ pub fn ability_trigger<E: FlowEnv + BppEnv>(
         return 0;
     }
     let head = advance_fields(&mut w.mem[OFS_QHEAD..]);
-    env.call(0x021B_DBB8, &mut [Arg::V(waddr), Arg::V(maddr)]);
-    let r = env.call(0x021C_88E4, &mut [Arg::V(waddr)]);
+    env.callw(0x021B_DBB8, &mut [Arg::V(waddr), Arg::V(maddr)], w);
+    let r = env.callw(0x021C_88E4, &mut [Arg::V(waddr)], w);
     set_word(&mut w.mem[OFS_QHEAD..], head);
     u32::from(r == 2)
 }
@@ -595,7 +602,7 @@ pub fn show_held_item<E: FlowEnv>(
     mon: &BattleMon,
 ) -> u32 {
     let args = &mut [Arg::V(waddr), Arg::V(mon.poke_id() as u32)];
-    if env.call(0x021E_869C, args) != 0 {
+    if env.callw(0x021E_869C, args, w) != 0 {
         return 0;
     }
     let item = mon.held_item() as u32;
@@ -604,13 +611,13 @@ pub fn show_held_item<E: FlowEnv>(
     }
     let head = advance_fields(&mut w.mem[OFS_QHEAD..]);
     let id = mon.poke_id() as u32;
-    let rec = rec_new(env, waddr, 0x20, id);
+    let rec = rec_new(&mut Lend::new(env, w), waddr, 0x20, id);
     w.mem[rec + 6] = id as u8;
     w.mem[rec + 4..rec + 6].copy_from_slice(&0u16.to_le_bytes());
     str_init(&mut w.mem[..], rec + 0xC, 2, 0xE1);
     str_push(&mut w.mem[..], rec + 0xC, id);
     str_push(&mut w.mem[..], rec + 0xC, item);
-    rec_commit(env, waddr, rec);
+    rec_commit(&mut Lend::new(env, w), waddr, rec);
     set_word(&mut w.mem[OFS_QHEAD..], head);
     1
 }
@@ -625,14 +632,14 @@ pub fn flinch_message<E: FlowEnv>(
 ) -> u32 {
     let head = advance_fields(&mut w.mem[OFS_QHEAD..]);
     let id = mon.poke_id() as u32;
-    let rec = rec_new(env, waddr, 0x10, id);
+    let rec = rec_new(&mut Lend::new(env, w), waddr, 0x10, id);
     w.mem[rec + 4] = 1;
     w.mem[rec + 5] = id as u8;
-    rec_commit(env, waddr, rec);
-    let rec = rec_new(env, waddr, 4, id);
+    rec_commit(&mut Lend::new(env, w), waddr, rec);
+    let rec = rec_new(&mut Lend::new(env, w), waddr, 4, id);
     str_init(&mut w.mem[..], rec + 4, 2, 0xE4);
     str_push(&mut w.mem[..], rec + 4, id);
-    rec_commit(env, waddr, rec);
+    rec_commit(&mut Lend::new(env, w), waddr, rec);
     set_word(&mut w.mem[OFS_QHEAD..], head);
     1
 }
@@ -745,22 +752,22 @@ pub fn who_leads<E: FlowEnv + BppEnv>(
     // stack bytes: [0..2) party size per side, [2..4) alive count per side
     let mut st = [0u8; 4];
     for i in 0..4u32 {
-        let used = env.call(0x021B_8B9C, &mut [Arg::V(main), Arg::V(i & 0xFF)]);
+        let used = env.callwr(0x021B_8B9C, &mut [Arg::V(main), Arg::V(i & 0xFF)], w);
         if used == 0 {
             continue;
         }
-        let list = env.call(0x021B_9AEC, &mut [Arg::V(pokecon), Arg::V(i)]);
-        if env.call(0x021B_9B94, &mut [Arg::V(list)]) == 0 {
+        let list = env.callwr(0x021B_9AEC, &mut [Arg::V(pokecon), Arg::V(i)], w);
+        if env.callwr(0x021B_9B94, &mut [Arg::V(list)], w) == 0 {
             continue;
         }
-        let side = env.call(0x021B_8BC4, &mut [Arg::V(main), Arg::V(i & 0xFF)]) as usize;
-        let alive = env.call(0x021B_9B98, &mut [Arg::V(list)]);
+        let side = env.callwr(0x021B_8BC4, &mut [Arg::V(main), Arg::V(i & 0xFF)], w) as usize;
+        let alive = env.callwr(0x021B_9B98, &mut [Arg::V(list)], w);
         st[2 + side] = st[2 + side].wrapping_add(alive as u8);
-        let size = env.call(0x021B_9B94, &mut [Arg::V(list)]);
+        let size = env.callwr(0x021B_9B94, &mut [Arg::V(list)], w);
         st[side] = st[side].wrapping_add(size as u8);
     }
-    let client = env.call(0x021B_8FF4, &mut [Arg::V(main)]);
-    let me = env.call(0x021B_8BC4, &mut [Arg::V(main), Arg::V(client)]);
+    let client = env.callwr(0x021B_8FF4, &mut [Arg::V(main)], w);
+    let me = env.callwr(0x021B_8BC4, &mut [Arg::V(main), Arg::V(client)], w);
     let other = ((1 ^ me) & 0xFF) as usize;
     let mine = st[2 + me as usize];
     let theirs = st[2 + other];
@@ -770,11 +777,11 @@ pub fn who_leads<E: FlowEnv + BppEnv>(
     if theirs == 0 && mine != 0 {
         return 1;
     }
-    if env.call(0x021B_A534, &mut [Arg::V(main)]) == 0 {
+    if env.callwr(0x021B_A534, &mut [Arg::V(main)], w) == 0 {
         return 2;
     }
     if st[2] == 0 {
-        let r = env.call(0x021C_C758, &mut [Arg::V(waddr + 0x3E0)]);
+        let r = env.callwr(0x021C_C758, &mut [Arg::V(waddr + 0x3E0)], w);
         if r == 0x1F {
             return 2;
         }
@@ -799,16 +806,16 @@ pub fn side_totals<E: FlowEnv + BppEnv>(
     let mut total_hp = 0u32;
     let mut total_max = 0u32;
     for i in 0..4u32 {
-        if env.call(0x021B_8B9C, &mut [Arg::V(main), Arg::V(i & 0xFF)]) == 0 {
+        if env.callwr(0x021B_8B9C, &mut [Arg::V(main), Arg::V(i & 0xFF)], w) == 0 {
             continue;
         }
-        if side != env.call(0x021B_8BC4, &mut [Arg::V(main), Arg::V(i & 0xFF)]) {
+        if side != env.callwr(0x021B_8BC4, &mut [Arg::V(main), Arg::V(i & 0xFF)], w) {
             continue;
         }
-        let list = env.call(0x021B_9AEC, &mut [Arg::V(pokecon), Arg::V(i)]);
-        let n = env.call(0x021B_9B94, &mut [Arg::V(list)]);
+        let list = env.callwr(0x021B_9AEC, &mut [Arg::V(pokecon), Arg::V(i)], w);
+        let n = env.callwr(0x021B_9B94, &mut [Arg::V(list)], w);
         for k in 0..n {
-            let at = env.call(0x021B_9C00, &mut [Arg::V(list), Arg::V(k & 0xFF)]);
+            let at = env.callwr(0x021B_9C00, &mut [Arg::V(list), Arg::V(k & 0xFF)], w);
             let m = mons(at);
             total_max = total_max.wrapping_add(m.get(value::MAX_HP, env));
             total_hp = total_hp.wrapping_add(m.get(value::HP, env));
@@ -844,7 +851,7 @@ fn band(v: u32) -> usize {
 /// C: `FUN_overlay_d_93__021cbcf4`: 4.12 fixed-point bonus by the main module's value
 /// `021b873c(main)`: 1.0 above 600, then 0.9, 0.8, 0.7, 0.5 and 0.3.
 pub fn capture_bonus<E: FlowEnv>(env: &mut E, w: &SvFlowWork) -> u32 {
-    let v = env.call(0x021B_873C, &mut [Arg::V(w.u32_at(4))]);
+    let v = env.callwr(0x021B_873C, &mut [Arg::V(w.u32_at(4))], w);
     [0x1000, 0xE66, 0xCCD, 0xB33, 0x800, 0x4CD][band(v)]
 }
 
@@ -853,7 +860,7 @@ pub fn capture_bonus<E: FlowEnv>(env: &mut E, w: &SvFlowWork) -> u32 {
 /// none, in 4.12), divides by 6 and compares `rand(0x100)` with the integer part. Returns 1
 /// when the roll is below it.
 pub fn capture_shake<E: FlowEnv>(env: &mut E, w: &SvFlowWork, x: i32) -> u32 {
-    let v = env.call(0x021B_873C, &mut [Arg::V(w.u32_at(4))]);
+    let v = env.callwr(0x021B_873C, &mut [Arg::V(w.u32_at(4))], w);
     let factor: i64 = match band(v) {
         0 => 10 << 10,
         1 => 2 << 12,
@@ -865,7 +872,7 @@ pub fn capture_shake<E: FlowEnv>(env: &mut E, w: &SvFlowWork, x: i32) -> u32 {
     let x = x.min(0xFF000) as i64;
     let scaled = (((x * factor) + 0x800) >> 12) as i32;
     let q = scaled.wrapping_div(6);
-    let r = env.call(0x021D_78AC, &mut [Arg::V(0x100)]);
+    let r = env.callwr(0x021D_78AC, &mut [Arg::V(0x100)], w);
     u32::from(r < (q >> 12) as u32)
 }
 
@@ -901,7 +908,7 @@ pub fn ball_multiplier<E: FlowEnv + BppEnv>(
             }
         }
         7 => {
-            if env.call(0x021B_A1A8, &mut [Arg::V(main), Arg::V(1)]) != 0 {
+            if env.callwr(0x021B_A1A8, &mut [Arg::V(main), Arg::V(1)], w) != 0 {
                 return 0x3800;
             }
             let s = blob_at(env);
@@ -928,7 +935,7 @@ pub fn ball_multiplier<E: FlowEnv + BppEnv>(
             f2i(f).wrapping_div(10) as u32
         }
         9 => {
-            if env.call(0x021B_8724, &mut [Arg::V(main), Arg::V(mon_addr)]) != 0 {
+            if env.callwr(0x021B_8724, &mut [Arg::V(main), Arg::V(mon_addr)], w) != 0 {
                 0x3000
             } else {
                 0x1000
@@ -944,15 +951,16 @@ pub fn ball_multiplier<E: FlowEnv + BppEnv>(
         }
         13 => {
             let s = blob_at(env);
-            let r = env.call(
+            let r = env.callwr(
                 0x0201_13F0,
                 &mut [Arg::V(blob[s + 9] as u32), Arg::V(blob[s + 0xC] as u32)],
+                w,
             ) & 0xFF;
             let kind = rd32(&blob[s..]);
             if kind.wrapping_sub(4) <= 1 {
                 return 0x3800;
             }
-            if env.call(0x021C_BE98, &mut [Arg::V(kind & 0xFFFF)]) == 0 {
+            if env.callwr(0x021C_BE98, &mut [Arg::V(kind & 0xFFFF)], w) == 0 {
                 return 0x1000;
             }
             if (r + 0xFD) & 0xFF <= 1 {
@@ -1076,14 +1084,15 @@ pub fn exp_distribute<E: FlowEnv + BppEnv>(
     let level = fainted.get(value::LEVEL, env) & 0xFFFF;
     let base = env.personal(species, form, 9);
     let mut exp = u32_div(base.wrapping_mul(level), 5);
-    let count = env.call(0x021B_9B94, &mut [Arg::V(list)]);
+    let count = env.callwr(0x021B_9B94, &mut [Arg::V(list)], w);
     let mut lucky = 0u32;
-    if env.call(0x021B_86B8, &mut [Arg::V(main)]) == 1 {
+    if env.callwr(0x021B_86B8, &mut [Arg::V(main)], w) == 1 {
         exp = u32_div(exp.wrapping_mul(15), 10);
     }
     out[..72].fill(0);
-    let member =
-        |env: &mut E, k: u32| mons(env.call(0x021B_9C00, &mut [Arg::V(list), Arg::V(k & 0xFF)]));
+    let member = |env: &mut E, k: u32| {
+        mons(env.callwr(0x021B_9C00, &mut [Arg::V(list), Arg::V(k & 0xFF)], w))
+    };
     // holders of item 216 (Exp. Share)
     let mut i = 0u32;
     while i < count {
@@ -1116,7 +1125,7 @@ pub fn exp_distribute<E: FlowEnv + BppEnv>(
     let mut i = 0u32;
     while (i as i32) < faced {
         let id = fainted.faced(i & 0xFF) as u32;
-        let m = mons(env.call(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(id)]));
+        let m = mons(env.callwr(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(id)], w));
         if !m.is_fainted(env) {
             alive = (alive + 1) & 0xFF;
         }
@@ -1148,16 +1157,22 @@ pub fn exp_distribute<E: FlowEnv + BppEnv>(
     while i < count {
         let at = 12 * i as usize;
         if rd32(&out[at..]) != 0 {
-            let trainer = env.call(0x021B_871C, &mut [Arg::V(main)]);
+            let trainer = env.callwr(0x021B_871C, &mut [Arg::V(main)], w);
             let m = member(env, i);
             let pp = m.get_pokemon();
             let lvl_m = m.get(value::LEVEL, env) & 0xFFFF;
             let lvl_f = fainted.get(value::LEVEL, env) & 0xFFFF;
-            let scaled = exp_scale(env, &m, rd32(&out[at..]), lvl_m, lvl_f);
+            let scaled = exp_scale(
+                &mut Lend::new_ref(env, w),
+                &m,
+                rd32(&out[at..]),
+                lvl_m,
+                lvl_f,
+            );
             wr32(&mut out[at..], scaled);
-            if env.call(0x0201_8480, &mut [Arg::V(pp), Arg::V(trainer)]) == 0 {
+            if env.callwr(0x0201_8480, &mut [Arg::V(pp), Arg::V(trainer)], w) == 0 {
                 let own = env.pp_get(pp, 0xC);
-                let other = env.call(0x0200_8564, &mut [Arg::V(trainer)]);
+                let other = env.callwr(0x0200_8564, &mut [Arg::V(trainer)], w);
                 let fx = if own == other { 0x1800 } else { 0x1B33 };
                 let v = fx_mul(rd32(&out[at..]), fx);
                 wr32(&mut out[at..], v);
@@ -1169,7 +1184,7 @@ pub fn exp_distribute<E: FlowEnv + BppEnv>(
                 out[at + 4] = 1;
             }
             let cur = rd32(&out[at..]);
-            let v = env.call(0x0201_1168, &mut [Arg::V(cur)]);
+            let v = env.callwr(0x0201_1168, &mut [Arg::V(cur)], w);
             wr32(&mut out[at..], v);
         }
         i = (i + 1) & 0xFFFF;
@@ -1179,8 +1194,13 @@ pub fn exp_distribute<E: FlowEnv + BppEnv>(
     while i < count {
         let at = 12 * i as usize;
         if rd32(&out[at..]) != 0 {
-            let winner = mons(env.call(0x021B_9BF0, &mut [Arg::V(list), Arg::V(i & 0xFF)]));
-            ev_gain(env, &winner, fainted, &mut out[at..at + 12]);
+            let winner = mons(env.callwr(0x021B_9BF0, &mut [Arg::V(list), Arg::V(i & 0xFF)], w));
+            ev_gain(
+                &mut Lend::new_ref(env, w),
+                &winner,
+                fainted,
+                &mut out[at..at + 12],
+            );
         }
         i = (i + 1) & 0xFFFF;
     }
@@ -1226,7 +1246,7 @@ pub fn capture_roll<E: FlowEnv + BppEnv>(
         fsub(u2f(0), 0x3F00_0000)
     };
     let mut r6 = f2i(f) as u32;
-    if env.call(0x021B_A1A8, &mut [Arg::V(w.u32_at(4)), Arg::V(0x20)]) != 0 {
+    if env.callwr(0x021B_A1A8, &mut [Arg::V(w.u32_at(4)), Arg::V(0x20)], w) != 0 {
         r6 = mul_round_fx(r6, capture_bonus(env, w));
     }
     let species = mon.species() as u32;
@@ -1243,20 +1263,20 @@ pub fn capture_roll<E: FlowEnv + BppEnv>(
     if let Some(factor) = factor {
         r6 = mul_round_fx(r6, factor);
     }
-    let x = env.call(0x0201_11BC, &mut [Arg::V(r6)]);
+    let x = env.callwr(0x0201_11BC, &mut [Arg::V(r6)], w);
     flag[0] = capture_shake(env, w, x as i32) as u8;
     if (x as i32) >= 0xFF000 {
         count[0] = if flag[0] == 0 { 3 } else { 1 };
         return 1;
     }
     let shakes = if flag[0] == 0 { 3 } else { 1 };
-    let a = env.call(0x0207_C768, &mut [Arg::V(0xFF000), Arg::V(x)]);
-    let a = env.call(0x0207_C7B4, &mut [Arg::V(a)]);
-    let a = env.call(0x0207_C7B4, &mut [Arg::V(a)]);
-    let limit = (env.call(0x0207_C768, &mut [Arg::V(1 << 28), Arg::V(a)]) as i32 >> 12) as u32;
+    let a = env.callwr(0x0207_C768, &mut [Arg::V(0xFF000), Arg::V(x)], w);
+    let a = env.callwr(0x0207_C7B4, &mut [Arg::V(a)], w);
+    let a = env.callwr(0x0207_C7B4, &mut [Arg::V(a)], w);
+    let limit = (env.callwr(0x0207_C768, &mut [Arg::V(1 << 28), Arg::V(a)], w) as i32 >> 12) as u32;
     count[0] = 0;
     for _ in 0..shakes {
-        if env.call(0x021D_78AC, &mut [Arg::V((1u32 << 28) >> 12)]) >= limit {
+        if env.callwr(0x021D_78AC, &mut [Arg::V((1u32 << 28) >> 12)], w) >= limit {
             return 0;
         }
         count[0] = count[0].wrapping_add(1);
@@ -1291,20 +1311,23 @@ pub fn throw_ball<E: FlowEnv + BppEnv>(
     // the original keeps them in one stack array: flag, shake count, target ids
     let (mut flag, mut count, mut ids) = ([0u8; 1], [0u8; 1], [0u8; 6]);
     let id = mon.poke_id() as u32;
-    let r2 = env.call(
+    let r2 = env.call_l(
         0x021B_8D8C,
         &mut [Arg::V(main), Arg::V(pokecon), Arg::V(id)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
     );
     let r1 = ((best << 8) | r2) & 0xFFFF;
-    let n = env.call(
+    let n = env.call_l(
         0x021B_8778,
         &mut [Arg::V(main), Arg::V(r1), Arg::Out(&mut ids)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
     );
     let mut i = 0u32;
     while i < n {
-        target_addr = env.call(
+        target_addr = env.call_l(
             0x021B_98AC,
             &mut [Arg::V(pokecon), Arg::V(ids[i as usize & 0xFF] as u32)],
+            Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
         );
         if !mons(target_addr).is_fainted(env) {
             best = ids[i as usize] as u32;
@@ -1312,9 +1335,14 @@ pub fn throw_ball<E: FlowEnv + BppEnv>(
         }
         i = (i + 1) & 0xFF;
     }
-    if env.call(0x021B_86B8, &mut [Arg::V(main)]) != 0 {
+    if env.call_l(
+        0x021B_86B8,
+        &mut [Arg::V(main)],
+        Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+    ) != 0
+    {
         if best != 6 {
-            put_cmd(env, q, 0x47, &[best, ball], scratch);
+            put_cmd(&mut Lend::new(env, w), q, 0x47, &[best, ball], scratch);
         }
         return 0;
     }
@@ -1337,7 +1365,13 @@ pub fn throw_ball<E: FlowEnv + BppEnv>(
     if ok != 0 {
         w.set_u32_at(0x14, 6);
         w.set_u8_at(0x784, best as u8);
-        r4 = u32::from(env.call(0x021B_8724, &mut [Arg::V(main), Arg::V(target_addr)]) == 0);
+        r4 = u32::from(
+            env.call_l(
+                0x021B_8724,
+                &mut [Arg::V(main), Arg::V(target_addr)],
+                Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
+            ) == 0,
+        );
         target.set_pp_0x98(ball, env);
     }
     put_cmd(
@@ -1459,11 +1493,11 @@ fn run_entry<E: FlowEnv + BppEnv>(
         0x021C_C0C8 => stage_entry_4(env, w, waddr, m, r3),
         0x021C_C0D8 => stage_entry_5(env, w, waddr, m, r3),
         0x021C_C0E8 => stage_entry_6(env, w, waddr, m, r3),
-        0x021C_C0F8 => raise_crit(env, io.q, io.scratch, m, r3),
+        0x021C_C0F8 => raise_crit(&mut Lend::new(env, w), io.q, io.scratch, m, r3),
         0x021C_C178 => pp_restore_one(env, w, waddr, m, item, extra),
         0x021C_C214 => pp_restore_all(env, w, waddr, m, item),
         0x021C_C2C0 => heal(env, w, waddr, m, item),
-        0x021C_C4AC => held_item_check(env, waddr, m, target_addr),
+        0x021C_C4AC => held_item_check(&mut Lend::new(env, w), waddr, m, target_addr),
         0x021C_C508 => ability_trigger(env, w, waddr, m, target_addr),
         0x021C_C558 => show_held_item(env, w, waddr, m),
         0x021C_C5F4 => flinch_message(env, w, waddr, m),
@@ -1542,58 +1576,73 @@ fn use_item_body<E: FlowEnv + BppEnv, X: ItemEffects<E>>(
         BattleMon::from_bytes(snapshot[o..o + BPP_SIZE].try_into().unwrap())
     };
     let user_id = user.poke_id() as u32;
-    let client = env.call(0x021B_8D08, &mut [Arg::V(user_id)]);
+    let client = env.callw(0x021B_8D08, &mut [Arg::V(user_id)], w);
     let mut target_addr = 0u32;
     let mut target_id = 0u32;
     let mut cba30 = 0u32;
     let mut mode = 0u32; // var_2c
     if slot != 6 {
-        let list = env.call(0x021B_9AEC, &mut [Arg::V(pokecon), Arg::V(client)]);
-        let count = env.call(0x021B_6994, &mut [Arg::V(main), Arg::V(client)]);
-        target_addr = env.call(0x021B_9BF0, &mut [Arg::V(list), Arg::V(slot)]);
+        let list = env.callw(0x021B_9AEC, &mut [Arg::V(pokecon), Arg::V(client)], w);
+        let count = env.callw(0x021B_6994, &mut [Arg::V(main), Arg::V(client)], w);
+        target_addr = env.callw(0x021B_9BF0, &mut [Arg::V(list), Arg::V(slot)], w);
         *target_off = target_addr.wrapping_sub(img_base) as usize;
         let t = mons(target_addr);
         target_id = t.poke_id() as u32;
         *target = Some(t);
-        cba30 = env.call(
+        cba30 = env.callw(
             0x021C_BA30,
             &mut [Arg::V(waddr + OFS_TABLE), Arg::V(target_id)],
+            w,
         );
         let mut m = 0;
         if slot >= count {
             m = 2;
         }
         mode = m & 0xFF;
-        if env.call(0x021B_8588, &mut [Arg::V(main)]) == 3 && mode == 2 && slot < 3 {
+        if env.callw(0x021B_8588, &mut [Arg::V(main)], w) == 3 && mode == 2 && slot < 3 {
             mode = 1;
         }
     }
     let term = 0xFFFF_0000;
     if w.u32_at(0x18) != 1 {
-        put_cmd_list(env, io.q, 0x5A, 0x21, &[client, item, term]);
-        if item_param(env, item, 0xF) == 4 {
+        put_cmd_list(
+            &mut Lend::new(env, w),
+            io.q,
+            0x5A,
+            0x21,
+            &[client, item, term],
+        );
+        if item_param(&mut Lend::new(env, w), item, 0xF) == 4 {
             let used = throw_ball(
                 env, w, user, item, io.q, io.scratch, &mons, img_base, snapshot,
             );
             if used != 0 {
-                env.call(
+                env.callw(
                     0x021B_9090,
                     &mut [Arg::V(main), Arg::V(client), Arg::V(item)],
+                    w,
                 );
             }
             return 0;
         }
-        if item_param(env, item, 7) == 3 {
-            env.call(
+        if item_param(&mut Lend::new(env, w), item, 7) == 3 {
+            env.callw(
                 0x021B_9090,
                 &mut [Arg::V(main), Arg::V(client), Arg::V(item)],
+                w,
             );
             return 1;
         }
     } else {
-        put_cmd_list(env, io.q, 0x5A, 0x24, &[client, target_id, item, term]);
-        if env.call(0x021B_8FF4, &mut [Arg::V(main)]) == client {
-            env.call(0x021B_A1B4, &mut [Arg::V(main), Arg::V(0x6F)]);
+        put_cmd_list(
+            &mut Lend::new(env, w),
+            io.q,
+            0x5A,
+            0x24,
+            &[client, target_id, item, term],
+        );
+        if env.callw(0x021B_8FF4, &mut [Arg::V(main)], w) == client {
+            env.callw(0x021B_A1B4, &mut [Arg::V(main), Arg::V(0x6F)], w);
         }
     }
     let mut usable = mode == 0 && cba30 != 6;
@@ -1603,7 +1652,7 @@ fn use_item_body<E: FlowEnv + BppEnv, X: ItemEffects<E>>(
             let hit = if flag != 0 {
                 item == id
             } else {
-                item_param(env, item, id) != 0
+                item_param(&mut Lend::new(env, w), item, id) != 0
             };
             if !hit {
                 continue;
@@ -1615,61 +1664,83 @@ fn use_item_body<E: FlowEnv + BppEnv, X: ItemEffects<E>>(
         }
     }
     if !usable {
-        put_cmd_list(env, io.q, 0x5A, 0xC4, &[term]);
+        put_cmd_list(&mut Lend::new(env, w), io.q, 0x5A, 0xC4, &[term]);
         return 0;
     }
     if w.u32_at(0x18) == 1 {
         if cba30 != 6 {
-            put_cmd(env, io.q, 0x4D, &[cba30, 0x282], io.scratch);
+            put_cmd(
+                &mut Lend::new(env, w),
+                io.q,
+                0x4D,
+                &[cba30, 0x282],
+                io.scratch,
+            );
         }
         for e in ITEM_TABLE.iter() {
             if e.2 == 0 || item != e.0 as u32 {
                 continue;
             }
             let mut r7 = 0;
-            if env.call(0x021C_8338, &mut [Arg::V(waddr), Arg::V(target_id)]) == 0 {
-                let pos = put_cmd_placeholder(env, io.q, 0x4D, io.scratch);
+            if env.callw(0x021C_8338, &mut [Arg::V(waddr), Arg::V(target_id)], w) == 0 {
+                let pos = put_cmd_placeholder(&mut Lend::new(env, w), io.q, 0x4D, io.scratch);
                 r7 = fx.run(env, w, waddr, e.3, target, target_addr, item, 0, extra, io);
                 if r7 == 1 {
-                    put_cmd_at(env, io.q, pos, 0x4D, &[cba30, 0x25E], io.scratch);
-                    put_cmd(env, io.q, 0x4C, &[0x236], io.scratch);
+                    put_cmd_at(
+                        &mut Lend::new(env, w),
+                        io.q,
+                        pos,
+                        0x4D,
+                        &[cba30, 0x25E],
+                        io.scratch,
+                    );
+                    put_cmd(&mut Lend::new(env, w), io.q, 0x4C, &[0x236], io.scratch);
                     return 0;
                 }
             }
             if r7 == 0 {
-                put_cmd_list(env, io.q, 0x5A, 0x44, &[term]);
+                put_cmd_list(&mut Lend::new(env, w), io.q, 0x5A, 0x44, &[term]);
             }
-            put_cmd(env, io.q, 0x4C, &[0x236], io.scratch);
+            put_cmd(&mut Lend::new(env, w), io.q, 0x4C, &[0x236], io.scratch);
             return 0;
         }
     }
     let mut any = false;
-    let pos = put_cmd_placeholder(env, io.q, 0x4D, io.scratch);
+    let pos = put_cmd_placeholder(&mut Lend::new(env, w), io.q, 0x4D, io.scratch);
     let head = advance_fields(&mut w.mem[OFS_QHEAD..]);
     for e in ITEM_TABLE.iter() {
-        let r3 = item_param(env, item, e.0 as u32);
+        let r3 = item_param(&mut Lend::new(env, w), item, e.0 as u32);
         if r3 != 0 && fx.run(env, w, waddr, e.3, target, target_addr, item, r3, extra, io) != 0 {
             any = true;
         }
     }
     if any {
         let msg = if cba30 != 6 { 0x25E } else { 0x292 };
-        put_cmd_at(env, io.q, pos, 0x4D, &[cba30, msg], io.scratch);
+        put_cmd_at(
+            &mut Lend::new(env, w),
+            io.q,
+            pos,
+            0x4D,
+            &[cba30, msg],
+            io.scratch,
+        );
         if w.u32_at(0x18) != 1 {
-            env.call(
+            env.callw(
                 0x021B_9090,
                 &mut [Arg::V(main), Arg::V(client), Arg::V(item)],
+                w,
             );
-            env.call(
+            env.callw(
                 0x021B_A250,
                 &mut [Arg::V(main), Arg::V(target_addr), Arg::V(item)],
+                w,
             );
         }
     } else {
-        put_cmd_list(env, io.q, 0x5A, 0x44, &[term]);
+        put_cmd_list(&mut Lend::new(env, w), io.q, 0x5A, 0x44, &[term]);
     }
     set_word(&mut w.mem[OFS_QHEAD..], head);
-    put_cmd(env, io.q, 0x4C, &[0x236], io.scratch);
+    put_cmd(&mut Lend::new(env, w), io.q, 0x4C, &[0x236], io.scratch);
     0
 }
 
@@ -1694,7 +1765,7 @@ pub fn target_override<E: FlowEnv>(
     if kind == 0 {
         if id == expected || expected == 6 {
             // the callee's fifth word is whatever the caller's stack holds: the saved r3
-            return env.call(
+            return env.callwr(
                 0x021D_80BC,
                 &mut [
                     Arg::V(w.u32_at(4)),
@@ -1703,6 +1774,7 @@ pub fn target_override<E: FlowEnv>(
                     Arg::V(0xAE),
                     Arg::V(id),
                 ],
+                w,
             );
         }
         return expected;
@@ -1728,41 +1800,42 @@ pub fn message_args_a<E: FlowEnv>(
     obj: u32,
 ) -> u32 {
     let (main, pokecon) = (w.u32_at(4), w.u32_at(8));
-    env.call(
+    env.callwr(
         0x021B_8D8C,
         &mut [Arg::V(main), Arg::V(pokecon), Arg::V(mon.poke_id() as u32)],
+        w,
     );
     match rd32(&rec[0xC..]) {
         0 | 3 | 4 | 5 | 9 => {
             let m = if who == 0x1F {
                 mon_of_main_a(env, waddr, &w.mem[..])
             } else {
-                env.call(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)])
+                env.callwr(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)], w)
             };
-            env.call(0x021C_A9D4, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callwr(0x021C_A9D4, &mut [Arg::V(obj), Arg::V(m)], w);
             1
         }
         1 | 7 => {
             let m = if who == 0x1F {
                 mon_addr
             } else {
-                env.call(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)])
+                env.callwr(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)], w)
             };
-            env.call(0x021C_A9E4, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callwr(0x021C_A9E4, &mut [Arg::V(obj), Arg::V(m)], w);
             1
         }
         8 => {
-            env.call(0x021C_A9F4, &mut [Arg::V(obj), Arg::V(mon_addr)]);
+            env.callwr(0x021C_A9F4, &mut [Arg::V(obj), Arg::V(mon_addr)], w);
             let m = mon_of_main_a(env, waddr, &w.mem[..]);
-            env.call(0x021C_AA04, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callwr(0x021C_AA04, &mut [Arg::V(obj), Arg::V(m)], w);
             2
         }
         13 => {
             if who == 0x1F {
                 return 0;
             }
-            let m = env.call(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)]);
-            env.call(0x021C_AA14, &mut [Arg::V(obj), Arg::V(m)]);
+            let m = env.callwr(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)], w);
+            env.callwr(0x021C_AA14, &mut [Arg::V(obj), Arg::V(m)], w);
             1
         }
         _ => 0,
@@ -1791,9 +1864,9 @@ fn message_tail<E: FlowEnv>(
     let answer = dispatch_value_bracketed(env, w, waddr, mon, rec, id);
     let mut r = r;
     if answer != 0x1F {
-        r = env.call(0x021B_9934, &mut [Arg::V(w.u32_at(8)), Arg::V(answer)]);
+        r = env.callw(0x021B_9934, &mut [Arg::V(w.u32_at(8)), Arg::V(answer)], w);
     }
-    env.call(veneer, &mut [Arg::V(obj), Arg::V(r)]);
+    env.callw(veneer, &mut [Arg::V(obj), Arg::V(r)], w);
     1
 }
 
@@ -1814,9 +1887,10 @@ pub fn message_args_b<E: FlowEnv>(
     mons: &dyn Fn(u32) -> BattleMon,
 ) -> u32 {
     let (main, pokecon) = (w.u32_at(4), w.u32_at(8));
-    let client = env.call(
+    let client = env.callw(
         0x021B_8D8C,
         &mut [Arg::V(main), Arg::V(pokecon), Arg::V(mon.poke_id() as u32)],
+        w,
     );
     let tgt = target_override(env, w, rec, mon_addr, client, extra);
     let victim = |env: &mut E| env.call(0x021B_98AC, &mut [Arg::V(pokecon), Arg::V(tgt)]);
@@ -1829,60 +1903,60 @@ pub fn message_args_b<E: FlowEnv>(
             tail(env, w, r)
         }
         9 => {
-            env.call(0x021D_78AC, &mut [Arg::V(2)]);
+            env.callw(0x021D_78AC, &mut [Arg::V(2)], w);
             let r = mon_of_main_a(env, waddr, &w.mem[..]);
             tail(env, w, r)
         }
         5 => {
             let m = mon_of_main_a(env, waddr, &w.mem[..]);
-            env.call(0x021C_AC24, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_AC24, &mut [Arg::V(obj), Arg::V(m)], w);
             let m = mon_of_main_a(env, waddr, &w.mem[..]);
-            env.call(0x021C_AC34, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_AC34, &mut [Arg::V(obj), Arg::V(m)], w);
             2
         }
         4 => {
             let m = mon_of_main_b(env, waddr, &w.mem[..]);
-            env.call(0x021C_AC44, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_AC44, &mut [Arg::V(obj), Arg::V(m)], w);
             let m = mon_of_main_a(env, waddr, &w.mem[..]);
-            env.call(0x021C_AC54, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_AC54, &mut [Arg::V(obj), Arg::V(m)], w);
             let m = mon_of_main_a(env, waddr, &w.mem[..]);
-            env.call(0x021C_AC64, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_AC64, &mut [Arg::V(obj), Arg::V(m)], w);
             3
         }
         8 => {
-            env.call(0x021C_AC74, &mut [Arg::V(obj), Arg::V(mon_addr)]);
+            env.callw(0x021C_AC74, &mut [Arg::V(obj), Arg::V(mon_addr)], w);
             let m = mon_of_main_b(env, waddr, &w.mem[..]);
-            env.call(0x021C_AC84, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_AC84, &mut [Arg::V(obj), Arg::V(m)], w);
             let m = mon_of_main_a(env, waddr, &w.mem[..]);
-            env.call(0x021C_AC94, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_AC94, &mut [Arg::V(obj), Arg::V(m)], w);
             let m = mon_of_main_a(env, waddr, &w.mem[..]);
-            env.call(0x021C_ACA4, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_ACA4, &mut [Arg::V(obj), Arg::V(m)], w);
             3
         }
         7 => {
             let m = if who == 0x1F {
                 mon_addr
             } else {
-                env.call(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)])
+                env.callw(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)], w)
             };
-            env.call(0x021C_ACB4, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_ACB4, &mut [Arg::V(obj), Arg::V(m)], w);
             1
         }
         1 => {
             let m = victim(env);
-            env.call(0x021C_ACC4, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_ACC4, &mut [Arg::V(obj), Arg::V(m)], w);
             1
         }
         2 => {
             let m = mon_of_main_b(env, waddr, &w.mem[..]);
-            env.call(0x021C_ACD4, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_ACD4, &mut [Arg::V(obj), Arg::V(m)], w);
             1
         }
         13 => {
             if who == 0x1F {
                 return 0;
             }
-            let r = env.call(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)]);
+            let r = env.callw(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)], w);
             tail(env, w, r)
         }
         _ => 0,
@@ -1906,11 +1980,12 @@ pub fn message_args_c<E: FlowEnv>(
     mons: &dyn Fn(u32) -> BattleMon,
 ) -> u32 {
     let (main, pokecon) = (w.u32_at(4), w.u32_at(8));
-    let client = env.call(
+    let client = env.callw(
         0x021B_8D8C,
         &mut [Arg::V(main), Arg::V(pokecon), Arg::V(mon.poke_id() as u32)],
+        w,
     );
-    env.call(0x021B_99E0, &mut [Arg::V(client)]);
+    env.callw(0x021B_99E0, &mut [Arg::V(client)], w);
     let n0 = u16::from_le_bytes([list[0], list[1]]) as u32;
     let n1 = u16::from_le_bytes([list[2], list[3]]) as u32;
     let tgt = target_override(env, w, rec, mon_addr, client, extra);
@@ -1924,7 +1999,7 @@ pub fn message_args_c<E: FlowEnv>(
             tail(env, w, r)
         }
         9 => {
-            let pick = env.call(0x021D_78AC, &mut [Arg::V(n0)]) & 0xFF;
+            let pick = env.callw(0x021D_78AC, &mut [Arg::V(n0)], w) & 0xFF;
             let r = party(env, list[4 + pick as usize] as u32);
             tail(env, w, r)
         }
@@ -1932,7 +2007,7 @@ pub fn message_args_c<E: FlowEnv>(
             let mut i = 0;
             while i < n0 {
                 let m = party(env, list[4 + i as usize] as u32);
-                env.call(0x021C_AF18, &mut [Arg::V(obj), Arg::V(m)]);
+                env.callw(0x021C_AF18, &mut [Arg::V(obj), Arg::V(m)], w);
                 i += 1;
             }
             n0 & 0xFF
@@ -1942,7 +2017,7 @@ pub fn message_args_c<E: FlowEnv>(
             let mut i = 0;
             while i < n0 {
                 let m = party(env, list[4 + i as usize] as u32);
-                env.call(0x021C_AF28, &mut [Arg::V(obj), Arg::V(m)]);
+                env.callw(0x021C_AF28, &mut [Arg::V(obj), Arg::V(m)], w);
                 i += 1;
                 count += 1;
             }
@@ -1951,7 +2026,7 @@ pub fn message_args_c<E: FlowEnv>(
                 let other = list[7 + j as usize] as u32;
                 if client != other {
                     let m = party(env, other);
-                    env.call(0x021C_AF38, &mut [Arg::V(obj), Arg::V(m)]);
+                    env.callw(0x021C_AF38, &mut [Arg::V(obj), Arg::V(m)], w);
                     count += 1;
                 }
                 j += 1;
@@ -1959,17 +2034,17 @@ pub fn message_args_c<E: FlowEnv>(
             count & 0xFF
         }
         8 => {
-            env.call(0x021C_AF48, &mut [Arg::V(obj), Arg::V(mon_addr)]);
+            env.callw(0x021C_AF48, &mut [Arg::V(obj), Arg::V(mon_addr)], w);
             for i in 0..3u32 {
-                let r1 = env.call(0x021B_8C38, &mut [Arg::V(client), Arg::V(i & 0xFF)]);
+                let r1 = env.callw(0x021B_8C38, &mut [Arg::V(client), Arg::V(i & 0xFF)], w);
                 if r1 != client {
                     let m = party(env, r1);
-                    env.call(0x021C_AF58, &mut [Arg::V(obj), Arg::V(m)]);
+                    env.callw(0x021C_AF58, &mut [Arg::V(obj), Arg::V(m)], w);
                 }
             }
             for veneer in [0x021C_AF68, 0x021C_AF78, 0x021C_AF88] {
                 let m = mon_of_main_a(env, waddr, &w.mem[..]);
-                env.call(veneer, &mut [Arg::V(obj), Arg::V(m)]);
+                env.callw(veneer, &mut [Arg::V(obj), Arg::V(m)], w);
             }
             6
         }
@@ -1977,26 +2052,26 @@ pub fn message_args_c<E: FlowEnv>(
             let m = if who == 0x1F {
                 mon_addr
             } else {
-                env.call(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)])
+                env.callw(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)], w)
             };
-            env.call(0x021C_AF98, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_AF98, &mut [Arg::V(obj), Arg::V(m)], w);
             1
         }
         1 => {
             let m = party(env, tgt);
-            env.call(0x021C_AFA8, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_AFA8, &mut [Arg::V(obj), Arg::V(m)], w);
             1
         }
         2 => {
             let m = party(env, tgt);
-            env.call(0x021C_AFB8, &mut [Arg::V(obj), Arg::V(m)]);
+            env.callw(0x021C_AFB8, &mut [Arg::V(obj), Arg::V(m)], w);
             1
         }
         13 => {
             if who == 0x1F {
                 return 0;
             }
-            let r = env.call(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)]);
+            let r = env.callw(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)], w);
             tail(env, w, r)
         }
         _ => 0,
@@ -2024,10 +2099,10 @@ pub fn pick_ally<E: FlowEnv + BppEnv>(
     if fun_021d7f00(kind) <= 1 {
         return 0;
     }
-    if env.call(0x021C_B134, &mut [Arg::V(obj)]) != 1 {
+    if env.callwr(0x021C_B134, &mut [Arg::V(obj)], w) != 1 {
         return 0;
     }
-    let fainted_addr = env.call(0x021C_B144, &mut [Arg::V(obj), Arg::V(0)]);
+    let fainted_addr = env.callwr(0x021C_B144, &mut [Arg::V(obj), Arg::V(0)], w);
     let fainted = mons(fainted_addr);
     if !fainted.is_fainted(env) {
         return 0;
@@ -2038,27 +2113,30 @@ pub fn pick_ally<E: FlowEnv + BppEnv>(
     if u32::from(my_id >= 12) == u32::from(their_id >= 12) {
         return 0;
     }
-    let client = env.call(
+    let client = env.callwr(
         0x021B_8D8C,
         &mut [Arg::V(main), Arg::V(pokecon), Arg::V(mon.poke_id() as u32)],
+        w,
     );
-    env.call(0x021C_B154, &mut [Arg::V(obj), Arg::V(fainted_addr)]);
-    let r1 = if env.call(0x0201_BEB8, &mut [Arg::V(mv), Arg::V(0xB)]) != 0 {
+    env.callwr(0x021C_B154, &mut [Arg::V(obj), Arg::V(fainted_addr)], w);
+    let r1 = if env.callwr(0x0201_BEB8, &mut [Arg::V(mv), Arg::V(0xB)], w) != 0 {
         (6 << 8) | client
     } else {
         client | 0x100
     } & 0xFFFF;
     let mut ids = [0u8; 8];
-    let count = env.call(
+    let count = env.callwr(
         0x021B_8778,
         &mut [Arg::V(main), Arg::V(r1), Arg::Out(&mut ids)],
+        w,
     );
     let mut slots = [0u32; 3];
     let (mut kept, mut i) = (0usize, 0u32);
     while i < count {
-        let m = env.call(
+        let m = env.callwr(
             0x021B_98AC,
             &mut [Arg::V(pokecon), Arg::V(ids[i as usize] as u32)],
+            w,
         );
         slots[kept] = m;
         if !mons(m).is_fainted(env) {
@@ -2089,15 +2167,15 @@ pub fn pick_ally<E: FlowEnv + BppEnv>(
         } else if b < a {
             1
         } else {
-            env.call(0x021D_78AC, &mut [Arg::V(2)]) & 0xFF
+            env.callwr(0x021D_78AC, &mut [Arg::V(2)], w) & 0xFF
         }
     };
     if slots[pick as usize] == 0 {
         return 0;
     }
-    env.call(0x021C_B164, &mut [Arg::V(obj)]);
+    env.callwr(0x021C_B164, &mut [Arg::V(obj)], w);
     1
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

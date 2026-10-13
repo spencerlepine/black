@@ -47,6 +47,27 @@ impl SvFlowWork {
         self.mem[ofs]
     }
 
+    /// B16: a record a port holds as a separate image that the original keeps at `p` — in the work
+    /// itself in the game (work at `waddr`), a separate region in the differential test. When `p`
+    /// lies in the work, [`Self::pull`] refreshes the image from the work and [`Self::push`] stores
+    /// it there (around the calls that read / write it); otherwise both do nothing.
+    pub fn pull(&self, waddr: u32, p: u32, img: &mut [u8]) {
+        let o = p.wrapping_sub(waddr) as usize;
+        if o < Self::SIZE {
+            let n = img.len().min(Self::SIZE - o);
+            img[..n].copy_from_slice(&self.mem[o..o + n]);
+        }
+    }
+
+    /// See [`Self::pull`].
+    pub fn push(&mut self, waddr: u32, p: u32, img: &[u8]) {
+        let o = p.wrapping_sub(waddr) as usize;
+        if o < Self::SIZE {
+            let n = img.len().min(Self::SIZE - o);
+            self.mem[o..o + n].copy_from_slice(&img[..n]);
+        }
+    }
+
     pub fn set_u8_at(&mut self, ofs: usize, v: u8) {
         self.mem[ofs] = v;
     }

@@ -616,8 +616,8 @@ pub fn ai_create<E: FlowEnv>(
     let x = env.call(0x021B_86B8, &mut [Arg::P]);
     m.w32(ai + 0x9C, x);
     let _ = INIT_RECORD;
-    let vm = env.call(0x0201_121C, &mut [Arg::V(heap), Arg::P]);
-    env.call(0x0201_126C, &mut [Arg::P, Arg::V(ai)]);
+    let vm = env.call(0x0201_121C, &mut [Arg::V(heap), Arg::PAt(0x0218_A574)]);
+    env.call(0x0201_126C, &mut [Arg::PAt(vm), Arg::V(ai)]);
     if call(env, 0x0201_C408, &[]) == 0 {
         call(env, 0x0201_C328, &[0x30, heap]);
     }

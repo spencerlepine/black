@@ -58,7 +58,7 @@ const RECORDED: &[(u32, &str)] = &[
 ];
 // svflow-recorded-end
 
-fn call(addr: u32, c: &mut Case) -> u64 {
+pub(crate) fn call<E: crate::server_flow::env::FlowEnv>(addr: u32, c: &mut Case<E>) -> u64 {
     let v = c.vals.clone();
     match addr {
         0x021C_65A8 => {

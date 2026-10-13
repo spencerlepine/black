@@ -1121,17 +1121,17 @@ fn contact_status<H: FlowHost>(b: &mut Battle<H>, me: u8, sick: u32, cont: u32, 
 
 /// 0x021D9C8C: Poison Point.
 pub fn h_021d9c8c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
-    let c = b.calc.make_default_sick_cont(5).0;
+    let c = b.calc_mut().make_default_sick_cont(5).0;
     contact_status(b, me, 5, c, 30);
 }
 /// 0x021D9CBC: Static.
 pub fn h_021d9cbc<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
-    let c = b.calc.make_default_sick_cont(1).0;
+    let c = b.calc_mut().make_default_sick_cont(1).0;
     contact_status(b, me, 1, c, 30);
 }
 /// 0x021D9CEC: Flame Body.
 pub fn h_021d9cec<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<H>, me: u8) {
-    let c = b.calc.make_default_sick_cont(4).0;
+    let c = b.calc_mut().make_default_sick_cont(4).0;
     contact_status(b, me, 4, c, 30);
 }
 
@@ -1155,7 +1155,7 @@ pub fn h_021d9db0<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     if !is_me(b, 4, me) || b.var(0x46) != 0 {
         return;
     }
-    let r = b.calc.rand(30);
+    let r = b.calc_mut().rand(30);
     let sick = if r > 20 {
         5
     } else if r > 10 {
@@ -1163,7 +1163,7 @@ pub fn h_021d9db0<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     } else {
         2
     };
-    let c = b.calc.make_default_sick_cont(sick).0;
+    let c = b.calc_mut().make_default_sick_cont(sick).0;
     contact_status(b, me, sick, c, 30);
 }
 
@@ -1308,7 +1308,7 @@ pub fn h_021da150<H: FlowHost>(sys: &mut EventSystem, f: FactorId, b: &mut Battl
             let k = if count == 1 {
                 0
             } else {
-                b.calc.rand(count as u32)
+                b.calc_mut().rand(count as u32)
             };
             let id = cands[k as u8 as usize] as u32;
             ability = b.mon_get(id, value::ABILITY_RAW);
@@ -1446,7 +1446,7 @@ pub fn h_021da3d8<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     if found.is_empty() {
         return;
     }
-    let k = b.calc.rand(found.len() as u32) as u8 as usize;
+    let k = b.calc_mut().rand(found.len() as u32) as u8 as usize;
     let (pid, mv) = found[k];
     popup_message(b, me, 0x1B1, &[pid as u32, mv as u32]);
 }
@@ -1513,7 +1513,7 @@ pub fn h_021da624<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     if count == 0 {
         return;
     }
-    let k = b.calc.rand(count as u32) as u8 as usize;
+    let k = b.calc_mut().rand(count as u32) as u8 as usize;
     popup_message(b, me, 0x1B7, &[me as u32, items[k] as u32]);
 }
 
@@ -2472,7 +2472,7 @@ pub fn h_021dbbd8<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     if found == 0 {
         return;
     }
-    let pick = b.calc.rand(found as u32) as u8;
+    let pick = b.calc_mut().rand(found as u32) as u8;
     let target = buf[6 + pick as usize] as u32;
     let item = b.mon(target).u14();
     if item == 0 {
@@ -2796,9 +2796,9 @@ pub fn h_021dc32c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     }
     let (mut up, mut down) = (0u8, 0u8);
     if ups == 0 && downs != 0 {
-        down = buf[0xAF + b.calc.rand(downs as u32) as usize];
+        down = buf[0xAF + b.calc_mut().rand(downs as u32) as usize];
     } else if ups != 0 && downs == 0 {
-        up = buf[0xA8 + b.calc.rand(ups as u32) as usize];
+        up = buf[0xA8 + b.calc_mut().rand(ups as u32) as usize];
     } else if ups != 0 && downs != 0 {
         let mut n = 0u8;
         let mut i = 0u8;
@@ -2819,7 +2819,7 @@ pub fn h_021dc32c<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
             }
             i = i.wrapping_add(1);
         }
-        let at = b.calc.rand(n as u32) as usize * 2;
+        let at = b.calc_mut().rand(n as u32) as usize * 2;
         let pair = u16::from_le_bytes([buf[at], buf[at + 1]]);
         up = (pair >> 8) as u8;
         down = pair as u8;
@@ -2857,7 +2857,7 @@ pub fn h_021dc4d4<H: FlowHost>(_: &mut EventSystem, _: FactorId, b: &mut Battle<
     }
     let id = b.host.handex_push(HANDEX_ADD_SICK, me as u32);
     let target = b.var(4) as u8;
-    let cont = b.calc.make_default_sick_cont(5).0;
+    let cont = b.calc_mut().make_default_sick_cont(5).0;
     let w = b.host.handex(id);
     let h = w.get_u32(0);
     w.put_u32(0, h | HANDEX_HEADER_POPUP);
