@@ -5,7 +5,7 @@ use black_fndiff::{run_suite, Case, Suite};
 // Written by tools/check-fn.sh only, after the Rust hashes matched the ROM run.
 // fndiff-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
-    (0x021AB0D4, "4680a4153d8763ea"),
+    (0x021AB0D4, "d5520dd000b783a2"),
     (0x021AB0F0, "04e931146b9319e1"),
     (0x021AB0F8, "9b11d4b80402c8cc"),
     (0x021AB100, "6e923909b2e34ca5"),
