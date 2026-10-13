@@ -24,14 +24,14 @@ Undecompiled callees go in `hooks` as traits (§4 porting pattern); pointers sta
 | `scrcmd_screen` | overlay-21 screen effects 0x021B2830-0x021B2FD7 (row 21.44 tail, 21.45 `scrcmd_screeneffects.c`, cmd 594; 36 fns, 29 ids) | `tools/rom-diff/specs/black-script/scrcmd_screen.spec` | `tools/check-fn.sh black-script scrcmd_screen` | 36 specced (F8-spec2, 773/773), **5 smoke ports verified, area hash 6e9a0a809f9d93e1** |
 
 | `scrcmd_screen` | overlay-21 screen effects 0x021B2830-0x021B2FD7 (row 21.44 tail, 21.45 `scrcmd_screeneffects.c`, cmd 594; 36 fns, 29 ids) | `tools/rom-diff/specs/black-script/scrcmd_screen.spec` | `tools/check-fn.sh black-script scrcmd_screen` | 36 specced (F8-spec2, 773/773), **5 smoke ports verified, area hash 6e9a0a809f9d93e1** |
-| `scrcmd_proc` | `scrcmd_proc.c`: overlay 10 0x0215C63C-0x0215CE97 (F1 row 10.15 minus its tail; 22 fns, 17 command ids) | `tools/rom-diff/specs/black-script/scrcmd_proc.spec` | `tools/check-fn.sh black-script scrcmd_proc` | 22 specced (F8-spec3, 824/824 insns covered), **6 smoke ports verified, area hash 8ace4d03c9fe46a6** |
-| `scrcmd_sodateya` | `scrcmd_sodateya.c`: overlay 10 0x0215CE98-0x0215D34B (row 10.16 + the tail of 10.15; 18 fns, 15 ids) | `tools/rom-diff/specs/black-script/scrcmd_sodateya.spec` | `tools/check-fn.sh black-script scrcmd_sodateya` | 18 specced (F8-spec3, 463/463), **5 smoke ports verified, area hash e3a1ae75de9be143** |
-| `scrcmd_misc10` | overlay 10 rows 10.33 (0x0216A420-0x0216AC3F) and 10.35 (0x0216B504-0x0216B86B) + cmd 359 (0x0215D34C, `scrcmd_musical.c`, X2); 33 fns, 30 ids | `tools/rom-diff/specs/black-script/scrcmd_misc10.spec` | `tools/check-fn.sh black-script scrcmd_misc10` | 33 specced (F8-spec3, 1305/1305), **5 smoke ports verified, area hash 2029557f4ba29478** |
+| `scrcmd_proc` | `scrcmd_proc.c`: overlay 10 0x0215C63C-0x0215CE97 (F1 row 10.15 minus its tail; 22 fns, 17 command ids) | `tools/rom-diff/specs/black-script/scrcmd_proc.spec` | `tools/check-fn.sh black-script scrcmd_proc` | **22/22 verified, area hash 3ec48c52d531838d** (F8d; F8-spec3 spec, 824/824 insns covered) |
+| `scrcmd_sodateya` | `scrcmd_sodateya.c`: overlay 10 0x0215CE98-0x0215D34B (row 10.16 + the tail of 10.15; 18 fns, 15 ids) | `tools/rom-diff/specs/black-script/scrcmd_sodateya.spec` | `tools/check-fn.sh black-script scrcmd_sodateya` | **18/18 verified, area hash 6f0e40c19a57626b** (F8d; F8-spec3 spec, 463/463) |
+| `scrcmd_misc10` | overlay 10 rows 10.33 (0x0216A420-0x0216AC3F) and 10.35 (0x0216B504-0x0216B86B) + cmd 359 (0x0215D34C, `scrcmd_musical.c`, X2); 33 fns, 30 ids | `tools/rom-diff/specs/black-script/scrcmd_misc10.spec` | `tools/check-fn.sh black-script scrcmd_misc10` | 33 specced (F8-spec3, 1305/1305); **32/32 in-scope fns verified, area hash 6b303e0a9940ca36** (F8d); cmd 359 (X2) specced only |
 | `scrcmd` | F8 index (doc only: which area holds which commands) | | | |
 
 | `scrcmd_core` | scrcmd core: overlay 10 0x02159204-0x0215995E, commands 0..48 + 4 helpers (53 fns) | `tools/rom-diff/specs/black-script/scrcmd_core.spec` | `tools/check-fn.sh black-script scrcmd_core` | **53/53 verified, area hash 3467bfc999c8890b** (F8a; F8-spec1 spec, 747/747 insns covered) |
 | `scrcmd_work` | `scrcmd_work.c`: overlay 10 0x0215A514-0x0215C63A minus the ctx getters and the Heap_Free veneer (130 fns, 86 command ids) | `tools/rom-diff/specs/black-script/scrcmd_work.spec` | `tools/check-fn.sh black-script scrcmd_work` | **130/130 verified, area hash d7e9a9ae52796e75** (F8a; F8-spec1 spec, 3451/3451 insns covered) |
-| `scrcmd` | F8 index + the command-id -> handler table of the ported commands (`commands`, `handler`, `dispatch`, `call_wait`) | | `cargo test -p black-script scrcmd` (ids unique, every ported id dispatches) | 200 ids (49 core, 86 work, 33 talk, 29 screen, 3 script_sys) |
+| `scrcmd` | F8 index + the command-id -> handler table of the ported commands (`commands`, `handler`, `dispatch`, `call_wait`) | | `cargo test -p black-script scrcmd` (ids unique, every ported id dispatches) | 261 ids (49 core, 86 work, 33 talk, 29 screen, 17 proc, 15 sodateya, 29 misc10, 3 script_sys) |
 
 | `scrcmd` | F8 index + the command-id -> handler table of the ported commands (`commands`, `handler`, `dispatch`, `call_wait`) | | `cargo test -p black-script scrcmd` (ids unique, every ported id dispatches) | 273 ids (49 core, 86 work, 80 fld, 55 obj, 3 script_sys) |
 
@@ -129,9 +129,10 @@ ROM tables embedded in `script_sys/tables.rs` (copied from overlay 10 data): `CM
 
 ### Command dispatch (F8a)
 
-`scrcmd::commands()` is the table of every ported command id -> handler address (200 ids: `scrcmd_core::COMMANDS` 0..48,
-`scrcmd_work::COMMANDS` (86 ids), `scrcmd_talk::COMMANDS` (33), `scrcmd_screen::COMMANDS` (29), `scrcmd::SCRIPT_SYS_COMMANDS`
-49 / 50 / 311; each area test checks its words against the ROM table 0x0217062C). `scrcmd::handler(id)` looks one up. A
+`scrcmd::commands()` is the table of every ported command id -> handler address (261 ids: `scrcmd_core::COMMANDS` 0..48,
+`scrcmd_work::COMMANDS` (86 ids), `scrcmd_talk::COMMANDS` (33), `scrcmd_screen::COMMANDS` (29), `scrcmd_proc::COMMANDS` (17),
+`scrcmd_sodateya::COMMANDS` (15), `scrcmd_misc10::COMMANDS` (29), `scrcmd::SCRIPT_SYS_COMMANDS` 49 / 50 / 311; each area test
+checks its words against the ROM table 0x0217062C). `scrcmd::handler(id)` looks one up. A
 game-side `CommandDispatch` implementation is:
 
 `scrcmd::commands()` is the table of every ported command id -> handler address (273 ids: `scrcmd_core::COMMANDS` 0..48,
@@ -144,6 +145,8 @@ impl CommandDispatch for Game {
         scrcmd::dispatch(self, handler, vm, ctx)                       // core, work, talk, screen ids
 
         scrcmd::dispatch(self, handler, vm, ctx)                       // core 0..48, work, fld, obj
+
+        scrcmd::dispatch(self, handler, vm, ctx)                       // core, work, talk, screen, proc, sodateya, misc10
             .or_else(|| script_sys::call_known(self, handler, &[vm, ctx])) // 49 / 50 / 311
             .unwrap_or_else(|| todo!("command handler {handler:#x}: unported F8 job"))
     }
@@ -240,6 +243,35 @@ init procs of mask bits 10 / 12 / 13 to `scrcmd_fld::init_proc`.
   once a caller needs it.
 * Smoke ports call their callees through `ProcHooks` / `SodateyaHooks` / `Misc10Hooks` (one method per callee address).
 
+## F8d: scrcmd_proc, scrcmd_sodateya and scrcmd_misc10 ported
+
+* All three areas are ported (22 + 18 + 32 functions; 17 + 15 + 29 command ids) and dispatched by `scrcmd`; cmd 359 is not
+  (X2). `ProcHooks` / `SodateyaHooks` / `Misc10Hooks` extend `CoreHooks` (vm.c, the operand readers, the ctx getters,
+  `FUN_020120F4` / `FUN_020122C0` / `FUN_020124E8` and the child-event call `FUN_0215897C` come from there); `ProcHooks`
+  defaults `FUN_02158F50` / `FUN_02158FB4` / `FUN_02158FB8` to the `script_sys` ports. In-area callees are called as Rust
+  (`proc_call_wait`, `party_select_event`, `gender_mark`).
+* Code addresses handed to other systems: the app-proc wait `scrcmd_proc::PROC_WAIT` (in `scrcmd::call_wait`), the GMEVENT
+  functions `scrcmd_sodateya::EVENT_247` and `scrcmd_misc10::EVENT_549` / `EVENT_550` (in `scrcmd::call_event`) and the
+  result callbacks `scrcmd_proc::CB_334` / `CB_336` / `CB_489` (`scrcmd::call_callback`; the proc wait reaches them through
+  `ProcHooks::call_proc_callback`, the app events of main through their own callback call).
+* Heap destinations a callee fills (`FUN_02175648(gd, W + 0x2C)` 16 bytes, `FUN_0216D88C(mmdl, W + pos)` 12 bytes) are
+  passed as addresses; stack records stay byte arrays (`FUN_020124AC`'s 8 / 16-byte record, command 399's 8 var addresses,
+  command 559's out word `k`).
+* ROM data: `scrcmd_misc10::{COUNTS_532 0x0217219C (32 B incl. 2 zero bytes after the 30 counts), ROWS_532 0x021721BC (30 x 17)}`;
+  `FX_SinCosTable_` (main 0x020A1B38) is computed (`scrcmd_misc10::fx_sin` / `fx_cos`, checked against all 4096 ROM entries,
+  same formula as `black_field::fieldmap::fx_cos`). Command 550's curved path inlines `_u32_div_f` / `_ll_mul` (svflow `ALLOW`)
+  and the compiler's `% 0x10000` angle reduction (`step_index`).
+* **App-proc requests (proposed mapping, not a `ScriptHost` method yet):** `FUN_020120B4(GAMESYS, ovl, proc table, param)`
+  -> `ScriptHost::app_start(AppRequest { ovl, proc_table, param })`, `FUN_020120F0(GAMESYS) != 0` -> `ScriptHost::app_running()`
+  (the proc wait `0x0215C69C` polls it, then runs the result callback). The app events `FUN_02014808` / `FUN_02014840(GAMESYS,
+  field map, ovl, proc table, param, cb, cbwork)` (commands 336 / 489, and musical 359) are main-side GMEVENTs that leave the
+  field, run the same kind of app, return and call `cb(cbwork)`: they map to the same pair once the event code (main, G2 /
+  F10) is ported; until then `ProcHooks::fun_02014808` / `fun_02014840` are the seam. The `param` / result layouts are the
+  commands' (doc of each `cmd_*`); which app each overlay id is (0x46, 0x47, 0x88, 0xAD, 0xAE, 0xDD..0xE0) is not identified
+  (UNVERIFIED; G2 / U), so `host.rs` gets no method until a caller (G2) needs it.
+* Mutation spot check: 5/6 killed; survivor `cmd_532` `best < s` -> `best <= s` (the `0200e4f8` / `0200e4b0` stubs answer
+  mixed u32 values, so ties never happen: needs small `pick:` answers, harness queue).
+
 ## Notes for porters
 
 * A `vm` function ported in `vm.rs` does not deactivate its stubs in `script_sys.spec` (stub deactivation is per area):
@@ -282,6 +314,13 @@ init procs of mask bits 10 / 12 / 13 to `scrcmd_fld::init_proc`.
 * `dispatch_hook` / `run_init_procs` index the embedded tables; ids past them (the original reads the following bytes)
   panic.
 * `fatal` (0x02158DBC) loops on `FUN_020053EC` forever, as the original.
-* `scrcmd_proc` 0x0215CC4C (cmd 356) stores its caller's r6 / r4 into the event record when an operand misses its cases
-  (unset registers; the Z19 entry state makes them 0 in the test). `scrcmd_misc10` 0x0216B720 (cmd 532) stores an unset stack
-  word when no row wins (0 in the test). Not ported yet; a port takes those words as inputs.
+* `scrcmd_proc::cmd_356` (0x0215CC4C) stores its caller's r6 / r4 into the event record when an operand misses its cases
+  (unset registers): the port takes them as `stale_r4` / `stale_r6`; `scrcmd_misc10::cmd_532` (0x0216B720) stores an unset
+  stack word when no row wins: the port takes it as `stale`. `dispatch` passes 0 for all three (the Z19 entry state the test
+  runs with), so a game running a script that hits these paths gets 0 where the original gets whatever its caller left.
+* `scrcmd_misc10::event_549` divides by the frame count with Rust's `wrapping_div` (`_s32_div_f` inlined): a 0-frame move
+  panics where the original's division-by-zero result is unknown (§8; the spec bounds frames to 1..0x40).
+  `scrcmd_misc10::cmd_532` indexes the embedded tables with the script operand `c` (panics for `c` > 31; the original reads
+  the following bytes).
+* `scrcmd_misc10` command 359 (0x0215D34C, `scrcmd_musical.c`) is out of scope (X2): specced, not ported, not dispatched
+  (`scrcmd::dispatch` returns `None` for it, like any unported command).

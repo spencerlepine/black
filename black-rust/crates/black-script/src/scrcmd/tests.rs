@@ -926,6 +926,339 @@ impl ScreenHooks for Null {
 }
 
 #[allow(clippy::too_many_arguments)]
+impl ProcHooks for Null {
+    fn fun_02158f50(&mut self, _sw: u32) -> u32 {
+        0
+    }
+    fn fun_02158fb4(&mut self, _sw: u32) -> u32 {
+        0
+    }
+    fn fun_02158fb8(&mut self, _sw: u32) -> u32 {
+        0
+    }
+    fn fun_02158fbc(&mut self, _sw: u32) {}
+    fn call_proc_callback(&mut self, _cb: u32, _w: u32) {}
+    fn fun_02030734(
+        &mut self,
+        _heap: u32,
+        _size: u32,
+        _from_end: u32,
+        _file: u32,
+        _line: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_020307b0(&mut self, _block: u32) {}
+    fn fun_0216f940(&mut self, _block: u32) {}
+    fn fun_020120b4(&mut self, _gamesys: u32, _ovl: u32, _proc_table: u32, _param: u32) {}
+    fn fun_020120f0(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_0201210c(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_02012138(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_020124ac(&mut self, _gamesys: u32, _kind: u32, _proc_table: u32, _rec: &[u8]) -> u32 {
+        0
+    }
+    fn fun_02012934(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012944(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012b58(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012ebc(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_0200be48(&mut self, _save: u32) {}
+    fn fun_0201ab28(&mut self, _party: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_0202e474(&mut self, _gamedata: u32, _a: u32, _m: u32, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_02014808(
+        &mut self,
+        _gamesys: u32,
+        _fm: u32,
+        _ovl: u32,
+        _proc_table: u32,
+        _param: u32,
+        _cb: u32,
+        _cbwork: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_02014840(
+        &mut self,
+        _gamesys: u32,
+        _fm: u32,
+        _ovl: u32,
+        _proc_table: u32,
+        _param: u32,
+        _cb: u32,
+        _cbwork: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_02034ac4(&mut self, _ovl: u32) {}
+    fn fun_02034a5c(&mut self, _ovl: u32) {}
+    fn fun_02158344(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0215840c(&mut self, _x: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_0215841c(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02161b90(&mut self, _gamesys: u32, _event: u32, _a: u32, _b: u32, _c: u32) -> u32 {
+        0
+    }
+    fn fun_02165344(&mut self) {}
+    fn fun_0216f918(&mut self, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_0216f948(&mut self, _mon: u32, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_02175648(&mut self, _gamedata: u32, _out: u32) {}
+    fn fun_02175fb4(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_021f36c0(&mut self, _gamesys: u32, _a: u32, _b: u32) {}
+    fn fun_021f36e8(&mut self, _gamesys: u32, _v: u32) {}
+    fn fun_021f3724(&mut self, _gamesys: u32, _v: u32) {}
+    fn fun_021f3768(&mut self, _gamesys: u32, _vars: &[u8; 32]) {}
+    fn fun_021f3800(&mut self, _gamesys: u32) {}
+}
+
+#[allow(clippy::too_many_arguments)]
+impl SodateyaHooks for Null {
+    fn fun_0201210c(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_02012934(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012ebc(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012374(&mut self, _event: u32, _child: u32) {}
+    fn fun_0200bdb0(&mut self, _save: u32) {}
+    fn fun_0200ca1c(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_0200ca38(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0201aa18(&mut self, _party: u32) -> u32 {
+        0
+    }
+    fn fun_02017e1c(&mut self, _mon: u32, _id: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_02030734(&mut self, _heap: u32, _size: u32, _flag: u32, _file: u32, _line: u32) -> u32 {
+        0
+    }
+    fn fun_020307b0(&mut self, _block: u32) {}
+    fn fun_020144dc(&mut self, _gamesys: u32, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02014910(&mut self, _gamesys: u32, _fm: u32, _a: u32, _b: u32) -> u32 {
+        0
+    }
+    fn fun_020145cc(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_02188d50(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_021be8d4(&mut self, _gamesys: u32, _fm: u32, _a: u32, _b: u32) -> u32 {
+        0
+    }
+    fn fun_021be92c(
+        &mut self,
+        _gamesys: u32,
+        _fm: u32,
+        _a: u32,
+        _b: u32,
+        _c: u32,
+        _d: u32,
+        _e: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_021c3204(&mut self, _daycare: u32, _party: u32, _v: u32) {}
+    fn fun_021c3270(&mut self, _daycare: u32, _v: u32, _party: u32) {}
+    fn fun_021c32f4(&mut self, _daycare: u32, _party: u32) {}
+    fn fun_021c335c(&mut self, _daycare: u32) {}
+    fn fun_021c3400(&mut self, _daycare: u32) -> u32 {
+        0
+    }
+    fn fun_021c340c(&mut self, _daycare: u32) -> u32 {
+        0
+    }
+    fn fun_021c341c(&mut self, _daycare: u32, _slot: u32) -> u32 {
+        0
+    }
+    fn fun_021c3490(&mut self, _daycare: u32, _slot: u32) -> u32 {
+        0
+    }
+    fn fun_021c34b4(&mut self, _daycare: u32, _slot: u32) -> u32 {
+        0
+    }
+    fn fun_021c34c4(&mut self, _daycare: u32) -> u32 {
+        0
+    }
+    fn fun_021c34f8(&mut self, _daycare: u32, _slot: u32) -> u32 {
+        0
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+impl Misc10Hooks for Null {
+    fn fun_0201210c(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_02012ebc(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012f50(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02008c58(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_02008e68(&mut self, _block: u32, _v: u32) {}
+    fn fun_02008e78(&mut self, _block: u32) -> u32 {
+        0
+    }
+    fn fun_0200c0e8(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_0200c0f0(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_0200c224(&mut self, _block: u32) -> u32 {
+        0
+    }
+    fn fun_0200c22c(&mut self, _block: u32, _n: u32) {}
+    fn fun_0200c32c(&mut self, _block: u32) -> u32 {
+        0
+    }
+    fn fun_0200c334(&mut self, _block: u32, _v: u32) {}
+    fn fun_0200c33c(&mut self, _block: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_0200c344(&mut self, _block: u32, _i: u32, _v: u32) {}
+    fn fun_0200c358(&mut self, _block: u32, _i: u32, _v: u32) {}
+    fn fun_0200c384(&mut self, _block: u32, _lo: u32, _hi: u32) {}
+    fn fun_0200e394(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_0200e3a0(&mut self, _block: u32) -> u32 {
+        0
+    }
+    fn fun_0200e3e8(&mut self, _x: u32, _a: u32, _b: u32) {}
+    fn fun_0200e4b0(&mut self, _block: u32, _c: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_0200e4f8(&mut self, _block: u32, _c: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_02027100(&mut self, _x: u32) {}
+    fn fun_02027138(&mut self, _n: u32) {}
+    fn fun_0203f524(&mut self) -> u64 {
+        0
+    }
+    fn fun_0200ca1c(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0200cfa0(&mut self, _dex: u32, _mon: u32) {}
+    fn fun_0201aa18(&mut self, _party: u32) -> u32 {
+        0
+    }
+    fn fun_0201ab28(&mut self, _party: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_02017e1c(&mut self, _mon: u32, _id: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_02017988(&mut self, _mon: u32, _form: u32) {}
+    fn fun_021670f8(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_02168bf0(&mut self, _gamesys: u32, _rec: u32, _a: u32, _b: u32, _var: u32) -> u32 {
+        0
+    }
+    fn fun_02168cf4(&mut self, _gamesys: u32, _rec: u32) -> u32 {
+        0
+    }
+    fn fun_02168e5c(&mut self, _gamesys: u32, _a: u32, _b: u32) -> u32 {
+        0
+    }
+    fn fun_0216d568(&mut self, _mmdl: u32, _flags: u32) {}
+    fn fun_0216d88c(&mut self, _mmdl: u32, _out: u32) {}
+    fn fun_0216d89c(&mut self, _mmdl: u32, _pos: &[u8; 12]) {}
+    fn fun_0216de94(&mut self, _sys: u32, _id: u32) -> u32 {
+        0
+    }
+    fn fun_0216aed0(&mut self, _ctx: u32, _v: u32) -> u32 {
+        0
+    }
+    fn fun_0216af1c(&mut self, _ctx: u32, _p: u32, _n: u32, _k: &mut [u8; 4]) -> u32 {
+        0
+    }
+    fn fun_0216af74(
+        &mut self,
+        _gamesys: u32,
+        _fm: u32,
+        _q: u32,
+        _k: u32,
+        _var: u32,
+        _n: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_0216b8b8(&mut self, _save: u32, _var: u32) {}
+    fn fun_0216b91c(&mut self, _save: u32, _v: u32, _var: u32) {}
+    fn fun_0216bb18(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_02188c7c(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_021d0a48(&mut self, _gamesys: u32, _rec: u32) {}
+    fn fun_021d0a74(&mut self, _rec: u32, _v: u32) {}
+    fn fun_021d0ab8(&mut self, _rec: u32, _v: u32) {}
+    fn fun_021d0ac0(&mut self, _gamesys: u32, _rec: u32, _v: u32) -> u32 {
+        0
+    }
+    fn fun_021d0bd8(&mut self, _gamesys: u32, _rec: u32, _a: u32, _b: u32) -> u32 {
+        0
+    }
+    fn fun_021d0be4(&mut self, _gamesys: u32, _rec: u32, _var: u32) -> u32 {
+        0
+    }
+    fn fun_021d0db0(&mut self, _gamesys: u32, _rec: u32, _a: u32, _b: u32) {}
+    fn fun_021d0fe0(&mut self, _gamesys: u32, _rec: u32) -> u32 {
+        0
+    }
+    fn fun_021d0fe8(&mut self, _gamesys: u32, _rec: u32, _v: u32) -> u32 {
+        0
+    }
+    fn fun_021d1028(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
 impl FldHooks for Null {
     fn fun_0215a5cc(&mut self, _ctx: u32) -> u32 {
         0
@@ -1552,7 +1885,7 @@ impl ObjHooks for Null {
 #[test]
 fn table_is_consistent() {
     let c = commands();
-    assert_eq!(c.len(), 49 + 86 + 33 + 29 + 80 + 55 + 3);
+    assert_eq!(c.len(), 49 + 86 + 33 + 29 + 80 + 55 + 17 + 15 + 29 + 3);
     for w in c.windows(2) {
         assert!(w[0].0 < w[1].0, "duplicate id {}", w[0].0);
     }
@@ -1561,9 +1894,17 @@ fn table_is_consistent() {
         assert_eq!(a & 1, 0);
     }
     assert_eq!(handler(93), None);
+    // command 359 (scrcmd_musical.c, X2) is specced only
+    assert_eq!(handler(359), None);
+    assert_eq!(
+        handler(crate::scrcmd_misc10::COMMANDS[0].0),
+        Some(0x0216_A420)
+    );
 }
 
-/// Every scrcmd_core / scrcmd_work / scrcmd_talk / scrcmd_screen / scrcmd_fld / scrcmd_obj command id runs through [`dispatch`] (null callees, zeroed memory); the script_sys
+/// Every scrcmd_core / scrcmd_work / scrcmd_talk / scrcmd_screen / scrcmd_fld / scrcmd_obj / scrcmd_proc / scrcmd_sodateya /
+/// scrcmd_misc10 command id runs
+/// through [`dispatch`] (null callees, zeroed memory); the script_sys
 /// ones and unknown addresses give `None`.
 #[test]
 fn every_ported_command_dispatches() {
@@ -1626,6 +1967,11 @@ fn waits_dispatch() {
     ] {
         assert_eq!(call_wait(&mut h, f, 0x1000, 0x2000), Some(1), "{f:#x}");
     }
+    // the null proc-running hook says "not running": the app-proc wait ends
+    assert_eq!(
+        call_wait(&mut h, crate::scrcmd_proc::PROC_WAIT, 0x1000, 0x2000),
+        Some(1)
+    );
     // scrcmd_fld / scrcmd_obj waits (null callees: "still busy" = 0 is "done" for the `== 0` polls)
     for f in [
         crate::scrcmd_fld::WAIT_160,
@@ -1661,6 +2007,42 @@ fn events_procs_tasks_dispatch() {
         call_event(&mut h, 0x021B_0131, 0x1000, 0x1800, 0x2000),
         None
     );
+    // overlay 10 (F8d): seq 0 of each event is one step that does not finish
+    for f in [
+        crate::scrcmd_sodateya::EVENT_247,
+        crate::scrcmd_misc10::EVENT_550,
+    ] {
+        h.w32(0x1800, 0);
+        assert_eq!(
+            call_event(&mut h, f, 0x1000, 0x1800, 0x2000),
+            Some(0),
+            "{f:#x}"
+        );
+    }
+    // command 549's move: 1 frame -> finished after one step
+    h.w16(0x2000 + 4, 1);
+    assert_eq!(
+        call_event(
+            &mut h,
+            crate::scrcmd_misc10::EVENT_549,
+            0x1000,
+            0x1800,
+            0x2000
+        ),
+        Some(1)
+    );
+    for cb in [
+        crate::scrcmd_proc::CB_334,
+        crate::scrcmd_proc::CB_336,
+        crate::scrcmd_proc::CB_489,
+    ] {
+        assert!(call_callback(&mut h, cb, 0x3000), "{cb:#x}");
+    }
+    assert!(!call_callback(
+        &mut h,
+        crate::scrcmd_proc::CB_334 & !1,
+        0x3000
+    ));
     for slot in [1, 2, 3, 4, 5, 6, 9] {
         let f = crate::script_sys::INIT_PROCS[slot];
         assert_eq!(

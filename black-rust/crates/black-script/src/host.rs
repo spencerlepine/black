@@ -40,6 +40,11 @@
 //! [`MessageWindow::Talk`], not a window. Command 51 toggles a msgbg flag (`FUN_021904DC(msgbg, 0 / 1)`, init-proc bit 9;
 //! UNVERIFIED meaning).
 //!
+//! Proposed, not a method yet (F8d): the app-proc requests of `scrcmd_proc` (`FUN_020120B4(GAMESYS, ovl, proc table, param)`
+//! starts an application, `FUN_020120F0(GAMESYS)` is nonzero while it runs; the app events `FUN_02014808` / `FUN_02014840`
+//! wrap the same in a GMEVENT) would become `app_start(ovl, proc table, param)` / `app_running()`; which application each
+//! overlay id is is not identified yet, so they stay `scrcmd_proc::ProcHooks` methods (mapping in `scrcmd_proc`'s module docs).
+//!
 //! Text is passed as message ids (bank, index) plus the script's WORDSET (`SW + 0x2C`, `black_text::wordset`), not as
 //! rendered strings: the original expands the message into STRBUF 1 (`0x021B162C`: `FUN_02045CAC` + `FUN_0201F250`) right
 //! before printing, and that expansion belongs to `black-text`; layout and printing belong to the UI.

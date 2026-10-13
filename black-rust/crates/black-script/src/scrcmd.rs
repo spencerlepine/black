@@ -17,9 +17,9 @@
 //! | [`crate::scrcmd_talk`] | overlay 21 0x021B0084-0x021B1667 (rows 21.42 tail, 21.43, 21.44 head) | 33 ids (51..75, 135, 173..178, 579) | 70/70 fns ported and verified (F8b) |
 //! | [`crate::scrcmd_obj`] | overlay 21 0x021B1668-0x021B282F (row 21.44) | 55 ids (100..126, 384, 385, 387..389, 391..398, 400..405, 407..410, 577, 583, 588, 603, 608) | 63/63 fns ported and verified (F8c) |
 //! | [`crate::scrcmd_screen`] | overlay 21 0x021B2830-0x021B2FD7 (rows 21.44 tail, 21.45, cmd 594) | 29 ids (179, 180, 292..306, 429..434, 436..440, 594) | 36/36 fns ported and verified (F8b) |
-//! | [`crate::scrcmd_proc`] | `scrcmd_proc.c` overlay 10 0x0215C63C-0x0215CE97 (row 10.15 minus its tail) | 17 ids (332, 334, 336, 337, 339..341, 355..357, 370, 383, 386, 390, 399, 406, 489) | 22 fns specced (F8-spec3), smoke ports |
-//! | [`crate::scrcmd_sodateya`] | `scrcmd_sodateya.c` overlay 10 0x0215CE98-0x0215D34B (row 10.16 + the tail of 10.15) | 15 ids (235..248, 593) | 18 fns specced (F8-spec3), smoke ports |
-//! | [`crate::scrcmd_misc10`] | overlay 10 0x0216A420-0x0216AC3F (row 10.33), 0x0216B504-0x0216B86B (row 10.35), cmd 359 at 0x0215D34C (`scrcmd_musical.c`, X2) | 30 ids (359, 506..520, 528..533, 535, 540..543, 549, 550, 559) | 33 fns specced (F8-spec3), smoke ports |
+//! | [`crate::scrcmd_proc`] | `scrcmd_proc.c` overlay 10 0x0215C63C-0x0215CE97 (row 10.15 minus its tail) | 17 ids (332, 334, 336, 337, 339..341, 355..357, 370, 383, 386, 390, 399, 406, 489) | 22/22 fns ported and verified (F8d) |
+//! | [`crate::scrcmd_sodateya`] | `scrcmd_sodateya.c` overlay 10 0x0215CE98-0x0215D34B (row 10.16 + the tail of 10.15) | 15 ids (235..248, 593) | 18/18 fns ported and verified (F8d) |
+//! | [`crate::scrcmd_misc10`] | overlay 10 0x0216A420-0x0216AC3F (row 10.33), 0x0216B504-0x0216B86B (row 10.35), cmd 359 at 0x0215D34C (`scrcmd_musical.c`, X2) | 30 ids (359, 506..520, 528..533, 535, 540..543, 549, 550, 559) | 32/32 in-scope fns ported and verified (F8d; cmd 359 musical, X2, specced only) |
 //!
 //! Remaining F8 jobs (F1-SPLIT list): the overlay-21 files / clusters 0x021B2FD8-0x021B73F6 (shop, proc_fld, encount, fld_battle, c03center,
 //! pokemon_fld), 0x021CF7DC, 0x021D1670.
@@ -36,14 +36,17 @@
 //! `ScriptSysHooks::call_init_proc`) and a field task ([`call_task`]: the field fade).
 
 use crate::scrcmd_fld::FldHooks;
+use crate::scrcmd_misc10::Misc10Hooks;
 use crate::scrcmd_obj::ObjHooks;
+use crate::scrcmd_proc::ProcHooks;
 use crate::scrcmd_screen::ScreenHooks;
+use crate::scrcmd_sodateya::SodateyaHooks;
 use crate::scrcmd_talk::TalkHooks;
 use crate::scrcmd_work::WorkHooks;
 
 /// The command tables of the ported areas (scrcmd_core, scrcmd_work, scrcmd_talk, scrcmd_screen, scrcmd_fld, scrcmd_obj;
 /// `script_sys` apart).
-fn area_tables() -> [&'static [(u16, u32)]; 6] {
+fn area_tables() -> [&'static [(u16, u32)]; 9] {
     [
         crate::scrcmd_core::COMMANDS,
         crate::scrcmd_work::COMMANDS,
@@ -51,6 +54,9 @@ fn area_tables() -> [&'static [(u16, u32)]; 6] {
         crate::scrcmd_screen::COMMANDS,
         crate::scrcmd_fld::COMMANDS,
         crate::scrcmd_obj::COMMANDS,
+        crate::scrcmd_proc::COMMANDS,
+        crate::scrcmd_sodateya::COMMANDS,
+        crate::scrcmd_misc10::COMMANDS,
     ]
 }
 
@@ -88,7 +94,16 @@ pub fn handler(id: u16) -> Option<u32> {
 
 /// Run the command handler at `handler` (the command table word, Thumb bit allowed) when it is ported in scrcmd_core,
 /// scrcmd_work, scrcmd_talk, scrcmd_screen, scrcmd_fld or scrcmd_obj; `None` otherwise (`script_sys::call_known` has commands 49 / 50 / 311).
-pub fn dispatch<H: WorkHooks + TalkHooks + ScreenHooks + FldHooks + ObjHooks>(
+pub fn dispatch<
+    H: WorkHooks
+        + TalkHooks
+        + ScreenHooks
+        + FldHooks
+        + ObjHooks
+        + ProcHooks
+        + SodateyaHooks
+        + Misc10Hooks,
+>(
     h: &mut H,
     handler: u32,
     vm: u32,
@@ -100,12 +115,15 @@ pub fn dispatch<H: WorkHooks + TalkHooks + ScreenHooks + FldHooks + ObjHooks>(
         .or_else(|| crate::scrcmd_screen::dispatch(h, handler, vm, ctx))
         .or_else(|| crate::scrcmd_fld::dispatch(h, handler, vm, ctx))
         .or_else(|| crate::scrcmd_obj::dispatch(h, handler, vm, ctx))
+        .or_else(|| crate::scrcmd_proc::dispatch(h, handler, vm, ctx))
+        .or_else(|| crate::scrcmd_sodateya::dispatch(h, handler, vm, ctx))
+        .or_else(|| crate::scrcmd_misc10::dispatch(h, handler, vm, ctx))
 }
 
 /// Run the wait callback `f` (VM +0x10, Thumb bit set) when it belongs to a ported scrcmd command (3, 28, the overlay-21
 /// message windows, 75, 180, 298, 433, scrcmd_fld 160 / 168 / 170 / 172, scrcmd_obj 101 / 117 / the talk lock); `None`
 /// otherwise.
-pub fn call_wait<H: TalkHooks + ScreenHooks + FldHooks + ObjHooks>(
+pub fn call_wait<H: TalkHooks + ScreenHooks + FldHooks + ObjHooks + ProcHooks>(
     h: &mut H,
     f: u32,
     vm: u32,
@@ -116,12 +134,28 @@ pub fn call_wait<H: TalkHooks + ScreenHooks + FldHooks + ObjHooks>(
         .or_else(|| crate::scrcmd_screen::call_wait(h, f, vm, ctx))
         .or_else(|| crate::scrcmd_fld::call_wait(h, f, vm, ctx))
         .or_else(|| crate::scrcmd_obj::call_wait(h, f, vm, ctx))
+        .or_else(|| crate::scrcmd_proc::call_wait(h, f, vm, ctx))
 }
 
 /// Run the GMEVENT function `f(event, seq, work)` when a ported command installed it (the yes / no event of command 71, the
-/// menu event of commands 176 / 177); `None` otherwise.
-pub fn call_event<H: TalkHooks>(h: &mut H, f: u32, event: u32, seq: u32, work: u32) -> Option<u32> {
+/// menu event of commands 176 / 177, the party-select event of command 247, the object moves of commands 549 / 550); `None`
+/// otherwise.
+pub fn call_event<H: TalkHooks + SodateyaHooks + Misc10Hooks>(
+    h: &mut H,
+    f: u32,
+    event: u32,
+    seq: u32,
+    work: u32,
+) -> Option<u32> {
     crate::scrcmd_talk::call_event(h, f, event, seq, work)
+        .or_else(|| crate::scrcmd_sodateya::call_event(h, f, event, seq, work))
+        .or_else(|| crate::scrcmd_misc10::call_event(h, f, event, seq, work))
+}
+
+/// Run the app-proc result callback `cb(w)` of scrcmd_proc (commands 334 / 336 / 489, see
+/// [`ProcHooks::call_proc_callback`] and the app events `FUN_02014808` / `FUN_02014840`); false otherwise.
+pub fn call_callback<H: ProcHooks>(h: &mut H, cb: u32, w: u32) -> bool {
+    crate::scrcmd_proc::call_callback(h, cb, w)
 }
 
 /// Run the init proc `f(task, task + 0xC)` of `script_sys::INIT_PROCS` when it is ported (slots 1..6 and 9 in scrcmd_talk,
