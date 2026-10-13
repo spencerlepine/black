@@ -501,7 +501,9 @@ ALLOW = {0x0209C2B0, 0x0209C054, 0x0209C074, 0x02082BCC, 0x02082D44, 0x02082AC0,
          0x02082A90,
          # F2a-spec: further ARM9 MI/C library helpers the field ports inline: 02082a48 MIi_CpuClear16(v, dst, n),
          # 0203efc8 memcmp(a, b, n) (byte difference or 0)
-         0x02082A48, 0x0203EFC8} | {int(x, 16) for x in os.environ.get("SVFLOW_ALLOW", "").replace(",", " ").split()}
+         0x02082A48, 0x0203EFC8,
+         # F6a-spec: 02082c60 memset(dst, v, n) (byte fill; mmdl_move 021631c0 clears its 0x1C-byte ATTR INFO with it)
+         0x02082C60} | {int(x, 16) for x in os.environ.get("SVFLOW_ALLOW", "").replace(",", " ").split()}
 
 # B10-spec3: callees that run as real ROM code by design in a spec with `env bpp` (events; see the header of events.spec).
 # The Rust ports reproduce them (inlined or ported elsewhere), so an equal area hash verifies their effect:

@@ -476,3 +476,15 @@ function of the area treated as ported: no fault, stray write or unstubbed calle
 (counts, OBJ id / code, move code, flag tests) are stubbed with `pick:` over the interesting values; ROM-table lookups that hand out
 function tables (`0216E400` / `0216E40C`) are `force` stubs returning FAKE tables in the work image; out-of-area callees are
 `force` stubs.
+
+## F6a-spec additions (black-field wfbc_data / eventdata / mmdl_move / eventdata_tail)
+
+No new syntax; `black-fndiff` is unchanged; no existing spec text or hash changes. Harness change (warning check only, hash-neutral):
+`svflow.py` `ALLOW` += `02082c60` (memset(dst, v, n), a pure byte fill like `MI_CpuFill8`; `mmdl_move` `021631c0` clears its ATTR INFO
+with it, the ports inline it).
+
+Conventions of `specs/black-field/{wfbc_data,eventdata,mmdl_move,eventdata_tail}.spec` (headers): closure stubs as in core4 (checked with
+every function of the area treated as ported: no fault, stray write or unstubbed callee; `--strict-callees` and `--order-check` clean);
+every out-of-area stub is `force`, also between the four areas; records whose fields a lookup compares with a position are drawn small
+and correlated with the position (several `alt` alternatives of one small range weight it); indirect calls through ROM tables land on
+in-area stubs or force stubs at the table targets, with the table index bounded to the table.

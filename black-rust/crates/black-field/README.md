@@ -319,3 +319,85 @@ Deliberate deviations: none.
 rail) (these were `unk_04`), `x`, `z` (grid z; was `y`), `height` (fx32 y; was `unk_20`). Byte round trip unchanged
 (`nds-rom/tests/map_rom.rs`; `npc_records_are_mmdl_headers`: 2217 grid / 40 rail records, 2131 grid heights are whole
 tiles, the others half / quarter tiles).
+
+## F6a-spec: F1 row 10.23 "eventdata_system.c" (zone event data) and its neighbours (specs + smoke ports)
+
+F1 row 10.23 (`0x02161D98..0x02164768`, overlay 10) holds four files; F6a-spec splits it by address into four spec areas under
+`tools/rom-diff/specs/black-field/` (set `field`), generated with closure stubs (a block lists the stubs of its callees and of the
+callees of all its in-area descendants and the shared fix lines; with every function of the area treated as ported all blocks run
+without a fault, stray write or unstubbed callee), so each area can be ported in any order. `svflow.py AREA --all --strict-callees` and
+`--order-check` are clean for all four.
+
+| area | contents | range | specced | coverage (plain / closure) | smoke ports (hash) | area hash |
+|---|---|---|---|---|---|---|
+| `wfbc_data` | Black City / White Forest people LIST + COMM record (callers in ov20 `field_wfbc_data_local.c`, F1 scope X1) | `0x02161D98..0x0216237C` | 40 | 658/658 / 658/658 | `02162254` `slot_a_get` (28b863af3fd4d04e) | bfa64f2c43e3e8cc |
+| `eventdata` | `eventdata_system.c`: load, record accessors, lookups by position, warp exits, trigger checks | `0x0216237C..0x02163010` | 56 | 1460/1460 / 1451/1460 | `021625CC` `warp_at` (3fdf6ac27877002c), `02162C54` `warp_exit_dir` (045d3001fed6ce4e), `02162D2C` `warp_contains` (aa222acd171682c8) | a3c5804a426adb7a |
+| `mmdl_move` | MMDL grid move procs, height / attribute tracking, attribute field effects, step hit checks, direction tables, rail header glue | `0x02163010..0x021643AC` | 70 | 2129/2129 / 2114/2129 | `021642B4` `dir_between` (96a464d84c2e8a0a) | b006cfa1a82757fc |
+| `eventdata_tail` | zone-change hooks, field-menu entry checks / event constructors, two GMEVENTs, hidden-item flags | `0x021643AC..0x02164768` | 19 | 364/364 / 364/364 | `021646E8` `hidden_item_index` (507fe2bc5c2ed984) | bb4944f39966a046 |
+
+Coverage = instructions of the function body (Thumb walk from the entry, jump tables decoded) that the spec's inputs execute on the
+original, with the in-area callees stubbed (plain) or real (closure). The closure gaps are hits that need two random records to agree
+(`02162970` facing cases, `021627C8` / `0216282C` / `02162890` / `021628E4` var matches through real record checks, `021638CC` /
+`02163AF0` / `02163BAC` overlapping MMDLs) and one path that is unreachable with real callees (`02163868`: `02163F40` never answers -1
+when `02163E34` is real, it stores 0 first); plain mode covers all of them.
+
+Function list: 197 entries in the row (bl/blx targets of the whole field set, odd code pointers, the Ghidra index, a Thumb walk from
+every entry; the gaps between functions are 2-byte padding only), minus 12 veneers (`ldr r3,=T; bx r3`; callers stub T: `02162024`,
+`02162038`, `02162040`, `02162A64`, `02162A6C`, `021626A8`, `021626B0`, `02164454` / `5C` / `64` / `6C`, `02164474`) and 3 false entries
+(`02161E82`, `021634A8` inside `02163464`, `02163E72` inside `02163E58`: data words in main `0x020A3E5A..0x020A481C` decode as `bl`): 185
+specced. Ghidra misses `02162370`, `0216237C`, `02162458`, `02162478`, `021624B0`, `02162560`, `021625E8`, `021621C0`, `02164240`, `0216458C`,
+`021645C0` and lists 9 switch cases / shared tails as `LAB_` functions. `02162478` (trigger of kind 6 at a position) and `02162560` (warp
+count) have no caller in the field set. Render-only functions left out: none (the draw side is reached only through overlay-21 field-effect
+callees, all stubs).
+
+### Records (as the code reads them; full tables in the spec headers)
+
+* EVENTDATA_SYSTEM (0xAA8, `Heap_AllocDebug(heap, 0xAA8, 1, "eventdata_system.c", 0xAF)` in `0216237C`): `+0x04 / +0x08 / +0x0C`
+  ARC 125 / 126 / 57 handles, `+0x10 u16` zone, `+0x12 / +0x14 / +0x16 / +0x18 u16` bg / npc / warp / trigger counts, `+0x1C / +0x20 / +0x24
+  / +0x28` the record arrays, `+0x2C..+0x32` copies of the counts, `+0x34` field_encount_st ready, `+0x38` field_encount_st work (`0215E2B8`),
+  `+0x120` -> the TAIL after the records (`021623DC` stores `sys + 0x2328`, outside the block, until the load), `+0x124` the ARC 125 member
+  (u32 size, u8 counts, records, tail; <= 0x880 + 4 bytes, `021624B0`).
+* BG (20): `+0 u16` script, `+2 u16` kind (2 = hidden item: script `8000 + i`, flag `ROM 0x02171534[i] + 900`, present while the flag is
+  clear), `+4 u16` facing rule (0: dir 0, 1: dir 3, 2: dir 2, 3: dir 1, 4: any, 5: dir 2 / 3, 6: dir 0 / 1), `+6 u16` position kind (0 grid,
+  else rail), grid `+8 u32` tile x, `+0xC u32` tile z, `+0x10 s32` y in `fx32 >> 12` units; rail `+8 u16` line, `+0xA u16` front, `+0xC s16`
+  side.
+* WARP (20): `+0 u16` destination zone, `+2 u16` destination warp (0x100: LOCATION kind 3, else 2; `0xFFFF` in `+0` or `+2` = disabled),
+  `+4 u8` exit direction (1..4 -> 0..3, else 1), `+5 u8` (door / transition kind, `021626E8`), `+6 u16` position kind, grid `+8 / +0xA / +0xC
+  s16` x / y / z in `fx32 >> 12` units (16 per tile, door centre `16 t + 8`), `+0xE / +0x10 u16` width / depth in tiles; rail `+8` line,
+  `+0xA` front start, `+0xC s16` side start, `+0xE` front length, `+0x10` side length, `+0x12 u16` flip mode.
+* TRIGGER (22): `+0 u16` script, `+2 u16` value, `+4 u16` event var (0 = unconditional, else `*var == value`), `+6 u16` kind (1..4 = facing
+  0..3, 6 = the `02162890` set, 0 = others), `+8 u16` position kind, grid `+0xA / +0xC u16` tile x / z, `+0xE / +0x10 u16` width / depth,
+  `+0x12 s16` y (`fx32 >> 12` units), `+0x14 u16` unread (0 in every ROM record); rail `+0xA` line, `+0xC` front, `+0xE s16` side, `+0x10` /
+  `+0x12` lengths.
+* RAIL LOCATION (8): `+0 u16` line, `+2 u8` type (1), `+3 u8` key (`0201441C(dir)`), `+4 s16` side, `+6 u16` front; exit code (u16) = width
+  `<< 4` | offset | dir `<< 8` (`02162B68` / `02162BCC`, consumed by `02162AA4` / `021625FC`).
+* ATTR INFO (0x1C, `021631C0`, on the stack of the `mmdl_move` effect passes): previous / current attribute, their values (`021AB0F0`) and
+  flags (`021AB0F8`), `+0x10` -> OBJ DATA, `+0x14` field-effect control, `+0x18` season.
+* WFBC LIST (0x1E8) of two `REC[10]` lists (`+8`, `+0xF8`; REC 0x18: kind nibble, id < 30, byte <= 100, `u16 name[8]`) and the COMM record
+  (0x48: id, flags, 3 + 1 + 1 + 3 eight-byte slots).
+
+Cross-check with `nds_rom::map::events` (A6; checked against all 428 ARC 125 members with a scratch script, nds-rom unchanged):
+* `BgEvent`: `script` matches; `unk_02` = kind (0: 351, 1: 127, 2 = hidden item: 184 records, scripts 8000..8176 = items 0..0xB0); `unk_04`
+  = `u16` facing rule (4: 325, 0: 235, 6: 71, ...) + `u16` position kind (25 rail records); `unk_08` / `unk_0c` = tile x / z (`u32`; rail:
+  line + front / side halfwords); `unk_10` = y in `fx32 >> 12` units (multiples of 16, e.g. 48 = 3 tiles up), not a tile count.
+* `Npc`: as F4a-spec found (`y` is grid z, `unk_20` the fx32 height, `unk_04` packs move code .. move limits and the u32 kind).
+* `Warp`: `dest_zone` matches; `unk_02` = destination warp index; `unk_04` = `u8` exit direction + `u8` door kind (1..6, 33..42) + `u16`
+  position kind (77 rail warps); `unk_08` / `unk_0c` / `unk_10` are not fixed-point words but `s16` pairs: x, y | z, width | depth, flip mode;
+  x / y / z are in `fx32 >> 12` units (e.g. x 152 = tile 9 centre), width / depth in tiles (1x1: 500, 3x1: 206, 1x3: 79).
+* `Trigger`: `script` matches; `unk_02` = value; `unk_04` = var, kind, position kind (u16 each); `x` = tile x (matches), `y` = tile **z**;
+  `unk_0e` = width, depth (tiles), `s16` y (units), `u16` unused (0 everywhere).
+* `tail`: the code keeps a pointer to it (`+0x120`, `02162450`, read by script_sys); its entries are not decoded here (F7/F8).
+
+### Spec conventions (these four areas)
+
+* Arenas: `wfbc_data` / `eventdata` / `mmdl_move` use the `work` image with fixed zones (spec headers); `eventdata_tail` is `nowork` with `arg
+  buf` arenas (the GMEVENT work of `020124E8` is the block's argument 2).
+* Every out-of-area stub is `force` (overlay addresses collide with battle `PORTED` entries; fldmmdl / ARM9 callees are ported in other
+  black-field areas); the only call between the four areas (`02162970` -> `02164708`) is a forced stub too.
+* Position records and positions are drawn small and correlated (tile 0 / 1, units 0..0x20) so the containment checks hit; the event-work
+  var stub `020143CC` answers inside work+0xC00, whose values are drawn like the trigger values.
+* Indirect calls through ROM tables (`02162120`: 0x02172990 [slot +6]; `02163D04`: 0x021714A0 / 0x02171490 [dir]; `021644C4`: 0x021714DC
+  [i]; `021644F4`: 0x02171504 [i]) land on in-area stubs (plain) or force stubs at the table targets; their indices are bounded (`dir` 0..3,
+  `i` 0..9 / 0..5, the slot index 0..2) because larger values read other ROM words as code.
+* `02161F90` writes through the `02161DC4` result without a null check: its block plants a valid list-B record for each id 0..3.
+* `svflow.py` `ALLOW` += `02082C60` (memset, used by `021631C0`).
