@@ -69,15 +69,26 @@ class Emu:
         """Observe `addr` without replacing it: fn(emu, r0, r1, r2, r3)."""
         self.traces[addr & ~1] = fn
 
-    def load_thumb(self, addr, source):
-        """Assemble Thumb `source` with arm-none-eabi-as and load it at `addr`."""
+    def load_thumb(self, addr, source, prebuilt=None):
+        """Load Thumb `source` at `addr`. Assembled with arm-none-eabi-as/objcopy when they are on PATH
+        (then it must equal `prebuilt`, if given); without the toolchain the vendored `prebuilt` bytes
+        are used."""
+        import shutil
         import subprocess
         import tempfile
+        if not (shutil.which("arm-none-eabi-as") and shutil.which("arm-none-eabi-objcopy")):
+            if prebuilt is None:
+                raise RuntimeError("load_thumb: arm-none-eabi-as/objcopy not on PATH and no prebuilt bytes")
+            self.uc.mem_write(addr, prebuilt)
+            return
         with tempfile.TemporaryDirectory() as d:
             open(f"{d}/a.s", "w").write(source)
             subprocess.run(["arm-none-eabi-as", "-mthumb", "-march=armv5te", "-o", f"{d}/a.o", f"{d}/a.s"], check=True)
             subprocess.run(["arm-none-eabi-objcopy", "-O", "binary", "-j", ".text", f"{d}/a.o", f"{d}/a.bin"], check=True)
-            self.uc.mem_write(addr, open(f"{d}/a.bin", "rb").read())
+            code = open(f"{d}/a.bin", "rb").read()
+        if prebuilt is not None and code.rstrip(b"\0") != prebuilt.rstrip(b"\0"):
+            raise RuntimeError("load_thumb: assembled source differs from the vendored prebuilt bytes; regenerate them")
+        self.uc.mem_write(addr, code)
 
     def stub(self, addr, fn):
         self.stubs[addr & ~1] = fn

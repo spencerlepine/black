@@ -21,6 +21,11 @@ python3 -m venv /tmp/blk/venv && /tmp/blk/venv/bin/pip install unicorn
 - `gen.py` has one function per Rust fuzz test. Each one copies its Rust test's generator
   (xorshift32 seeding, call order, hashed values) exactly, and its stubs behave like the Rust
   test mocks.
+- `evf.py` (event_factor suite) runs small Thumb handler stubs. They ship pre-assembled
+  (`ASM_BYTES`), so no ARM toolchain is needed. `Emu.load_thumb` re-assembles `ASM` with
+  `arm-none-eabi-as`/`objcopy` only when they are on PATH, and fails if the result differs from
+  `ASM_BYTES`. After editing `ASM`, regenerate the bytes (binutils 2.41 `--target=arm-none-eabi`;
+  `make all-gas all-binutils` builds it from source in ~3 min).
 
 To verify a newly ported function, add the call to both sides with `"TODO"` as the expected hash
 in Rust. Run `gen.py` and check that its hash equals the one the Rust test prints, then paste it in.
