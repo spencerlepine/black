@@ -19,7 +19,7 @@ fn 021d36cc ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5f90 ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5fa4(mon, u16 at args[1]); returns 1
@@ -28,7 +28,7 @@ fn 021d36ec ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5fa4 ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5608(mon, u8 args[1], u8 args[2]); returns 1
@@ -37,7 +37,7 @@ fn 021d370c ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5608 ret=none args=v,v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5640(mon, u8 args[1], u8 args[2]); returns 1
@@ -46,7 +46,7 @@ fn 021d3734 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5640 ret=none args=v,v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d56cc(mon, u8 args[1]); returns 1
@@ -55,7 +55,7 @@ fn 021d375c ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d56cc ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5fb8(mon, no extra argument); returns 1
@@ -64,7 +64,7 @@ fn 021d377c ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5fb8 ret=none args=v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5674(mon, u8 args[1], u8 args[2]); returns 1
@@ -73,7 +73,7 @@ fn 021d3794 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5674 ret=none args=v,v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d56a0(mon, u8 args[1], u8 args[2]); returns 1
@@ -82,7 +82,7 @@ fn 021d37b8 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d56a0 ret=none args=v,v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5dc0(mon, args[1], u8 args[2]); returns 1
@@ -91,7 +91,7 @@ fn 021d37dc ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5dc0 ret=none args=v,v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5e38(mon, args[1], u8 args[2]); returns 1
@@ -100,7 +100,7 @@ fn 021d37fc ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5e38 ret=none args=v,v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5efc(mon, no extra argument); returns 1
@@ -109,7 +109,7 @@ fn 021d3894 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5efc ret=none args=v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5f08(mon, no extra argument); returns 1
@@ -118,7 +118,7 @@ fn 021d38ac ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5f08 ret=none args=v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5f38(mon, args[1]); returns 1
@@ -127,7 +127,7 @@ fn 021d38c4 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5f38 ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d6034(mon, args[1], args[2]); returns 1
@@ -136,7 +136,7 @@ fn 021d38e0 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d6034 ret=none args=v,v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d61f0(mon, no extra argument); returns 1
@@ -145,7 +145,7 @@ fn 021d3900 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d61f0 ret=none args=v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d6238(mon, args[1]); returns 1
@@ -154,7 +154,7 @@ fn 021d3918 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d6238 ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d66b0(mon, args[1]); returns 1
@@ -163,7 +163,7 @@ fn 021d3988 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d66b0 ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d6730(mon, args[1]); returns 1
@@ -172,7 +172,7 @@ fn 021d3a20 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d6730 ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d6744(mon, args[1], args[2], args[3], args[4], args[5]); returns 1
@@ -181,7 +181,7 @@ fn 021d3a40 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d6744 ret=none args=v,v,v,v,v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5fe4(mon, args[1]); returns 1
@@ -190,7 +190,7 @@ fn 021d3a7c ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5fe4 ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d6008(mon, args[1]); returns 1
@@ -199,7 +199,7 @@ fn 021d3a98 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d6008 ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5fc0(mon, args[1]); returns 1
@@ -208,7 +208,7 @@ fn 021d3ab4 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5fc0 ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d6440(mon, args[1]); returns 1
@@ -217,7 +217,7 @@ fn 021d3ad0 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d6440 ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d66d0(mon, args[1]); returns 1
@@ -226,7 +226,7 @@ fn 021d3aec ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d66d0 ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5b44(mon, args[1]); returns 1
@@ -235,7 +235,7 @@ fn 021d3b08 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5b44 ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5734(mon, args[1], args[2], args[3], args[4]); returns 1
@@ -244,7 +244,7 @@ fn 021d3b28 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5734 ret=none args=v,v,v,v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d64f0(mon, no extra argument); returns 1
@@ -253,7 +253,7 @@ fn 021d3b5c ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d64f0 ret=none args=v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d69a0(mon, args[1], args[2]); returns 1
@@ -262,7 +262,7 @@ fn 021d3bc0 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d69a0 ret=none args=v,v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d6d5c(mon, args[1]); returns 1
@@ -271,7 +271,7 @@ fn 021d3c0c ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d6d5c ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d6d70(mon, no extra argument); returns 1
@@ -280,7 +280,7 @@ fn 021d3c2c ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d6d70 ret=none args=v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d6738(mon, no extra argument); returns 1
@@ -289,7 +289,7 @@ fn 021d3c90 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d6738 ret=none args=v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d6264(mon, u8 args[1]); returns 1
@@ -298,7 +298,7 @@ fn 021d3ca8 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d6264 ret=none args=v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d5970(mon, args[1], args[2]); returns 1
@@ -307,7 +307,7 @@ fn 021d3d2c ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5970 ret=none args=v,v,v
 
 # view-command handler: BattleMon = 021b9934(pokecon, u8 args[0]); 1d67d8(mon, args[1]); returns 1
@@ -316,7 +316,7 @@ fn 021d3d50 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d67d8 ret=none args=v,v
 
 # 7 BattleMon view calls 021d5ea8(mon, k, u8 args[k + 0]) for k = 1..7; returns 1
@@ -325,7 +325,7 @@ fn 021d381c ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5ea8 ret=none args=v,v,v
 
 # 021ef9f4(c.view_side, args[0], args[1], 0); returns 1
@@ -366,7 +366,7 @@ fn 021d3be0 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d65c8 ret=none args=v,v
 
 # args[0] == client id (c[0x1A6]): counter += u8 args[1] (021cd9f4, client1) else 021b9b10(server, u8 args[0]); returns 1
@@ -378,7 +378,7 @@ fn 021d3c44 ret=u32
   fix arg0 0x1A6 u8 range 0 3
   fix arg2 0 u32 alt range 0 3 || range 0x100 0x103 || any
   stub 021cd9f4 ret=none args=p,v
-  stub 021b9b10 ret=none args=v,v
+  stub 021b9b10 force ret=none args=v,v
 
 # x = 021b9aec(pokecon, u8 args[0]); 021b9d10(server, x, u8 args[0]); returns 1
 fn 021d3c70 ret=u32
@@ -386,8 +386,8 @@ fn 021d3c70 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9aec ret=u32 args=v,v
-  stub 021b9d10 ret=none args=v,v,v
+  stub 021b9aec force ret=u32 args=v,v
+  stub 021b9d10 force ret=none args=v,v,v
 
 # 021d6848(mon, &{u16 args[4], u16 args[5], u8 args[3], u8 args[1], u8 args[2], pad}); returns 1
 fn 021d3cc8 ret=u32
@@ -395,7 +395,7 @@ fn 021d3cc8 ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d6848 ret=none args=v,in:7
 
 # mon = 021b9934(pokecon, u8 args[0]); 021d6408(mon); 021d6e88(mon); returns 1
@@ -404,7 +404,7 @@ fn 021d3cfc ret=u32
   arg buf 0x1C0
   arg u32 any
   arg buf 0x40
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d6408 ret=none args=v
   stub 021d6e88 ret=none args=v
 
@@ -433,7 +433,7 @@ fn 021d3d90 ret=u8
 fn 021d3d9c ret=none
   nowork
   arg buf 0x1C0
-  stub 021b9f84 ret=u32 args=v,v,v
+  stub 021b9f84 force ret=u32 args=v,v,v
 
 # ---------------------------------------------------------------------------------------------------------------------------------- B13-spec2
 # B13-spec2 specs every function the B13-spec1 header above lists as "not specced in this batch" (list in client/mod.rs).
@@ -463,18 +463,18 @@ fn 021d2fd8 ret=u32
   stub 021b8e70 force ret=u32 args=v,v
   stub 021f7cfc ret=none args=v,v,v,v,v
   stub 021f7eb4 ret=pick:0/1 args=
-  stub 021b98ac ret=u32 args=v,v
+  stub 021b98ac force ret=u32 args=v,v
   stub 021eaf18 ret=none args=p,v,v
   stub 021d5440 ret=u32 args=v
   stub 021eaf50 ret=none args=p,v
   stub 021f883c ret=none args=v
   stub 021ea614 ret=none args=v,p
   stub 021ea710 ret=pick:0/1 args=v
-  stub 021ba2d4 ret=none args=v,v
+  stub 021ba2d4 force ret=none args=v,v
   stub 02005f38 ret=pick:0/1 args=
   stub 021f7c0c ret=none args=
   stub 02005d90 ret=none args=v,v
-  stub 021b92a0 ret=none args=v
+  stub 021b92a0 force ret=none args=v
 
 # command 0x47: 0: 021f7d44(021b8e70(server, (u8) args[0]), (u16) args[1]), state 1. 1: !021f7eb4() -> message 0x43, 021ea614, state 2.
 # 2: 021ea710(view) -> 1.
@@ -501,11 +501,11 @@ fn 021d31a0 ret=u32
   arg buf 0x40
   fix arg1 0 u32 alt range 0 2 || any
   fix arg2 4 u8 alt range 1 3 || any
-  stub 021b9aec ret=u32 args=v,v
-  stub 021b9c50 ret=none args=v,v,v,v
+  stub 021b9aec force ret=u32 args=v,v
+  stub 021b9c50 force ret=none args=v,v,v,v
   stub 021eaa6c ret=none args=v,v,v
   stub 021eaad8 ret=pick:0/1 args=v
-  stub 021b9f70 ret=pick:0/1 args=v,v
+  stub 021b9f70 force ret=pick:0/1 args=v,v
   stub 021ea678 ret=none args=v,v,p
   stub 021ea710 ret=pick:0/1 args=v
 
@@ -520,7 +520,7 @@ fn 021d324c ret=u32
   fix arg1 0 u32 alt range 0 3 || any
   stub 021b8d8c force ret=u32 args=v,v,v
   stub 021cd9e0 force ret=pick:0/0/1 args=p
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d66d0 ret=none args=v,v
   stub 021ea768 ret=none args=v,v,v
   stub 021ea778 ret=pick:0/1 args=v,v
@@ -541,10 +541,10 @@ fn 021d32e0 ret=u32 inputs=400
   fix arg1 0 u32 alt range 0 7 || any
   fix global0 4 u32 alt range 0 9 || any
   stub 021b8d8c force ret=u32 args=v,v,v
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021cd9e0 force ret=pick:0/0/1 args=p
   stub 021d66d0 ret=none args=v,v
-  stub 021b9a24 ret=pick:0/0/1 args=v,v
+  stub 021b9a24 force ret=pick:0/0/1 args=v,v
   stub 021ea768 ret=none args=v,v,v
   stub 021ea778 ret=pick:0/1/1 args=v,v
   stub 021ea7a8 ret=none args=v,v
@@ -559,7 +559,7 @@ fn 021d344c ret=u32
   arg buf 0x40
   fix arg1 0 u32 alt range 0 2 || any
   stub 021b8d8c force ret=u32 args=v,v,v
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021cd9e0 force ret=pick:0/1 args=p
   stub 021d6c2c ret=none args=v
   stub 021ea868 ret=none args=v,v,v
@@ -614,7 +614,7 @@ fn 021d35c8 ret=u32
   fix arg1 0 u32 alt range 0 2 || any
   stub 021b8d8c force ret=u32 args=v,v,v
   stub 021b8e70 force ret=u32 args=v,v
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d66d8 ret=none args=v,v
   stub 021ea888 ret=none args=v,v
   stub 021ea8a4 ret=pick:0/1 args=v
@@ -653,9 +653,9 @@ fn 021d3934 ret=u32
   arg buf 0x40
   fix arg0 0x140 u8 alt range 0 5 || any
   fix arg0 0x13C u8 range 0 5
-  stub 021b9aec ret=u32 args=v,v
-  stub 021b9c10 ret=none args=v,v,v
-  stub 021b9bf0 ret=u32 args=v,v
+  stub 021b9aec force ret=u32 args=v,v
+  stub 021b9c10 force ret=none args=v,v,v
+  stub 021b9bf0 force ret=u32 args=v,v
   stub 021d63ec ret=none args=v,v
   stub 021d6580 ret=none args=v
 
@@ -670,7 +670,7 @@ fn 021d39a8 ret=u32
   fix arg2 4 u32 alt range 0 4 || range 0 0x10
   stub 021d8090 ret=none args=v,outm:8:0xFF
   stub 021d3a10 ret=nullable:4:u32 args=v
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d5b68 ret=pick:0/0/1 args=v
   stub 021d6064 ret=none args=v,v,v,v
 
@@ -683,7 +683,7 @@ fn 021d3dc4 ret=u16
   arg u32 any
   arg u32 any
   fix arg0 0xE8 u16 alt const 0 || any rep=4,2
-  stub 021b9b94 ret=pick:0/1/2/3/6 args=v
+  stub 021b9b94 force ret=pick:0/1/2/3/6 args=v
   stub 021d62c4 ret=pick:0/0/1 args=v,v
   stub 021d805c ret=pick:0/1 args=v,v
   stub 021d59b4 ret=u16 args=v,v

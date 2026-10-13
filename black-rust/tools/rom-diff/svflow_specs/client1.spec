@@ -183,15 +183,15 @@ fn 021cd6f0 ret=ofs:arg11
   arg buf 0x1C0
   stub 02030734 ret=ptr:arg11:0:1 args=v,v,v,v,v
   stub 021eea58 force ret=u32 args=v,v,v,v
-  stub 021b9af8 ret=u32 args=v,v
-  stub 021ba08c ret=u32 args=v
+  stub 021b9af8 force ret=u32 args=v,v
+  stub 021ba08c force ret=u32 args=v
   stub 021d8230 ret=none args=p
   stub 021d3f04 ret=none args=p
   stub 021d3d9c force ret=none args=p
-  stub 021b9fbc ret=u32 args=v,v
-  stub 021ba820 ret=u32 args=v
+  stub 021b9fbc force ret=u32 args=v,v
+  stub 021ba820 force ret=u32 args=v
   stub 02187f00 ret=u32 args=v,v,v,v,v
-  stub 021b90f8 ret=pick:0/1 args=v
+  stub 021b90f8 force ret=pick:0/1 args=v
   stub 021ee5e4 ret=u32 args=v
 
 # run the current step: (c->step)(c, c->step) (r1 is the pointer itself); returns its result
@@ -232,7 +232,7 @@ fn 021cda18 ret=u32
   stub 02006740 ret=none args=
   stub 02005e50 ret=pick:0/1 args=
   stub 021d3fa8 ret=u16 args=p
-  stub 021ba73c ret=none args=v,v
+  stub 021ba73c force ret=none args=v,v
   stub 02006734 ret=none args=v
 
 # the wait-for-request step (`.byte` block, 6-way jump table on c[0x1A8]; table data 021cdc30-021cdc3c): 021d3fdc(c, cursor) first.
@@ -263,4 +263,4 @@ fn 021cdc0c ret=u32 inputs=600
   stub 02005e50 ret=pick:0/1 args=
   stub 021d3fa8 ret=u16 args=p
   stub 021eae74 ret=none args=v,v,v
-  stub 021ba7f8 ret=none args=v
+  stub 021ba7f8 force ret=none args=v

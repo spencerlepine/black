@@ -49,7 +49,7 @@ fn 021bb848 ret=none
   arg buf 0x10
   arg u32 any
   arg u8 any
-  stub 021b9b94 ret=u8 args=v
+  stub 021b9b94 force ret=u8 args=v
 
 # &slot(idx) if idx < 4 and the slot is used, else 0 (returned as an offset into arg 0)
 fn 021bb85c ret=ofs:arg0
@@ -203,10 +203,10 @@ fn 021baa94 ret=none
   arg u32 any
   arg u32 range 0 3
   arg u32 any
-  stub 021b9aec ret=u32 args=v,v
+  stub 021b9aec force ret=u32 args=v,v
   stub 021bb840 ret=none args=v,v,v,v
   stub 021bb848 ret=none args=v,v,v
-  stub 021b9b94 ret=u8 args=v
+  stub 021b9b94 force ret=u8 args=v
 
 # (S, r1, r2, idx, u8 on the stack): like aa94 but the handle comes from eea58(r2, idx, 1, S.u16[0xCC0])
 fn 021baacc ret=none
@@ -216,11 +216,11 @@ fn 021baacc ret=none
   arg u32 any
   arg u32 range 0 3
   arg u8 any
-  stub 021b9aec ret=u32 args=v,v
+  stub 021b9aec force ret=u32 args=v,v
   stub 021eea58 force ret=u32 args=v,v,v,v
   stub 021bb840 ret=none args=v,v,v,v
   stub 021bb848 ret=none args=v,v,v
-  stub 021b9b94 ret=u8 args=v
+  stub 021b9b94 force ret=u8 args=v
 
 # (S, idx, u8): slot(idx) = (idx, 0, 0), slot data = (b9aec(S[0x10], idx), u8)
 fn 021bab10 ret=none
@@ -228,10 +228,10 @@ fn 021bab10 ret=none
   arg buf 0x1000
   arg u32 range 0 3
   arg u8 any
-  stub 021b9aec ret=u32 args=v,v
+  stub 021b9aec force ret=u32 args=v,v
   stub 021bb840 ret=none args=v,v,v,v
   stub 021bb848 ret=none args=v,v,v
-  stub 021b9b94 ret=u8 args=v
+  stub 021b9b94 force ret=u8 args=v
 
 # ---- teardown ----------------------------------------------------------------------------------------------
 
@@ -290,8 +290,8 @@ fn 021bab9c ret=u32 inputs=1500
   stub 021ee96c ret=nullable:2:u32 args=v,v,out:4
   stub 021ee9a4 ret=u32 args=v,out:4
   stub 021bc390 force ret=bool args=v
-  stub 021ba5d8 ret=mod:3 args=v
-  stub 021ba618 ret=mod:3 args=v
+  stub 021ba5d8 force ret=mod:3 args=v
+  stub 021ba618 force ret=mod:3 args=v
   stub 021bbc34 force ret=none args=v
   stub 021bbc44 force ret=u32 args=v,v
   stub 021bbd20 force ret=none args=v
@@ -299,9 +299,9 @@ fn 021bab9c ret=u32 inputs=1500
   stub 021b86c0 force ret=u8 args=v
   stub 021b8588 force ret=mod:2 args=v
   stub 021bc55c force ret=u8 args=v
-  stub 021b9120 ret=none args=v,v
+  stub 021b9120 force ret=none args=v,v
   stub 021cc668 force ret=u32 args=v
-  stub 021b916c ret=none args=v,v
+  stub 021b916c force ret=none args=v,v
   stub 021bb830 ret=bool args=v
   stub 021eeb64 force ret=ptr:arg0:0xD00:64 args=v,outn:4:0xC/0/0/0
   stub 021b8ff4 force ret=u8 args=v
@@ -310,15 +310,15 @@ fn 021bab9c ret=u32 inputs=1500
   stub 021bbd8c force ret=u32 args=v,v
   stub 021b85a8 force ret=bool args=v
   stub 021b8cfc force ret=bool args=v,v
-  stub 021b9aec ret=u32 args=v,v
-  stub 021b9b98 ret=mod:4 args=v
+  stub 021b9aec force ret=u32 args=v,v
+  stub 021b9b98 force ret=mod:4 args=v
   stub 021d8454 ret=mod:4 args=v
-  stub 021b9920 ret=u32 args=v,v,v
+  stub 021b9920 force ret=u32 args=v,v,v
   stub 021d5440 ret=u8 args=v
-  stub 021ba54c ret=mod:4 args=v
+  stub 021ba54c force ret=mod:4 args=v
   stub 021b86dc force ret=u16 args=v
   stub 02005d90 ret=none args=v,v
-  stub 021b9114 ret=mod:2 args=v
+  stub 021b9114 force ret=mod:2 args=v
   stub 020362dc ret=u32
   stub 02035c60 ret=u32
 
@@ -358,8 +358,8 @@ fn 021bacac ret=u32 inputs=600
   stub 021bb798 ret=bool args=v
   stub 021bb718 ret=none args=v,v
   stub 021bb7d0 ret=none args=v
-  stub 021ba5d8 ret=mod:3 args=v
-  stub 021ba618 ret=mod:3 args=v
+  stub 021ba5d8 force ret=mod:3 args=v
+  stub 021ba618 force ret=mod:3 args=v
   stub 021babec ret=none args=v,v
   stub 021bb6a8 ret=none args=v
   stub 021bae5c ret=u32
@@ -372,9 +372,9 @@ fn 021bacac ret=u32 inputs=600
   stub 021b86b8 force ret=mod:3 args=v
   stub 021b8588 force ret=mod:2 args=v
   stub 021bc55c force ret=u8 args=v
-  stub 021b9120 ret=none args=v,v
+  stub 021b9120 force ret=none args=v,v
   stub 021cc668 force ret=u32 args=v
-  stub 021b916c ret=none args=v,v
+  stub 021b916c force ret=none args=v,v
   # 021bb6a8 is ported (real code): its callees need stubs and a data zone
   fix arg0 0x1f u8 alt const 255 || any rep=4,12
   fix arg0 0xD00 u32 any rep=64,4
@@ -424,14 +424,14 @@ fn 021baef8 ret=u32 inputs=600
   stub 021bb0a0 ret=u8 args=v
   stub 021bb768 ret=none args=v,v,v,v,v
   stub 021bb7d0 ret=none args=v
-  stub 021ba618 ret=mod:3 args=v
+  stub 021ba618 force ret=mod:3 args=v
   stub 021babec ret=none args=v,v
   stub 021bb6a8 ret=none args=v
   stub 021bb628 ret=bool args=v,v,v
   stub 021bbd80 force ret=none args=v
   stub 021bbd8c force ret=u32 args=v,v
   stub 021cc668 force ret=u32 args=v
-  stub 021b916c ret=none args=v,v
+  stub 021b916c force ret=none args=v,v
   stub 021babf4 ret=none args=v
   # 021bb6a8 is ported (real code): its callees need stubs and a data zone
   fix arg0 0x1f u8 alt const 255 || any rep=4,12
@@ -449,10 +449,10 @@ fn 021baef8 ret=u32 inputs=600
   stub 021b85a8 force ret=bool args=v
   stub 021b8cfc force ret=bool args=v,v
   stub 021b8ff4 force ret=u8 args=v
-  stub 021b9aec ret=u32 args=v,v
-  stub 021b9b98 ret=mod:4 args=v
+  stub 021b9aec force ret=u32 args=v,v
+  stub 021b9b98 force ret=mod:4 args=v
   stub 021d8454 ret=mod:4 args=v
-  stub 021b9920 ret=u32 args=v,v,v
+  stub 021b9920 force ret=u32 args=v,v,v
   stub 021d5440 ret=u8 args=v
 
 # the 4 spec'd next-state constants of 021bb208/bb280/bb320 are literals in the ROM (021BB281 ...)
@@ -467,7 +467,7 @@ fn 021bb208 ret=u32 inputs=300
   stub 021bb7d0 ret=none args=v
   stub 021bb718 ret=none args=v,v
   stub 021cc668 force ret=u32 args=v
-  stub 021b916c ret=none args=v,v
+  stub 021b916c force ret=none args=v,v
   stub 021babec ret=none args=v,v
   fix arg0 0x1f u8 alt const 255 || any rep=4,12
   stub 021eeae8 force ret=none
@@ -492,12 +492,12 @@ fn 021bb0e0 ret=u32 inputs=1200
   stub 021bb724 ret=none args=v,v,v,v
   stub 021bb798 ret=bool args=v
   stub 021bb7d0 ret=none args=v
-  stub 021ba618 ret=mod:3 args=v
+  stub 021ba618 force ret=mod:3 args=v
   stub 021babec ret=none args=v,v
   stub 021bbd20 force ret=none args=v
   stub 021bbd2c force ret=u32 args=v,v
   stub 021cc668 force ret=u32 args=v
-  stub 021b916c ret=none args=v,v
+  stub 021b916c force ret=none args=v,v
   stub 021bb830 ret=bool args=v
   stub 021eeb64 force ret=ptr:arg0:0xD00:64 args=v,outn:4:0xC/0/0/0
   stub 021eeae8 force ret=none
@@ -514,7 +514,7 @@ fn 021bb320 ret=u32
   arg buf 0x1000
   arg buf 0x10
   fix arg1 0 u32 range 0 2
-  stub 021b9114 ret=mod:2 args=v
+  stub 021b9114 force ret=mod:2 args=v
   stub 020362dc ret=u32
   stub 02035c60 ret=u32
 
@@ -605,7 +605,7 @@ fn 021bb484 ret=u32
 fn 021bb280 ret=u32 inputs=300
   nowork
   arg buf 0x1000
-  stub 021ba54c ret=mod:4 args=v
+  stub 021ba54c force ret=mod:4 args=v
   stub 021b8ff4 force ret=u8 args=v
   stub 021b86b8 force ret=mod:5 args=v
   stub 021b86dc force ret=u16 args=v
@@ -620,8 +620,8 @@ fn 021bb040 ret=u32
   stub 021b85a8 force ret=bool args=v
   stub 021b8cfc force ret=bool args=v,v
   stub 021b8ff4 force ret=u8 args=v
-  stub 021b9aec ret=u32 args=v,v
-  stub 021b9b98 ret=mod:4 args=v
+  stub 021b9aec force ret=u32 args=v,v
+  stub 021b9b98 force ret=mod:4 args=v
 
 # slot 0 (S+0x20): if used and its record says kind 3, b9920(S[0x10], 1, (word >> 7) & 7) and return d5440(that)
 fn 021bb0a0 ret=u8
@@ -631,7 +631,7 @@ fn 021bb0a0 ret=u8
   stub 021bb830 ret=bool args=v
   stub 021eeb64 force ret=ptr:arg0:0xD00:64 args=v,v
   stub 021d8454 ret=mod:4 args=v
-  stub 021b9920 ret=u32 args=v,v,v
+  stub 021b9920 force ret=u32 args=v,v,v
   stub 021d5440 ret=u8 args=v
 
 # pokemon of bpp -> 02017e1c(pk, 0x73, S[0xAC]), then 02027268(S[0xAC])
@@ -651,13 +651,13 @@ fn 021bb8dc ret=none
   stub 021d5844 ret=u32 args=v
   stub 02017e1c ret=u32 args=v,v,v
   stub 020271dc ret=none args=v
-  stub 021ba1b4 ret=none args=v,v
+  stub 021ba1b4 force ret=none args=v,v
 
 # tail call 021b9234(S[0xC]); 021bb914's literal is 021B9235
 fn 021bb914 ret=none
   nowork
   arg buf 0x1000
-  stub 021b9234 ret=none args=v
+  stub 021b9234 force ret=none args=v
 
 # ---- record builder / data exchange ------------------------------------------------------------------------
 

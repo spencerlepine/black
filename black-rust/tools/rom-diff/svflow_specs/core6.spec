@@ -274,7 +274,7 @@ fn 021c6bf8 ret=u32 inputs=400
   stub 021d5f14 ret=pick:0/1/2/3 args=v
   stub 0201c284 ret=pick:0/1 args=v
   stub 021d7930 ret=pick:0/1 args=v
-  stub 021b911c ret=pick:0/1 args=v,v
+  stub 021b911c force ret=pick:0/1 args=v,v
 
 # # out word at stack0; bd28(r2, 0x1e/0x1f), c1bc(r2) == 8 -> 0; message 0x50 with replies 0x35/0x41/0x51/0x36; scales via 7b3c
 fn 021c6cac ret=u32 inputs=400
@@ -514,7 +514,7 @@ fn 021c7374 ret=u32 inputs=400
   stub 021d5ad8 ret=u32 args=v,v
   stub 021d58a8 ret=u32 args=v,v
   stub 021d7b10 ret=u32 args=v,v
-  stub 021b9934 ret=u32 args=v,v
+  stub 021b9934 force ret=u32 args=v,v
   stub 021d775c ret=pick:0/1/2/31/31/50/65535 args=v
 
 # # two messages 0x3a / 0x3c; type multiplier id 9 / 0xb; c2ab0(work) == 4 && 5814(mon, 5) && id 0xb -> 7b10(x, 0x1800)
@@ -794,4 +794,4 @@ fn 021c7c24 ret=none inputs=400
   fix arg0 0 u16 alt near 9999 3 || any rep=6,2
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
   stub 021b8d08 force ret=pick:0/1/2/3 args=v
-  stub 021b9a24 ret=pick:0/1 args=v,v
+  stub 021b9a24 force ret=pick:0/1 args=v,v

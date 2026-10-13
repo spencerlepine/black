@@ -89,7 +89,7 @@ fn 021bbb60 ret=u32
   fix work 0xC u32 addrof region:Q
   stub 021b8714 force ret=ptr:work:0x1000:16 args=v
   stub 021c3b68 force ret=pick:0/1 args=p,v,v
-  stub 021b9bf0 ret=nullable:3:u32 args=v,v
+  stub 021b9bf0 force ret=nullable:3:u32 args=v,v
   stub 021d5b68 ret=pick:0/1 args=v
   stub 021bd8f0 force ret=none args=p,v,v,v
   stub 021b8588 force ret=pick:0/1/2/3 args=v
@@ -189,9 +189,9 @@ fn 021bbd8c ret=u32 inputs=400
   stub 021c6158 force ret=none args=p,p
   stub 021bc540 ret=pick:0/1/2/3/4 args=p,v,out:4
   stub 021b8b9c force ret=pick:0/1 args=v,v
-  stub 021b9aec ret=u32 args=v,v
+  stub 021b9aec force ret=u32 args=v,v
   stub 021b8bc4 force ret=pick:0/1 args=v,v
-  stub 021b9b98 ret=pick:0/1 args=v
+  stub 021b9b98 force ret=pick:0/1 args=v
   stub 021c859c force ret=none args=p
   stub 021c85b8 force ret=none args=p
   stub 021d62c4 ret=pick:0/1 args=v,v
@@ -236,9 +236,9 @@ fn 021bbfa8 ret=u8 inputs=400
   stub 021d5b68 ret=pick:0/1 args=v
   stub 021c85b8 force ret=none args=p
   stub 021b8b9c force ret=pick:0/1 args=v,v
-  stub 021b9aec ret=u32 args=v,v
+  stub 021b9aec force ret=u32 args=v,v
   stub 021b8bc4 force ret=pick:0/1 args=v,v
-  stub 021b9b98 ret=pick:0/1 args=v
+  stub 021b9b98 force ret=pick:0/1 args=v
   stub 021d59b4 ret=u32 args=v,v
   stub 021d74f8 ret=none args=v
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
@@ -325,9 +325,9 @@ fn 021bc220 ret=none inputs=300
 fn 021bc2b0 ret=bool
   arg work
   stub 021b8b9c force ret=pick:0/1 args=v,v
-  stub 021b9aec ret=u32 args=v,v
+  stub 021b9aec force ret=u32 args=v,v
   stub 021b8bc4 force ret=pick:0/1 args=v,v
-  stub 021b9b98 ret=pick:0/1 args=v
+  stub 021b9b98 force ret=pick:0/1 args=v
 
 # 1 when some client on our team has a usable party
 fn 021bc310 ret=u32
@@ -335,8 +335,8 @@ fn 021bc310 ret=u32
   stub 021b8b9c force ret=pick:0/1 args=v,v
   stub 021b8bc4 force ret=pick:0/1 args=v,v
   stub 021b8ff4 force ret=pick:0/1/2/3 args=v
-  stub 021b9aec ret=u32 args=v,v
-  stub 021b9b98 ret=pick:0/1 args=v
+  stub 021b9aec force ret=u32 args=v,v
+  stub 021b9b98 force ret=pick:0/1 args=v
 
 # queue header cleared, then 021bd584 on the first mon of our client
 fn 021bc360 ret=u32
@@ -344,7 +344,7 @@ fn 021bc360 ret=u32
   region Q 0xC00
   fix work 0xC u32 addrof region:Q
   stub 021b8ff4 force ret=pick:0/1/2/3 args=v
-  stub 021b990c ret=u32 args=v,v,v
+  stub 021b990c force ret=u32 args=v,v,v
   stub 021bd584 force ret=pick:0/1 args=p,v
 
 # queue header cleared, run 021bc3b0, result = queue got a command (the stub cannot write the queue: always 0 until 021bc3b0 is ported)
@@ -381,8 +381,8 @@ fn 021bc418 ret=none inputs=300
   fix region:Q 0 u32 range 0 2900
   global 021f3b44 0x40
   stub 02034714 noreturn ret=none args=v,v,v
-  stub 021b9aec ret=u32 args=v,v
-  stub 021b9c50 ret=none args=v,v,out:4,out:4
+  stub 021b9aec force ret=u32 args=v,v
+  stub 021b9c50 force ret=none args=v,v,out:4,out:4
   stub 021d5b68 ret=pick:0/1 args=v
   stub 021c5108 force ret=none args=p,v,v
   stub 021ef948 ret=pick:0/1 args=v
@@ -439,8 +439,8 @@ fn 021bc610 ret=u8 inputs=400
   fix arg1 0x30 u8 range 0 3 rep=4,1
   stub 021d83e0 ret=pick:0/1 args=v
   stub 021d8454 ret=pick:0/1/1/2/3/4/5/6/6/7 args=v
-  stub 021b9ab0 ret=pick:0/1/2/3/4/5 args=v
-  stub 021b9bf0 ret=nullable:3:u32 args=v,v
+  stub 021b9ab0 force ret=pick:0/1/2/3/4/5 args=v
+  stub 021b9bf0 force ret=nullable:3:u32 args=v,v
   stub 021b86b8 force ret=pick:0/1/2 args=v
   stub 021bc8ec ret=u8 args=p,v,v
   stub 021bc948 ret=u16 args=p,v,v
@@ -550,7 +550,7 @@ fn 021bcb14 ret=ofs:work inputs=300
   fix work 0x7ed u8 alt const 0 || const 0 || any rep=6,16
   stub 021bcaac ret=nullable:3:ptr:work:0x7e0:1 args=p,v,v seq
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
-  stub 021b9a24 ret=pick:0/1 args=v,v
+  stub 021b9a24 force ret=pick:0/1 args=v,v
   stub 021d5b68 ret=pick:0/1 args=v
   stub 021bcb68 ret=pick:0/1/2/3/4/5/6 args=p,p
   stub 021d8454 ret=pick:0/1/1/2/3/4/5/6/6/7 args=v
