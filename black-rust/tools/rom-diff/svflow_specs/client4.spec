@@ -111,8 +111,8 @@ fn 021d127c ret=u32
   stub 02005d90 ret=none args=v,v
   stub 02005e30 ret=none args=v
   stub 02005e50 ret=pick:0/1 args=
-  stub 021b86c8 ret=pick:0/1/0x100 args=v
-  stub 021b86dc ret=u32 args=v
+  stub 021b86c8 force ret=pick:0/1/0x100 args=v
+  stub 021b86dc force ret=u32 args=v
   stub 021b902c ret=pick:0/1 args=v,v
   stub 021b904c ret=u32 args=v,v
   stub 021b916c ret=none args=v,v
@@ -136,12 +136,12 @@ fn 021d1290 ret=u32
   stub 021b904c ret=u32 args=v,v
   stub 021d13a4 ret=pick:0/1/2/3 args=p
   stub 021eec20 force ret=u32 args=v,outp:2:0:1
-  stub 021b86c8 ret=pick:0/1/0x100 args=v
+  stub 021b86c8 force ret=pick:0/1/0x100 args=v
   stub 021b916c ret=none args=v,v
   stub 021eaf18 ret=none args=p,v,v
   stub 021eaf50 ret=none args=p,v
   stub 021ea614 ret=none args=v,p
-  stub 021b86dc ret=u32 args=v
+  stub 021b86dc force ret=u32 args=v
   stub 02005d90 ret=none args=v,v
   stub 02005e30 ret=none args=v
   stub 021ea710 ret=pick:0/1 args=v
@@ -170,8 +170,8 @@ fn 021d13fc ret=u32
   fix arg2 2 u16 alt range 0 2 || any
   stub 021d1410 ret=pick:0/1 args=p,p,v
   stub 021eec20 force ret=u32 args=v,outp:2:0:1
-  stub 021b86dc ret=u32 args=v
-  stub 021b8ff4 ret=u32 args=v
+  stub 021b86dc force ret=u32 args=v
+  stub 021b8ff4 force ret=u32 args=v
   stub 021b902c ret=pick:0/1 args=v,v
   stub 021b904c ret=pick:0/1 args=v,v
   stub 021b919c ret=nullable:2:u32 args=v
@@ -208,14 +208,14 @@ fn 021d1410 ret=u32 inputs=400
   fix arg2 2 u16 alt range 0 2 || any
   stub 021d13a4 ret=pick:0/1/1/2 args=p
   stub 021eec20 force ret=u32 args=v,outp:2:0:1
-  stub 021b86dc ret=u32 args=v
+  stub 021b86dc force ret=u32 args=v
   stub 021f878c ret=none args=v
   stub 021b904c ret=pick:0/1 args=v,v
   stub 021eaf18 ret=none args=p,v,v
   stub 021eaf50 ret=none args=p,v
   stub 021ea614 ret=none args=v,p
   stub 021ba1a8 ret=pick:0/1 args=v,v
-  stub 021b8ff4 ret=u32 args=v
+  stub 021b8ff4 force ret=u32 args=v
   stub 021ea710 ret=pick:0/1 args=v
   stub 021ba020 ret=u32 args=v,v
   stub 021f7f58 ret=none args=v,v,v,v,v
@@ -242,7 +242,7 @@ fn 021d1708 ret=u32
   stub 0202435c ret=u32 args=v,v
   stub 02024450 ret=pick:0/1 args=v
   stub 02045808 ret=none args=v
-  stub 021b86dc ret=u32 args=v
+  stub 021b86dc force ret=u32 args=v
   stub 021b902c ret=pick:0/1 args=v,v
   stub 021b904c ret=pick:0/1 args=v,v
   stub 021b916c ret=none args=v,v
@@ -277,7 +277,7 @@ fn 021d171c ret=u32
   stub 021d13a4 ret=pick:0/1/2 args=p
   stub 021eec20 force ret=u32 args=v,outp:2:0:1
   stub 021b916c ret=none args=v,v
-  stub 021b86dc ret=u32 args=v
+  stub 021b86dc force ret=u32 args=v
   stub 021f878c ret=none args=v
   stub 021b904c ret=pick:0/1 args=v,v
   stub 021ba020 ret=u32 args=v,v
@@ -326,7 +326,7 @@ fn 021d18ec ret=u32
   fix arg1 0 u32 alt range 0 1 || any
   stub 021ba1a8 ret=pick:0/1 args=v,v
   stub 021b9210 ret=nullable:2:u32 args=v
-  stub 021b8ff4 ret=u32 args=v
+  stub 021b8ff4 force ret=u32 args=v
   stub 021eaf18 ret=none args=p,v,v
   stub 021eaf50 ret=none args=p,v
   stub 021ea614 ret=none args=v,p
@@ -420,8 +420,8 @@ fn 021d1bd0 ret=u32
   stub 021eaf50 ret=none args=p,v
   stub 021ea614 ret=none args=v,p
   stub 021ea710 ret=pick:0/1 args=v
-  stub 021b8588 ret=pick:0/0/0/1 args=v
-  stub 021b86c0 ret=pick:0/0/0/1 args=v
+  stub 021b8588 force ret=pick:0/0/0/1 args=v
+  stub 021b86c0 force ret=pick:0/0/0/1 args=v
   stub 021b9f70 ret=pick:0/1 args=v,v
   stub 021cdf1c force ret=nullable:4:u32 args=p
   stub 021d59b4 ret=pick:100/100/150/60 args=v,v
@@ -436,8 +436,8 @@ fn 021d1c40 ret=u32
   arg buf 0x10
   fix arg0 0x1A6 u8 range 0 3
   fix arg0 0x19C u16 range 0 200
-  stub 021b8588 ret=pick:0/0/0/1 args=v
-  stub 021b86c0 ret=pick:0/0/0/1 args=v
+  stub 021b8588 force ret=pick:0/0/0/1 args=v
+  stub 021b86c0 force ret=pick:0/0/0/1 args=v
   stub 021cdf1c force ret=nullable:4:u32 args=p
   stub 021d59b4 ret=pick:100/100/150/60 args=v,v
   stub 021b9f70 ret=pick:0/1 args=v,v
@@ -449,7 +449,7 @@ fn 021d1cac ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021b8e70 ret=u32 args=v,v
+  stub 021b8e70 force ret=u32 args=v,v
   stub 021ea458 ret=none args=v,v,v
   stub 021ea478 ret=pick:0/1 args=v
 
@@ -467,18 +467,18 @@ fn 021d1cf4 ret=u32
   fix arg0 0x1A6 u8 range 0 3
   stub 021b9920 ret=u32 args=v,v,v
   stub 021d5440 ret=u32 args=v
-  stub 021b8ce8 ret=pick:0/1 args=v,v,v
+  stub 021b8ce8 force ret=pick:0/1 args=v,v,v
   stub 021d1df4 ret=pick:0xB/0x15/0x18 args=p
   stub 021eaf18 ret=none args=p,v,v
   stub 021b9f70 ret=pick:0/1 args=v,v
   stub 021eaf50 ret=none args=p,v
   stub 021ea614 ret=none args=v,p
   stub 021ea710 ret=pick:0/1 args=v
-  stub 021b8bec ret=u32 args=v,v,v
+  stub 021b8bec force ret=u32 args=v,v,v
   stub 021ea488 ret=none args=v,v,v,v
   stub 021ea4c4 ret=pick:0/1 args=v
   stub 021cdecc force ret=none args=p
-  stub 021b8588 ret=pick:0/0/1 args=v
+  stub 021b8588 force ret=pick:0/0/1 args=v
   stub 021b9064 ret=u32 args=v,v,v
   stub 021d5b68 ret=pick:0/0/1 args=v
   stub 021d5c44 ret=pick:0x4D800/0x37000/0x36FFF/0x20800/0xA000/0x9FFF args=v
@@ -488,7 +488,7 @@ fn 021d1cf4 ret=u32
 fn 021d1df4 ret=u32
   nowork
   arg buf 0x1C0
-  stub 021b8588 ret=pick:0/0/1 args=v
+  stub 021b8588 force ret=pick:0/0/1 args=v
   stub 021b9064 ret=u32 args=v,v,v
   stub 021b9920 ret=u32 args=v,v,v
   stub 021d5b68 ret=pick:0/0/1 args=v
@@ -573,7 +573,7 @@ fn 021d2030 ret=u32
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
   stub 021cd9e0 force ret=pick:0/0/1 args=p
-  stub 021b8590 ret=pick:0/1/1 args=v
+  stub 021b8590 force ret=pick:0/1/1 args=v
   stub 021d2000 ret=u32 args=p,v,v
   stub 021ea0a0 ret=none args=v,v,v,v,v,v,v
   stub 021ea0e4 ret=pick:0/1 args=v
@@ -589,7 +589,7 @@ fn 021d20bc ret=u32
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
   fix arg2 4 u32 alt const 0 || any
-  stub 021b8dc0 ret=u32 args=v,v,v
+  stub 021b8dc0 force ret=u32 args=v,v,v
   stub 021ea354 ret=none args=v,v,v
   stub 021f7eb4 ret=pick:0/1 args=
 
@@ -600,7 +600,7 @@ fn 021d210c ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
   stub 021ea0f4 ret=none args=v,v,v,v
   stub 021ea120 ret=pick:0/1 args=v
 
@@ -627,7 +627,7 @@ fn 021d21d4 ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 2 || any
-  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
   stub 021ea384 ret=none args=v,v
   stub 021ea3a0 ret=pick:0/1 args=v
   stub 021ea678 ret=none args=v,v,p
@@ -640,8 +640,8 @@ fn 021d2234 ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021b8d8c ret=u32 args=v,v,v
-  stub 021b8e70 ret=u32 args=v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
+  stub 021b8e70 force ret=u32 args=v,v
   stub 021f81d0 ret=none args=v,v
 
 # command 0x36: 0: not idle -> 021ea0a0(view, s, s, 1, 0201bd28(1, 0x1B), 0, 0) with s = 021b8d8c(server, pokecon, (u8) args[0]); state 1.
@@ -653,7 +653,7 @@ fn 021d2278 ret=u32
   arg buf 0x40
   fix arg1 0 u32 alt range 0 2 || any
   stub 021cd9e0 force ret=pick:0/0/1 args=p
-  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
   stub 0201bd28 ret=u32 args=v,v
   stub 021ea0a0 ret=none args=v,v,v,v,v,v,v
   stub 021ea0e4 ret=pick:0/1 args=v
@@ -669,7 +669,7 @@ fn 021d2320 ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
   stub 021ea40c ret=none args=v,v
   stub 021ea428 ret=pick:0/1 args=v
   stub 021b9934 ret=u32 args=v,v
@@ -682,7 +682,7 @@ fn 021d2374 ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
   stub 021ea438 ret=none args=v,v
   stub 021ea448 ret=pick:0/1 args=v
 
@@ -694,10 +694,10 @@ fn 021d23b8 ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021b8d8c ret=u32 args=v,v,v
-  stub 021b8e70 ret=u32 args=v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
+  stub 021b8e70 force ret=u32 args=v,v
   stub 021cd9e0 force ret=pick:0/0/1 args=p
-  stub 021b8590 ret=pick:0/1/1 args=v
+  stub 021b8590 force ret=pick:0/1/1 args=v
   stub 021ea7c8 ret=none args=v,v
   stub 021ea7e8 ret=pick:0/1 args=v,v
 
@@ -708,10 +708,10 @@ fn 021d2424 ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021b8d8c ret=u32 args=v,v,v
-  stub 021b8e70 ret=u32 args=v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
+  stub 021b8e70 force ret=u32 args=v,v
   stub 021cd9e0 force ret=pick:0/0/1 args=p
-  stub 021b8590 ret=pick:0/1/1 args=v
+  stub 021b8590 force ret=pick:0/1/1 args=v
   stub 021ea7d8 ret=none args=v,v
   stub 021ea7e8 ret=pick:0/1 args=v,v
 
@@ -752,7 +752,7 @@ fn 021d2580 ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
   stub 021ea384 ret=none args=v,v
   stub 021ea3a0 ret=pick:0/1 args=v
 
@@ -764,9 +764,9 @@ fn 021d25c4 ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
   stub 021cd9e0 force ret=pick:0/0/1 args=p
-  stub 021b8590 ret=pick:0/1/1 args=v
+  stub 021b8590 force ret=pick:0/1/1 args=v
   stub 021ea838 ret=none args=v,v
   stub 021ea850 ret=pick:0/1 args=v,v
 
@@ -777,7 +777,7 @@ fn 021d2628 ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
   stub 021ea384 ret=none args=v,v
   stub 021ea3a0 ret=pick:0/1 args=v
 
@@ -790,8 +790,8 @@ fn 021d266c ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021b8dec ret=u32 args=v,v
-  stub 021b8e70 ret=u32 args=v,v
+  stub 021b8dec force ret=u32 args=v,v
+  stub 021b8e70 force ret=u32 args=v,v
   stub 021b9aec ret=u32 args=v,v
   stub 021b9c10 ret=none args=v,v,v
   stub 021ea904 ret=none args=v,v,v,v,v,v
@@ -808,8 +808,8 @@ fn 021d2700 ret=u32
   fix arg1 0 u32 alt range 0 3 || any
   stub 021f7998 ret=none args=v
   stub 021f7eb4 ret=pick:0/1 args=
-  stub 021b8bec ret=u32 args=v,v,v
-  stub 021b8e70 ret=u32 args=v,v
+  stub 021b8bec force ret=u32 args=v,v,v
+  stub 021b8e70 force ret=u32 args=v,v
   stub 021b9aec ret=u32 args=v,v
   stub 021b9c10 ret=none args=v,v,v
   stub 021ea904 ret=none args=v,v,v,v,v,v
@@ -822,7 +822,7 @@ fn 021d2814 ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021b8e70 ret=u32 args=v,v
+  stub 021b8e70 force ret=u32 args=v,v
   stub 021f7e94 ret=none args=v
   stub 021f7eb4 ret=pick:0/1 args=
 
@@ -834,7 +834,7 @@ fn 021d284c ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021b8e70 ret=u32 args=v,v
+  stub 021b8e70 force ret=u32 args=v,v
   stub 021cd9e0 force ret=pick:0/1 args=p
   stub 021f88bc ret=none args=v
   stub 021f7ea4 ret=none args=v
@@ -849,7 +849,7 @@ fn 021d28ac ret=u32
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
   stub 021b9934 ret=u32 args=v,v
-  stub 021b8dc0 ret=u32 args=v,v,v
+  stub 021b8dc0 force ret=u32 args=v,v,v
   stub 021d6c50 ret=none args=v,v
   stub 021ea8b4 ret=none args=v,v,v
   stub 021ea8d4 ret=pick:0/1 args=v
@@ -863,7 +863,7 @@ fn 021d2930 ret=u32
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
   stub 021cd9e0 force ret=pick:0/0/1 args=p
-  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
   stub 021d7ad4 ret=u32 args=v
   stub 021ea1b8 ret=none args=v,v,v,v
   stub 021ea1f0 ret=pick:0/1 args=v
@@ -899,7 +899,7 @@ fn 021d2a20 ret=u32 inputs=600
   fix global0 8 u32 alt range 0x48 0x52 || any
   fix global0 0xC u32 alt const 0 || any
   stub 021b9934 ret=u32 args=v,v
-  stub 021b8dc0 ret=pick:0/1/0xFF args=v,v,v
+  stub 021b8dc0 force ret=pick:0/1/0xFF args=v,v,v
   stub 021f8204 ret=pick:0/1 args=v,v
   stub 021d69b8 ret=pick:0/1 args=v,p,p
   stub 021f8134 ret=none args=v,v
