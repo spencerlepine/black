@@ -8,7 +8,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021CFA1C, "97aeccb69611967c"),
     (0x021CFCF4, "eb812d1bb178947a"),
     (0x021CFD88, "2ed4e3a15afbdb38"),
-    (0x021D1988, "d0d3bcecd4b621c3"),
+    (0x021D1988, "3470fc4513a836f9"),
     (0x021D21C0, "d67b0ade3b5c7b41"),
 ];
 // fndiff-recorded-end

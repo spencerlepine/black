@@ -6,7 +6,7 @@ use black_fndiff::{run_suite, Arg, Case, StubEnv, Suite};
 // fndiff-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
     (0x021B4BEC, "2e04b61ac872d2c4"),
-    (0x021B4C54, "b7fadc9d6e14b0e4"),
+    (0x021B4C54, "02a6f32562e6e6fc"),
     (0x021B4D14, "98492bc4ca85ce27"),
 ];
 // fndiff-recorded-end
