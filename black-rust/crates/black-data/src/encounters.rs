@@ -2,8 +2,19 @@
 //!
 //! A member is one 232-byte table, or four (one per season, 928 bytes). Table layout: 8 rate
 //! bytes, then 56 slots of `(u16 species | form << 11, u8 min level, u8 max level)`: three
-//! 12-slot land tables, then four 5-slot water/fishing tables. Which rate goes with which slot
-//! group follows the slot order (UNVERIFIED until F5 ports the encounter code).
+//! 12-slot land tables, then four 5-slot water/fishing tables.
+//!
+//! Rate <-> group mapping (verified from the encounter code, F5a-spec): `rates[t]` is the rate of
+//! slot group `t` in file order, `t` being the encounter type of `field_encount.c` (`0x021AA3E0` reads
+//! `table[t]`, `0x021A9A5C` copies group `t`): 0 grass, 1 dark grass (double battles), 2 shaking
+//! grass, 3 surf, 4 rippling water, 5 fishing, 6 fishing on a ripple. `rates[7]` is not a rate: it
+//! is the zone's effect-encounter kind 0..=2 (`0x021AA7DC`: step interval / probability of shaking
+//! grass etc., 20 steps 10 % for kinds 0 / 1, 5 steps 15 % for kind 2); the game sets its bit 7 in
+//! the RAM copy as the "table loaded" flag. In all 148 tables of the ROM a rate is nonzero exactly
+//! when its group has species, and `rates[7]` is 0 (115 tables), 1 (31) or 2 (2). A form of 0x1F
+//! means a random form. The game loads table `season` (0..=3, `0x0215E2B8`, called by
+//! `eventdata_system.c` `0x02162438` with the season it is given) of a four-table member, and the
+//! only table of a one-table member in every season (which season number is which: F11).
 
 use black_core::ids::SpeciesId;
 use serde::{Deserialize, Serialize};
@@ -25,8 +36,10 @@ pub struct Slot {
 /// One table: rates + slot groups.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct EncounterTable {
+    /// `rates[0..7]`: rate of group `t` (encounter type `t`, see the module doc); `rates[7]`: the
+    /// effect-encounter kind (0..=2), not a rate.
     pub rates: [u8; 8],
-    /// `GROUP_SLOTS` groups in file order.
+    /// `GROUP_SLOTS` groups in file order (encounter types 0..=6).
     pub groups: Vec<Vec<Slot>>,
 }
 

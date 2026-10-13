@@ -596,3 +596,20 @@ core4 (checked with every function of the area treated as ported: no fault, stra
 pointers to the caller's stack reach stubs only as `in:` / `out:` / `outm:` / `outv:`; a stub whose answer must change between calls of
 one input (polled callees, an OBJ code that a pending change rewrites, an attribute per footprint tile) is `seq` (stub results do not mix
 in the `in:` words, only `v` arguments and the `seq` index).
+
+## F5a-spec additions (black-field encount_st / enc_pokeset / encount / effect_encount / map_attr)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-field/{encount_st,enc_pokeset,encount,effect_encount,map_attr}.spec` (headers), on top of the F6a ones:
+
+* Closure stubs (checked with every function of each area treated as ported: no fault, stray write or unstubbed callee); every
+  out-of-area stub is `force`, also between the five areas; `--strict-callees` and `--order-check` clean; instruction coverage
+  153/153, 1327/1327, 925/925, 1030/1030, 601/601 in both modes.
+* The FIELD ENCOUNT object is one `arg buf 0x800` arena with fixed zones (ENCOUNT TABLE +0x20, EFFECT ENCOUNT work +0x200, ENCOUNT
+  WORK +0x7C0 = the `02012A38` answer); the object's pointer fields are `fix ... addrof arg0 OFS`.
+* Locals that a function hands to its callees (the 0x2C-byte encounter context EFP, the MON descriptors, the slot copy, the field
+  situation, the search window) reach the stubs as `in:` / `out:` / `outm:` buffers, never as `v` stack addresses; the in-area
+  stub of the EFP builder `021A9350` is `outm:0x2C` with the Pokemon count byte masked to 0 / 1, because its callers compare it.
+* The RNG (`020056EC` next / `02005728` next_scaled, ported in black-core rng) is a `force` stub `ret=lt:0` (an answer below the
+  argument); the percent roll `021A9DC8` / `021AA6E0` as an in-area stub picks the threshold values of its callers.
+* The slot-pick table call of `021A9C58` (ROM 0x021D8DD8 [mode], mode bounded 0..3) lands on the in-area entries.

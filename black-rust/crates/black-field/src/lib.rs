@@ -3,6 +3,10 @@
 //! Logic crate (D6): no Bevy dependency.
 
 pub mod btl_setup;
+pub mod effect_encount;
+pub mod enc_pokeset;
+pub mod encount;
+pub mod encount_st;
 pub mod encounter;
 pub mod event_battle_head;
 pub mod event_work;
@@ -17,6 +21,7 @@ pub mod game_data;
 pub mod height_ex;
 pub mod hooks;
 pub mod land_data_patch;
+pub mod map_attr;
 pub mod map_matrix;
 pub mod mmdl_move;
 pub mod namipoke;

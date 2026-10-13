@@ -605,3 +605,104 @@ because the unit-length stub `021B7C38` answers only multiples of 0x1000), `play
 `<= 40` -> `< 40` need exact values the inputs never hit; the grid clamp `>` -> `>=` is equivalent).
 
 Deliberate deviations: none in behaviour.
+
+## F5a-spec: wild encounters (field_encount_st, enc_pokeset, field_encount, effect_encount, map_attr; specs + smoke ports)
+
+Five spec areas under `tools/rom-diff/specs/black-field/` (set `field`), generated with closure stubs (a block lists the stubs of its
+callees and of the callees of all its in-area descendants; with every function of the area treated as ported all blocks run without a
+fault, stray write or unstubbed callee), so each area can be ported in any order. `svflow.py AREA --all --strict-callees` and
+`--order-check` are clean for all five. File bounds come from the `__FILE__` strings passed to `Heap_AllocDebug` (0215E31C
+"field_encount_st.c", 021A9ED8 / 021AA490 / 021AA548 "field_encount.c", 021AA77C "effect_encount.c") and, where a file allocates
+nothing, from the call graph.
+
+| area | original | range | specced | coverage (plain / closure) | smoke ports (hash) | smoke area hash |
+|---|---|---|---|---|---|---|
+| `encount_st` | `field_encount_st.c` (ov10, F1 row 10.18) | `0x0215E2B8..0x0215E440` | 10 | 153/153 / 153/153 | `0215E358` `move_roamer` (bd830468a80bd244), `0215E3E4` `swarm_zone` (6da815577882823b), `0215E404` `any_roamer_active` (b4bb3a5e30a49624), `0215E428` `push_location` (42fa3505f8b7c075) | b181a5118f9b7c9f |
+| `enc_pokeset` | enc_pokeset.c (ov21; F1 counted it in row 21.28 "field_menu.c") | `0x021A9350..0x021A9ED8` | 25 | 1327/1327 / 1327/1327 | `021A94B0` `rate_modifier` (faa9a0fa40414d9b), `021A996C` `rejected` (07e1c7f19f7738d0), `021A9DC8` `roll100` (ec3cc29e686f3cd0), `021A9DE0` `land_slot` (2af26d6b476b6055), `021A9E64` `water_slot` (74773d933136a7bb), `021A9E98` `fishing_slot` (cce9ca220a45f360) | 8c4b543b7265043a |
+| `encount` | `field_encount.c` (ov21, F1 row 21.29) | `0x021A9ED8..0x021AA77C` | 19 | 925/925 / 925/925 | `021AA3E0` `rate_of` (e58485b1e4fc408c), `021AA3FC` `rate_check` (4a0ea365af4f3bc3), `021AA69C` `weather_class` (be901561c94fb25f), `021AA6E0` `rate_roll` (6cf5cf1e9c1b7cf8), `021AA778` `steps` (9e0936cf35143d00) | 171a2e9e134c10b0 |
+| `effect_encount` | `effect_encount.c` (ov21, F1 row 21.30, first part) | `0x021AA77C..0x021AB0D4` | 29 | 1030/1030 / 1030/1030 | `021AA7DC` `set_params` (101957db2c123694), `021AAB48` `item` (c1a269747cc5d424), `021AABC4` `step_due` (2de542984a587430), `021AABEC` `reset_counter` (9ae9caf275a47fbc), `021AB070` `shadow_item` (43816e9c3e1eac63) | 515de880ccb606c9 |
+| `map_attr` | MAPATTR accessors (ov21, F1 row 21.30, tail; no `__FILE__`) | `0x021AB0D4..0x021AB5F4` | 68 | 601/601 / 601/601 | `021AB0F0` `value` (04e931146b9319e1), `021AB100` `valid` (6e923909b2e34ca5), `021AB250` `is_long_grass_a` (09bdf3432f2f4591), `021AB270` `is_long_grass_b` (f0601593713d4759), `021AB29C` `is_long_grass` (6f65057c43ebd492), `021AB504` `effect_kind` (7aa0038a043177e6) | 58a7861b87714527 |
+
+Coverage = instructions of the function body (Thumb walk from the entry, jump tables decoded) that the spec's inputs execute on the
+original, with the in-area callees stubbed (plain) or real (closure). Area hashes of the whole specs (`svflow.py AREA --all`): encount_st
+0e78a61f591671cc, enc_pokeset 5f76f704a63123fd, encount 8abddf9e19162aab, effect_encount ba71840eb21c733c, map_attr d42b07bcc5b35293.
+
+Function lists (bl/blx targets of the whole field set, odd code pointers, the Ghidra index, a Thumb walk from every entry; the gaps between
+functions are 2-byte padding only): 153 entries, minus 2 veneers (`0215E334` -> Heap_Free, `021AA8F8` -> `021AAF54`; callers stub the
+targets) and 3 false entries (`021A939C`, `021A9C56`, `021AB394`: data words in main 0x020A3EE2 / 0x020A4790 / 0x020A3EE6 decode as bl)
+= 151 specced. Ghidra misses `021A9810` (swarm species, no caller in the field set), `021A9E64`, `021A9E98`, `021AB1A0`, `021AB1AC`,
+`021AB2F8`, `021AB358`, `021AB428`, `021AB458`, `021AB3F8` (no caller) and splits the slot-pick functions into `LAB_` pieces.
+
+F1 corrections: row 21.28 ("field_menu.c", anchor 0x021A84A0) ends at 0x021A934C; 0x021A9350..0x021A9ED8 is enc_pokeset (all its entry points
+are called by field_encount.c). Row 21.30 is effect_encount.c (to 0x021AB0D4) + the map attribute accessors. Row 21.40 is
+fldeff_fishing.c only up to 0x021AE0CC; 0x021AE0CC..0x021AE44E is the head of event_trainer_eye.c (trainer sight checks over the MMDLs,
+GMEVENT 021AE430; F4c).
+
+Render-only functions left out (U2, D3): all of `fldeff_fishing.c` (`0x021ADEDC..0x021AE0CC`: 021ADEDC / 021ADF00 effect create /
+delete (table 0x021D9000), 021ADF14 / 021ADF68 G3D resource / animation set-up and teardown (0204xxxx NNS calls), 021ADF94 rod model
+position by direction (soft float into a VecFx32), 021AE01C animation start, 021AE030 / 021AE04C / 021AE050 / 021AE090 the effect procs of
+table 0x021D92EC). Nothing there decides an encounter: the fishing encounter is field_encount `021AA180` (types 5 / 6, rate without the
+walk counter, the lead's Suction Cups / Sticky Hold doubling it). The shaking-grass / dust / ripple objects (fldeff_encount.c, F1 row
+21.38) are reached only through the force stubs `021ADAAC` / `021ADB4C` / `021ADB5C` / `021AC154`.
+
+### The encounter roll (from the code)
+
+* ENCOUNT TABLE (one ARC 126 member, `black_data::encounters`; loaded by `0215E2B8` into EVENTDATA_SYSTEM + 0x38): `rates[t]` (u8,
+  t = 0..6) is the rate of slot group `t`, `t` = encounter type: 0 grass (12 slots at +0x08), 1 dark grass (12 at +0x38, double battles),
+  2 shaking grass (12 at +0x68), 3 surf (5 at +0x98), 4 rippling water (5 at +0xAC), 5 fishing (5 at +0xC0), 6 fishing on a ripple (5 at
+  +0xD4). `rates[7]` is the zone's effect-encounter kind 0..2 (bit 7 set in RAM = loaded). Members of 0xE8 bytes serve every season, of
+  0x3A0 bytes hold four seasonal tables (table `season`); other sizes are rejected.
+* Type of a step (`021AA35C`): the attribute word under the player (map_attr: flags bit 2 = wild encounters, bit 1 = water): no
+  encounter attribute -> none (unless kind 1, the effect encounter); water -> 3 (4 for kind 1); land -> 1 when the value is long grass
+  (6 / 7 / 9 / 0x22), else 0 (2 for kind 1). Attribute values 8 / 9 add 10 to the rate.
+* Rate check (kind 0 walking only, `021A9F40`): rate' = `021A94B0`: x2 for Illuminate / Arena Trap / No Guard, / 2 for Stench / White
+  Smoke / Quick Feet (Sand Veil in sandstorm, Snow Cloak in hail), 2/3 for Cleanse Tag / Pure Incense (of the unmodified rate), at most
+  100, then the pass-power modifier `02010FB0`; the walk counter (`021AA728`): the first step after a reset forces rate 1; encounter
+  when `021AA6E0()` (= `020056EC(0xFFFF) / 0x290`, 0..99) `<= rate'`. Fishing (`021AA180`): Suction Cups / Sticky Hold double the rate.
+* RNG: the global 64-bit LCG of `black_core::rng` (`MathRandContext32`; `FUN_020056EC` = `next`, `FUN_02005728` = `next_scaled`; both
+  ported in black-core). Percent rolls are `next(0xFFFF) / 656`, per-mille rolls `next_scaled(1000)`.
+* Roamers (`021A957C`): an active roamer (ENC SAVE record) in the current zone that passes the level filter replaces the roll half of
+  the time (`02005728(1000) >= 500`). Swarms (`021A99E4`): flag 0x960 set, the zone of the swarm record ROM 0x021D8DE8[ENC SAVE +0x30]
+  (17 records: zone, species, form, levels 15..55), grass (type 0): 40 % (`02005728(1000) <= 400`) the swarm species.
+* Slot pick (`021A9C58`): Magnet Pull / Static (half the time) prefer a slot of a steel / electric species; else ROM 0x021D8DD8[mode]:
+  land 20/20/10/10/10/10/5/5/4/4/1/1 %, water 60/30/5/4/1 %, fishing 40/40/15/4/1 %, uniform (swarm). Level (`021A9B00`) = min + roll %
+  (max - min + 1); form 0x1F = random form; Pressure / Hustle / Vital Spirit (half the time) raise it (`021A9BE8`: to the highest max level of
+  the species in the group, or by 5 when that is at least 5 higher and the group's levels vary).
+* Level filter (`021A996C`): repel (ENC SAVE +0x31 steps) rejects levels below the lead's; Intimidate / Keen Eye (half the time) reject
+  levels 5 or more below; not for kinds 1 / 2. Dark grass gives a double (flag 0x20) with two able Pokemon and a 40 % roll; with one
+  accepted Pokemon it becomes a single.
+* The Pokemon (`021A96B8`): POKEPARAM from species / level / trainer id / PID (`021A9D30`: Cute Charm 67 % opposite gender, the rare check
+  of `mon +6`), held item rolled from the personal items with ROM 0x021D8DCC odds (Compound Eyes), Synchronize copies the lead's nature.
+* Effect encounters (effect_encount): every step with no active effect counts up to the kind's interval (20 steps, or 5 for kind 2), then
+  10 % (15 %) places one candidate tile around the player (a 11 x 11 or half window of the 32 x 32 block); stepping on it starts a kind-1
+  encounter, or gives a dust-cloud / bird-shadow item.
+
+**A7g rate <-> group mapping: verified.** The mapping in `black_data::encounters` (rate `i` <-> slot group `i` in file order) is what the
+code does (`021AA3E0` reads `table[type]`, `021A9A5C` copies group `type`); the ROM agrees (in all 148 tables a rate is nonzero exactly
+when its group has species). The 8th byte is not a rate but the effect-encounter kind (0: 115 tables, 1: 31, 2: 2); the black-data doc
+now says so (doc only, no format change).
+
+### Records (full tables in the spec headers)
+
+* FIELD ENCOUNT (0x14, `021A9ED8`): FIELDMAP, GAMESYS, GAMEDATA, -> ENCOUNT TABLE, -> EFFECT ENCOUNT.
+* EFP (0x2C, `021A9350`, on the caller's stack): GAMESYS, ENC SAVE, type, kind, slot-pick mode, slot / Pokemon counts, the lead's species /
+  item / egg / ability / gender / nature / level, trainer id, MYSTATUS, FLAGS (ability and repel bits, header of enc_pokeset.spec).
+* MON (0x14 per Pokemon): species, item, level, form, rare mode, special, gender request.
+* ENCOUNT WORK (0x20, `02012A38(GAMEDATA)`): walk counter (grid position at the reset, moved, steps), effect step counter, effect state
+  (zone, x / y / z, height, kind, state bits).
+* EFFECT ENCOUNT (0x5C0, `021AA77C`): effect control, candidate count, 121 candidates of 0xC, effect object, interval, probability, item.
+* ENC SAVE (save block 0x38): locations, two roamer records, swarm index (+0x30), repel steps (+0x31).
+* FIELD SITUATION (0x10, `021AA304`): battle background, ground kind (`021AB580`, ROM 0x021D8EA0), weather class, season, zone, RTC hour /
+  minute.
+
+### Spec conventions (these five areas)
+
+* The FIELD ENCOUNT arena is `arg buf 0x800` (object +0, ENCOUNT TABLE +0x20, EFFECT ENCOUNT +0x200, ENCOUNT WORK +0x7C0); blocks that
+  iterate MMDLs (`021AAEC0` and its callers) also use the `work` image (the `0216DD1C` iterator's MMDL pointers).
+* Locals handed to callees (EFP, MON, slot copy, field situation, search window) are `in:` / `out:` / `outm:` stub arguments; the in-area
+  stub of `021A9350` writes the EFP (`outm:0x2C`, Pokemon count 0 / 1).
+* RNG stubs `020056EC` / `02005728` answer below their argument (`lt:0`); in-area percent rolls pick their callers' thresholds.
+* `021A9604` (WFBC) reads the caller's r5 as its weight column for types other than 0 / 1 / 3 / 0xFF (0 under the Z19 entry state; kept in
+  the inputs; WFBC passes only 0 / 1 / 3 / 0xFF). `021A9A5C` with a negative type copies 0 bytes from the caller's r4.
+* `021AACD4` runs the ARM9 soft-float helpers (`0209BDBC` / `0209C95C` / `0209CB8C` / `0209C494`, ALLOW) on both sides: its port must use
+  `black_core::softfloat`.
