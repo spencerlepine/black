@@ -37,8 +37,13 @@ fn blz_roundtrip_via_cli() {
 
 #[test]
 fn info_on_real_rom_when_present() {
-    let rom = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../../black-rom/build/black.us/pokeblack.us.nds");
+    // $BLACK_ROM_BUILD first: the build is untracked, so worktrees only have it there.
+    let rom = std::env::var_os("BLACK_ROM_BUILD")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../black-rom/build/black.us")
+        })
+        .join("pokeblack.us.nds");
     if !rom.exists() {
         eprintln!("skipping: {} not found", rom.display());
         return;

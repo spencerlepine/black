@@ -105,12 +105,16 @@ mod tests {
     #[cfg(feature = "rom")]
     #[test]
     fn real_rom_chart() {
-        const OVY: &str = concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../../black-rom/build/black.us/OVY_93.sbin"
-        );
-        let Ok(image) = std::fs::read(OVY) else {
-            eprintln!("skipping: {OVY} missing");
+        // $BLACK_ROM_BUILD first: the build is untracked, so worktrees only have it there.
+        let ovy = std::env::var_os("BLACK_ROM_BUILD")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| {
+                std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("../../../black-rom/build/black.us")
+            })
+            .join("OVY_93.sbin");
+        let Ok(image) = std::fs::read(&ovy) else {
+            eprintln!("skipping: {} missing", ovy.display());
             return;
         };
         let c = TypeChart::from_overlay93(&image, 0x021B_6100).unwrap();
