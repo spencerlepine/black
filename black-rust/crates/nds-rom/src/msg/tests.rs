@@ -135,7 +135,7 @@ fn rom_files() -> PathBuf {
 fn load(n: u32) -> Option<Narc> {
     let path = rom_files().join(n.to_string());
     if !path.exists() {
-        eprintln!("skipping: {} not found", path.display());
+        crate::testenv::rom_missing(&format!("{} not found", path.display()));
         return None;
     }
     Some(Narc::parse(&std::fs::read(path).unwrap()).unwrap())

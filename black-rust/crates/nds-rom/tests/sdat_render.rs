@@ -23,7 +23,7 @@ fn short() -> RenderOptions {
 #[test]
 fn renders_every_bgm_and_me() {
     let Some(bytes) = load() else {
-        eprintln!("skipping: wb_sound_data.sdat not found");
+        nds_rom::testenv::rom_missing("wb_sound_data.sdat not found");
         return;
     };
     let sdat = Sdat::parse(&bytes).unwrap();
@@ -46,7 +46,7 @@ fn renders_every_bgm_and_me() {
 #[test]
 fn golden_first_second_loops_and_length() {
     let Some(bytes) = load() else {
-        eprintln!("skipping: wb_sound_data.sdat not found");
+        nds_rom::testenv::rom_missing("wb_sound_data.sdat not found");
         return;
     };
     let sdat = Sdat::parse(&bytes).unwrap();

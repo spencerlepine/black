@@ -83,13 +83,16 @@ mod tests {
 
     #[test]
     fn real_main_table() {
-        let Some(dir) = std::env::var_os("BLACK_ROM_BUILD") else {
-            eprintln!("skipping: BLACK_ROM_BUILD unset");
-            return;
-        };
-        let path = std::path::Path::new(&dir).join("main.sbin");
+        // $BLACK_ROM_BUILD first: the build is untracked, so worktrees only have it there.
+        let path = std::env::var_os("BLACK_ROM_BUILD")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| {
+                std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("../../../black-rom/build/black.us")
+            })
+            .join("main.sbin");
         let Ok(bytes) = std::fs::read(&path) else {
-            eprintln!("skipping: {} missing", path.display());
+            nds_rom::testenv::rom_missing(&format!("{} missing", path.display()));
             return;
         };
         let t = TmHmTable::from_main(&bytes).unwrap();

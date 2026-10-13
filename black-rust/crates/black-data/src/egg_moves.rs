@@ -73,7 +73,7 @@ mod tests {
             });
         let path = root.join("files/a/1/2/3");
         let Ok(bytes) = std::fs::read(&path) else {
-            eprintln!("skipping: {} missing", path.display());
+            nds_rom::testenv::rom_missing(&format!("{} missing", path.display()));
             return;
         };
         let t = EggMoveTable::from_narc(&bytes).unwrap();

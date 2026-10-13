@@ -14,7 +14,7 @@ fn load() -> Option<Vec<u8>> {
 #[test]
 fn parses_every_entry() {
     let Some(bytes) = load() else {
-        eprintln!("skipping: wb_sound_data.sdat not found");
+        nds_rom::testenv::rom_missing("wb_sound_data.sdat not found");
         return;
     };
     let sdat = Sdat::parse(&bytes).unwrap();
@@ -73,7 +73,7 @@ fn parses_every_entry() {
 #[test]
 fn golden() {
     let Some(bytes) = load() else {
-        eprintln!("skipping: wb_sound_data.sdat not found");
+        nds_rom::testenv::rom_missing("wb_sound_data.sdat not found");
         return;
     };
     let sdat = Sdat::parse(&bytes).unwrap();

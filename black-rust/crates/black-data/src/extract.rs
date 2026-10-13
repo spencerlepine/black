@@ -142,7 +142,7 @@ mod tests {
         }
         if !src.files.join("a/0/1/6").exists() || !src.overlay93.exists() || !src.main_sbin.exists()
         {
-            eprintln!("skipping: ROM files missing");
+            nds_rom::testenv::rom_missing("ROM files missing");
             return;
         }
         let t = read_tables(&src).unwrap();

@@ -1,7 +1,9 @@
 //! Integration tests against the real, locally built Pokemon Black artifacts.
 //!
-//! They are skipped (not failed) when the build output is absent.  The source tree defaults to
-//! `../../../black-rom` relative to this crate; set `BLACK_ROM_DIR` to override.
+//! They are skipped (not failed) when the build output is absent, unless `REQUIRE_ROM` is set.
+//! The source tree defaults to `../../../black-rom` relative to this crate; set `BLACK_ROM_DIR` to
+//! override. The build (untracked, so worktrees only have it there) is `$BLACK_ROM_BUILD`, else
+//! `build/black.us` in the source tree.
 
 use nds_rom::build::{assemble, default_inputs, parse_file_list};
 use nds_rom::fnt::Fnt;
@@ -15,14 +17,20 @@ fn project() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../black-rom"))
 }
 
+fn build_dir() -> PathBuf {
+    std::env::var_os("BLACK_ROM_BUILD")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| project().join("build/black.us"))
+}
+
 fn rom_path() -> PathBuf {
-    project().join("build/black.us/pokeblack.us.nds")
+    build_dir().join("pokeblack.us.nds")
 }
 
 macro_rules! require {
     ($path:expr) => {
         if !$path.exists() {
-            eprintln!("skipping: {} not found", $path.display());
+            nds_rom::testenv::rom_missing(&format!("{} not found", $path.display()));
             return;
         }
     };
@@ -61,7 +69,7 @@ fn fnt_roundtrip_and_rebuild() {
 
 #[test]
 fn blz_matches_python_pipeline() {
-    let build = project().join("build/black.us");
+    let build = build_dir();
     require!(build.join("packed/main_table.sbin"));
     let table = parse_table(&std::fs::read(build.join("main_table.sbin")).unwrap()).unwrap();
     let raw_ids: Vec<usize> =
@@ -89,10 +97,16 @@ fn blz_matches_python_pipeline() {
 
 #[test]
 fn assembled_rom_is_byte_identical() {
-    let build = project().join("build/black.us");
+    let build = build_dir();
     require!(rom_path());
     require!(build.join("packed/arm9.bin"));
-    let inputs = default_inputs(&project(), &build);
+    let mut inputs = default_inputs(&project(), &build);
+    if std::env::var_os("BLACK_ROM_BUILD").is_some() {
+        // sub/build is untracked like build/: take arm7 from the tree the build belongs to
+        // (<black-rom>/build/black.us -> <black-rom>/sub/build).
+        inputs.arm7 = build.join("../../sub/build/arm7.sbin");
+    }
+    require!(inputs.arm7);
     let (rom, report) = assemble(&inputs).unwrap();
     assert_eq!(report.files, 484);
     assert_eq!(sha1_hex(&rom), expected_sha1());

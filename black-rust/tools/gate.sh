@@ -9,6 +9,14 @@ X=""; [ -n "$GATE_NO_GAME" ] && X="--exclude black-game"
 cargo fmt --all --check
 cargo clippy -q --workspace $X --all-targets -- -D warnings
 cargo clippy -q -p black-data --features rom --all-targets -- -D warnings
+# Real-ROM tests fail instead of skipping when the ROM files or build are missing (REQUIRE_ROM=0
+# to opt out). The build is untracked, so without BLACK_ROM_BUILD a worktree uses the main
+# checkout's (git's common dir is the main checkout's .git).
+: "${REQUIRE_ROM:=1}"
+if [ -z "$BLACK_ROM_BUILD" ]; then
+  BLACK_ROM_BUILD="$(cd "$(git rev-parse --path-format=absolute --git-common-dir)/.." && pwd)/black-rom/build/black.us"
+fi
+export REQUIRE_ROM BLACK_ROM_BUILD
 log="${BLK_OUT:-${CARGO_TARGET_DIR:-target}}/gate-test.log"
 mkdir -p "$(dirname "$log")"
 cargo test -q --workspace $X >"$log" 2>&1 || { grep -E "FAILED|panicked|left|right" "$log" | head -20; exit 1; }

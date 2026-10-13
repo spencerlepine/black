@@ -29,7 +29,7 @@ fn member(narc: &Narc, i: usize) -> Vec<u8> {
 fn parses_every_graphics_file() {
     let dir = files_dir().join("a");
     if !dir.exists() {
-        eprintln!("skipping: {} not found", dir.display());
+        nds_rom::testenv::rom_missing(&format!("{} not found", dir.display()));
         return;
     }
     let mut counts = [0usize; 5];
@@ -79,7 +79,7 @@ fn open(id: u32) -> Option<Narc> {
 #[test]
 fn golden_pokemon_sprite() {
     let Some(narc) = open(4) else {
-        eprintln!("skipping: ARC 004 not found");
+        nds_rom::testenv::rom_missing("ARC 004 not found");
         return;
     };
     let pal = Nclr::parse(&member(&narc, 38)).unwrap();
@@ -140,7 +140,7 @@ fn golden_pokemon_sprite() {
 #[test]
 fn golden_screen() {
     let Some(narc) = open(40) else {
-        eprintln!("skipping: ARC 040 not found");
+        nds_rom::testenv::rom_missing("ARC 040 not found");
         return;
     };
     let scr = Nscr::parse(&member(&narc, 34)).unwrap();

@@ -6,7 +6,7 @@ use crate::handlers::testkit::{run_effect_suite, EffectRegistry, TestHost};
 #[test]
 fn effects_match_rom() {
     let Some(reg) = EffectRegistry::load() else {
-        eprintln!("skipped: ROM build not found");
+        nds_rom::testenv::rom_missing("ROM build not found");
         return;
     };
     let addrs: Vec<u32> = super::PORTED.to_vec();
@@ -19,7 +19,7 @@ fn effects_match_rom() {
 #[test]
 fn effect_registry_shape() {
     let Some(reg) = EffectRegistry::load() else {
-        eprintln!("skipped: ROM build not found");
+        nds_rom::testenv::rom_missing("ROM build not found");
         return;
     };
     assert_eq!(reg.keys[0], (0..8).collect::<Vec<_>>());

@@ -52,7 +52,7 @@ fn load() -> Option<Data> {
 #[test]
 fn parses_every_map_file() {
     let Some(d) = load() else {
-        eprintln!("skipping: ROM files not found");
+        nds_rom::testenv::rom_missing("ROM files not found");
         return;
     };
     assert_eq!(d.zones.len(), 427);
@@ -117,7 +117,7 @@ fn parses_every_map_file() {
 #[test]
 fn golden_nuvema_town() {
     let Some(d) = load() else {
-        eprintln!("skipping: ROM files not found");
+        nds_rom::testenv::rom_missing("ROM files not found");
         return;
     };
     let z = &d.zones[389];

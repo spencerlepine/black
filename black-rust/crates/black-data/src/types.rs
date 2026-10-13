@@ -114,7 +114,7 @@ mod tests {
             })
             .join("OVY_93.sbin");
         let Ok(image) = std::fs::read(&ovy) else {
-            eprintln!("skipping: {} missing", ovy.display());
+            nds_rom::testenv::rom_missing(&format!("{} missing", ovy.display()));
             return;
         };
         let c = TypeChart::from_overlay93(&image, 0x021B_6100).unwrap();

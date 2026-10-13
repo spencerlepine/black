@@ -68,7 +68,7 @@ mod tests {
     #[test]
     fn real_rom_growth_tables() {
         let Ok(bytes) = std::fs::read(ARC) else {
-            eprintln!("skipping: {ARC} missing");
+            nds_rom::testenv::rom_missing(&format!("{ARC} missing"));
             return;
         };
         let t = GrowthTables::from_narc(&bytes).unwrap();

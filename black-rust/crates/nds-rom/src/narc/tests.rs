@@ -100,7 +100,7 @@ fn collect_narcs(root: &Path) -> Vec<PathBuf> {
 fn real_rom_narcs() {
     let root = Path::new(ROM_FILES);
     if !root.join("a/0").is_dir() {
-        eprintln!("skipping: {ROM_FILES} not found");
+        crate::testenv::rom_missing(&format!("{ROM_FILES} not found"));
         return;
     }
     let (mut narcs, mut members, mut lz10, mut lz11, mut other, mut named) = (0, 0, 0, 0, 0, 0);

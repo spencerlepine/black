@@ -99,7 +99,7 @@ pub(crate) fn rom_entries() -> Option<Vec<(Vec<u16>, bool)>> {
 #[test]
 fn rom_round_trip() {
     let Some(entries) = rom_entries() else {
-        eprintln!("skipping: message banks not found");
+        nds_rom::testenv::rom_missing("message banks not found");
         return;
     };
     let (mut n, mut tags, mut breaks) = (0, 0, 0);

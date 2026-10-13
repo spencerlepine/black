@@ -6,7 +6,7 @@ use crate::handlers::testkit::{run_move_suite, MoveRegistry, TestHost};
 #[test]
 fn moves_match_rom() {
     let Some(reg) = MoveRegistry::load() else {
-        eprintln!("skipped: ROM build not found");
+        nds_rom::testenv::rom_missing("ROM build not found");
         return;
     };
     let addrs: Vec<u32> = super::PORTED.to_vec();
@@ -19,7 +19,7 @@ fn moves_match_rom() {
 #[test]
 fn move_registry_shape() {
     let Some(reg) = MoveRegistry::load() else {
-        eprintln!("skipped: ROM build not found");
+        nds_rom::testenv::rom_missing("ROM build not found");
         return;
     };
     assert_eq!(reg.keys.len(), 258);

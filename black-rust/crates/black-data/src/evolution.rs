@@ -120,7 +120,7 @@ mod tests {
             std::fs::read(format!("{DIR}/1/9")),
             std::fs::read(format!("{DIR}/2/0")),
         ) else {
-            eprintln!("skipping: {DIR} missing");
+            nds_rom::testenv::rom_missing(&format!("{DIR} missing"));
             return;
         };
         let t = EvolutionTable::from_narcs(&evo, &baby).unwrap();

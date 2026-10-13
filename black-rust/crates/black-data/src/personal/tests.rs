@@ -67,7 +67,7 @@ mod rom {
     fn load(path: &str) -> Option<Vec<u8>> {
         let p = files_dir().join(path);
         if !p.exists() {
-            eprintln!("skipping: {} not found", p.display());
+            nds_rom::testenv::rom_missing(&format!("{} not found", p.display()));
             return None;
         }
         Some(std::fs::read(p).unwrap())

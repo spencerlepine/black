@@ -206,7 +206,7 @@ mod tests {
             std::fs::read(format!("{DIR}/2")),
             std::fs::read(format!("{DIR}/3")),
         ) else {
-            eprintln!("skipping: {DIR} missing");
+            nds_rom::testenv::rom_missing(&format!("{DIR} missing"));
             return;
         };
         let t = TrainerTable::from_narcs(&d, &p).unwrap();

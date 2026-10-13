@@ -14,7 +14,7 @@ fn path() -> PathBuf {
 #[test]
 fn parses_gfl_font() {
     let Ok(bytes) = std::fs::read(path()) else {
-        eprintln!("skipping: gfl_font.dat not found");
+        nds_rom::testenv::rom_missing("gfl_font.dat not found");
         return;
     };
     let f = Font::parse(&bytes).unwrap();

@@ -30,6 +30,8 @@ pub mod pack;
 pub mod render;
 pub mod rom;
 pub mod sdat;
+#[doc(hidden)]
+pub mod testenv;
 
 pub use error::{Error, Result};
 pub use header::Header;

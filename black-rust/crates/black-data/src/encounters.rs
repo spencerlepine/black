@@ -121,7 +121,7 @@ mod tests {
             "/../../../black-rom/files/a/1/2/6"
         );
         let Ok(bytes) = std::fs::read(ARC) else {
-            eprintln!("skipping: {ARC} missing");
+            nds_rom::testenv::rom_missing(&format!("{ARC} missing"));
             return;
         };
         let t = EncounterData::from_narc(&bytes).unwrap();

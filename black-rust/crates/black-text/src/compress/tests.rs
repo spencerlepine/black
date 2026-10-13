@@ -96,7 +96,7 @@ fn unterminated_stream_yields_what_was_decoded() {
 #[test]
 fn rom_compressed_entries() {
     let Some(entries) = crate::token::tests::rom_entries() else {
-        eprintln!("skipping: message banks not found");
+        nds_rom::testenv::rom_missing("message banks not found");
         return;
     };
     let mut n = 0;

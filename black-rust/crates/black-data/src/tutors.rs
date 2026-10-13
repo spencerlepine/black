@@ -86,7 +86,7 @@ mod tests {
                 std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../black-rom")
             });
         let Ok(bytes) = std::fs::read(root.join("files/a/0/1/6")) else {
-            eprintln!("skipping: personal missing");
+            nds_rom::testenv::rom_missing("personal missing");
             return;
         };
         let p = PersonalTable::from_narc(&bytes).unwrap();

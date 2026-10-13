@@ -16,7 +16,7 @@ fn narc() -> Option<Narc> {
 #[test]
 fn parses_all_text_fonts() {
     let Some(n) = narc() else {
-        eprintln!("skipping: a/0/2/3 not found");
+        nds_rom::testenv::rom_missing("a/0/2/3 not found");
         return;
     };
     let fonts = fonts_from_narc(&n);

@@ -45,7 +45,7 @@ fn info_on_real_rom_when_present() {
         })
         .join("pokeblack.us.nds");
     if !rom.exists() {
-        eprintln!("skipping: {} not found", rom.display());
+        nds_rom::testenv::rom_missing(&format!("{} not found", rom.display()));
         return;
     }
     let out = black().arg("info").arg(&rom).output().unwrap();
@@ -71,7 +71,7 @@ fn missing_file_is_an_error() {
 fn extract_assets_small_categories_are_idempotent() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../black-rom");
     if !root.join("files/a/0/2/3").exists() {
-        eprintln!("skipping: ROM files not found under {}", root.display());
+        nds_rom::testenv::rom_missing(&format!("ROM files not found under {}", root.display()));
         return;
     }
     let dir = scratch("assets");
