@@ -51,17 +51,54 @@
 
 pub mod ai1;
 
-/// Little-endian word at `ofs`.
-pub(crate) fn rd32(b: &[u8], ofs: usize) -> u32 {
-    u32::from_le_bytes(b[ofs..ofs + 4].try_into().unwrap())
+use crate::server_flow::env::{Arg, FlowEnv};
+
+/// The memory model of the AI ports: byte blocks at fixed addresses (the AI object, the VM, the global AI table), with
+/// every object passed as its address, as the original sees it (same type as the `battle_server.s` ports).
+pub use crate::server::server3::Mem;
+
+/// The environment of the AI: [`FlowEnv`] plus callees with a 64-bit result in `r0:r1`.
+pub trait AiEnv: FlowEnv {
+    /// Calls the unported callee at `addr` whose result is 64-bit (`r1 << 32 | r0`), e.g. `OS_GetTick` (0x020870D0).
+    fn call64(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u64;
 }
 
-/// Stores a little-endian word at `ofs`.
-pub(crate) fn wr32(b: &mut [u8], ofs: usize, v: u32) {
-    b[ofs..ofs + 4].copy_from_slice(&v.to_le_bytes());
-}
+/// C: `0x0218A574`, the VM init record of `ai_create` (`0201121c(heap, &rec)`): word 0 = 0x80010, word 1 = the command
+/// table [`CMD_TABLE`], word 2 = its length 120; words 3..5 (0x0218A580) = the kind table `{1, 0, 2}` of `021895c4`;
+/// words 6..12 (0x0218A58C) = the value ids `{1..7}` of `02189c8c`.
+pub const INIT_RECORD: [u32; 13] = [0x0008_0010, 0x0218_A5A8, 0x78, 1, 0, 2, 1, 2, 3, 4, 5, 6, 7];
 
-/// Little-endian halfword at `ofs`.
-pub(crate) fn rd16(b: &[u8], ofs: usize) -> u16 {
-    u16::from_le_bytes(b[ofs..ofs + 2].try_into().unwrap())
-}
+/// C: `0x0218A5A8`, the 120-entry AI command table (Thumb addresses, bit 0 set); the VM calls entry `id` as
+/// `fn(vm, ai)` and the handler returns the AI status word `ai[0xC4]` (except `021895ac`, "stop", which returns 1).
+pub const CMD_TABLE: [u32; 120] = [
+    0x0218871D, 0x0218872D, 0x0218873D, 0x0218874D, 0x0218878D, 0x021887B5, 0x021887C5,
+    0x021887D5, //
+    0x021887E5, 0x0218883D, 0x0218884D, 0x0218889D, 0x021888AD, 0x02188905, 0x02188915,
+    0x02188981, //
+    0x02188991, 0x021889E9, 0x021889F9, 0x02188A55, 0x02188A65, 0x02188A75, 0x02188A85,
+    0x02188A95, //
+    0x02188AA5, 0x02188AD9, 0x02188AE9, 0x02188B1D, 0x02188B65, 0x02188BB1, 0x02188C1D,
+    0x02188C89, //
+    0x02188CA1, 0x02188D49, 0x02188D5D, 0x02188E01, 0x02188A75, 0x02188A85, 0x02188E25,
+    0x02188E91, //
+    0x02188F09, 0x02188F15, 0x02188F2D, 0x02188F51, 0x02188F59, 0x02188FAD, 0x02188FBD,
+    0x0218905D, //
+    0x0218906D, 0x0218907D, 0x021890C1, 0x021890D1, 0x021890E1, 0x021890F1, 0x02189151,
+    0x02189161, //
+    0x021891D5, 0x021891E5, 0x021892D9, 0x021892E9, 0x021893AD, 0x021893B5, 0x021893CD,
+    0x021893D5, //
+    0x021893DD, 0x02189401, 0x02189435, 0x0218945D, 0x0218948D, 0x021894B5, 0x021894C5,
+    0x021894D5, //
+    0x021894F9, 0x02189501, 0x02189525, 0x02189549, 0x02189591, 0x021895AD, 0x021895C5,
+    0x02189621, //
+    0x02189631, 0x02189669, 0x02189695, 0x021896E1, 0x02189719, 0x02189759, 0x0218979D,
+    0x021897CD, //
+    0x02189801, 0x0218989D, 0x02189979, 0x021899C5, 0x021899DD, 0x02189A2D, 0x02189A45,
+    0x02189A6D, //
+    0x02189A9D, 0x02189AC1, 0x02189B79, 0x02189BFD, 0x02189C8D, 0x02189CED, 0x02189D31,
+    0x02189D39, //
+    0x02189D41, 0x02189D49, 0x02189E71, 0x02189E81, 0x02189ED1, 0x02189EF9, 0x02189F35,
+    0x02189F59, //
+    0x02189F69, 0x02189F79, 0x02189F89, 0x02189FC1, 0x0218A035, 0x0218A075, 0x0218A085,
+    0x0218A095, //
+];
