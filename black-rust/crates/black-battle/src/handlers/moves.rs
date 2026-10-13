@@ -10,7 +10,7 @@ use crate::battle_mon::{value, BattleMon, BppEnv};
 use crate::calc::{fx_mul, fx_mul_min1, u32_div};
 use crate::event_factor::{EventSystem, FactorId};
 use crate::flow::{str_param_add_arg, str_param_setup, Battle, FlowHost, HandexBytes};
-use crate::main_util::{other_side, poke_side, same_side};
+use crate::main_util::{opposing_side, other_side, poke_side, same_side};
 use crate::poke_type::{make_mono_pair, types};
 use crate::sick_cont::SickCont;
 
@@ -381,11 +381,6 @@ pub fn fun_021b8d08(x: u32) -> u32 {
 /// C: unlabeled routine at `0x021B99F0(x)`: whether `x` is 2 or 3.
 pub fn fun_021b99f0(x: i32) -> bool {
     x == 2 || x == 3
-}
-
-/// C: unlabeled routine at `0x021B9A50(poke_id)`: `other_side(poke_side(poke_id))`.
-pub fn fun_021b9a50(poke_id: u32) -> u8 {
-    other_side(poke_side(poke_id) as u32)
 }
 
 /// C: unlabeled routine at `0x021D7D6C(sick)`: whether `sick` is below 6 (signed).
@@ -3751,13 +3746,13 @@ pub fn h_021e5428<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
     fun_021e556c(b, me, poke_side(me as u32), 5, SickCont::turn(5).0, 0x90);
 }
 
-/// C: unlabeled routine at `0x021E546C`: `fun_021e556c` with `fun_021b9a50(holder)`, kind 6,
+/// C: unlabeled routine at `0x021E546C`: `fun_021e556c` with `opposing_side(holder)`, kind 6,
 /// a permanent duration and string 0x94.
 pub fn h_021e546c<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Battle<H>, me: u8) {
     fun_021e556c(
         b,
         me,
-        fun_021b9a50(me as u32),
+        opposing_side(me as u32),
         6,
         SickCont::permanent().0,
         0x94,
@@ -3769,7 +3764,7 @@ pub fn h_021e54ac<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
     fun_021e556c(
         b,
         me,
-        fun_021b9a50(me as u32),
+        opposing_side(me as u32),
         7,
         SickCont::permanent().0,
         0x98,
@@ -3781,7 +3776,7 @@ pub fn h_021e54ec<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
     fun_021e556c(
         b,
         me,
-        fun_021b9a50(me as u32),
+        opposing_side(me as u32),
         8,
         SickCont::permanent().0,
         0x9C,

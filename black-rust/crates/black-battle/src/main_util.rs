@@ -15,7 +15,7 @@ pub fn other_side(side: u32) -> u8 {
     (side == 0) as u8
 }
 
-/// C: `FUN_overlay_d_93__021b9a4c`: the opposing side of a Pokemon.
+/// C: `FUN_overlay_d_93__021b9a50`: the opposing side of a Pokemon.
 pub fn opposing_side(poke_id: u32) -> u8 {
     other_side(poke_side(poke_id) as u32)
 }
