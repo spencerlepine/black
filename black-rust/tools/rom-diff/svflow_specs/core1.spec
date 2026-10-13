@@ -51,7 +51,7 @@ fn 021bb968 ret=u32
   stub 021b8588 ret=pick:0/1/2/3 args=v
   stub 021bbb28 ret=none args=p,v,v,v
   stub 021c7c18 force ret=none args=p
-  stub 021c8588 ret=none args=p
+  stub 021c8588 force ret=none args=p
   stub 021d8230 ret=none args=p
   stub 021c5474 force ret=none args=p
   stub 021bbb38 ret=none args=
@@ -66,7 +66,7 @@ fn 021bb9d8 ret=none
   stub 021b8588 ret=pick:0/1/2/3 args=v
   stub 021bbb28 ret=none args=p,v,v,v
   stub 021c7c18 force ret=none args=p
-  stub 021c8588 ret=none args=p
+  stub 021c8588 force ret=none args=p
   stub 021bbb38 ret=none args=
   stub 021c5474 force ret=none args=p
   stub 021d8230 ret=none args=p
@@ -118,7 +118,7 @@ fn 021bbc44 ret=u32
   region Q 0xC00
   fix work 0xC u32 addrof region:Q
   fix work 0x77c u8 alt const 0 || any
-  stub 021c84e8 ret=none args=p
+  stub 021c84e8 force ret=none args=p
   stub 021bbcc4 ret=none args=p
   stub 021d6ee8 ret=none args=
   stub 021d74e4 ret=none args=
@@ -192,8 +192,8 @@ fn 021bbd8c ret=u32 inputs=400
   stub 021b9aec ret=u32 args=v,v
   stub 021b8bc4 ret=pick:0/1 args=v,v
   stub 021b9b98 ret=pick:0/1 args=v
-  stub 021c859c ret=none args=p
-  stub 021c85b8 ret=none args=p
+  stub 021c859c force ret=none args=p
+  stub 021c85b8 force ret=none args=p
   stub 021d62c4 ret=pick:0/1 args=v,v
   stub 021d74f8 ret=none args=v
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
@@ -229,12 +229,12 @@ fn 021bbfa8 ret=u8 inputs=400
   stub 021bc2b0 ret=pick:0/1 args=p
   stub 021c446c force ret=pick:0/1 args=p
   stub 021bc0d8 ret=pick:0/1 args=p,v
-  stub 021c8534 ret=pick:0/1 args=p
+  stub 021c8534 force ret=pick:0/1 args=p
   stub 021bc4dc ret=pick:0/1 args=p,p
   stub 021c6158 force ret=none args=p,p
-  stub 021c859c ret=none args=p
+  stub 021c859c force ret=none args=p
   stub 021d5b68 ret=pick:0/1 args=v
-  stub 021c85b8 ret=none args=p
+  stub 021c85b8 force ret=none args=p
   stub 021b8b9c ret=pick:0/1 args=v,v
   stub 021b9aec ret=u32 args=v,v
   stub 021b8bc4 ret=pick:0/1 args=v,v
@@ -602,7 +602,7 @@ fn 021bcce0 ret=u8 inputs=800
   fix work 0x7ed u8 alt const 0 || const 0 || any rep=6,16
   fix work 0x14 u32 oneof 0 5 1 2 3 4
   fix work 0x7ed u8 alt const 0 || const 0 || const 0 || any rep=6,16
-  stub 021c859c ret=none args=p
+  stub 021c859c force ret=none args=p
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
   stub 021bceec ret=pick:0/1 args=p,v
   stub 021b86e4 ret=pick:0/1/2 args=v
@@ -624,7 +624,7 @@ fn 021bcce0 ret=u8 inputs=800
   stub 021c54bc force ret=none args=p,v
   stub 021c60ec force ret=none args=p,v,v
   stub 021bcf70 ret=none args=p,v,v
-  stub 021c85b8 ret=none args=p
+  stub 021c85b8 force ret=none args=p
   stub 021d5b68 ret=pick:0/0/0/1 args=v
   stub 021d62c4 ret=pick:0/1 args=v,v
   stub 021d74f8 ret=none args=v

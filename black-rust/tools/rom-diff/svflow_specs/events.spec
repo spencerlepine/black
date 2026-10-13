@@ -142,7 +142,7 @@ fn 021cc008 ret=u32
   stub 021d805c ret=pick:0xfd/0xfe/0xff/0x20 args=v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
   stub 021c88c8 force ret=none args=v,v
-  stub 021c84f4 ret=none args=v,v
+  stub 021c84f4 force ret=none args=v,v
 
 # raise stat/flag via put_cmd (real cmd_queue code on the queue in P[0xC]): (P, bpp, r2, amount)
 fn 021cc0f8 ret=u32
@@ -236,7 +236,7 @@ fn 021cc4ac ret=u32
   arg bpp
   env bpp
   stub 021cc4f8 ret=bool args=v
-  stub 021c84ac ret=bool args=v,v,outm:1:1
+  stub 021c84ac force ret=bool args=v,v,outm:1:1
 
 # unless the pokemon's stat 0x10 is 150: 021bdbb8(P, bpp); returns 1 when 021c88e4(P) == 2
 fn 021cc508 ret=u32
@@ -787,7 +787,7 @@ fn 021cb730 ret=u32 inputs=800
   stub 021b9090 ret=none args=v,v,v
   stub 021b8ff4 ret=pick:0/1/2/3 args=v
   stub 021ba1b4 ret=none args=v,v
-  stub 021c8338 ret=pick:0/1 args=v,v
+  stub 021c8338 force ret=pick:0/1 args=v,v
   stub 021ba250 ret=none args=v,v,v
   stub 021cbf30 force ret=pick:0/1/2/1 args=v,v,v,v,v
   stub 021cbf40 force ret=pick:0/1/2/1 args=v,v,v,v,v
@@ -818,9 +818,9 @@ fn 021cb730 ret=u32 inputs=800
   stub 021cc428 ret=mod:4 args=v
   stub 021cc49c ret=mod:7 args=v,v
   stub 021cbff8 ret=bool args=v,v,v
-  stub 021c84f4 ret=none args=v,v
+  stub 021c84f4 force ret=none args=v,v
   stub 021cc4f8 ret=bool args=v
-  stub 021c84ac ret=bool args=v,v,outm:1:1
+  stub 021c84ac force ret=bool args=v,v,outm:1:1
   stub 021bdbb8 force ret=none args=v,v
   stub 021c88e4 force ret=mod:3 args=v
   stub 021e869c ret=bool args=v,v

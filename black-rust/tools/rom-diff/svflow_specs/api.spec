@@ -264,7 +264,7 @@ fn 021c8174 ret=u32
 # tail call 021b8670(work[4])
 fn 021c8180 ret=u32
   arg work
-  stub 021b8670 ret=pick:0/1/2/3 args=v
+  stub 021b8670 force ret=pick:0/1/2/3 args=v
 
 # 1 when 0201b718(work[0x4A4], species, 0, i) holds for some i < 7
 fn 021c818c ret=bool
