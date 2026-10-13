@@ -3,7 +3,9 @@
 Every ported item carries a doc comment naming its original symbol(s), e.g.
     /// C: `FUN_overlay_d_93__021d5b10` / `021d7b2c`: ...
     /// C: unlabeled routine at `0x021D778C`: ...
-Short forms after a full name inherit its prefix. Run after each batch:
+Short forms after a full name inherit its prefix. Top-level `fn h_XXXXXXXX` / `fun_` / `sub_`
+(event handlers, whose docs start `/// 0xADDR: ...`) without a `/// C:` line are mapped by the
+address in their name. Run after each batch:
     python3 tools/sync-docs.py
 Symbols listed in UNIT_TESTED are ticked `~` (ported, not emulator-verified).
 """
@@ -20,14 +22,14 @@ UNIT_TESTED = {
     "FUN_overlay_d_93__021d804c": "unit-tested only (state setter)",
 }
 
-SYM_RE = re.compile(r"`((?:FUN|LAB|thunk)_[A-Za-z0-9_]+|0x[0-9A-Fa-f]{8}|[0-9a-f]{4,8}|[A-Z][A-Za-z0-9]+_[A-Za-z0-9_]+|[A-Z][a-z]+[A-Z][A-Za-z0-9]+)`")
+SYM_RE = re.compile(r"`((?:FUN|LAB|thunk|sub)_[A-Za-z0-9_]+|0x[0-9A-Fa-f]{8}|[0-9a-f]{4,8}|[A-Z][A-Za-z0-9]+_[A-Za-z0-9_]+|[A-Z][a-z]+[A-Z][A-Za-z0-9]+)`")
 
 
 def expand(tokens):
     out = []
     prefix = None
     for t in tokens:
-        if t.startswith(("FUN_", "LAB_", "thunk_")):
+        if t.startswith(("FUN_", "LAB_", "thunk_", "sub_")):
             out.append(t)
             m = re.match(r"(.*?)([0-9a-fA-F]{8})$", t)
             prefix = m.group(1) if m else None
@@ -56,6 +58,7 @@ def scan_crate(crate):
             mod = mod.replace("::mod", "").replace("lib", "")
             lines = open(path).read().splitlines()
             impl = None
+            documented = set()  # line numbers of items a `/// C:` comment already mapped
             for i, line in enumerate(lines):
                 m = re.match(r"\s*impl(?:<[^>]*>)?\s+(?:[A-Za-z0-9_:]+\s+for\s+)?([A-Za-z0-9_]+)", line)
                 if m and line.rstrip().endswith("{") and not line.startswith("    "):
@@ -63,6 +66,10 @@ def scan_crate(crate):
                 if not line.startswith(("impl", "    ", "}")):
                     if not line.startswith("impl"):
                         impl = None if line.startswith(("pub fn", "fn", "pub struct", "pub const")) else impl
+                am = re.match(r"pub(?:\(crate\))? fn ((?:h|fun|sub)_([0-9a-f]{8}))\b", line)
+                if am and i not in documented:
+                    rows.append((["ADDR_" + am.group(2).upper()], f"{crate.replace('-', '_')}::{mod + '::' if mod else ''}{am.group(1)}"))
+                    continue
                 m = re.match(r"\s*/// C: (.*)", line)
                 if not m:
                     continue
@@ -76,6 +83,7 @@ def scan_crate(crate):
                     if mm:
                         indented = lines[j].startswith("    ")
                         item = (impl + "::" if indented and impl else "") + mm.group(1)
+                        documented.add(j)
                         break
                 if item:
                     rows.append((syms, f"{crate.replace('-', '_')}::{mod + '::' if mod else ''}{item}"))

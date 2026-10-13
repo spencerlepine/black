@@ -9,7 +9,8 @@ ported / trait-stubbed / runtime helpers first, then by fewest unported callees 
 Also the shared library for tools/re/packet.py (which loads this file by path).
 
 Status of an address, from the Rust sources:
-  ported - a `fn` with a body carries `/// C: ...` naming it, or a free `fn fun_XXXXXXXX` exists
+  ported - a `fn` with a body carries `/// C: ...` naming it, or a free `fn fun_XXXXXXXX` (or event
+           handler `fn h_XXXXXXXX`) exists
            (unless its doc says "Env wrapper" / "UNVERIFIED port": those count as stubs)
   stub   - a trait method declaration carries `/// C:` naming it, or any method called
            `fun_XXXXXXXX` / `sub_XXXXXXXX` (a FlowHost-style wrapper around an unported callee)
@@ -116,8 +117,8 @@ def scan_rust(crates_dir, name_to_addr):
                         sm = re.match(r"^(?:pub\s+)?(?:unsafe\s+)?(impl|trait)\b(.*?)\s*(?:\{|where|$)", ln)
                         if sm:
                             scope = (sm.group(1) + sm.group(2)).strip()
-                    # name-based stubs / free functions: fn fun_XXXXXXXX, fn sub_XXXXXXXX
-                    nm = re.match(r"^\s*(?:pub(?:\([a-z]+\))?\s+)?(?:const\s+)?fn\s+(?:fun|sub)_([0-9a-fA-F]{8})\b", ln)
+                    # name-based stubs / free functions: fn fun_XXXXXXXX, fn sub_XXXXXXXX, handlers fn h_XXXXXXXX
+                    nm = re.match(r"^\s*(?:pub(?:\([a-z]+\))?\s+)?(?:const\s+)?fn\s+(?:fun|sub|h)_([0-9a-fA-F]{8})\b", ln)
                     if nm:
                         a = nm.group(1).lower()
                         doc = " ".join(lines[max(0, i - 8):i])
