@@ -1,6 +1,10 @@
 use super::*;
 use crate::testutil::{Fnv, Rng};
 
+pub(crate) fn wide(a: u32, b: u32) -> u32 {
+    [b % 64, b % 0x400, b % 0x20000, b][((a >> 28) & 3) as usize]
+}
+
 pub(crate) fn mix(a: u32, b: u32) -> u32 {
     let x = a.wrapping_mul(0x9E37_79B1) ^ b.wrapping_mul(0x85EB_CA77);
     x ^ (x >> 15)
@@ -103,7 +107,13 @@ fn op_a(b: &mut BattleMon, env: &mut MockEnv, op: u32, a: u32, x: u32, d: u32) -
             vec![]
         }
         1 => {
-            b.move_replace(s, x & 0x3FF, d % 70, (a >> 8) & 1 != 0, env);
+            b.move_replace(
+                s,
+                if x >> 28 == 0 { 0 } else { x & 0xFFFF },
+                d & 0xFF,
+                (a >> 8) & 1 != 0,
+                env,
+            );
             vec![]
         }
         2 => vec![b.move_load_from_party(s, x, env) as u32],
@@ -159,15 +169,15 @@ fn op_a(b: &mut BattleMon, env: &mut MockEnv, op: u32, a: u32, x: u32, d: u32) -
         }
         13 => vec![b.move_pp_full(s, x & 1 != 0) as u32],
         14 => {
-            b.move_spend_pp(s, x % 40, env);
+            b.move_spend_pp(s, wide(a, x), env);
             vec![]
         }
         15 => {
-            b.move_spend_orig_pp(s, x % 40, env);
+            b.move_spend_orig_pp(s, wide(a, x), env);
             vec![]
         }
-        16 => vec![b.move_restore_pp(s, x % 300) as u32],
-        17 => vec![b.move_restore_orig_pp(s, x % 300) as u32],
+        16 => vec![b.move_restore_pp(s, wide(a, x)) as u32],
+        17 => vec![b.move_restore_orig_pp(s, wide(a, x)) as u32],
         18 => {
             b.move_mark_used(s);
             vec![]
@@ -185,33 +195,34 @@ fn op_a(b: &mut BattleMon, env: &mut MockEnv, op: u32, a: u32, x: u32, d: u32) -
             vec![]
         }
         22 => vec![
+            b.has_negative_stage() as u32,
             b.clear_negative_stages() as u32,
             b.has_negative_stage() as u32,
         ],
         23 => {
             let st = 1 + a % 7;
-            let delta = (x % 7) as i32 - 3;
+            let delta = (x % 65) as i32 - 32;
             vec![
                 b.can_change_stage(st, delta) as u32,
                 b.stage_headroom(st) as u32,
             ]
         }
-        24 => vec![b.raise_stage(a % 10, x % 15)],
-        25 => vec![b.lower_stage(a % 10, x % 15)],
+        24 => vec![b.raise_stage(a % 10, wide(a, x))],
+        25 => vec![b.lower_stage(a % 10, wide(a, x))],
         26 => {
-            b.set_stage(a % 10, x % 15);
+            b.set_stage(a % 10, wide(a, x));
             vec![]
         }
         27 => vec![
             b.crit_stage() as u32,
-            b.add_crit_boost((x % 11) as i32 - 5) as u32,
+            b.add_crit_boost((x % 201) as i32 - 100) as u32,
         ],
         28 => {
-            b.damage(x % 0x20000);
+            b.damage(wide(a, x));
             vec![]
         }
         29 => {
-            b.heal(x % 0x20000);
+            b.heal(wide(a, x));
             vec![]
         }
         30 => {
@@ -269,7 +280,7 @@ fn suite_a_matches_rom() {
             hash_state(&mut h, &b, &mut env);
         }
     }
-    assert_eq!(h.hex(), "cc7790225924882e");
+    assert_eq!(h.hex(), "7d4b099bf7737bd6");
 }
 
 #[test]
@@ -312,17 +323,30 @@ fn op_b(
 ) -> Vec<u32> {
     match op {
         0 => {
+            if a & 3 == 0 {
+                // V-0012 hint: grounded (sick 0x18) with Flying in either slot (or both), which
+                // random op sequences almost never combine.
+                b.set_sick(0x18, SickCont(d | 1));
+                b.set_type_pair(
+                    [0x0211, 0x1102, 0x0202, ((x % 18) << 8 | 2) as u16][((a >> 2) & 3) as usize],
+                );
+            }
             let (t1, t2) = b.types();
             vec![
                 t1 as u32,
                 t2 as u32,
                 b.type_pair() as u32,
-                b.has_type(x % 19) as u32,
+                b.has_type(x % 32) as u32,
             ]
         }
         1 => {
-            b.set_type_pair(x as u16);
-            b.set_ability(d as u16);
+            let pair = match (x >> 16) & 3 {
+                0 => 0x1111,
+                1 => 0x1102,
+                _ => x as u16,
+            };
+            b.set_type_pair(pair);
+            b.set_ability(if (d >> 16) & 3 == 0 { 0x30 } else { d as u16 });
             vec![]
         }
         2 => vec![
@@ -342,14 +366,26 @@ fn op_b(
             b.set_stat(7 + a % 7, x as u16, env);
             vec![]
         }
-        5 => vec![
-            b.is_full_hp(env) as u32,
-            b.is_fainted(env) as u32,
-            b.is_alive(env) as u32,
-        ],
+        5 => {
+            if a & 3 == 1 {
+                b.set_u16(0x10, b.u16_at(0x0E));
+            } else if a & 3 == 2 {
+                b.set_u16(0x10, 0);
+            }
+            vec![
+                b.is_full_hp(env) as u32,
+                b.is_fainted(env) as u32,
+                b.is_alive(env) as u32,
+            ]
+        }
         6 => {
-            b.set_u16(0x0E, (1 + x % 999) as u16);
-            b.set_u16(0x10, (a % 1200) as u16);
+            b.set_u16(0x0E, ((x & 0xFFFF) >> ((a >> 20) & 15)) as u16);
+            let hp = if (a >> 28) & 7 == 0 {
+                0
+            } else {
+                (a & 0xFFFF) >> ((a >> 24) & 15)
+            };
+            b.set_u16(0x10, hp as u16);
             vec![b.hp_percent_fx() as u32]
         }
         7 => {
@@ -379,6 +415,13 @@ fn op_b(
             vec![]
         }
         11 => {
+            if (a >> 8) & 3 == 0 {
+                // V-0012 hint: a fresh kind-1 cont with a count-up limit in bits 3-8 (turns 0 < limit)
+                b.set_sick(
+                    a % 36,
+                    SickCont((d & !0x1FF) | (((x >> 2) % 63 + 1) << 3) | 1),
+                );
+            }
             let mut prev = SickCont(0xCCCC_CCCC);
             let mut ended = 0xCCCC_CCCCu32;
             let r = b.tick_sick(
@@ -388,7 +431,12 @@ fn op_b(
             );
             vec![r as u32, prev.0, ended]
         }
-        12 => vec![b.tick_sleep() as u32, b.tick_confusion() as u32],
+        12 => {
+            if a & 3 == 0 {
+                b.set_ability(0x30); // V-0012 hint: Early Bird doubles the sleep countdown
+            }
+            vec![b.tick_sleep() as u32, b.tick_confusion() as u32]
+        }
         13 => vec![b.sick_damage(a % 12, env)],
         14 => {
             b.clear_sicks(a & 1 != 0);
@@ -422,7 +470,7 @@ fn op_b(
             if x & 1 != 0 {
                 b.set_u16(0x0C, 0x1EC);
             }
-            b.change_form((a % 4) as u8, env);
+            b.change_form((a % 32) as u8, env);
             vec![]
         }
         21 => {
@@ -541,7 +589,7 @@ fn op_b(
             vec![b.has_substitute() as u32, b.substitute_hp() as u32]
         }
         38 => {
-            let mut dmg = (x % 0x300) as u16;
+            let mut dmg = x as u16;
             let r = b.hit_substitute(&mut dmg);
             vec![r as u32, dmg as u32]
         }
@@ -553,9 +601,9 @@ fn op_b(
             vec![b.faced_count() as u32, b.faced(d % 30) as u32]
         }
         40 => {
-            b.set_u32(0x08, a % 0x10000);
-            b.set_u8(0x18, ((a >> 16) % 110) as u8);
-            let mut exp = x % 0x20000;
+            b.set_u32(0x08, wide(d, a));
+            b.set_u8(0x18, (a >> 16) as u8);
+            let mut exp = wide(a, x);
             let mut info = LevelUpInfo::default();
             let r = b.gain_exp(&mut exp, Some(&mut info), env);
             let mut v = vec![r as u32, exp];
@@ -570,7 +618,7 @@ fn op_b(
                 mul: LCG_MUL,
                 add: LCG_ADD,
             };
-            *b = BattleMon::new(x, (a & 0x1F) as u8, &mut calc, env);
+            *b = BattleMon::new(x, (a & 0xFF) as u8, &mut calc, env);
             vec![1, calc.rng.x as u32, (calc.rng.x >> 32) as u32]
         }
         _ => unreachable!(),
@@ -597,7 +645,7 @@ fn suite_b_matches_rom() {
             hash_state(&mut h, &b, &mut env);
         }
     }
-    assert_eq!(h.hex(), "df1a8d25a55e9335");
+    assert_eq!(h.hex(), "542d98380ee76f0d");
 }
 
 /// `set_tagged_payload` against the original (`tools/rom-diff/bpp.py tagged`).
@@ -605,7 +653,7 @@ fn suite_b_matches_rom() {
 fn tagged_payload_matches_rom() {
     let mut h = Fnv::new();
     let mut r = Rng::new(0x4D64);
-    for _ in 0..300 {
+    for _ in 0..300u32 {
         let mut buf = vec![0u8; 0x48];
         let len = r.next() % 0x40;
         buf[0..4].copy_from_slice(&(len << 8 | (r.next() & 0xFF)).to_le_bytes());

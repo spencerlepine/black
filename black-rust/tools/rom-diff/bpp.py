@@ -16,6 +16,10 @@ SCR = 0x02E00000
 SIZE = 0x1F8
 
 
+def wide(a, b):
+    return [b % 64, b % 0x400, b % 0x20000, b][(a >> 28) & 3]
+
+
 def mix(a, b):
     x = ((a * 0x9E3779B1) ^ (b * 0x85EBCA77)) & M
     return (x ^ (x >> 15)) & M
@@ -149,7 +153,7 @@ def ops_a(c, op, a, b, d):
     if op == 0:
         c.run(0x021D51CC, slot_ptr(s)); return []
     if op == 1:
-        c.run(0x021D5734, BPP, s, b & 0x3FF, d % 70, stack=(a >> 8 & 1,)); return []
+        c.run(0x021D5734, BPP, s, 0 if (b >> 28) == 0 else b & 0xFFFF, d & 0xFF, stack=(a >> 8 & 1,)); return []
     if op == 2:
         return [c.run(0x021D5244, slot_ptr(s), b, s)]
     if op == 3:
@@ -182,13 +186,13 @@ def ops_a(c, op, a, b, d):
     if op == 13:
         return [c.run(0x021D55D8, BPP, s, b & 1)]
     if op == 14:
-        c.run(0x021D5608, BPP, s, b % 40); return []
+        c.run(0x021D5608, BPP, s, wide(a, b)); return []
     if op == 15:
-        c.run(0x021D5640, BPP, s, b % 40); return []
+        c.run(0x021D5640, BPP, s, wide(a, b)); return []
     if op == 16:
-        return [c.run(0x021D5674, BPP, s, b % 300)]
+        return [c.run(0x021D5674, BPP, s, wide(a, b))]
     if op == 17:
-        return [c.run(0x021D56A0, BPP, s, b % 300)]
+        return [c.run(0x021D56A0, BPP, s, wide(a, b))]
     if op == 18:
         c.run(0x021D56CC, BPP, s); return []
     if op == 19:
@@ -198,23 +202,23 @@ def ops_a(c, op, a, b, d):
     if op == 21:
         c.run(0x021D5F08, BPP); return []
     if op == 22:
-        return [c.run(0x021D5EFC, BPP), c.run(0x021D5D68, BPP)]
+        return [c.run(0x021D5D68, BPP), c.run(0x021D5EFC, BPP), c.run(0x021D5D68, BPP)]
     if op == 23:
         st = 1 + a % 7
-        delta = (b % 7) - 3
+        delta = (b % 65) - 32
         return [c.run(0x021D5D14, BPP, st, delta), c.run(0x021D5D50, BPP, st)]
     if op == 24:
-        return [c.run(0x021D5DC0, BPP, a % 10, b % 15)]
+        return [c.run(0x021D5DC0, BPP, a % 10, wide(a, b))]
     if op == 25:
-        return [c.run(0x021D5E38, BPP, a % 10, b % 15)]
+        return [c.run(0x021D5E38, BPP, a % 10, wide(a, b))]
     if op == 26:
-        c.run(0x021D5EA8, BPP, a % 10, b % 15); return []
+        c.run(0x021D5EA8, BPP, a % 10, wide(a, b)); return []
     if op == 27:
-        return [c.run(0x021D5F14, BPP), c.run(0x021D5F38, BPP, (b % 11) - 5)]
+        return [c.run(0x021D5F14, BPP), c.run(0x021D5F38, BPP, (b % 201) - 100)]
     if op == 28:
-        c.run(0x021D5F90, BPP, b % 0x20000); return []
+        c.run(0x021D5F90, BPP, wide(a, b)); return []
     if op == 29:
-        c.run(0x021D5FA4, BPP, b % 0x20000); return []
+        c.run(0x021D5FA4, BPP, wide(a, b)); return []
     if op == 30:
         c.run(0x021D5FB8, BPP); return []
     if op == 31:
@@ -271,13 +275,18 @@ def r16(e, a):
 def ops_b(c, op, a, b, d):
     e = c.e
     if op == 0:
+        if a & 3 == 0:
+            # V-0012 hint: grounded (sick 0x18) with Flying in either slot (or both)
+            c.run(0x021D6034, BPP, 0x18, d | 1)
+            c.run(0x021D66B0, BPP, [0x0211, 0x1102, 0x0202, (b % 18) << 8 | 2][(a >> 2) & 3])
         e.wbytes(SCR, bytes(2))
         c.run(0x021D57A8, BPP, SCR, SCR + 1)
         t = list(e.rbytes(SCR, 2))
-        return t + [c.run(0x021D57FC, BPP), c.run(0x021D5814, BPP, b % 19)]
+        return t + [c.run(0x021D57FC, BPP), c.run(0x021D5814, BPP, b % 32)]
     if op == 1:
-        c.run(0x021D66B0, BPP, b & 0xFFFF)
-        c.run(0x021D66D0, BPP, d & 0xFFFF)
+        pair = 0x1111 if (b >> 16) & 3 == 0 else (0x1102 if (b >> 16) & 3 == 1 else b & 0xFFFF)
+        c.run(0x021D66B0, BPP, pair)
+        c.run(0x021D66D0, BPP, 0x30 if (d >> 16) & 3 == 0 else d & 0xFFFF)
         return []
     if op == 2:
         return [c.run(0x021D59B4, BPP, a % 23), c.run(0x021D58A8, BPP, b % 14),
@@ -289,10 +298,15 @@ def ops_b(c, op, a, b, d):
     if op == 4:
         c.run(0x021D5970, BPP, 7 + a % 7, b & 0xFFFF); return []
     if op == 5:
+        if a & 3 == 1:
+            e.wbytes(BPP + 0x10, e.rbytes(BPP + 0x0E, 2))
+        elif a & 3 == 2:
+            e.wbytes(BPP + 0x10, bytes(2))
         return [c.run(0x021D5B48, BPP), c.run(0x021D5B68, BPP), c.run(0x021D5B7C, BPP)]
     if op == 6:
-        mx = 1 + b % 999
-        e.wbytes(BPP + 0x0E, struct.pack("<HH", mx, a % 1200))
+        mx = (b & 0xFFFF) >> ((a >> 20) & 15)
+        hp = 0 if (a >> 28) & 7 == 0 else (a & 0xFFFF) >> ((a >> 24) & 15)
+        e.wbytes(BPP + 0x0E, struct.pack("<HH", mx, hp))
         return [c.run(0x021D5C44, BPP)]
     if op == 7:
         s_ = a % 36
@@ -309,12 +323,17 @@ def ops_b(c, op, a, b, d):
     if op == 10:
         c.run(0x021D6264, BPP, b % 40); return []
     if op == 11:
+        if (a >> 8) & 3 == 0:
+            # V-0012 hint: a fresh kind-1 cont with a count-up limit in bits 3-8 (turns 0 < limit)
+            c.run(0x021D6034, BPP, a % 36, (d & ~0x1FF & M) | (((b >> 2) % 63 + 1) << 3) | 1)
         e.wbytes(SCR, struct.pack("<II", 0xCCCCCCCC, 0xCCCCCCCC))
         p1 = SCR if b & 1 else 0
         p2 = SCR + 4 if b & 2 else 0
         r = c.run(0x021D6064, BPP, a % 36, p1, p2)
         return [r, e.r32(SCR), e.r32(SCR + 4)]
     if op == 12:
+        if a & 3 == 0:
+            c.run(0x021D66D0, BPP, 0x30)  # V-0012 hint: Early Bird
         return [c.run(0x021D6130, BPP), c.run(0x021D61A8, BPP)]
     if op == 13:
         return [c.run(0x021D6324, BPP, a % 12)]
@@ -334,7 +353,7 @@ def ops_b(c, op, a, b, d):
     if op == 20:
         if b & 1:
             e.wbytes(BPP + 0x0C, struct.pack("<H", 0x1EC))
-        c.run(0x021D66D8, BPP, a % 4); return []
+        c.run(0x021D66D8, BPP, a % 32); return []
     if op == 21:
         c.run(0x021D6BFC, BPP); return []
     if op == 22:
@@ -402,7 +421,7 @@ def ops_b(c, op, a, b, d):
             c.run(0x021D6D70, BPP)
         return [c.run(0x021D6D7C, BPP), c.run(0x021D6D90, BPP)]
     if op == 38:
-        e.wbytes(SCR, struct.pack("<H", b % 0x300))
+        e.wbytes(SCR, struct.pack("<H", b & 0xFFFF))
         r = c.run(0x021D6D9C, BPP, SCR)
         return [r, r16(e, SCR)]
     if op == 39:
@@ -411,14 +430,14 @@ def ops_b(c, op, a, b, d):
         c.run(0x021D6DCC, BPP, b % 30)
         return [c.run(0x021D6E04, BPP), c.run(0x021D6E0C, BPP, d % 30)]
     if op == 40:
-        e.wbytes(BPP + 8, struct.pack("<I", a % 0x10000))
-        e.wbytes(BPP + 0x18, bytes([(a >> 16) % 110]))
-        e.wbytes(SCR, struct.pack("<I", b % 0x20000) + bytes(16))
+        e.wbytes(BPP + 8, struct.pack("<I", wide(d, a)))
+        e.wbytes(BPP + 0x18, bytes([(a >> 16) & 0xFF]))
+        e.wbytes(SCR, struct.pack("<I", wide(a, b)) + bytes(16))
         r = c.run(0x021D69B8, BPP, SCR, SCR + 4)
         return [r, e.r32(SCR)] + list(e.rbytes(SCR + 4, 14)) + [c.run(0x021D6B6C, BPP)]
     if op == 41:
         e.wbytes(RNGCTX, struct.pack("<QQQ", (a << 32) | b, LCG_MUL, LCG_ADD))
-        res = c.run(0x021D4D84, b, a & 0x1F, 0)
+        res = c.run(0x021D4D84, b, a & 0xFF, 0)
         x = struct.unpack("<Q", e.rbytes(RNGCTX, 8))[0]
         return [res == BPP, x & M, x >> 32]
     raise ValueError(op)
