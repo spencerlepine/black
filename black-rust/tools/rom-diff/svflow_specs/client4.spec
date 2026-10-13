@@ -423,7 +423,9 @@ fn 021d1bd0 ret=u32
   stub 021b8588 force ret=pick:0/0/0/1 args=v
   stub 021b86c0 force ret=pick:0/0/0/1 args=v
   stub 021b9f70 force ret=pick:0/1 args=v,v
-  stub 021cdf1c force ret=nullable:4:u32 args=p
+  stub 021cdf1c ret=nullable:4:u32 args=p      # client2 active_mon: PORTED (B13a) -> real code inside the real 021cdee8; its callees below
+  stub 021b9064 force ret=u32 args=v,v,v
+  stub 021b9920 force ret=u32 args=v,v,v
   stub 021d59b4 ret=pick:100/100/150/60 args=v,v
 
 # message id for client r1: own client (c[0x1A6]): *out = 0; battle type or the multi flag -> 0x1A; HP loss 021cdee8(c) (client2 smoke port,
@@ -438,7 +440,9 @@ fn 021d1c40 ret=u32
   fix arg0 0x19C u16 range 0 200
   stub 021b8588 force ret=pick:0/0/0/1 args=v
   stub 021b86c0 force ret=pick:0/0/0/1 args=v
-  stub 021cdf1c force ret=nullable:4:u32 args=p
+  stub 021cdf1c ret=nullable:4:u32 args=p      # client2 active_mon: PORTED (B13a) -> runs as real code inside the real 021cdee8; its callees below
+  stub 021b9064 force ret=u32 args=v,v,v
+  stub 021b9920 force ret=u32 args=v,v,v
   stub 021d59b4 ret=pick:100/100/150/60 args=v,v
   stub 021b9f70 force ret=pick:0/1 args=v,v
 

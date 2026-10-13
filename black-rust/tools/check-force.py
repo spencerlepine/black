@@ -23,8 +23,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # can't hit this trap and are not scanned.
 SPECS = glob.glob(os.path.join(ROOT, "tools/rom-diff/svflow_specs/*.spec"))
 # Unforced on purpose (the caller's Rust port calls the ported callee directly, so both sides run real code):
-# (spec, callee). Each entry is documented in MIGRATION-AGENT.md (§6 B13-spec2 / B10g).
-EXPECTED = {("client5", 0x021CD9F4), ("core2", 0x021BCB14), ("core2", 0x021BD148)}
+# (spec, callee). Each entry is documented in MIGRATION-AGENT.md (§6 B13-spec2 / B10g / B13a merge note).
+EXPECTED = {("client5", 0x021CD9F4), ("core2", 0x021BCB14), ("core2", 0x021BD148), ("client4", 0x021CDF1C)}
 FLOW_DIRS = ["crates/black-battle/src/server_flow", "crates/black-battle/src/client", "crates/black-battle/src/server"]
 
 
