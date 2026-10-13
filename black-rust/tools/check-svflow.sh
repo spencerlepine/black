@@ -28,7 +28,10 @@ D=${BLK_OUT:-$D}  # per-worker output dir (shared target dir is safe)
 mkdir -p "$D"
 mkdir -p "$D"
 MOD=server_flow
-case "$AREA" in client[0-9]*) MOD=client ;; esac  # B13-spec1: btl_client.c areas live in crates/black-battle/src/client/
+case "$AREA" in
+  client[0-9]*) MOD=client ;;  # B13-spec1: btl_client.c areas live in crates/black-battle/src/client/
+  server[0-9]*) MOD=server ;;  # B11-spec: btl_server.c areas live in crates/black-battle/src/server/
+esac
 T=crates/black-battle/src/$MOD/$AREA/tests.rs
 [ -f "$T" ] || { echo "no $T: nothing is ported in $AREA yet"; exit 2; }
 TEST=$MOD::$AREA::tests::svflow_match_rom

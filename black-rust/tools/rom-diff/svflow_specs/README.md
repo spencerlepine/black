@@ -295,6 +295,24 @@ No new syntax; `svflow.py` and `black-fndiff` are unchanged. Conventions of `hem
 * Caller stubs of the smoke ports got `force` where they were plain: `021c8838` / `021c8860` (core4), `021c88a4` (events),
   `021c88e4` (core2, core3, core4, events). Hash-neutral (the callers' ports reach them through `env.call`).
 
+## B11-spec additions (server1..server3, battle_server.s)
+
+No new syntax; no existing spec text or hash changes. Harness change (small, backward compatible, like B13-spec1): areas named
+`serverN` live in `crates/black-battle/src/server/serverN.rs` (+ `serverN/tests.rs`, test path `server::serverN::tests::svflow_match_rom`):
+`check-svflow.sh` picks the directory from the name, `svflow.py` scans it for `PORTED` lists too.
+
+* All server areas are `nowork`. The main module M (0x474 bytes) is `arg buf 0x1000` with its BATTLE_SETUP (`*M`) at arena offset 0x480
+  (`fix arg0 0 u32 addrof arg0 0x480`); further pointed-to objects sit in higher zones of the same buffer (each spec header lists them).
+  The `btl_server.c` object S is `arg buf 0x1000` with zones at 0xD00+ (as in `server_side.spec`).
+* Function-pointer fields that a function calls (`blx rN`) are fixed to FAKE callee addresses in the unused mapped page
+  0x02EE0000-0x02EEFFFF (Thumb: odd values, e.g. `fix arg0 0x450 u32 alt const 0 || const 0x02EE0011`) and stubbed there
+  (`stub 02ee0010 ...`); the emulator hooks the stub address, a port calls `env.call(ptr & !1, ..)`.
+* Same closure-stub convention as core4/core5/client: a block lists the stubs of its callees and of the callees of its in-area descendants;
+  checked by running every function with the whole area treated as ported (no fault, no stray write, no unstubbed callee). Callees in another
+  `serverN` area or another svflow area are `force` stubs.
+* A pointer that a stub returns into a block the function never receives as an argument (021b9a6c reads the record 021b99e0 returns) is
+  modelled with an extra `arg buf` the function ignores, as the `ptr:argK` target; the port treats that argument as test-only data.
+
 ## What is compared (per input, in this order)
 
 `halt` (0, or 1 + stub address) , `ret`, `work` (all 0x212C bytes), `argN` for each buf/bpp,

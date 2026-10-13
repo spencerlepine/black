@@ -49,6 +49,7 @@ ROOT = os.path.dirname(os.path.dirname(HERE))
 SPECS = os.path.join(HERE, "svflow_specs")
 FLOW_SRC = os.path.join(ROOT, "crates", "black-battle", "src", "server_flow")
 CLIENT_SRC = os.path.join(ROOT, "crates", "black-battle", "src", "client")  # B13-spec1: areas client1.. (btl_client.c), `nowork` svflow areas
+SERVER_SRC = os.path.join(ROOT, "crates", "black-battle", "src", "server")  # B11-spec: areas server1/server2 (btl_server.c), `nowork` svflow areas
 DEFAULT_INPUTS = 200
 
 
@@ -312,7 +313,7 @@ def crate_ported():
 
 def ported_flow(area=None):
     out = []
-    for src in (FLOW_SRC, CLIENT_SRC):
+    for src in (FLOW_SRC, CLIENT_SRC, SERVER_SRC):
         if not os.path.isdir(src):
             continue
         for fn in sorted(os.listdir(src)):
