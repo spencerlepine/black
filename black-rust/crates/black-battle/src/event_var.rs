@@ -405,4 +405,72 @@ mod tests {
         }
         assert_eq!(h.hex(), "3345d98e60c66013");
     }
+
+    /// Widened [`matches_rom_fuzz`] (validation V-0003): long push-heavy runs reach the overflow
+    /// path of `push` and the full-stack fallback of `slot_for_set` (slot 0); labels cover the
+    /// full u16 range (0, the separator 1, > 7), multipliers the full i32 range, clamp bounds
+    /// signed and inverted. Mirrors `gen.py event_var_wide`.
+    #[test]
+    fn matches_rom_fuzz_wide() {
+        let mut h = Fnv::new();
+        let (mut overflows, mut full_sets) = (0, 0);
+        for seed in 0..1000u32 {
+            let mut rng = Rng::new(seed);
+            let mut s = EventVarStack::new();
+            for _ in 0..200 {
+                let op = rng.next() % 14;
+                let x = rng.next();
+                let label = if x.is_multiple_of(4) {
+                    x & 0xFFFF
+                } else {
+                    x % 8
+                } as u16;
+                let v = rng.next() as i32 >> (rng.next() % 32);
+                if (5..=8).contains(&op) && s.sp != 0 && s.slot_for_set(label) == 0 {
+                    full_sets += 1;
+                }
+                match op {
+                    0..=3 => {
+                        let ok = s.push().is_ok();
+                        overflows += !ok as u32;
+                        h.w(ok as u32)
+                    }
+                    4 => s.pop(),
+                    5 => s.set_value(label, v),
+                    6 => s.set_const_value(label, v),
+                    7 => s.set_rewrite_once_value(label, v),
+                    8 => {
+                        let (a, b) = if !rng.next().is_multiple_of(2) {
+                            (rng.next() as i32, rng.next() as i32)
+                        } else {
+                            ((rng.next() % 300) as i32, (rng.next() % 300) as i32)
+                        };
+                        s.set_mul_value(label, v, a, b)
+                    }
+                    9 => h.w(s.rewrite_value(label, v) as u32),
+                    10 => {
+                        let mul = if !rng.next().is_multiple_of(2) {
+                            rng.next()
+                        } else {
+                            rng.next() % 0x4000
+                        };
+                        s.mul_value(label, mul as i32)
+                    }
+                    11 => h.w(s.get_value(label) as u32),
+                    12 => h.w(s.find(label) as u32),
+                    _ => {
+                        let r = s.get_value_if_exists(label);
+                        h.w(r.is_some() as u32);
+                        h.w(r.unwrap_or(0) as u32);
+                    }
+                }
+            }
+            s.to_bytes().iter().for_each(|&b| h.b(b));
+        }
+        assert!(
+            overflows > 0 && full_sets > 0,
+            "{overflows} overflows, {full_sets} full-stack sets"
+        );
+        assert_eq!(h.hex(), "abed39672ee62107");
+    }
 }

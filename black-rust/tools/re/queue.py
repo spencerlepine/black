@@ -100,7 +100,8 @@ def scan_rust(crates_dir, name_to_addr):
         r"(fn|struct|enum|const|static|type|trait|impl|mod|union)\b\s*(?:<[^>]*>\s*)?([A-Za-z_][A-Za-z0-9_]*)?")
     for crate in sorted(os.listdir(crates_dir)):
         src = os.path.join(crates_dir, crate, "src")
-        for dp, _dn, fns in os.walk(src):
+        for dp, dn, fns in os.walk(src):
+            dn.sort()  # deterministic tie-break in put() on every host
             for fn in sorted(fns):
                 if not fn.endswith(".rs"):
                     continue

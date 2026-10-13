@@ -16,6 +16,8 @@ You report how close the human's Claude plan is to its usage limits. You run one
 
 `$HOME/workplace/black/.claude/scripts/usage-cap.sh` reads Claude Code's OAuth token (macOS Keychain item `Claude Code-credentials`, or `~/.claude/.credentials.json` on Linux) and calls `https://api.anthropic.com/api/oauth/usage`, the same endpoint `/usage` reads. That endpoint returns usage for the whole account, so the numbers include every session, not just this one. It prints one `USAGE:` line.
 
+If Claude Code runs on a pay-as-you-go backend (AWS Bedrock, Google Vertex AI, Microsoft Foundry, or a plain API key), there is no plan cap, so the script skips the endpoint and prints `GREEN 0% — no plan usage cap (...)`. It detects this from `CLAUDE_CODE_USE_BEDROCK` / `_VERTEX` / `_FOUNDRY` / `ANTHROPIC_API_KEY`, either in the environment or in a Claude `settings.json` `env` block. If the endpoint answers but reports no capped windows (an unlimited plan), it prints `GREEN 0% — no capped usage limits reported (plan is unlimited)`. Network errors, non-200 responses, and unreadable bodies print `UNKNOWN`.
+
 The limits it reports:
 
 - `session(5h)`: the rolling 5-hour session limit (the "daily" limit).
@@ -53,4 +55,6 @@ Reply with exactly one line and nothing else, starting with `USAGE:`:
 - `USAGE: GREEN 20% — session(5h) 10% (resets 2026-10-12 19:00Z, in 1h39m), weekly 20% (resets 2026-10-15 13:00Z, in 2d19h39m)`
 - `USAGE: ORANGE 80% — session(5h) 80% (resets 2026-10-12 19:00Z, in 1h39m), weekly 50% (resets 2026-10-15 13:00Z, in 2d19h39m) | resume_at 2026-10-12 19:05Z (in 1h44m) resume_cron "5 12 12 10 *"`
 - `USAGE: RED 100% — session(5h) 100% LIMIT HIT (resets 2026-10-12 17:40Z, in 0h19m), weekly 14% (resets 2026-10-13 13:00Z, in 19h39m) | extra usage 46% of $100 | resume_at 2026-10-12 17:45Z (in 0h24m) resume_cron "45 10 12 10 *"`
+- `USAGE: GREEN 0% — no plan usage cap (Claude Code runs on AWS Bedrock, billed per token; no session/weekly limits apply)`
+- `USAGE: GREEN 0% — no capped usage limits reported (plan is unlimited)`
 - `USAGE: UNKNOWN — usage endpoint returned HTTP 401`

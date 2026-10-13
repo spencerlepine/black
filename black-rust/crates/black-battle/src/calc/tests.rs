@@ -31,6 +31,25 @@ impl Mon {
         }
     }
 
+    /// Full-width max HP, level, form and species (validation V-0005); mirrors `gen.py WideMon`.
+    fn wide(r: &mut Rng) -> Self {
+        let max_hp = r.next();
+        let sel = r.next();
+        Mon {
+            max_hp,
+            level: if !sel.is_multiple_of(2) {
+                r.next()
+            } else {
+                1 + r.next() % 100
+            },
+            form: r.next(),
+            species: (r.next() & 0xFFFF) as u16,
+            poke_id: (r.next() % 24) as u8,
+            t1: (r.next() % 18) as u8,
+            t2: (r.next() % 18) as u8,
+        }
+    }
+
     fn typed(max_hp: u32, t1: u8, t2: u8) -> Self {
         Mon {
             max_hp,
@@ -449,4 +468,111 @@ fn hooks_match_rom_fuzz() {
         h.w(fun_021d7f60(&Arm9, v) as u32);
     }
     assert_eq!(h.hex(), "c0fc8425b1d2fa14");
+}
+
+/// Widened [`pure_matches_rom_fuzz`] (validation V-0005): full-range codes for the match-based
+/// helpers (table-indexed ones stay in range), divisor 0, full-width damage and multipliers.
+#[test]
+fn pure_wide_matches_rom_fuzz() {
+    let mut h = Fnv::new();
+    let mut r = Rng::new(0xCA1D);
+    for _ in 0..20000 {
+        let a = r.next();
+        let b = r.next();
+        let c = r.next();
+        let d = r.next();
+        h.w(calc_base_damage(a, b, c, 0));
+        h.w(calc_base_damage(a % 251, b % 1000, c % 101, d));
+        h.w(apply_type_effectiveness(a, b));
+        h.w(apply_type_effectiveness(a, b % 16));
+        h.w(effectiveness_class(c as i32) as u32);
+        h.w(effectiveness_class((c % 9) as i32 - 4) as u32);
+        h.w(fx_mul_min1(a, b));
+        h.w(weather_power_modifier(a, b));
+        h.w(weather_power_modifier(a % 8, b % 20));
+        h.w(is_not_0_or_3(a) as u32);
+        h.w(fun_021d7f00(b));
+        h.w(fun_021d7f2c(c, d));
+        h.w(fun_021d7f2c(c % 5, d));
+    }
+    assert_eq!(h.hex(), "5d03a40cdcc1ff18");
+}
+
+/// Widened [`rng_matches_rom_fuzz`] (validation V-0005): full-range `rand` / `rand_range`
+/// (including the 0..=u32::MAX span, where `hi - lo + 1` wraps to 0 and the raw high word is
+/// used), sick ids, hit counts and percents.
+#[test]
+fn rng_wide_matches_rom_fuzz() {
+    let mut h = Fnv::new();
+    let mut full_spans = 0;
+    for seed in 0..2000u32 {
+        let mut r = Rng::new(seed);
+        let hi = r.next() as u64;
+        let lo = r.next() as u64;
+        let mut c = calc_with_seed(hi << 32 | lo);
+        let mon = Mon::wide(&mut r);
+        for _ in 0..40 {
+            let op = r.next() % 10;
+            let a = r.next();
+            let b = r.next();
+            let v = match op {
+                0 => c.rand(if !b.is_multiple_of(4) { a } else { 0 }),
+                1 => c.rand_range(a, b),
+                2 => {
+                    let lo = if a.is_multiple_of(3) { 0 } else { a };
+                    let hi = u32::MAX - b % 2;
+                    full_spans += (lo == 0 && hi == u32::MAX) as u32;
+                    if b & 2 != 0 {
+                        c.rand_range(hi, lo)
+                    } else {
+                        c.rand_range(lo, hi)
+                    }
+                }
+                3 => c.roll_hit_count(a),
+                4 => c.make_default_sick_cont(a).0,
+                5 => c.make_sick_cont(a, &mon).0,
+                6 => {
+                    let mut o = SickCont(b);
+                    c.make_move_sick_cont(a as u16, &mon, &mut o);
+                    o.0
+                }
+                7 => c.roll_percent(a) as u32,
+                8 => c.roll_critical(a % 5) as u32,
+                _ => c.make_default_sick_cont(a % 9).0,
+            };
+            h.w(v);
+            h.w(c.rng.x as u32);
+            h.w((c.rng.x >> 32) as u32);
+        }
+    }
+    assert!(full_spans > 0);
+    assert_eq!(h.hex(), "e4e27e20aaef739c");
+}
+
+/// Widened [`hooks_match_rom_fuzz`] (validation V-0005): full-u32 max HP (the `& 0xFFFF` of
+/// max_hp / 16, max_hp >= 2^31), level (u32 wrap of max_level * 4 * mult), form (`& 0xFFFF`),
+/// divisor (including 0), weather and badges (unsigned clamp).
+#[test]
+fn hooks_wide_match_rom_fuzz() {
+    let mut h = Fnv::new();
+    for seed in 0..5000u32 {
+        let mut r = Rng::new(seed);
+        let mon = Mon::wide(&mut r);
+        let x = r.next();
+        let d = if x.is_multiple_of(3) { x % 40 } else { x };
+        h.w(max_hp_div(&mon, d));
+        h.w(max_hp_div_min1(&mon, d));
+        h.w(weather_residual_damage(&mon, r.next()));
+        h.w(weather_residual_damage(&mon, r.next() % 6));
+        h.w(exp_yield(&mon, &Personal));
+        h.w(fun_021d80a8(&mon));
+        let n = r.next() % 7;
+        let party = Party((0..n).map(|_| Mon::wide(&mut r)).collect());
+        h.w(prize_money(r.next(), &party));
+        let v = r.next();
+        h.w(fun_021d7f38(&Arm9, v) as u32);
+        h.w(fun_021d7f4c(&Arm9, v) as u32);
+        h.w(fun_021d7f60(&Arm9, v) as u32);
+    }
+    assert_eq!(h.hex(), "44c219e197d73914");
 }

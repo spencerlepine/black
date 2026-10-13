@@ -36,6 +36,20 @@ class Mon:
         self.t2 = r.next() % 18
 
 
+class WideMon(Mon):
+    """Mon with full-width max HP, level, form and species (V-0005); mirrors `Mon::wide`."""
+
+    def __init__(self, r):
+        self.max_hp = r.next()
+        sel = r.next()
+        self.level = r.next() if sel % 2 else 1 + r.next() % 100
+        self.form = r.next()
+        self.species = r.next() & 0xFFFF
+        self.poke_id = r.next() % 24
+        self.t1 = r.next() % 18
+        self.t2 = r.next() % 18
+
+
 e = Emu()
 mons = {}
 party = {"mons": []}
@@ -162,6 +176,56 @@ def event_var():
     return h.hex()
 
 
+
+def event_var_wide():
+    """Widened event_var (V-0003): long runs with a push-heavy mix so the stack overflows (021d74f8
+    error path) and fills (021d77c4 returns slot 0); full u16 labels incl. 0/1, full-range i32
+    multipliers and signed / inverted clamp bounds."""
+    h = Fnv()
+    for seed in range(1000):
+        r = Rng(seed)
+        e.wbytes(EV, bytes(0x5A4))
+        for _ in range(200):
+            op = r.next() % 14
+            x = r.next()
+            label = x & 0xFFFF if x % 4 == 0 else x % 8
+            v = s32(r.next()) >> (r.next() % 32)
+            if op < 4:
+                diag["called"] = False
+                call(0x021D74F8)
+                h.w(int(not diag["called"]))
+            elif op == 4:
+                call(0x021D7540)
+            elif op == 5:
+                call(0x021D75A8, label, v)
+            elif op == 6:
+                call(0x021D75EC, label, v)
+            elif op == 7:
+                call(0x021D7630, label, v)
+            elif op == 8:
+                if r.next() % 2:
+                    lo, hi = r.next(), r.next()
+                else:
+                    lo, hi = r.next() % 300, r.next() % 300
+                call(0x021D7674, label, v, lo, hi)
+            elif op == 9:
+                h.w(call(0x021D76BC, label, v))
+            elif op == 10:
+                mul = r.next() if r.next() % 2 else r.next() % 0x4000
+                call(0x021D7704, label, mul)
+            elif op == 11:
+                h.w(call(0x021D775C, label))
+            elif op == 12:
+                h.w(call(0x021D77E8, EV, label))
+            else:
+                e.w32(SCRATCH, 0)
+                found = call(0x021D778C, label, SCRATCH)
+                h.w(found)
+                h.w(e.r32(SCRATCH))
+        for x in e.rbytes(EV, 0x5A4):
+            h.b(x)
+    return h.hex()
+
 # ---- calc: pure -----------------------------------------------------------------------------
 def trunc_mod8(v):
     s = s32(v)
@@ -212,6 +276,28 @@ def pure():
     return h.hex()
 
 
+def pure_wide():
+    """Widened pure (V-0005): full-range codes for the match-based helpers (table-indexed ones stay
+    in range), divisor 0, full-width damage / multiplier inputs."""
+    h = Fnv()
+    r = Rng(0xCA1D)
+    for _ in range(20000):
+        a, b, c, d = r.next(), r.next(), r.next(), r.next()
+        h.w(call(0x021D7A44, a, b, c, 0))
+        h.w(call(0x021D7A44, a % 251, b % 1000, c % 101, d))
+        h.w(call(0x021D7A6C, a, b))
+        h.w(call(0x021D7A6C, a, b % 16))
+        h.w(call(0x021D7AD4, c))
+        h.w(call(0x021D7AD4, c % 9 - 4))
+        h.w(call(0x021D7B2C, a, b))
+        h.w(call(0x021D7C38, a, b))
+        h.w(call(0x021D7C38, a % 8, b % 20))
+        h.w(call(0x021D7EF0, a))
+        h.w(call(0x021D7F00, b))
+        h.w(call(0x021D7F2C, c, d))
+        h.w(call(0x021D7F2C, c % 5, d))
+    return h.hex()
+
 # ---- calc: rng ------------------------------------------------------------------------------
 def rng():
     h = Fnv()
@@ -256,6 +342,53 @@ def rng():
     return h.hex()
 
 
+def rng_wide():
+    """Widened rng (V-0005): full-range rand / rand_range (incl. the 0..0xFFFFFFFF span, where
+    hi - lo + 1 wraps to 0 and the raw high word is used), sick ids, hit counts and percents."""
+    h = Fnv()
+    for seed in range(2000):
+        r = Rng(seed)
+        hi = r.next()
+        lo = r.next()
+        x = (hi << 32) | lo
+        e.wbytes(RNGCTX, struct.pack("<QQQ", x, LCG_MUL, LCG_ADD))
+        mons.clear()
+        mon = add_mon(WideMon(r), 0)
+        for _ in range(40):
+            op = r.next() % 10
+            a = r.next()
+            b = r.next()
+            if op == 0:
+                v = call(0x021D78AC, a if b % 4 else 0)
+            elif op == 1:
+                v = call(0x021D7B8C, a, b)
+            elif op == 2:
+                lo, hi = (0 if a % 3 == 0 else a), M - (b % 2)
+                v = call(0x021D7B8C, *((hi, lo) if b & 2 else (lo, hi)))
+            elif op == 3:
+                v = call(0x021D7BA4, a)
+            elif op == 4:
+                v = call(0x021D7D18, a)
+            elif op == 5:
+                e.w32(SCRATCH, 0xCCCCCCCC)
+                call(0x021D7DC0, a, mon, SCRATCH)
+                v = e.r32(SCRATCH)
+            elif op == 6:
+                e.w32(SCRATCH, b)
+                call(0x021D7C70, a & 0xFFFF, mon, SCRATCH)
+                v = e.r32(SCRATCH)
+            elif op == 7:
+                v = call(0x021D7AF0, a)
+            elif op == 8:
+                v = call(0x021D7930, a % 5)
+            else:
+                v = call(0x021D7D18, a % 9)
+            h.w(v)
+            x = struct.unpack("<Q", e.rbytes(RNGCTX, 8))[0]
+            h.w(x & M)
+            h.w(x >> 32)
+    return h.hex()
+
 # ---- calc: hooks ----------------------------------------------------------------------------
 def hooks():
     h = Fnv()
@@ -278,6 +411,32 @@ def hooks():
         h.w(call(0x021D7F60, v))
     return h.hex()
 
+
+def hooks_wide():
+    """Widened hooks (V-0005): full-u32 max HP (the & 0xFFFF of max_hp / 16, max_hp >= 2^31),
+    level (u32 wrap of max_level * 4 * mult), form (& 0xFFFF), divisor (incl. 0), weather and
+    badges (unsigned clamp)."""
+    h = Fnv()
+    for seed in range(5000):
+        r = Rng(seed)
+        mons.clear()
+        mon = add_mon(WideMon(r), 0)
+        x = r.next()
+        d = x % 40 if x % 3 == 0 else x
+        h.w(call(0x021D7B60, mon, d))
+        h.w(call(0x021D7B74, mon, d))
+        h.w(call(0x021D7BD4, mon, r.next()))
+        h.w(call(0x021D7BD4, mon, r.next() % 6))
+        h.w(call(0x021D7EB4, mon))
+        h.w(call(0x021D80A8, mon))
+        n = r.next() % 7
+        party["mons"] = [add_mon(WideMon(r), 1 + i) for i in range(n)]
+        h.w(call(0x021D7FF8, r.next(), PARTY))
+        v = r.next()
+        h.w(call(0x021D7F38, v))
+        h.w(call(0x021D7F4C, v))
+        h.w(call(0x021D7F60, v))
+    return h.hex()
 
 # ---- field (btl_field.c) ----------------------------------------------------------------------
 FIELD = 0x021F63F4
@@ -393,6 +552,9 @@ def field():
 
 
 if __name__ == "__main__":
-    which = sys.argv[1:] or ["poke_type", "sick_cont", "event_var", "pure", "rng", "hooks", "field"]
+    which = sys.argv[1:] or [
+        "poke_type", "sick_cont", "event_var", "event_var_wide", "pure", "pure_wide", "rng", "rng_wide",
+        "hooks", "hooks_wide", "field",
+    ]
     for name in which:
         print(name, globals()[name]())

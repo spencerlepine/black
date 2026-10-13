@@ -46,7 +46,8 @@ def expand(tokens):
 def scan_crate(crate):
     rows = []
     src = os.path.join(ROOT, "crates", crate, "src")
-    for dirpath, _, files in os.walk(src):
+    for dirpath, dirnames, files in os.walk(src):
+        dirnames.sort()  # walk order is filesystem-dependent; keep SYMBOLS.md identical on every host
         for fn in sorted(files):
             if not fn.endswith(".rs") or fn == "tests.rs":
                 continue
