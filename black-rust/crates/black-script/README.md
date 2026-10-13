@@ -13,6 +13,10 @@ Undecompiled callees go in `hooks` as traits (§4 porting pattern); pointers sta
 | `script_sys` | `script_sys.c` + `script_work.c`, overlay 10 0x02158804-0x021591FE, 0x02159960-0x02159B48, scrcmd ctx getters 0x0215A5CC-0x0215A5FA (90 fns) | `tools/rom-diff/specs/black-script/script_sys.spec` | `tools/check-fn.sh black-script script_sys` | **90/90 verified, area hash f4bb4f39ea9115b6** (F7) |
 | `scrcmd_core` | scrcmd core: overlay 10 0x02159204-0x0215995E, commands 0..48 + 4 helpers (53 fns) | `tools/rom-diff/specs/black-script/scrcmd_core.spec` | `tools/check-fn.sh black-script scrcmd_core` | 53 specced (F8-spec1, 747/747 insns covered), **5 smoke ports verified, area hash 8571c7a4a83df68b** |
 | `scrcmd_work` | `scrcmd_work.c`: overlay 10 0x0215A514-0x0215C63A minus the ctx getters and the Heap_Free veneer (130 fns, 86 command ids) | `tools/rom-diff/specs/black-script/scrcmd_work.spec` | `tools/check-fn.sh black-script scrcmd_work` | 130 specced (F8-spec1, 3451/3451 insns covered), **5 smoke ports verified, area hash 935b80ee13c13582** |
+| `scrcmd_fld` | overlay-21 field commands 0x021AE948-0x021B0083 (F1 row 21.42, first part; 97 fns, 80 command ids) | `tools/rom-diff/specs/black-script/scrcmd_fld.spec` | `tools/check-fn.sh black-script scrcmd_fld` | 97 specced (F8-spec2, 2360/2360 insns covered), **6 smoke ports verified, area hash 3a3b6fd5c3a80131** |
+| `scrcmd_talk` | overlay-21 message / yes-no / menu commands 0x021B0084-0x021B1667 (rows 21.42 tail, 21.43, 21.44 head; 70 fns, 33 ids) | `tools/rom-diff/specs/black-script/scrcmd_talk.spec` | `tools/check-fn.sh black-script scrcmd_talk` | 70 specced (F8-spec2, 2246/2246), **6 smoke ports verified, area hash 03a53d82f880c36f** |
+| `scrcmd_obj` | overlay-21 field-object / camera commands 0x021B1668-0x021B282F (row 21.44; 63 fns, 55 ids) | `tools/rom-diff/specs/black-script/scrcmd_obj.spec` | `tools/check-fn.sh black-script scrcmd_obj` | 63 specced (F8-spec2, 1809/1827: 021b1e80 18 behind an uninitialised-register path), **5 smoke ports verified, area hash 719910d5290037ee** |
+| `scrcmd_screen` | overlay-21 screen effects 0x021B2830-0x021B2FD7 (row 21.44 tail, 21.45 `scrcmd_screeneffects.c`, cmd 594; 36 fns, 29 ids) | `tools/rom-diff/specs/black-script/scrcmd_screen.spec` | `tools/check-fn.sh black-script scrcmd_screen` | 36 specced (F8-spec2, 773/773), **5 smoke ports verified, area hash 6e9a0a809f9d93e1** |
 | `scrcmd` | F8 index (doc only: which area holds which commands) | | | |
 
 Every function of both areas is specced with closure stubs (porting order needs no spec edit). The spec headers are the
@@ -68,7 +72,7 @@ Data flow per frame: the field's event loop calls the script event function (`sc
 | `ScriptHost::pad_held` | `FUN_020362DC()` | via `ScriptSysHooks::fun_020362dc`; read by commands 49 / 50 (verified) |
 | `ScriptHost::message_bank_open` | `FUN_0215A760(ctx, type, msg)` | via `ScriptSysHooks::fun_0215a760`; called by `vm_new` for ctx mode 0 (verified call site) |
 | `ScriptHost::menu_start` / `menu_result` | `0x0215A77C` begin / `0x0215A7F0` add item / `0x0215A864` open / `0x0215A954`, `0x0215A990` poll (scrcmd_work.c) | `MenuRequest` follows the builder (F8-spec1); called by overlay-21 menu commands (F8 job 21.42) |
-| `ScriptHost::message_*`, `yes_no_*`, `fade_*` | not in scrcmd core / scrcmd_work.c (overlay-21 scrcmd files; the talk window object is SCRCMD WORK +0xFC) | planned interface (request + poll, see `host.rs`); those F8 jobs fix the request fields |
+| `ScriptHost::message_*`, `play_se`, `yes_no_*`, `fade_*` | overlay-21 `scrcmd_talk` (talk / balloon / system windows, wait-button command 75, yes / no command 71) and `scrcmd_screen` (fade.c `0x0204E720` / `0x0204E804`, commands 179 / 180 and the field fades 429..440) | request structs and poll semantics from the F8-spec2 call sites (`host.rs` table); the overlay-21 window routines themselves are render side (UNVERIFIED meaning) |
 
 ## Symbols
 
@@ -99,6 +103,21 @@ ROM tables embedded in `script_sys/tables.rs` (copied from overlay 10 data): `CM
   job extends them (one method per callee address, as `ScriptSysHooks`). ROM tables the commands index are embedded
   (`scrcmd_core::COND` 0x021705DC, `scrcmd_work::TABLE_562` 0x02171160; tests compare them with the ROM build).
 
+## F8 areas (F8-spec2, overlay 21)
+
+* **scrcmd_fld** (0x021AE948..): trainer-eye / trainer-battle starts (127..148), field events and sounds (152..172, 584..607),
+  the WORDSET commands 76..99 / 538 / 539, name / string queries 181..189, warps / map changes 190..196 / 602, 3 init procs.
+* **scrcmd_talk** (0x021B0084..): yes / no (71), choice menus (173..178), the talk window (52..55, 63, 75), balloons over field
+  objects (60..62, 72, 73, 135), system / info windows (51, 56..59, 64..70, 74, 579), 6 init procs. F1 row 21.43 ("event_trainer_eye.c")
+  is not trainer-eye code: it is the balloon placement (camera projection + the ROM table 0x021D939C) of these commands.
+* **scrcmd_obj** (0x021B1668..): movements (100 / 101), field objects (102..126, 577, 583, 588, 603), the talk lock (`0x021B1B08`,
+  entered from the scrcmd_core thunk at 0x021598E4), and 384..410 / 608: wrappers of an overlay at 0x021F3xxx (outside the field set).
+* **scrcmd_screen** (0x021B2830..): fades (179 / 180, 429..440 / 433), field 3D objects (292..302), child events 293 / 303..306 / 436, 594.
+* The specs list every function with its command id(s) and a one-line role; every stub outside the area is `force` (overlay-21
+  addresses collide with battle `PORTED` entries). The smoke ports call their callees through `FldHooks` / `TalkHooks` /
+  `ObjHooks` / `ScreenHooks` (one method per callee address); globals 0x021EE71C (talk-lock flags) and 0x021EE720 (command 298) are
+  absolute addresses in the `Mem` window.
+
 ## Notes for porters
 
 * A `vm` function ported in `vm.rs` does not deactivate its stubs in `script_sys.spec` (stub deactivation is per area):
@@ -113,6 +132,9 @@ ROM tables embedded in `script_sys/tables.rs` (copied from overlay 10 data): `CM
 * `script_sys::wait_311` (0x021599A8): for a status `FUN_02012DD0` > 3 the original returns its caller's r4 (never set on
   that path; in the game the VM step's caller's r4, e.g. the SYS slot index). The port returns
   `WAIT_311_STALE_R4` = 0, the value the differential test enters with.
+* `scrcmd_obj::object_of` (0x021B1668): for id 0xF1 the original returns its caller's r6 (never set; command 100: the movement
+  offset); the port takes it as `stale_r6`, and the test never generates 0xF1. The same kind of uninitialised-register path:
+  0x021AE948 (r5 for a value other than 0 / 1) and 0x021B1E80 (r7 when no direction passes): not exercised (specs bound them).
 * `script_lookup` (0x02158CD0): an id inside a range's `lo` but past its `hi` calls the assertion hook `FUN_02034714`; in
   retail it returns, and the port (like the original) then uses the entry anyway. The test models the hook as noreturn,
   so that continuation is not covered.

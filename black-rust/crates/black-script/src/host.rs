@@ -4,60 +4,100 @@
 //! 21 directly. The rewrite keeps that code on the Bevy side (D3: UI is rewritten, not ported), so the ported command
 //! handlers (F8) call this trait instead. It follows the VM's own concurrency model:
 //!
-//! 1. a command handler (`fn(vm, ctx) -> 0 next / 1 yield`) issues a request (`*_start`), installs a wait callback with
-//!    `vm::wait` (`FUN_020113D0`) and yields 1;
+//! 1. a command handler (`fn(vm, ctx) -> 0 next / 1 yield`) issues a request (`*_start` / `*_open`), installs a wait
+//!    callback with `vm::wait` (`FUN_020113D0`) and yields 1 (or calls a child GMEVENT that does the waiting);
 //! 2. every frame `vm::step` (`FUN_02011298`) calls that callback, which polls the host (`*_done` / `*_result`) and
 //!    returns 1 once the request finished (the VM then runs the next command on the following frame);
 //! 3. results go back into script vars through `script_sys::cmd_var_addr` (`FUN_02159AE8`), as the original's handlers
 //!    do.
 //!
-//! So no method blocks, and the host never calls back into the VM. Mapping to the original (F8-spec1 read the scrcmd core
-//! 0x02159204.. and `scrcmd_work.c` 0x0215A514..; specs `scrcmd_core.spec` / `scrcmd_work.spec`):
+//! So no method blocks, and the host never calls back into the VM. Mapping to the original (F8-spec1: scrcmd core and
+//! `scrcmd_work.c`; F8-spec2: the overlay-21 areas `scrcmd_fld` / `scrcmd_talk` / `scrcmd_obj` / `scrcmd_screen`, specs in
+//! `tools/rom-diff/specs/black-script/`). "Verified" = the call sites and arguments are read from the code and the smoke port
+//! of the caller matches the ROM; the meaning of the overlay-21 window routines themselves (field_msgbg.c, 0x021901EC..,
+//! render side, G5 / U2) is inferred:
 //!
-//! | method | original | caller |
+//! | method | original | callers |
 //! |---|---|---|
-//! | `pad_held` | `FUN_020362DC()` (pad bits, NitroSDK `PAD_BUTTON_*` layout: A 1, B 2, .., X 0x400) | commands 49 / 50 (`script_sys::wait_pad_a` / `wait_pad_b`, verified); the menu wait `0x0215A990` tests 0x400 (X) |
-//! | `message_bank_open` | `FUN_0215A760(ctx, type, msg)`: ctx +0x14 = `MsgData_Create` (`0x02045B38(0, type, msg, heap)`), +0x18 = msg | `script_sys::vm_new` for ctx mode 0 (verified call site) |
-//! | `menu_start` | `0x0215A77C` (begin: x, y, cursor, 2 flag bytes, result var, WORDSET, message data) + `0x0215A7F0` per item (text msg, help msg or 0xFFFF, param) + `0x0215A864` (open the overlay-21 list menu `0x02190988`) | overlay-21 menu commands (calls from 0x021B018C..0x021B0388, F8 job 21.42) |
-//! | `menu_result` | `0x0215A954` (poll `0x021909E4`; result = the chosen item's param (UNVERIFIED: what the overlay-21 list returns), 0xFFFE cancel) / `0x0215A990` (same, X -> 0xFFFD) | the wait callbacks of those commands (written to the var at MENU +8) |
-//! | `message_*` | not in these ranges: the talk-window object is SCRCMD WORK +0xFC (`0x0215A614` / `0x0215A61C`), set by overlay-21 commands (0x021B0472..0x021B14B4) | F8 jobs 21.42 / 21.44 |
-//! | `yes_no_*` | not in these ranges (UNVERIFIED: overlay-21 scrcmd clusters) | F8 jobs 21.42 / 21.44 |
-//! | `fade_*` | not in these ranges (probably `21.45 scrcmd_screeneffects.c`, by name only) | F8 job 21.45 |
+//! | `pad_held` | `FUN_020362DC()` (pad bits, NitroSDK `PAD_BUTTON_*` layout: A 1, B 2, .., X 0x400) | commands 49 / 50 (`script_sys::wait_pad_a` / `wait_pad_b`), the menu wait `0x0215A990` (X), command 75 (`scrcmd_talk::wait_button`, A or B) |
+//! | `message_bank_open` | `FUN_0215A760(ctx, type, msg)`: ctx +0x14 = `MsgData_Create` (`0x02045B38(0, type, msg, heap)`), +0x18 = msg | `script_sys::vm_new` for ctx mode 0 |
+//! | `message_start` | talk window: `0x021B03E4` (open or reuse: `FUN_02190FA0(msgbg, msgdata, style)`) + `FUN_02191084(window, 0, 0, text)` (streamed, command 52) or `FUN_02191164` + `FUN_02191184` (put at once, command 53); system window: `FUN_02191558` + `FUN_021916A8` (commands 56 / 74); balloon: `0x021B0BAC` (`FUN_0219129C`, or `FUN_02191348` for the next page; commands 60 / 61 / 72 / 73 / 135) | `scrcmd_talk` |
+//! | `message_done` | `FUN_021910C0(window) == 1` (talk), `FUN_021916E0` (system), `FUN_02191388` (balloon, which also follows its object every frame: `0x021B0B08`) | the wait callbacks `0x021B04C0` / `0x021B0FF0` / `0x021B0CEC` |
+//! | `message_close` | talk `0x021B0480` (`FUN_02191008`), system `0x021B10A4` (`FUN_021915B4`), balloon `0x021B0A88` (`FUN_021912D8`, then polls `FUN_021912F8` until 1) / `0x021B0AB0` (`FUN_0219131C`, at once); command 63 closes every open one | commands 54 / 57 / 62 / 63, the init procs of mask bits 1..3 |
+//! | `message_cursor` | `FUN_02191134` (talk) / `FUN_02191794` (system) / `FUN_021914CC` (balloon), called every frame while command 75 waits | `scrcmd_talk::wait_button` |
+//! | `play_se` | `FUN_020061E4(se)` (main, 100 callers; UNVERIFIED: sound effect) | command 75 (0x547 on A / B), 126 (0x676), 166, 297 |
+//! | `yes_no_start` / `yes_no_result` | `FUN_02190BE4(msgbg, 0)` / `FUN_02190C78(menu)`: 0 yes, 2 open, other no; closed by `FUN_021909BC` | command 71: GMEVENT `0x021B0084` (`scrcmd_talk::yes_no_event`): 8 frames of delay (`0x0215A684` / `690`), then the menu; var = 0 yes / 1 no |
+//! | `menu_start` | `0x0215A77C` (begin: x, y, cursor, 2 flag bytes, result var, WORDSET, message data) + `0x0215A7F0` per item (text msg, help msg or 0xFFFF, param) + `0x0215A864` (open the overlay-21 list menu `0x02190988`) | commands 173 / 174 / 178 (begin; 173 without, 174 / 178 with the script's message data, 178 right-aligned), 175 (item), 176 / 177 (open + wait: GMEVENT `0x021B015C`, 8 frames of delay first) |
+//! | `menu_result` | `0x0215A954` (poll `0x021909E4`; result = the chosen item's param (UNVERIFIED: what the overlay-21 list returns), 0xFFFE cancel) / `0x0215A990` (same, X -> 0xFFFD) | the GMEVENT `0x021B015C` (176 and 177 both pass "no X") |
+//! | `fade_start` | `FUN_0204E720(mode, start, end, wait)` (fade.c) | command 179 (four u16 operands; `scrcmd_screen::cmd_fade`), the field fade task `0x021B2F18` (commands 429..440: `scrcmd_screen::field_fade_task`) |
+//! | `fade_done` | `FUN_0204E804() != 1` (fade.c "running" is 1) | command 180 (`scrcmd_screen::wait_fade`), the field fade task (then command 433 waits for its field-map flag `FUN_02189A24`) |
 //!
 //! Not host requests: command 3 (wait N frames) counts down in SCRCMD WORK +0x106 inside the VM (`0x0215A684` /
-//! `0x0215A690`); the movement wait `0x0215A6FC` polls overlay-21 movement objects (field side, F4b).
-//!
-//! The `message_*`, `yes_no_*` and `fade_*` methods and their request structs are still the planned interface, not
-//! ported behaviour: the F8 jobs that own those handlers adjust their fields. [`MenuRequest`] follows the menu builder
-//! above (UNVERIFIED meaning of the flag bytes).
+//! `0x0215A690`); the movement wait `0x0215A6FC` polls overlay-21 movement objects (field side, F4b); the info board
+//! (commands 64..66), the sized info window (58 / 59), the windows of commands 67 / 579 and 69 and the window icon of command
+//! 55 are further overlay-21 window kinds the F8 port job adds to [`MessageWindow`] when it ports them.
 //!
 //! Text is passed as message ids (bank, index) plus the script's WORDSET (`SW + 0x2C`, `black_text::wordset`), not as
-//! rendered strings: expansion and layout belong to `black-text` / the UI.
+//! rendered strings: the original expands the message into STRBUF 1 (`0x021B162C`: `FUN_02045CAC` + `FUN_0201F250`) right
+//! before printing, and that expansion belongs to `black-text`; layout and printing belong to the UI.
 
-/// A message window request (UNVERIFIED field set; the F8 jobs owning the message commands confirm it).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+/// Which message window a request is for (`scrcmd_talk`; the window object of every kind is SCRCMD WORK +0xFC).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MessageWindow {
+    /// The talk window (`0x021B03E4`, init-proc mask bit 1). `style` is `FUN_02190FA0`'s third argument: 1 for kind 1 (and
+    /// kind 0 when the SCRCMD WORK kind byte is 1 / 3 / 5), 0x13 otherwise (UNVERIFIED meaning: the frame type).
+    Talk { style: u8 },
+    /// A balloon over a field object (`0x021B0BAC`, bit 2): the object's OBJ id (0xFF = the player when the target is
+    /// missing) and the tail kind (`0x021B09EC`; placement from the ROM table 0x021D939C or projected, `0x021B0960`).
+    Balloon { object: u16, tail: u16 },
+    /// The system window (`0x021B1008`, bit 3): `kind` 0 (command 56) / 1 (command 74); style 1 or 0x13 by a script byte.
+    System { kind: u8, style: u8 },
+}
+
+/// Where the message text comes from.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MessageBank {
+    /// The script's own message data (`message_bank_open`; ctx +0x14). Balloons ask for it with bank 0x400.
+    Script,
+    /// Message file `n` of type 3 (`FUN_02045B38(0, 3, n, heap)`, loaded for the one message; balloon commands).
+    File(u16),
+}
+
+/// How the text is printed.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PrintMode {
+    /// Character by character; the command waits until [`ScriptHost::message_done`] (command 52, balloons, system window).
+    Streamed,
+    /// All at once, no wait (command 53: `FUN_02191184`).
+    Instant,
+}
+
+/// A message request (verified against the call sites in `scrcmd_talk`; see the module docs). Waiting for a key is a separate
+/// command (75), not part of the request.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MessageRequest {
-    /// Message bank (ARC 2/3 file, `SCRIPT_RANGES[..].msg` or the zone's bank).
-    pub bank: u16,
+    pub window: MessageWindow,
+    pub bank: MessageBank,
     /// Message index in the bank.
     pub index: u16,
     /// The script's WORDSET address (`SW + 0x2C`) for `{F000 ..}` tags.
     pub wordset: u32,
-    /// Wait for a key press at the end of the text (vs. leaving the window open for the next command).
-    pub wait_key: bool,
+    pub print: PrintMode,
 }
 
-/// A fade request (UNVERIFIED field set; the F8 job of `scrcmd_screeneffects.c` confirms it).
+/// A screen fade (`FUN_0204E720(mode, start, end, wait)`, fade.c; the four values of command 179 are u16 script operands).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct FadeRequest {
-    /// Fade out (to `color`) or in (from it).
-    pub out: bool,
-    /// Which screens: bit 0 top, bit 1 bottom.
-    pub screens: u8,
-    /// 0 black, 1 white.
-    pub color: u8,
-    /// Duration in frames.
-    pub frames: u16,
+    /// fade.c mode bits; the field fade uses 3 (to / from black, both screens) and 0xC (white, both screens), so bit 0 / 1 =
+    /// main / sub screen to black and bit 2 / 3 = to white (UNVERIFIED beyond those two values).
+    pub mode: u16,
+    /// Brightness at the start and the end (the field fade uses 0 and 16: its kinds 0 / 2, which also re-enable the field
+    /// display, go 16 -> 0 (in), kinds 1 / 3 go 0 -> 16 (out); UNVERIFIED for other values).
+    pub start: i16,
+    pub end: i16,
+    /// Speed (read from `FUN_0204E720`, UNVERIFIED in detail): < 0 = |wait| + 1 brightness steps per frame, >= 0 = one step
+    /// every `wait` frames (the field fade uses -1 and 4).
+    pub wait: i16,
 }
 
 /// One item of a choice menu (`0x0215A7F0(ctx, msg, help, param, ..)`).
@@ -82,7 +122,7 @@ pub struct MenuRequest {
     pub cursor: u16,
     /// The u8 at MENU +6 (passed to the list menu as its last argument; UNVERIFIED meaning).
     pub flag6: u8,
-    /// MENU +7 == 1.
+    /// MENU +7 == 1 (command 178).
     pub right_align: bool,
     pub items: Vec<MenuItem>,
 }
@@ -97,23 +137,32 @@ pub const MENU_X: u16 = 0xFFFD;
 pub trait ScriptHost {
     /// C: `FUN_020362DC()`: the pad bits of this frame in NitroSDK `PAD_BUTTON_*` order (A 1, B 2, SELECT 4, START 8,
     /// RIGHT 0x10, LEFT 0x20, UP 0x40, DOWN 0x80, R 0x100, L 0x200, X 0x400, Y 0x800): commands 49 / 50 test `& 3` /
-    /// `& 0xF3`, the menu wait `0x0215A990` tests 0x400. UNVERIFIED: held vs. newly pressed, and the touch bits.
+    /// `& 0xF3`, the menu wait `0x0215A990` tests 0x400, command 75 tests `& 3`. UNVERIFIED: held vs. newly pressed, and the
+    /// touch bits.
     fn pad_held(&mut self) -> u32;
 
     /// C: `FUN_0215A760(ctx, type, msg)`: the script's message bank (`type`, `msg` from `script_sys::script_lookup`)
     /// becomes the current one for its message commands (`MsgData_Create(0, type, msg, heap)` stored in the ctx).
     fn message_bank_open(&mut self, ctx: u32, ty: u32, msg: u32);
 
-    /// Open (or reuse) the talk window and start printing a message.
-    fn message_start(&mut self, req: MessageRequest);
-    /// The message started last finished printing (and, with `wait_key`, the key was pressed).
-    fn message_done(&mut self) -> bool;
-    /// Close the talk window.
-    fn message_close(&mut self);
+    /// Open (or, when that window is already open, clear and reuse) a message window and print a message into it.
+    fn message_start(&mut self, req: &MessageRequest);
+    /// The message started last in `window` finished printing (`FUN_021910C0` / `FUN_021916E0` / `FUN_02191388` == 1).
+    fn message_done(&mut self, window: MessageWindow) -> bool;
+    /// Close a message window (the balloon closes animated: the script polls [`ScriptHost::message_closed`]).
+    fn message_close(&mut self, window: MessageWindow);
+    /// The balloon close animation finished (`FUN_021912F8(window) == 1`); other windows close at once (true).
+    fn message_closed(&mut self, window: MessageWindow) -> bool;
+    /// One frame of "waiting for a key" in the open window (the "next" cursor; command 75).
+    fn message_cursor(&mut self, window: MessageWindow);
 
-    /// Show the yes/no menu.
+    /// C: `FUN_020061E4(se)`: play sound effect `se` (UNVERIFIED: the sound side of main; 0x547 = the message button).
+    fn play_se(&mut self, se: u16);
+
+    /// Show the yes / no menu (`FUN_02190BE4(msgbg, 0)`; the script delays it by 8 frames itself).
     fn yes_no_start(&mut self);
-    /// `Some(true)` = yes, `Some(false)` = no / cancelled, `None` = still open.
+    /// `Some(true)` = yes (`FUN_02190C78` 0), `Some(false)` = no (any value but 0 and 2), `None` = still open (2). The menu is
+    /// closed (`FUN_021909BC`) once a result was returned.
     fn yes_no_result(&mut self) -> Option<bool>;
 
     /// Open a choice menu (`0x0215A77C` .. `0x0215A864`).
@@ -122,8 +171,8 @@ pub trait ScriptHost {
     /// store it into the result var).
     fn menu_result(&mut self) -> Option<u16>;
 
-    /// Start a screen fade.
+    /// C: `FUN_0204E720`: start a screen fade.
     fn fade_start(&mut self, req: FadeRequest);
-    /// The last fade finished.
+    /// C: `FUN_0204E804() != 1`: no fade is running.
     fn fade_done(&mut self) -> bool;
 }

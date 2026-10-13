@@ -446,3 +446,17 @@ hubs, so any split only adds crossing calls). Closure stubs as in core4/B11 (eve
 callees and of all its in-area descendants); callees of ov96 all live in ARM9 main or other battle areas and
 are `force` stubs (several are already ported in black-battle, so the stub must stay active to keep the ROM
 side deterministic). `svflow.py ai1 --all --strict-callees` is clean.
+
+## F8-spec2 additions (black-script scrcmd_fld / scrcmd_talk / scrcmd_obj / scrcmd_screen)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-script/scrcmd_{fld,talk,obj,screen}.spec` (headers), on top of the F8-spec1 ones:
+
+* Every stub outside the block's area carries `force` (overlay-21 addresses share the range of battle `PORTED` entries; the four
+  areas and the overlay-10 ones call each other only through forced stubs, so each area is verified on its own).
+* A GMEVENT function `(event, seq, work)` is `arg u32, arg buf 0x10 (seq word, bounded with alt range), arg buf 0x40 (work)`; an
+  init proc of the table 0x021705F0 `(task, task + 0xC)` is `arg buf 0x100, arg buf 0x10`.
+* Code paths that read an uninitialised callee-saved register (the emulator leaves r4..r7 from the previous input, which a port
+  cannot reproduce) are kept out of the inputs (0x021AE948 value 0 / 1 only, 0x021B1668 never 0xF1, 0x021B1E80's stub always
+  answers nonzero); the header says so and the coverage report counts the lost instructions.
+* Overlay-21 BSS words the commands write (0x021EE71C, 0x021EE720) are `global`s; the ports address them absolutely.
