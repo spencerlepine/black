@@ -229,6 +229,31 @@ through the item handlers that call it (`tools/check-handlers.sh items --per-fun
 - `06898e54` (shared tail-called helper of side keys 0 and 1) is not a handler; `coverage.py
   effects --all` measures it from its callers' executed instructions. Coverage: 30 handlers +
   the helper, 100% of the reachable instructions with the hints (without hints 6 were below 70%).
+- B7b: `06898de0` (layer count) is no longer stubbed; it runs on a layer array that `run()`
+  seeds per input.
+
+### Side-effect adder / remover (B7b2)
+
+```sh
+/tmp/blk/venv/bin/python -I tools/rom-diff/handlers.py effect-sides             # suite hash
+/tmp/blk/venv/bin/python -I tools/rom-diff/handlers.py effect-sides --coverage  # 06898c10 / 06898d10 coverage
+cargo test -p black-battle effect_sides_match_rom                               # Rust side (recorded hash)
+```
+
+A direct suite (not a handler module, so not driven by `check-handlers.sh`) for `06898c10(side,
+key, cont)` and `06898d10(side, key)` (`handlers::effects::SideEffects::add` / `remove`). Nothing
+is stubbed: the registry getters, `EventSystem` add / set_work / remove (`021d6f0c`, `021d70dc`,
+`021d7040`) and their helpers run as real code (the Rust side uses the ported `EventSystem`).
+Per seed: a fresh event system with 0..11 or 0x80..0x84 random factors (the pool is sometimes
+exhausted, so `add` returns null) and 0..3 removes, a random 28-entry layer array (factor null or
+any pool slot, random cont / +8 word, layers 0..4 or noise), then 16 random adds / removes with
+side 0/1 (else 2..20) and key 0..13 (else 14..100). Hashed per call: op, args, result, the layer
+array, the whole event system. Calls whose entry is past the array (`side * 0xE0 + key * 0x10 >=
+0x1C0`): the original accesses memory past the BSS there, the Rust port panics; the ROM side
+detects the access with memory hooks (remover: any access, adder: a write), hashes `0xBAD` for
+the result and restores the event system and the overlay-95 region; the Rust side hashes `0xBAD`
+when the call panics (`catch_unwind`). Side 0 with key 14..27 addresses side 1 (in the array,
+compared normally). To record a new hash, run the Python side first and paste it into the test.
 
 ## Instruction coverage (Z18)
 

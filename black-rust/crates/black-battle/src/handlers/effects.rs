@@ -41,7 +41,10 @@
 //!   (BSS, past the end of `OVY_95`): `side * 0xE0 + key * 0x10`, per entry `{factor, cont, 0,
 //!   layers}`. The first add creates the factor (`owner = side`, work 6 = `cont`) with layers 1;
 //!   later adds while `layers < max layers` (third registry field) only raise `layers`; else it
-//!   returns 0. `06898de0(factor, side)` reads the layer count of the factor's key. The max
+//!   returns 0; the remover `06898d10(side, key)` removes the factor and clears factor, layers
+//!   and the low 3 bits of `cont` (ported as [`SideEffects::add`] / [`SideEffects::remove`],
+//!   B7b2, verified by `handlers.py effect-sides`). `06898de0(factor, side)` reads the layer
+//!   count of the factor's key. The max
 //!   layers are 1 except key 6 (3) and key 7 (2). Keys (from the move handlers that push HANDEX
 //!   0x19 with that key in `+4`): 0 Reflect (115), 1 Light Screen (113), 2 Safeguard (219),
 //!   3 Mist (54), 4 Tailwind (366), 5 Lucky Chant (381), 6 Spikes (191), 7 Toxic Spikes (390),
@@ -624,8 +627,139 @@ pub fn side_effect_layer_count<H: FlowHost>(
     b.host.side_effect_layers(side, key)
 }
 
-// Not ported yet: the side-effect adder 06898c10 and remover 06898d10 (reached from HANDEX procs,
-// not from these handlers), which write the layer array; see B7b2 in MIGRATION-AGENT.md.
+/// Factor type of side effects (`EventSystem::add` type argument of `06898c10`).
+pub const SIDE_EFFECT_TYPE: u32 = 2;
+/// Number of side-effect keys (entries of the registry at 0x0689D780, and entries per side of
+/// the layer array).
+pub const SIDE_KEYS: u32 = 14;
+/// Entries of the layer array (2 sides x 14 keys, 0x10 bytes each = the 0x1C0-byte BSS).
+pub const SIDE_ENTRIES: usize = 2 * SIDE_KEYS as usize;
+
+/// One 0x10-byte entry of the side-effect layer array at 0x0689E7E0 (overlay-95 BSS).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct SideEffectEntry {
+    /// +0x0: the event factor (a null pointer = `None`).
+    pub factor: Option<FactorId>,
+    /// +0x4: the `cont` word given to the adder (also stored as factor work 6); the remover
+    /// clears its low 3 bits.
+    pub cont: u32,
+    /// +0x8: zeroed by the adder when it creates the factor; not read by 06898c10/06898d10.
+    pub w8: u32,
+    /// +0xC: layer count (0 = inactive; read by `06898de0`).
+    pub layers: u32,
+}
+
+/// The side-effect registry 0x0689D780 (14 entries `(u32 key, getter, u32 max layers)`, stride
+/// 12), as the adder `06898c10` reads it.
+pub trait SideRegistry {
+    /// Entry `i` (0..14): `(key, max layers)` (the words at +0 and +8).
+    fn side_entry(&self, i: u32) -> (u32, u32);
+    /// C: the getter at +4 of entry `i`, `table = getter(&out)`: `(handler table, out word)`.
+    fn side_handlers(&self, i: u32) -> (u32, u32);
+}
+
+/// C: `0x0689E7E0`: the side-effect layer array (BSS of overlay 95, 0x1C0 bytes): entry
+/// `side * 0xE0 + key * 0x10`, i.e. index `side * 14 + key` (the original does not bound-check
+/// side or key, so e.g. side 0 key 14 is side 1 key 0).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct SideEffects {
+    pub entries: [SideEffectEntry; SIDE_ENTRIES],
+}
+
+impl SideEffects {
+    /// The entry the original addresses for `(side, key)` (`side * 0xE0 + key * 0x10`, 32-bit
+    /// wrapping). Panics where that lies outside the array (the original reads / writes past
+    /// it, into whatever follows the overlay-95 BSS); `who` names the caller.
+    fn entry_mut(&mut self, side: u32, key: u32, who: &str) -> &mut SideEffectEntry {
+        let off = side.wrapping_mul(0xE0).wrapping_add(key << 4);
+        let i = (off >> 4) as usize;
+        assert!(
+            i < SIDE_ENTRIES,
+            "{who}: side {side} key {key} is outside the layer array (the original accesses memory past it)"
+        );
+        &mut self.entries[i]
+    }
+
+    /// C: `sub_06898c10`: `(side, key, cont)`, overlay 95, reached through the thunks
+    /// `021C9818` (HANDEX proc 0x19 `021c97d0`) and `021CBFF8`. Adds a layer of side effect `key`
+    /// to `side`. Walks the 14 registry entries for one whose key equals `key` (32-bit
+    /// compare); none: returns `None`. If the entry's layer count is 0, gets the handler table from the registry getter, registers it
+    /// as a factor (`EventSystem::add(2, key, 2, 0, owner = side, table, count)`), stores `cont`
+    /// as its work 6 (`021d70dc`), sets the entry to `{factor, cont, 0, layers 1}` and returns the
+    /// factor. Else, while `layers < max layers` (registry +8), raises `layers` and returns the
+    /// stored factor; at the maximum it goes on with the next registry entry (so returns `None`).
+    /// The entry's layer word is read up front but used only on a key match, so a key that is
+    /// not in the registry returns `None` for any side.
+    ///
+    /// Deviations: panics when the matched entry lies outside the array (`side * 14 + key >=
+    /// 28`, i.e. side >= 2), where the original creates the factor and writes past the array.
+    /// When the factor pool is exhausted (`add` returns null) the original still writes `cont`
+    /// through the null factor (to address 0x34) and stores the null factor with layers 1; the
+    /// port stores `None` with layers 1 and skips that write.
+    pub fn add<R: SideRegistry + ?Sized>(
+        &mut self,
+        sys: &mut EventSystem,
+        reg: &R,
+        side: u32,
+        key: u32,
+        cont: u32,
+    ) -> Option<FactorId> {
+        for i in 0..SIDE_KEYS {
+            let (k, max_layers) = reg.side_entry(i);
+            if key != k {
+                continue;
+            }
+            let e = self.entry_mut(side, key, "06898c10");
+            if e.layers == 0 {
+                let (table, out) = reg.side_handlers(i);
+                let f = sys.add(
+                    SIDE_EFFECT_TYPE,
+                    key as u16,
+                    2,
+                    0,
+                    side as u8,
+                    table,
+                    out as u16,
+                );
+                if let Some(f) = f {
+                    sys.set_work(f, 6, cont);
+                }
+                *e = SideEffectEntry {
+                    factor: f,
+                    cont,
+                    w8: 0,
+                    layers: 1,
+                };
+                return f;
+            }
+            if e.layers < max_layers {
+                e.layers += 1;
+                return e.factor;
+            }
+        }
+        None
+    }
+
+    /// C: `sub_06898d10`: `(side, key)`, overlay 95, reached through the thunk `021c988c`
+    /// (HANDEX proc 0x1A `021c9828`). Ends side effect `key` on `side`. If the entry holds a
+    /// factor: removes it (`EventSystem::remove`, `021d7040`), clears the factor and layer
+    /// count, clears the low 3 bits of `cont` (the +8 word is kept) and returns true; else
+    /// returns false.
+    ///
+    /// Deviation: panics when the entry lies outside the array (`side * 14 + key >= 28`), where
+    /// the original reads (and, for a non-null word, writes) memory past it.
+    pub fn remove(&mut self, sys: &mut EventSystem, side: u32, key: u32) -> bool {
+        let e = self.entry_mut(side, key, "06898d10");
+        let Some(f) = e.factor else {
+            return false;
+        };
+        sys.remove(f);
+        e.factor = None;
+        e.layers = 0;
+        e.cont &= !7;
+        true
+    }
+}
 
 /// Ported overlay-95 effect handlers (regenerated by tools/sync-handlers.py).
 pub const PORTED: &[u32] = &[

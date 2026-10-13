@@ -943,6 +943,20 @@ pub struct EffectRegistry {
     /// For each handler (address without the Thumb bit): its kind and the keys using it, in
     /// registry order.
     pub by_fn: std::collections::HashMap<u32, (usize, Vec<u32>)>,
+    /// B7b2: the side registry (0x0689D780) entries `(key, handler table, getter out word, max
+    /// layers)`, the getter decoded as above.
+    pub side: Vec<(u32, u32, u32, u32)>,
+}
+
+impl crate::handlers::effects::SideRegistry for EffectRegistry {
+    fn side_entry(&self, i: u32) -> (u32, u32) {
+        let (k, _, _, max) = self.side[i as usize];
+        (k, max)
+    }
+    fn side_handlers(&self, i: u32) -> (u32, u32) {
+        let (_, table, n, _) = self.side[i as usize];
+        (table, n)
+    }
 }
 
 impl EffectRegistry {
@@ -963,6 +977,7 @@ impl EffectRegistry {
         let r32 = |a: u32| r16(a) | r16(a + 2) << 16;
         let mut keys: [Vec<u32>; 3] = Default::default();
         let mut by_fn: std::collections::HashMap<u32, (usize, Vec<u32>)> = Default::default();
+        let mut side = Vec::new();
         for (kind, &(reg, n, stride, _)) in FX_REGISTRIES.iter().enumerate() {
             for i in 0..n {
                 let (k, g) = (r32(reg + stride * i), r32(reg + stride * i + 4));
@@ -972,6 +987,9 @@ impl EffectRegistry {
                 assert!(mov >> 8 == 0x21 && str == 0x6001 && ldr >> 8 == 0x48 && bx == 0x4770);
                 let table = r32(((g + 8) & !3) + (ldr & 0xFF) * 4);
                 keys[kind].push(k);
+                if kind == 2 {
+                    side.push((k, table, mov & 0xFF, r32(reg + stride * i + 8)));
+                }
                 for j in 0..(mov & 0xFF) {
                     let f = r32(table + 8 * j + 4) & !1;
                     let ent = by_fn.entry(f).or_insert((kind, Vec::new()));
@@ -982,7 +1000,7 @@ impl EffectRegistry {
                 }
             }
         }
-        Some(EffectRegistry { keys, by_fn })
+        Some(EffectRegistry { keys, by_fn, side })
     }
 }
 

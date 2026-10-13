@@ -4,6 +4,7 @@ Usage: python -I handlers.py abilities
        python -I handlers.py items [--list]
        python -I handlers.py moves [--list]
        python -I handlers.py effects [--list]   (B7h: overlay-95 field / position / side effect handlers)
+       python -I handlers.py effect-sides [--coverage]   (B7b2: side-effect adder 06898c10 / remover 06898d10)
 """
 import os
 import re
@@ -1141,6 +1142,135 @@ def registration():
     return h.hex()
 
 
+FX_SIDE_ADD = 0x06898C10  # side-effect adder (side, key, cont) -> factor
+FX_SIDE_REMOVE = 0x06898D10  # side-effect remover (side, key) -> 0/1
+FX_SIDE_STATE = 0x0689E7E0  # overlay-95 BSS layer array: side * 0xE0 + key * 0x10, 0x1C0 bytes
+FX_SIDE_STATE_SIZE = 0x1C0
+FX_SIDE_MAPPED_END = 0x068A0000  # end of the 0x06898000 region bpp.Env maps (ov95 + BSS + slack)
+OOB = 0xBAD  # hashed instead of the result when the call left the layer array (Rust panics)
+
+
+def effect_sides(cov=None):
+    """B7b2: direct differential suite for the overlay-95 side-effect adder `06898c10(side, key,
+    cont)` and remover `06898d10(side, key)`; mirrors `effect_sides_match_rom` in
+    handlers/effects/tests.rs. Everything runs as real ROM code: the adder, the remover, the
+    registry getters (0x0689D780 entries), EventSystem add / set_work / remove (`021d6f0c`,
+    `021d70dc`, `021d7040`, reached through the `bx pc` veneers 06898cc0 / 06898cd0 / 06898d44)
+    and their helpers; there are no stubs. Per seed: a fresh EventSystem (`021d6eac`) with 0..11 or
+    0x80..0x84 random factors (so the pool is sometimes exhausted) and 0..3 random removes, a
+    random layer array (factor null or any pool slot, random cont / +8 word, layers 0..4 or 32-bit
+    noise), then 16 random adds / removes: side 0/1 (7 in 8) else 2..20, key 0..13 (7 in 8) else
+    14..100. Hashed per op: op, args, return (factor as pool index), the 28 entries, and the whole
+    EventSystem (pool, depth, head, count, free list).
+    Out of range: the entry is `state + side * 0xE0 + key * 0x10`, unchecked. When that lies past
+    the array the original reads (remover; adder only uses it on a key match) and writes (adder
+    with a registry key: it creates a factor and fills the out-of-array entry) memory outside the
+    array; the Rust port panics there instead. The ROM side detects it with memory hooks over
+    [state + 0x1C0, 0x068A0000) (remover: any access, adder: a write), hashes `OOB` instead of the
+    result and restores the event system + overlay-95 region, so both sides continue from the
+    same state. `cov` (dict) receives {fn: set of executed instruction addresses}."""
+    G = 0x021F3CB0
+    NONE = 0xFF
+    e = Emu()
+    e.uc.mem_map(0, 0x10000)  # an exhausted pool makes the adder write cont to null + 0x34
+    e.uc.mem_map(0x06898000, FX_SIDE_MAPPED_END - 0x06898000)
+    ovy95 = load_ovy95()
+    e.uc.mem_write(OVY95_BASE, ovy95)
+    from unicorn import UC_HOOK_CODE, UC_HOOK_MEM_READ, UC_HOOK_MEM_WRITE
+    acc = {"r": False, "w": False}
+    end = FX_SIDE_STATE + FX_SIDE_STATE_SIZE
+    e.uc.hook_add(UC_HOOK_MEM_READ, lambda uc, a, ad, sz, v, _: acc.__setitem__("r", True), None, end, FX_SIDE_MAPPED_END - 1)
+    e.uc.hook_add(UC_HOOK_MEM_WRITE, lambda uc, a, ad, sz, v, _: acc.__setitem__("w", True), None, end, FX_SIDE_MAPPED_END - 1)
+    if cov is not None:
+        for fn in (FX_SIDE_ADD, FX_SIDE_REMOVE):
+            cov.setdefault(fn, set())
+        e.uc.hook_add(UC_HOOK_CODE, lambda uc, a, sz, _: cov[FX_SIDE_ADD].add(a), None, FX_SIDE_ADD, 0x06898CB3)
+        e.uc.hook_add(UC_HOOK_CODE, lambda uc, a, sz, _: cov[FX_SIDE_REMOVE].add(a), None, FX_SIDE_REMOVE, 0x06898D3F)
+
+    def idx(p):
+        return NONE if p == 0 else (p - POOL) // 0x3C
+
+    regions = [(G, 0xC + 4 * 0x84), (POOL, 0x84 * 0x3C), (FX_SIDE_STATE, FX_SIDE_MAPPED_END - FX_SIDE_STATE), (0, 0x100)]
+    h = Fnv()
+    for seed in range(200):
+        r = Rng(0xC10 + seed)
+        e.wbytes(FX_SIDE_STATE, bytes(FX_SIDE_MAPPED_END - FX_SIDE_STATE))
+        e.call(0x021D6EAC)
+        n = r.next()
+        n = 0x80 + r.next() % 5 if n % 4 == 0 else r.next() % 12
+        for _ in range(n):
+            a, b, d = r.next(), r.next(), r.next()
+            e.call(0x021D6F0C, a % 8, b & 0xFFFF, (b >> 16) % 8, d & 0xFFFFFF,
+                   stack_args=((a >> 8) % 6, d, (a >> 24) % 5))
+        for _ in range(r.next() % 4):
+            e.call(0x021D7040, POOL + 0x3C * (r.next() % 0x84))
+        arr = bytearray(FX_SIDE_STATE_SIZE)
+        for i in range(28):
+            f = r.next()
+            fac = 0 if f % 3 == 0 else POOL + 0x3C * ((f >> 8) % 0x84)
+            cont, w8, lr = r.next(), r.next(), r.next()
+            layers = lr % 5 if lr % 8 else lr
+            struct.pack_into("<4I", arr, 0x10 * i, fac, cont, w8, layers)
+        e.wbytes(FX_SIDE_STATE, arr)
+        for _ in range(16):
+            o = int(r.next() % 5 < 3)  # 1 = add, 0 = remove
+            s, k = r.next(), r.next()
+            side = s % 2 if s % 8 else 2 + s % 19
+            key = k % 14 if k % 8 else 14 + k % 87
+            cont = r.next()
+            h.w(o); h.w(side); h.w(key)
+            off = (side * 0xE0 + key * 0x10) & M
+            snap = None
+            if off >= FX_SIDE_STATE_SIZE:
+                snap = [(a, e.rbytes(a, n)) for a, n in regions]
+            acc["r"] = acc["w"] = False
+            e.wbytes(0, bytes(0x100))
+            if o:
+                h.w(cont)
+                ret = idx(e.call(FX_SIDE_ADD, side, key, cont)[0])
+                oob = acc["w"]
+            else:
+                ret = e.call(FX_SIDE_REMOVE, side, key)[0]
+                oob = acc["r"] or acc["w"]
+            assert snap is not None or not (acc["r"] or acc["w"])
+            if oob:
+                h.w(OOB)
+                for a, b in snap:
+                    e.wbytes(a, b)
+            else:
+                h.w(ret)
+            for i in range(28):
+                w = struct.unpack_from("<4I", e.rbytes(FX_SIDE_STATE + 0x10 * i, 0x10))
+                h.w(idx(w[0])); h.w(w[1]); h.w(w[2]); h.w(w[3])
+            for i in range(0x84):
+                bb = e.rbytes(POOL + 0x3C * i, 0x3C)
+                w = struct.unpack("<15I", bb)
+                h.w(idx(w[0])); h.w(idx(w[1])); h.w(w[2]); h.w(w[3]); h.w(w[4]); h.w(w[5]); h.w(w[6])
+                for j in range(7):
+                    h.w(w[7 + j])
+                h.w(bb[0x38] | bb[0x39] << 8); h.b(bb[0x3A]); h.b(bb[0x3B])
+            h.w(e.r32(G)); h.w(idx(e.r32(G + 4))); h.w(e.r32(G + 8))
+            for i in range(0x84):
+                h.w(idx(e.r32(G + 0xC + 4 * i)))
+    return h.hex()
+
+
+def effect_sides_coverage():
+    """Instruction coverage of 06898c10 / 06898d10 under `effect_sides` (denominator: the Thumb
+    instructions statically reachable from the entry, as in coverage.py)."""
+    import coverage as C
+    cov = {}
+    effect_sides(cov)
+    ovy95 = load_ovy95()
+    out = []
+    for fn in (FX_SIDE_ADD, FX_SIDE_REMOVE):
+        reach, _ = C.reachable(ovy95, fn, set(), base=OVY95_BASE)
+        hit = reach & cov[fn]
+        miss = C.ranges(reach - hit, ovy95, fn, base=OVY95_BASE)
+        out.append("%08x %d/%d%s" % (fn, len(hit), len(reach), " missed " + ",".join(miss) if miss else ""))
+    return out
+
+
 def _chunk(arg):
     addrs, items, moves, effects = arg
     funcs = {}
@@ -1181,6 +1311,10 @@ if __name__ == "__main__":
             print(mod, skips())
         elif mod == "registration":
             print(mod, registration())
+        elif mod == "effect-sides" and "--coverage" in args0:
+            print("\n".join(effect_sides_coverage()))
+        elif mod == "effect-sides":
+            print(mod, effect_sides())
         elif mod == "movestubs":
             print(mod, move_stub_check())
         elif mod == "items" and "--list" in args0:
