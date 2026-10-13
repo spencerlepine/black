@@ -98,7 +98,6 @@ FX_REGISTRIES = [("field", 0x0689D650, 8, 8, 3), ("pos", 0x0689D6C8, 5, 8, 1), (
 FX_TYPE = {kind: ty for kind, _, _, _, ty in FX_REGISTRIES}
 FX_ALT_BD28 = 0x068993B0  # effect handler whose hint makes 0201bd28 answer 4 / 5 (the plain stub does so only for 1 key in 4, see wide_param)
 AB_ALT_89B8 = 0x021D89B8  # V-0015: Slow Start; its hint keys 021c804c on poke ^ wseed (by poke ID alone only poke 0 is found, with action kind 3)
-FX_STUB_DE0 = 0x06898DE0  # side-effect layer count (reads the 0x0689E7E0 state array): stubbed, tag 0x155
 
 
 def wide(x, salt, small, mask, signed=False):
@@ -232,10 +231,9 @@ class Host:
         st(0x020189D0, lambda em, pp, x, *a, sp: (self.log.extend([0x12E, pp, x]), M if mix(pp, x ^ 0x89D0) % 3 == 0 else mix(pp, x ^ 0x89D1) % 5)[1])
         if moves or effects:
             self.move_stubs()
-        if effects:
-            # B7h: callee of two side-effect handlers (tag 0x155; meaning guessed, see the Rust doc)
-            st(FX_STUB_DE0, self.layer_count)
-        elif items and not moves:
+        # B7b: 06898de0 (side-effect layer count) is no longer stubbed: it runs as real ROM code
+        # on the layer array at 0x0689E7E0, which run() seeds per input (see the effects branch).
+        if items and not moves:
             # also a move stub (tag 0x154); item handler 021dfe28 calls it
             st(0x021C7F4C, lambda em, wk, *a, sp: (self.log.append(0x154), mix(self.wseed, 0x7F4C) & 1)[1])
 
@@ -286,14 +284,6 @@ class Host:
         st(0x0689D0C8, self.last_move)
         st(0x0689D174, lambda em, ring, i, *a, sp: (lg([0x152, i]), mix(i, 0xD174) % 7 if i < 4 else 0)[1])
         st(0x0689D184, lambda em, ring, i, j, *a, sp: (lg([0x153, i, j]), (0x1F if mix(i, j ^ 0xD184) % 4 == 0 else mix(i, j ^ 0xD185) % 12) if i < 4 else 0x1F)[1])
-
-    def layer_count(self, e, fac, side, *_, sp):
-        """06898de0(factor, side): the layer count of the factor's side effect on `side`
-        (low byte of the 0x0689E7E0 + side * 0xE0 + key * 0x10 state word; 0 past key 14 / side 1).
-        Stub result: 0..3 from the sub ID (u16 at factor + 0x38) and the side."""
-        sub = struct.unpack("<H", e.rbytes(fac + 0x38, 2))[0]
-        self.log += [0x155, sub, side]
-        return mix(sub ^ (side << 16), 0x8DE0) % 4 if side < 2 else 0
 
     def party(self, e, wk, poke, *_, sp):
         """021c7fcc: the party of the Pokemon's side: a struct of mon pointers (+0..) and a count
@@ -758,6 +748,8 @@ def run(addrs, funcs=None, detail=None, items=False, hook=None, moves=False, cov
     if effects:
         ovy95 = load_ovy95()
         e.uc.mem_write(OVY95_BASE, ovy95)
+        # B7b: initialize the BSS layer array at 0x0689E7E0 (2 sides × 14 keys × 0x10 bytes)
+        e.uc.mem_write(0x0689E7E0, bytes(2 * 14 * 0x10))
         fx_by_fn, fx_keys, _, _ = fx_registry(ovy95)
     if cov is not None:
         from unicorn import UC_HOOK_CODE
@@ -891,6 +883,23 @@ def run(addrs, funcs=None, detail=None, items=False, hook=None, moves=False, cov
                 struct.pack_into("<H", fac, 0x38, key)
                 fac[0x3A] = owner
                 fac[0x3B] = 0x1F
+                # B7b: Seed the side-effect layer array at 0x0689E7E0 (2 sides × 14 keys × 0x10 bytes).
+                # Each entry: {factor: u32, cont: u32, _: u32, layers: u32}. Max layers per key
+                # (from registry at 0x0689D780 +8, stride 12): [1]*6 + [3, 2] + [1]*6.
+                MAX_LAYERS = [1, 1, 1, 1, 1, 1, 3, 2, 1, 1, 1, 1, 1, 1]
+                layers_arr = bytearray(2 * 14 * 0x10)
+                for side in range(2):
+                    for k in range(14):
+                        off = side * 14 * 0x10 + k * 0x10
+                        # factor (0 = not present, else a plausible factor ID 1..31)
+                        if r.next() % 3 != 0:
+                            factor_id = 1 + r.next() % 31
+                            struct.pack_into("<I", layers_arr, off, factor_id)
+                            struct.pack_into("<I", layers_arr, off + 4, r.next())  # cont
+                            # layers: 0..max (but if factor is present, at least 1)
+                            lyr = 1 + r.next() % MAX_LAYERS[k]
+                            struct.pack_into("<I", layers_arr, off + 0xC, lyr)
+                e.wbytes(0x0689E7E0, bytes(layers_arr))
             e.wbytes(POOL, fac)
             if moves:
                 apply_move_hint(e, addr, seed, me, mv)
@@ -1028,30 +1037,6 @@ def move_stub_check():
             for v in host.log:
                 h.w(v)
             host.log.clear()
-    return h.hex()
-
-
-def effect_stub_check():
-    """Self-test of the effects-mode stub (`06898de0`, tag 0x155): calls it through the emulator
-    with random arguments and hashes result and log. Mirrors `effect_stubs_match_python` in
-    handlers/effects/tests.rs."""
-    e = Emu()
-    e.uc.mem_map(0, 0x10000)
-    Env(e)
-    host = Host(e, False, False, True)
-    h = Fnv()
-    r = Rng(0xDE0)
-    for _ in range(200):
-        sub = r.next() % 0x20 if r.next() & 1 else r.next() & 0xFFFF
-        side = [0, 1, 2, r.next() % 8, r.next()][r.next() % 5]
-        e.wbytes(TMP, bytes(0x40))
-        e.wbytes(TMP + 0x38, struct.pack("<H", sub))
-        h.w(sub)
-        h.w(side)
-        h.w(e.call(FX_STUB_DE0, TMP, side)[0])
-        for v in host.log:
-            h.w(v)
-        host.log.clear()
     return h.hex()
 
 
@@ -1194,8 +1179,6 @@ if __name__ == "__main__":
     for mod in args or ["abilities"]:
         if mod == "skips":
             print(mod, skips())
-        elif mod == "effectstubs":
-            print(mod, effect_stub_check())
         elif mod == "registration":
             print(mod, registration())
         elif mod == "movestubs":

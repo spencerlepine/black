@@ -70,6 +70,9 @@ pub struct TestHost {
     /// `021c8234` uses 0x8236 (with 0x8234 it always agrees with `021c8374`); `021e6e38` ->
     /// `021c804c`'s result uses 0x804E (with 0x804D it is the opposite of `021c814c`).
     pub alt_hint: u32,
+    /// B7b: side-effect layer array (2 sides × 14 keys). Each entry: (factor, cont, _, layers).
+    /// Layout: side * 14 + key. Mirrors the ROM's 0x0689E7E0 array (side * 0xE0 + key * 0x10).
+    pub side_effects: [(u32, u32, u32, u32); 28],
 }
 
 impl BppEnv for TestHost {
@@ -529,14 +532,14 @@ impl FlowHost for TestHost {
         self.log.push(0x154);
         mix(self.wseed, 0x7F4C) & 1 != 0
     }
-    fn fun_06898de0(&mut self, sub_id: u32, side: u32) -> u32 {
-        self.log.extend([0x155, sub_id, side]);
-        if side < 2 {
-            mix(sub_id ^ (side << 16), 0x8DE0) % 4
-        } else {
-            0
+
+    fn side_effect_layers(&mut self, side: u32, key: u32) -> u32 {
+        if side >= 2 || key >= 14 {
+            return 0;
         }
+        self.side_effects[(side * 14 + key) as usize].3
     }
+
     fn msg_param(&mut self) -> &mut [u8] {
         &mut self.strparam
     }
@@ -1287,6 +1290,24 @@ fn run_suite(
                 } else {
                     0
                 };
+                // B7b: Seed the side-effect layer array identically to handlers.py. Max layers per
+                // key (from registry at 0x0689D780 +8, stride 12): [1]*6 + [3, 2] + [1]*6.
+                const MAX_LAYERS: [u32; 14] = [1, 1, 1, 1, 1, 1, 3, 2, 1, 1, 1, 1, 1, 1];
+                for side in 0..2 {
+                    for (k, &max_lyr) in MAX_LAYERS.iter().enumerate() {
+                        let idx = side * 14 + k;
+                        // factor (0 = not present, else a plausible factor ID 1..31)
+                        if !r.next().is_multiple_of(3) {
+                            let factor_id = 1 + r.next() % 31;
+                            let cont = r.next();
+                            // layers: 1..=max (if factor is present, at least 1)
+                            let lyr = 1 + r.next() % max_lyr;
+                            b.host.side_effects[idx] = (factor_id, cont, 0, lyr);
+                        } else {
+                            b.host.side_effects[idx] = (0, 0, 0, 0);
+                        }
+                    }
+                }
             }
             if items.is_none() && moves.is_none() && effects.is_none() {
                 b.host.alt_hint = if seed % 4 != 0 && addr == 0x021D_89B8 {

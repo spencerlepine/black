@@ -231,12 +231,12 @@ pub trait FlowHost: BppEnv {
     /// `wk +0x78A` (a once-per-battle flag): false if it was already set, else sets it and
     /// returns true.
     fn fun_021c7f4c(&mut self) -> bool;
-    /// C: `sub_06898de0(factor, side)` (overlay 95): the layer count of the side effect (factor
-    /// sub ID `sub_id`, a key 0..13) on `side` (0/1), from the state array at 0x0689E7E0
-    /// (`side * 0xE0 + key * 0x10 + 0xC`, low byte); 0 for a side >= 2 or a key >= 14. Written
-    /// by the side-effect adder `06898c10`. Meaning guessed; B7 ports the adder and replaces
-    /// this.
-    fn fun_06898de0(&mut self, sub_id: u32, side: u32) -> u32;
+
+    /// C: Side-effect layer array query (B7b). Returns the layer count for a side effect (0 if not
+    /// present). The layer array at 0x0689E7E0 is seeded by the harness before each handler call;
+    /// on the ROM side 06898de0 reads from real memory, on the Rust side this method reads from
+    /// TestHost's seeded array.
+    fn side_effect_layers(&mut self, side: u32, key: u32) -> u32;
 }
 
 /// The battle state handlers operate on.
