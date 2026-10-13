@@ -89,6 +89,7 @@ worktree copy (`/tmp/blk/wt-validate/validation/` is a stale snapshot; ignore it
 . /tmp/blk/out-validate/env.sh
 grep -rl 'pub const PORTED' $W/crates --include='*.rs' | sed "s|$W/crates/||" | sort
 # crates/black-battle/src/server_flow/<a>.rs  -> tools/check-svflow.sh <a>
+# crates/black-battle/src/server_flow/{ai1,server1..3}.rs and ai/*: svflow areas too (check-svflow.sh ai1 / server1 / server2 / server3), NOT check-fn (exits 2 'nothing is ported')
 # crates/black-battle/src/client/<a>.rs       -> tools/check-svflow.sh <a>
 # crates/black-battle/src/handlers/<m>.rs     -> tools/check-handlers.sh <m>
 # crates/<crate>/src/<a>.rs (anything else)   -> tools/check-fn.sh <crate> <a>
@@ -454,3 +455,5 @@ Other first lines: `BLOCKED: environment — <what>` (nothing reviewed; CSV unto
 - First run (R-20261012-2027, 2026-10-12): 4 commits, 15 areas, 11 min, 152k tokens on Sonnet, 2 low findings. Use that as the cost yardstick.
 
 - Finding IDs are global and never reused, even after old findings are deleted from VALIDATION.md: take the next number after the highest V-NNNN in `git log --all -p -- validation/VALIDATION.md` (V-0020 was the last as of 2026-10-13). Don't prune COMMITS.csv rows.
+- "Panics" marked UNVERIFIED in ports (`line_test` dir>3, task-state table, `enc_pokeset` slot-pick mode, acmd table indexes) trigger only on indices past ROM tables; don't file them unless the spec can actually draw such an input or the original handles the case (R-20261013-1528).
+- A full check-fn sweep takes ~30 min (`black-field/personal` ~280 s, `evolution` ~200 s); budget the 45-minute cap accordingly.
