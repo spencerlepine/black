@@ -4,16 +4,17 @@
 
 pub mod btl_setup;
 pub mod encounter;
+pub mod event_battle_head;
 pub mod event_work;
 pub mod events;
 pub mod fieldmap;
 pub mod fieldmap_event;
 pub mod fieldmap_func;
+pub mod fldmmdl;
 pub mod game_data;
 pub mod hooks;
 pub mod land_data_patch;
 pub mod map_matrix;
-pub mod mmdl;
 pub mod player;
 pub mod season;
 #[cfg(test)]

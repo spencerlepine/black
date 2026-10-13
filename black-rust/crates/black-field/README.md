@@ -213,3 +213,71 @@ every harness run; the callee ignores them).
 
 Deviations: none in behaviour. UNVERIFIED (inferred, not checked): the meaning of most callees (named by address), the
 attribute script predicates, the fly-point and var-table field names, `ATTRIBUTE_SCRIPTS` roles.
+
+## F4a-spec: fldmmdl (MMDL / MMDLSYS) and the head of event_battle.c (specs + smoke ports)
+
+Two spec areas under `tools/rom-diff/specs/black-field/` (set `field`), generated with closure stubs (a block lists the stubs
+of its callees and of the callees of all its in-area descendants and the shared fix lines; with every function of the area
+treated as ported all blocks run without a fault, stray write or unstubbed callee), so the area can be ported in any order.
+
+| area | original | range | specced | coverage (plain / closure) | smoke ports (hash) | area hash |
+|---|---|---|---|---|---|---|
+| `fldmmdl` | `fldmmdl.c` (ov10, F1 row 10.38) | `0x0216CC58..0x0216E62C` | 253 | 2754/2754 / 2754/2754 | `0216D4F0` `count` (b52340c0d3950151), `0216D55C` `status` (079615e140f95902), `0216D5F8` `dir_disp` (283f3ed95c1be88c), `0216D67C` `sys_of` (4250f23b5d2a364a), `0216DD1C` `next_in_use` (d7636c31b57a843c), `0216E4B0` `save_slot` (dde00de11a994a2a) | cf1b5fcbd5cf11de |
+| `event_battle_head` | `event_battle.c` head (ov10; counted in F1 row 10.38) | `0x0216E62C..0x0216E954` | 7 | 321/321 | `0216E680` `run_callback` (1125c1d4801c0dd1) | c22d9c951e9751cb |
+
+Coverage = instructions of the function body (Thumb walk from the entry, jump tables decoded) that the spec's inputs execute on
+the original, with the in-area callees stubbed (plain) or real (closure).
+
+Function list: the F1 index has 246 entries in the range, two of them fragments (`0216D3A4` tail of `0216D38C`, `0216E688`
+tail of `0216E680`). Labels, `bl`/`blx` targets of the whole field set and odd code pointers add 18 entries Ghidra misses
+(`0216CCCC`, `0216D38C`, `0216D4F8`, `0216D518`, `0216D524`, `0216D530`, `0216D538`, `0216D5A8`, `0216D5B0`, `0216D5FC`,
+`0216D678`, `0216D7C4`, `0216D7CC`, `0216D828`, `0216D860`, `0216D8B0`, `0216DA44`, `0216E3C8`) and two false ones (`0216DE22`
+inside `0216DDDC`: a data word in main `0x020A4804` decodes as a `bl` to it; `0216E166` inside `0216E160`: ARM-data hit), so the
+range holds 262 functions. 2 are veneers (`0216E3D0` -> `0216E3D8`, `0216E42C` -> event_work `check_flag` `020142E8`; callers
+stub the target): 260 specced. Render-only functions left out: none. The draw side is reached only through the draw-proc table
+(`+0x90`, FAKE callbacks in the specs) and overlay-21 callees (`fldmmdl_blact` `0219C5FC` / `0219C624` / `0219C630`,
+`fldmmdl_g3dobj` `0219D6B8` / `0219D6CC`, `fldmmdl_acmd` `02197C4C` / `02197C78`), all `force` stubs; the glue around them
+(`0216CD50` .. `0216CD88`, `0216D3B4`) is specced like the rest.
+
+### Records
+
+* MMDLSYS (0x48, `Heap_AllocDebug(heap, 0x48, 1, "fldmmdl.c", 0xC3)` in `0216CC58`): `+0x00 u32` flags (1 draw side on,
+  8, 0x10 task system + ARC 49 open, 0x20 all paused), `+0x04 u16` MMDL count, `+0x06 s16` objects in use, `+0x08 u16` heap,
+  `+0x0A u16` heap, `+0x0C u16` task priority (0x80), `+0x10` ARC 49 handle, `+0x14` ARC 48 handle (OBJ code data),
+  `+0x18` -> `MMDL[count]`, `+0x1C` task block, `+0x20` task system, `+0x24` draw (blact) system, `+0x28`, `+0x2C` -> save
+  positions, `+0x30`..`+0x3C` (create arguments), `+0x40` -> u16, `+0x44` -> OBJ code table (0x310 bytes: u16 count, u16
+  code[count] padded to a word, 0x1C-byte OBJ DATA records; ARC 58 member).
+* MMDL (0x100): `+0x00 u32` status (1 in use, 2 move proc ready, 8 dir locked, 0x800 alias, 0x2000 rail/3D move, ...),
+  `+0x04 u32` move bits (2 draw ready, 8 paused, 0x200/0x400 acmd set/done, ...), `+0x08 u16` OBJ id (0xFF = player),
+  `+0x0A u16` zone id, `+0x0C u16` OBJ code (0xA2..0xB1 from event vars 0x4020.., 0xB9 = size from the header), `+0x0E u16`
+  move code (move-proc table ROM `0x021D5E04`, 47 entries), `+0x10` event type, `+0x12` event flag, `+0x14` event id (0xFFFF =
+  alias), `+0x16` header dir, `+0x18` / `+0x1C` display dir / previous, `+0x1A` / `+0x1E` move dir / previous, `+0x20..+0x24`
+  params 0..2, `+0x26` acmd code, `+0x28` acmd seq, `+0x2A`, `+0x2C` / `+0x2E` move limits, `+0x30..+0x34` initial grid x/y/z,
+  `+0x36..+0x3A` old grid, `+0x3C..+0x40` current grid (s16), `+0x44` VecFx32 position, `+0x50` / `+0x5C` / `+0x68` VecFx32,
+  `+0x74`, `+0x78`, `+0x7C` / `+0x7D` u8 size, `+0x7E..+0x80` s8 offsets, `+0x84` task, `+0x88` -> MMDLSYS, `+0x8C` -> move
+  procs (init, move, delete, return), `+0x90` -> draw procs (init, draw, delete, push, pop, get; ROM `0x021D770C[OBJ data byte
+  3]`), `+0x94` / `+0xA4` / `+0xB4` / `+0xC4` work blocks (0x10 / 0x10 / 0x10 / 0x20), `+0xE4` OBJ DATA (0x1C). Grid =
+  `(fx >> 4) / 4096` (16 units per tile), position = `grid << 16` (+ 0x8000 for x/z: tile centre).
+* HEADER (0x24) = the 36-byte NPC record of ARC 125: `+0` OBJ id, `+2` OBJ code, `+4` move code, `+6` event type, `+8` event
+  flag, `+0xA` event id (script; 0xFFFF = alias), `+0xC` dir, `+0xE..+0x12` params 0..2, `+0x14` / `+0x16` move limit x / z,
+  `+0x18 u32` kind (0 grid, 1 rail), `+0x1C u16` grid x, `+0x1E u16` grid z, `+0x20` fx32 y.
+* SAVE POSITIONS (0x168 = 30 VecFx32, -1 = empty): slot of (zone, OBJ id) in ROM `0x02172A70` (`fldmmdl::SAVE_SLOTS`) for
+  OBJ codes 0x6D and 0x2003..0x2005.
+
+Cross-check with `nds_rom::map::events::Npc` (A6, 36-byte records): `id` = OBJ id (matches), `unk_02` = OBJ code (sprite),
+`unk_04[24]` = move code, event type, event flag, event id (script), dir, params 0..2, move limits x / z, and the u32 kind at
+record +0x18; `x` = grid x (matches), `y` is the grid **z** (the horizontal row; the height is separate), `unk_20` = fx32 height
+y (`n << 16`; e.g. 0x30000 = 3 tiles up). For kind 1 (rail, 40 of 2257 records in ARC 125) `x`/`y`/`unk_20` are rail
+coordinates read by `021642F8` (not decoded). nds-rom is unchanged (reported to the coordinator).
+
+### Spec conventions (these two areas)
+
+* The `fldmmdl` arena is the `work` image: MMDLSYS work+0, MMDL[0..7] work+0x100.. (count drawn 0..8), OBJ code table
+  work+0x1100, save positions work+0x1480, headers work+0x1600, scratch work+0x1800, FAKE move / draw proc tables work+0x1900 /
+  work+0x1920 (callbacks 0x02EE0011.. / 0x02EE0051.., nullable). `0216E400` / `0216E40C` (ROM proc-table lookups) and
+  `0216D8AC` are `force` stubs in their callers (the ports call them through the hooks).
+* The MMDL iterator `0216DD1C` is stubbed `seq ret=pick:0/1` with `outp:work:0x100:1` (MMDL 0); the out-pointer kind
+  `outp:work:OFS:N` is new (F4a-spec, mirrored in `svflow.py` and `black-fndiff`).
+* Create paths (`0216CDC4` and its callers) keep MMDL 0 free (`0216CEAC` / `0216CEE4`: all eight) so the first-free search
+  never returns null.
+* `event_battle_head` blocks are `nowork` with `arg buf 0x100` arenas; every callee is a `force` stub.

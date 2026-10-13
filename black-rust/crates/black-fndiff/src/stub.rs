@@ -1,6 +1,6 @@
 //! The stub model for unported callees (same as `make_stub` in tools/rom-diff/svflow.py).
 
-use crate::spec::{ret_value, StubSpec, BUF_BASE, BUF_STRIDE};
+use crate::spec::{ret_value, StubSpec, BUF_BASE, BUF_STRIDE, WORK_BASE};
 use crate::{mix, num};
 
 /// Unwind payload of a `noreturn` stub: the original never comes back from a fatal routine, so
@@ -156,18 +156,18 @@ impl StubEnv {
             if let Arg::Out(b) = a {
                 if let Some(p) = k.strip_prefix("outp:") {
                     // `outp:K:OFS:N` (B12-spec): the out word is BUF_BASE + K * BUF_STRIDE + OFS
-                    // + 4 * (mix(mix(acc, key + 0x1000 + 0x100 * (i + 1)), 0xC0DE) % N)
+                    // + 4 * (mix(mix(acc, key + 0x1000 + 0x100 * (i + 1)), 0xC0DE) % N);
+                    // `outp:work:OFS:N` (F4a-spec): the same inside the work image (WORK_BASE + OFS + ..)
                     let mut it = p.split(':');
-                    let (kk, ofs, n) = (
-                        num(it.next().unwrap()),
-                        num(it.next().unwrap()),
-                        num(it.next().unwrap()),
-                    );
+                    let kk = it.next().unwrap();
+                    let base = if kk == "work" {
+                        WORK_BASE
+                    } else {
+                        BUF_BASE.wrapping_add(num(kk).wrapping_mul(BUF_STRIDE))
+                    };
+                    let (ofs, n) = (num(it.next().unwrap()), num(it.next().unwrap()));
                     let h = mix(mix(acc, key + 0x1000 + 0x100 * (i as u32 + 1)), 0xC0DE);
-                    let v = BUF_BASE
-                        .wrapping_add(kk.wrapping_mul(BUF_STRIDE))
-                        .wrapping_add(ofs)
-                        .wrapping_add(4 * (h % n));
+                    let v = base.wrapping_add(ofs).wrapping_add(4 * (h % n));
                     b.copy_from_slice(&v.to_le_bytes());
                     continue;
                 }
@@ -395,5 +395,18 @@ mod tests {
         let mut e = StubEnv::new(vec![spec("u16", &["v", "outp:2:0x10:5"], false)], 0x1234);
         e.call(0x021B_B798, &mut [Arg::V(0), Arg::Out(&mut out)]);
         assert_eq!(u32::from_le_bytes(out), 0x02E3_0020);
+    }
+
+    /// `outp:work:OFS:N` (F4a-spec): the out word is an address inside the work image; vectors computed
+    /// with tools/rom-diff/svflow.py (`WORK`, `mix`), salt 0x1234, no `seq`.
+    #[test]
+    fn outp_work_writes_an_address_inside_the_work_image() {
+        let mut e = StubEnv::new(vec![spec("u16", &["outp:work:0x100:8"], false)], 0x1234);
+        let mut out = [0u8; 4];
+        e.call(0x021B_B798, &mut [Arg::Out(&mut out)]);
+        assert_eq!(u32::from_le_bytes(out), 0x02E0_0114);
+        let mut e = StubEnv::new(vec![spec("u16", &["v", "outp:work:0x20:5"], false)], 0x1234);
+        e.call(0x021B_B798, &mut [Arg::V(0), Arg::Out(&mut out)]);
+        assert_eq!(u32::from_le_bytes(out), 0x02E0_0030);
     }
 }

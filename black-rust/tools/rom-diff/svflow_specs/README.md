@@ -460,3 +460,19 @@ No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec te
   cannot reproduce) are kept out of the inputs (0x021AE948 value 0 / 1 only, 0x021B1668 never 0xF1, 0x021B1E80's stub always
   answers nonzero); the header says so and the coverage report counts the lost instructions.
 * Overlay-21 BSS words the commands write (0x021EE71C, 0x021EE720) are `global`s; the ports address them absolutely.
+
+## F4a-spec additions (black-field fldmmdl / event_battle_head)
+
+New syntax only; no existing spec text or hash changes. Mirrored in `svflow.py` (`make_stub`) and `black-fndiff` (`stub.rs`, parity
+vector `outp_work_writes_an_address_inside_the_work_image`, computed with `svflow.py`).
+
+* Stub argument kind `outp:work:OFS:N`: like `outp:K:OFS:N`, but the address is inside the work image
+  (`0x02E00000 + OFS + 4 * (mix(mix(acc, key + 0x1000 + 0x100 * (argpos + 1)), 0xC0DE) % N)`). For an iterator whose out
+  parameter is a pointer to an object inside the work (`0216DD1C(sys, &mmdl, &index)`, stubbed
+  `seq ret=pick:0/1 args=v,outp:work:0x100:1,p` in `fldmmdl.spec`).
+
+Conventions of `specs/black-field/{fldmmdl,event_battle_head}.spec` (headers): closure stubs as in core4 (checked with every
+function of the area treated as ported: no fault, stray write or unstubbed callee); in-area getters whose answer callers compare
+(counts, OBJ id / code, move code, flag tests) are stubbed with `pick:` over the interesting values; ROM-table lookups that hand out
+function tables (`0216E400` / `0216E40C`) are `force` stubs returning FAKE tables in the work image; out-of-area callees are
+`force` stubs.

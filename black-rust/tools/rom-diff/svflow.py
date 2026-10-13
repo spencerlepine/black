@@ -408,8 +408,8 @@ def make_stub(st, ctx):
                     _, n, m = k.split(":")
                     outs.append((raw[i], int(n, 0), [int(x, 0) & 0xFF for x in m.split("/")], 0x100 * (i + 1)))
             elif k.startswith("outp:"):  # outp:K:OFS:N, B12-spec: the out word is an address inside pointer argument K
-                _, kk, ofs, n = k.split(":")
-                outps.append((raw[i], int(kk, 0), int(ofs, 0), int(n, 0), 0x100 * (i + 1)))
+                _, kk, ofs, n = k.split(":")  # F4a-spec: K = `work` -> the address is inside the work image
+                outps.append((raw[i], kk if kk == "work" else int(kk, 0), int(ofs, 0), int(n, 0), 0x100 * (i + 1)))
         ctx.log += [st.addr] + vals + extra
         if st.noreturn:
             ctx.halted = st.addr
@@ -430,7 +430,8 @@ def make_stub(st, ctx):
                 data = bytes(mix(acc, key + 0x1000 + j) & 0xFF for j in range(n))
             em.wbytes(ptr, data)
         for ptr, kk, ofs, n, salt in outps:  # B12-spec: base(K) + OFS + 4 * (mix(mix(acc, key + 0x1000 + salt), 0xC0DE) % N)
-            em.wbytes(ptr, struct.pack("<I", (Runner.buf_addr(kk) + ofs + 4 * (mix(mix(acc, key + 0x1000 + salt), 0xC0DE) % n)) & M))
+            base = WORK if kk == "work" else Runner.buf_addr(kk)
+            em.wbytes(ptr, struct.pack("<I", (base + ofs + 4 * (mix(mix(acc, key + 0x1000 + salt), 0xC0DE) % n)) & M))
         if st.ret.startswith("seqptr:"):  # P4: `seqptr:argK:OFS:STEP` = base(K) + OFS + n * STEP, n = this stub's 0-based call
             # index in the run (a bump allocator: every call gets its own disjoint block; the value never depends on acc)
             _, kk, ofs, step = st.ret.split(":")
