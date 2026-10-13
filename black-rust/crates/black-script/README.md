@@ -17,11 +17,18 @@ Undecompiled callees go in `hooks` as traits (§4 porting pattern); pointers sta
 | `scrcmd_talk` | overlay-21 message / yes-no / menu commands 0x021B0084-0x021B1667 (rows 21.42 tail, 21.43, 21.44 head; 70 fns, 33 ids) | `tools/rom-diff/specs/black-script/scrcmd_talk.spec` | `tools/check-fn.sh black-script scrcmd_talk` | **70/70 verified, area hash f52686b3e04f16d2** (F8b; F8-spec2 spec, 2246/2246 insns covered) |
 | `scrcmd_obj` | overlay-21 field-object / camera commands 0x021B1668-0x021B282F (row 21.44; 63 fns, 55 ids) | `tools/rom-diff/specs/black-script/scrcmd_obj.spec` | `tools/check-fn.sh black-script scrcmd_obj` | 63 specced (F8-spec2, 1809/1827: 021b1e80 18 behind an uninitialised-register path), **5 smoke ports verified, area hash 719910d5290037ee** |
 | `scrcmd_screen` | overlay-21 screen effects 0x021B2830-0x021B2FD7 (row 21.44 tail, 21.45 `scrcmd_screeneffects.c`, cmd 594; 36 fns, 29 ids) | `tools/rom-diff/specs/black-script/scrcmd_screen.spec` | `tools/check-fn.sh black-script scrcmd_screen` | **36/36 verified, area hash a8af20a1036b361b** (F8b; F8-spec2 spec, 773/773 insns covered) |
+
+| `scrcmd_fld` | overlay-21 field commands 0x021AE948-0x021B0083 (F1 row 21.42, first part; 97 fns, 80 command ids) | `tools/rom-diff/specs/black-script/scrcmd_fld.spec` | `tools/check-fn.sh black-script scrcmd_fld` | **97/97 verified, area hash c4d23e2d7aaf61b2** (F8c; F8-spec2 spec, 2360/2360 insns covered) |
+| `scrcmd_talk` | overlay-21 message / yes-no / menu commands 0x021B0084-0x021B1667 (rows 21.42 tail, 21.43, 21.44 head; 70 fns, 33 ids) | `tools/rom-diff/specs/black-script/scrcmd_talk.spec` | `tools/check-fn.sh black-script scrcmd_talk` | 70 specced (F8-spec2, 2246/2246), **6 smoke ports verified, area hash 03a53d82f880c36f** |
+| `scrcmd_obj` | overlay-21 field-object / camera commands 0x021B1668-0x021B282F (row 21.44; 63 fns, 55 ids) | `tools/rom-diff/specs/black-script/scrcmd_obj.spec` | `tools/check-fn.sh black-script scrcmd_obj` | **63/63 verified, area hash c450ae3e75c7410b** (F8c; F8-spec2 spec, 1809/1827: 021b1e80 18 behind an uninitialised-register path) |
+| `scrcmd_screen` | overlay-21 screen effects 0x021B2830-0x021B2FD7 (row 21.44 tail, 21.45 `scrcmd_screeneffects.c`, cmd 594; 36 fns, 29 ids) | `tools/rom-diff/specs/black-script/scrcmd_screen.spec` | `tools/check-fn.sh black-script scrcmd_screen` | 36 specced (F8-spec2, 773/773), **5 smoke ports verified, area hash 6e9a0a809f9d93e1** |
 | `scrcmd` | F8 index (doc only: which area holds which commands) | | | |
 
 | `scrcmd_core` | scrcmd core: overlay 10 0x02159204-0x0215995E, commands 0..48 + 4 helpers (53 fns) | `tools/rom-diff/specs/black-script/scrcmd_core.spec` | `tools/check-fn.sh black-script scrcmd_core` | **53/53 verified, area hash 3467bfc999c8890b** (F8a; F8-spec1 spec, 747/747 insns covered) |
 | `scrcmd_work` | `scrcmd_work.c`: overlay 10 0x0215A514-0x0215C63A minus the ctx getters and the Heap_Free veneer (130 fns, 86 command ids) | `tools/rom-diff/specs/black-script/scrcmd_work.spec` | `tools/check-fn.sh black-script scrcmd_work` | **130/130 verified, area hash d7e9a9ae52796e75** (F8a; F8-spec1 spec, 3451/3451 insns covered) |
 | `scrcmd` | F8 index + the command-id -> handler table of the ported commands (`commands`, `handler`, `dispatch`, `call_wait`) | | `cargo test -p black-script scrcmd` (ids unique, every ported id dispatches) | 200 ids (49 core, 86 work, 33 talk, 29 screen, 3 script_sys) |
+
+| `scrcmd` | F8 index + the command-id -> handler table of the ported commands (`commands`, `handler`, `dispatch`, `call_wait`) | | `cargo test -p black-script scrcmd` (ids unique, every ported id dispatches) | 273 ids (49 core, 86 work, 80 fld, 55 obj, 3 script_sys) |
 
 Every function of both areas is specced with closure stubs (porting order needs no spec edit). The spec headers are the
 reference for the layouts; summary:
@@ -122,10 +129,16 @@ ROM tables embedded in `script_sys/tables.rs` (copied from overlay 10 data): `CM
 49 / 50 / 311; each area test checks its words against the ROM table 0x0217062C). `scrcmd::handler(id)` looks one up. A
 game-side `CommandDispatch` implementation is:
 
+`scrcmd::commands()` is the table of every ported command id -> handler address (273 ids: `scrcmd_core::COMMANDS` 0..48,
+`scrcmd_work::COMMANDS` (86 ids), `scrcmd_fld::COMMANDS` (80, F8c), `scrcmd_obj::COMMANDS` (55, F8c),
+`scrcmd::SCRIPT_SYS_COMMANDS` 49 / 50 / 311; each area test checks its words against the ROM table 0x0217062C). `scrcmd::handler(id)` looks one up. A game-side `CommandDispatch` implementation is:
+
 ```rust,ignore
 impl CommandDispatch for Game {
     fn command(&mut self, handler: u32, vm: u32, ctx: u32) -> u32 {
         scrcmd::dispatch(self, handler, vm, ctx)                       // core, work, talk, screen ids
+
+        scrcmd::dispatch(self, handler, vm, ctx)                       // core 0..48, work, fld, obj
             .or_else(|| script_sys::call_known(self, handler, &[vm, ctx])) // 49 / 50 / 311
             .unwrap_or_else(|| todo!("command handler {handler:#x}: unported F8 job"))
     }
@@ -139,6 +152,12 @@ system), `scrcmd::call_init_proc` (init procs `0x021B0631` .. `0x021B1605` = `sc
 `ScriptSysHooks::call_init_proc`) and `scrcmd::call_task` (the field fade task `0x021B2F19`, added with `FUN_02030DA8`).
 Commands of the remaining F8 jobs (scrcmd_fld, scrcmd_obj, `scrcmd_proc.c`, ...) are not in the table yet; `scrcmd_core`
 command 46 forwards to the overlay-21 handler `0x021B1BB8` through `CoreHooks::fun_021b1bb8`.
+
+and `VmHooks::call_wait` likewise tries `scrcmd::call_wait` then `script_sys::call_known`. Commands of the remaining F8 jobs
+(overlay-21 message / yes-no / menu / fade files, `scrcmd_proc.c`, ...) are not in the table yet; `scrcmd_core` command 46
+forwards to the overlay-21 handler `0x021B1BB8` through `CoreHooks::fun_021b1bb8` (ported: `scrcmd_obj::cmd_46_body`;
+command 47's `CoreHooks::fun_021b1be8` is `scrcmd_obj::release_objects`), and `ScriptSysHooks::call_init_proc` routes the
+init procs of mask bits 10 / 12 / 13 to `scrcmd_fld::init_proc`.
 
 ## F8 areas (F8-spec2, overlay 21)
 
@@ -176,6 +195,22 @@ command 46 forwards to the overlay-21 handler `0x021B1BB8` through `CoreHooks::f
   `host.rs`; `MessageWindow` gained the info board, sized info window and the windows of commands 67 / 579 and 69 from their
   call sites).
 
+### F8c port (scrcmd_fld / scrcmd_obj)
+
+* Both areas are ported completely: `FldHooks: CoreHooks` / `ObjHooks: CoreHooks` (the vm.c operand readers, ctx getters,
+  `0215897C` and the GMEVENT / GAMEDATA getters are shared with the scrcmd core; one method per other callee address).
+  fldmmdl (F4a) and the overlay at 0x021F3xxx (commands 384..410 / 608) stay hooks by address, as the specs stub them.
+* Stack records the original passes are byte arrays: VecFx32 positions `[u8; 12]` (warps 190..196 / 602, command 193's
+  player / event-data positions, the object positions of 123 / 583), the 4-byte sound record of the command 171 event, the
+  8-byte records of commands 119 / 124 / 125. ROM tables embedded and compared with the build by the tests:
+  `scrcmd_obj::{DIRS_119 0x021D93FC, RECORDS_119 0x021D9404..0x021D941C, VEC_583 0x021D9424}`.
+* The WORDSET thunks (commands 77 / 79 / 87 / 88 / 97 / 98: `ldr r2, =fn; ldr r3, =body; bx r3`) are the shared bodies
+  `wordset_body_77` / `_87` / `_97` with the routine address; the `blx` goes through `FldHooks::call_wordset_fn(f, ..)`.
+* Spec-comment errors found: 021af4e8 (command 171's event) passes `(a, b, ..)` to `FUN_02006984` in both modes (the header says
+  `(b, a, ..)` for mode != 0); 021b1c2c (command 112): the first var gets the OBJ id, the second the found flag (the header says
+  "found, id"). Command 603 (0x021B1DEC) is a byte-identical copy of command 118. Command 193 passes its second position record
+  uninitialised when `FUN_0216282C` finds nothing (the port passes zeros, the Z19 test state).
+
 ## Notes for porters
 
 * A `vm` function ported in `vm.rs` does not deactivate its stubs in `script_sys.spec` (stub deactivation is per area):
@@ -206,6 +241,12 @@ command 46 forwards to the overlay-21 handler `0x021B1BB8` through `CoreHooks::f
 * `scrcmd_obj::object_of` (0x021B1668): for id 0xF1 the original returns its caller's r6 (never set; command 100: the movement
   offset); the port takes it as `stale_r6`, and the test never generates 0xF1. The same kind of uninitialised-register path:
   0x021AE948 (r5 for a value other than 0 / 1) and 0x021B1E80 (r7 when no direction passes): not exercised (specs bound them).
+
+* `scrcmd_obj::object_of` (0x021B1668): for id 0xF1 the original returns its caller's r6 (never set; its only caller, command
+  100, has the movement offset there); the port takes it as `stale_r6` and `cmd_100` passes the offset (verified: the command
+  100 block generates 0xF1 and runs 0x021B1668 as real code). The same kind of uninitialised-register path: `scrcmd_fld::cmd_128`
+  (0x021AE948, r5 for a value other than 0 / 1) and `scrcmd_obj::cmd_119` (0x021B1E80, r7 when no direction passes) take
+  `stale_r5` / `stale_r7`; their `dispatch` passes 0 (the Z19 entry value); not exercised (the specs bound the paths away).
 * `script_lookup` (0x02158CD0): an id inside a range's `lo` but past its `hi` calls the assertion hook `FUN_02034714`; in
   retail it returns, and the port (like the original) then uses the entry anyway. The test models the hook as noreturn,
   so that continuation is not covered.
