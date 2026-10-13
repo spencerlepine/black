@@ -265,12 +265,8 @@ pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>])
         0x0201_C1F4 => (env.arc.move_record(val(args, 0))[4] == 0x65) as u32,
         0x0201_C284 => (env.arc.move_record(val(args, 0))[0xE] == 6) as u32,
         // 0201C020(move): number of stat changes; 0201C0BC(move, i, &amount): stat i, amount
-        0x0201_C020 => {
-            use crate::server_flow::host::Unported;
-            env.unp().move_fun_0201c020(val(args, 0))
-        }
+        0x0201_C020 => env.unp().move_fun_0201c020(val(args, 0)),
         0x0201_C0BC => {
-            use crate::server_flow::host::Unported;
             let (mv, i) = (val(args, 0), val(args, 1));
             let amount = env.unp().move_fun_0201c0bc(mv, i);
             Bufs::new(args).put(env, lent, 2, &amount.to_le_bytes());

@@ -11,6 +11,21 @@ fn gap(what: &str) -> ! {
 }
 
 impl Unp {
+    /// `FUN_0201C020(move)`: the number of stat changes (nonzero stat bytes at +0x15..+0x17).
+    pub fn move_fun_0201c020(&self, mv: u32) -> u32 {
+        let r = self.arc.move_record(mv);
+        (0..3).filter(|&i| r[0x15 + i] != 0).count() as u32
+    }
+    /// `FUN_0201C0BC(move, i, &amount)` amount part: `(s8) +0x18 + i` (0 without a stat).
+    pub fn move_fun_0201c0bc(&self, mv: u32, index: u32) -> i32 {
+        let r = self.arc.move_record(mv);
+        let i = index as usize;
+        if r[0x15 + i] != 0 {
+            r[0x18 + i] as i8 as i32
+        } else {
+            0
+        }
+    }
     /// `FUN_0201BD28(move, param)`.
     pub fn move_param(&self, mv: u32, param: u32) -> u32 {
         waza::record_param(&self.arc.move_record(mv), param)
@@ -22,42 +37,6 @@ impl Unp {
 }
 
 impl Unported for Unp {
-    fn move_category(&mut self, mv: u32) -> u32 {
-        self.move_param(mv, 2)
-    }
-    fn move_param(&mut self, mv: u32, param: u32) -> u32 {
-        Unp::move_param(self, mv, param)
-    }
-    fn move_flag(&mut self, mv: u32, flag: u32) -> bool {
-        Unp::move_flag(self, mv, flag)
-    }
-    fn move_power(&mut self, mv: u32) -> u32 {
-        self.move_param(mv, 3) & 0xFFFF
-    }
-    fn move_effect_class(&mut self, mv: u32) -> u32 {
-        self.move_param(mv, 1)
-    }
-    fn move_fun_0201c314(&mut self, mv: u32) -> bool {
-        self.move_param(mv, 3) != 0
-    }
-    fn move_type(&mut self, mv: u32) -> u32 {
-        self.move_param(mv, 0) & 0xFF
-    }
-    /// `FUN_0201C020(move)`: the number of stat changes (nonzero stat bytes at +0x15..+0x17).
-    fn move_fun_0201c020(&mut self, mv: u32) -> u32 {
-        let r = self.arc.move_record(mv);
-        (0..3).filter(|&i| r[0x15 + i] != 0).count() as u32
-    }
-    /// `FUN_0201C0BC(move, i, &amount)` amount part: `(s8) +0x18 + i` (0 without a stat).
-    fn move_fun_0201c0bc(&mut self, mv: u32, index: u32) -> i32 {
-        let r = self.arc.move_record(mv);
-        let i = index as usize;
-        if r[0x15 + i] != 0 {
-            r[0x18 + i] as i8 as i32
-        } else {
-            0
-        }
-    }
     fn item_fun_020213c0(&mut self, _item: u32) -> bool {
         gap("FUN_020213C0 (berry test)")
     }
@@ -87,9 +66,6 @@ impl Unported for Unp {
     }
     fn sick_list_entry(&mut self, _index: u32) -> u32 {
         gap("0689C9E4 (sick list)")
-    }
-    fn fun_06898cf4(&mut self, _side: u32, _kind: u32) -> bool {
-        gap("06898CF4")
     }
     fn fun_0689c8ac(&mut self, _mv: u32) -> bool {
         gap("0689C8AC")
@@ -147,5 +123,38 @@ impl Unported for Unp {
     }
     fn store_u8(&mut self, addr: u32, v: u8) {
         self.objs.borrow_mut().w8(addr, v as u32)
+    }
+}
+
+/// The move-record source of the production host's move getters ([`crate::server_flow::host::MoveData`]):
+/// ARC 21 member = the ROM move record. The learnset / heap hooks are not reached by the battle.
+pub struct RomWaza {
+    pub arc: std::rc::Rc<super::data::Archives>,
+}
+
+impl waza::WazaHooks for RomWaza {
+    fn load_move(&mut self, move_id: u32, dst: &mut [u8; waza::RECORD_SIZE]) {
+        let r = self.arc.move_record(move_id);
+        let n = r.len().min(waza::RECORD_SIZE);
+        dst.fill(0);
+        dst[..n].copy_from_slice(&r[..n]);
+    }
+    fn move_param(&mut self, move_id: u32, param: u32) -> u32 {
+        waza::record_param(&self.arc.move_record(move_id), param)
+    }
+    fn form_record_index(&mut self, _species: u32, _form: u32) -> u32 {
+        gap("FUN_0201AFD4 (waza hooks)")
+    }
+    fn load_learnset(&mut self, _index: u32, _dst: &mut [u8]) {
+        gap("learnset load (waza hooks)")
+    }
+    fn learnset_read(&mut self, _species: u32, _form: u32, _dst: u32, _buf: &mut [u8]) {
+        gap("FUN_0201ADD0 (waza hooks)")
+    }
+    fn free(&mut self, _block: u32) {
+        gap("waza cache free")
+    }
+    fn alloc(&mut self, _heap: u32, _size: u32, _line: u32) -> u32 {
+        gap("waza cache alloc")
     }
 }

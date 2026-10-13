@@ -19,7 +19,7 @@ use crate::server_flow::env::{Arg, Lent};
 use crate::server_flow::host::FlowWorkHost;
 use crate::server_flow::SvFlowWork;
 
-type Host<'a> = FlowWorkHost<&'a mut Env, Unp>;
+type Host<'a> = FlowWorkHost<&'a mut Env, Unp, super::unported::RomWaza>;
 
 /// The handler of a table entry.
 fn handler<'a>(addr: u32) -> Option<Handler<Host<'a>>> {
@@ -132,7 +132,10 @@ fn dispatch(env: &mut Env, event: u32, ftype: Option<u32>, check: bool) {
     };
     let side = std::mem::take(&mut env.side_effects);
     let unp = env.unp();
-    let mut host = FlowWorkHost::new(work, wa, &mut *env, unp);
+    let moves = super::unported::RomWaza {
+        arc: env.arc.clone(),
+    };
+    let mut host = FlowWorkHost::new(work, wa, &mut *env, unp, moves);
     host.side_effects = side;
     let mut d = Disp {
         battle: Battle::new(host),
