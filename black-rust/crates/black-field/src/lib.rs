@@ -3,6 +3,11 @@
 //! Logic crate (D6): no Bevy dependency.
 
 pub mod acmd1;
+pub mod acmd2a;
+pub mod acmd2b;
+pub mod acmd2c;
+pub mod acmd2d;
+pub mod acmd2e;
 pub mod btl_setup;
 pub mod effect_encount;
 pub mod enc_pokeset;

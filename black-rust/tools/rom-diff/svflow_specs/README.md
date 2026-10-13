@@ -651,3 +651,13 @@ area treated as ported: no fault, stray write or unstubbed callee); every out-of
 `--order-check` clean; instruction coverage 222/222 and 101/101 in both modes. Indirect calls through the acmd step tables
 (ROM 0x021D5F58 / 0x021D624C [code][seq]) land on `force seq` stubs at the step functions that the drawn codes (8 kinds, seq 0..1)
 reach; the acmd-list seq table 0x021D4A50 lands on in-area `seq` stubs (seq 0..5).
+
+## F4b-spec2 additions (black-field acmd2a / acmd2b / acmd2c / acmd2d / acmd2e)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-field/acmd2{a,b,c,d,e}.spec` (headers), on top of the F4b-spec1 ones: every block is `nowork` with arg0 = `arg buf 0x100` (the
+MMDL image; acmd work at +0xB4), and the acmd-work getters `0216D6BC` / `0216D6D4` are `force` stubs answering `ptr:arg0:0xB4:1`, so the
+steps read and write a real work block; work fields that index ROM tables or count frames are bounded with `fix arg0 0xB4+OFS`, with
+`near N 1` alternatives at the compared boundaries; closure stubs (checked with every function of the area treated as ported: no fault,
+stray write or unstubbed callee); every out-of-area stub is `force`; `--strict-callees` and `--order-check` clean; instruction coverage
+402/402, 709/709, 514/514, 1093/1093, 864/864 in both modes. `0209C0A4` (signed division) runs as real code under the existing `ALLOW`.
