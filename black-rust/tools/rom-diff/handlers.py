@@ -644,6 +644,11 @@ HINTS = {
     0x021DC7BC: {"vars": [(2, ME)], "mons": [(0, 0x0C, 2, 0x22B)]},
     0x021D9F1C: {"vars": [(4, ME), (3, NXT), (0x12, MV_BEB8_1)], "mons": [(0, 0x10, 2, 0)]},
     0x021D89B8: {"vars": [(2, ME)], "work": [(2, 0), (1, (5, 4, 7))]},
+    # V-0016: pinch boosts (helper 021d8cac): the attacker (var 3) is the owner and the move type
+    # (var 0x16) is the boosted one (Blaze 9, Torrent 10, Overgrow 11; Swarm's 6 comes up anyway)
+    0x021D8C3C: {"vars": [(3, ME), (0x16, 9)]},
+    0x021D8C58: {"vars": [(3, ME), (0x16, 10)]},
+    0x021D8C74: {"vars": [(3, ME), (0x16, 11)]},
     0x021DCC80: {"work": [(0, 0)]},
     0x021DB6A4: {"work": [(0, 0)]},
     0x021D8FCC: {"vars": [(3, NXT), (0x12, mv_cat(1))], "mons": [(0, 0x0C, 2, 0x1A5)], "wseed": W_WEATHER1},

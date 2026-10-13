@@ -28,6 +28,27 @@ pub const HINT_TABLE: &[Hint] = &[
         wseed: &[],
     },
     Hint {
+        addr: 0x021D8C3C,
+        vars: &[(0x3, &[0x7FFF0001]), (0x16, &[0x9])],
+        mons: &[],
+        work: &[],
+        wseed: &[],
+    },
+    Hint {
+        addr: 0x021D8C58,
+        vars: &[(0x3, &[0x7FFF0001]), (0x16, &[0xA])],
+        mons: &[],
+        work: &[],
+        wseed: &[],
+    },
+    Hint {
+        addr: 0x021D8C74,
+        vars: &[(0x3, &[0x7FFF0001]), (0x16, &[0xB])],
+        mons: &[],
+        work: &[],
+        wseed: &[],
+    },
+    Hint {
         addr: 0x021D8D40,
         vars: &[(0x3, &[0x7FFF0001]), (0x12, &[0x1])],
         mons: &[(2, 0x13C, 2, &[0x39, 0x3A, 0x39]), (2, 0x5C, 4, &[0x0])],
