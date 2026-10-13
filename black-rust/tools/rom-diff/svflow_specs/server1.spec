@@ -132,14 +132,16 @@ fn 021b64cc ret=u32
 # 02005E50 (skipped with bit5), 02005D28; seq 3 free M[0x2BC] (021ef980) / M[0x2C0] (020307B0) / M[0x2C4] (021D4D5C), 021d7894,
 # ba0cc(M), 9de8(M), 6804(M+0x450, M) (exit sub-proc 6c08); seq 4 run the callback pair, then 021eea54 / 021d4254 / 021d8058;
 # seq 5 teardown (heaps 0x13 0x14 0x12 freed, 020315D4(proc)), return 1. Other: 0.
-fn 021b6500 ret=u32
+# Z20: seq 1 at the end of the fade (M[0x460] == -16) was ~0.1% of the inputs: seq 1 and brightness -17..-15 get their own
+# alternatives (every earlier value is still drawn), 600 inputs
+fn 021b6500 ret=u32 inputs=600
   nowork
   arg u32 any                                            # r0 proc
   arg buf 4                                              # r1 &seq
   arg u32 any                                            # r2 unused
   arg buf 0x1000                                         # r3 M
-  fix arg1 0 u32 alt range 0 6 || any
-  fix arg3 0x460 u32 alt range 0xFFFFFFEE 0xFFFFFFFF || range 0 3 || any
+  fix arg1 0 u32 alt range 0 6 || const 1 || any
+  fix arg3 0x460 u32 alt range 0xFFFFFFEE 0xFFFFFFFF || near 0xFFFFFFF0 1 || range 0 3 || any
   fix arg3 0x2bc u32 alt const 0 || any
   fix arg3 0x2c0 u32 alt const 0 || any
   fix arg3 0x2c4 u32 alt const 0 || any

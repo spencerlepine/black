@@ -1238,12 +1238,23 @@ pub fn proc_27<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], d: &mut [u8]
     }
     let mut save = [0u8; 6];
     save.copy_from_slice(&d[..6]);
-    env.call(0x021B_D1E0, &mut [Arg::P]);
-    env.call(0x021B_D200, &mut [Arg::P, Arg::P, Arg::V(a), Arg::V(o)]);
+    env.call(0x021B_D1E0, &mut [Arg::Out(&mut d[..6])]);
+    env.call(
+        0x021B_D200,
+        &mut [Arg::Out(&mut d[..6]), Arg::P, Arg::V(a), Arg::V(o)],
+    );
     d[4] = 1;
+    // the original passes work; c091c reaches `d` through work + 0x4A8 (the spec's `outki`)
     env.call(
         0x021C_091C,
-        &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o), Arg::P, Arg::V(1)],
+        &mut [
+            Arg::Out(&mut d[..6]),
+            Arg::In(mr),
+            Arg::V(a),
+            Arg::V(o),
+            Arg::P,
+            Arg::V(1),
+        ],
     );
     let f = (d[5] & 1) as u32;
     d[..6].copy_from_slice(&save);

@@ -299,25 +299,72 @@ def ported_in(path):
     return [int(x.replace("_", ""), 16) for x in re.findall(r"0x([0-9A-Fa-f]{4}_?[0-9A-Fa-f]{4})", block)]
 
 
+def is_battle_set(name=None):
+    """True when the memory image is the battle set (ARM9 main + overlay 93; `set battle` or no `set` line), or a
+    battle set with more overlays (`set battle+96`): the black-battle modules' code is loaded there."""
+    n = SET[0] if name is None else name
+    return n in (None, "battle") or n.startswith("battle+")
+
+
 def ported(area=None):
     """PORTED addresses of one area, or of everything (area=None). With --ported-src the area's
-    list comes from those files; the server_flow modules still count for "everything ported"."""
+    list comes from those files; for "everything ported" the black-battle server_flow / client / server
+    modules count too, but only when the area runs on the battle set (Z20: PORTED is keyed per memory set;
+    a field-set area's overlay address can equal a battle-overlay port, e.g. ov21 021bc550 vs ov93 021bc550,
+    and must not deactivate that stub). Battle areas (no --ported-src) see exactly the battle modules."""
     if PORTED_SRC:
-        return [a for p in PORTED_SRC for a in ported_in(p)] + (ported_flow() if not area else [])
+        return [a for p in PORTED_SRC for a in ported_in(p)] + (ported_flow() if not area and is_battle_set() else [])
     return ported_flow(area)
 
 
+BATTLE_SRC = os.path.join(ROOT, "crates", "black-battle", "src")
+
+
+def src_set(path):
+    """Memory set of the code a Rust file ports: black-battle files are battle-set code; any other crate's
+    `src/AREA.rs` takes the `set` line of tools/rom-diff/specs/CRATE/AREA.spec (default battle); None when the
+    file has no spec (unknown: counts for every set)."""
+    path = os.path.abspath(path)
+    if path.startswith(BATTLE_SRC + os.sep):
+        return "battle"
+    rel = os.path.relpath(path, os.path.join(ROOT, "crates")).split(os.sep)
+    if len(rel) != 3 or rel[1] != "src":
+        return None
+    spec = os.path.join(HERE, "specs", rel[0], rel[2][:-3] + ".spec")
+    if not os.path.exists(spec):
+        return None
+    return parse_spec(open(spec).read())[1].set or "battle"
+
+
+def main_range():
+    """[lo, hi) of the ARM9 main image, which every set loads at the same address (its ports are the same code in
+    every set)."""
+    try:
+        return 0x02004000, 0x02004000 + os.path.getsize(os.path.join(B, "main.sbin"))
+    except OSError:
+        return 0x02004000, 0x02004000
+
+
 def crate_ported():
-    """Every `pub const PORTED` address of every logic crate (warning check only: a callee ported in another crate or area
-    runs as real code on the ROM side and as that Rust port on the other, e.g. poke_crypt 02019a7c from poke_tool; it never
-    deactivates a stub, see Z16)."""
+    """Every `pub const PORTED` address of every logic crate whose code lives in this run's memory set (warning check
+    only: a callee ported in another crate or area runs as real code on the ROM side and as that Rust port on the other,
+    e.g. poke_crypt 02019a7c from poke_tool; it never deactivates a stub, see Z16). Z20: overlay addresses of a crate
+    area on another set (field ov21 vs battle ov93) are left out, ARM9 main addresses always count."""
     if not CRATE_PORTED:
+        here = "battle" if is_battle_set() else SET[0]
+        lo, hi = main_range()
         for dp, _, fns in os.walk(os.path.join(ROOT, "crates")):
             if os.sep + "src" not in dp:
                 continue
             for fn in fns:
                 if fn.endswith(".rs"):
-                    CRATE_PORTED.update(ported_in(os.path.join(dp, fn)))
+                    p = os.path.join(dp, fn)
+                    addrs = ported_in(p)
+                    if not addrs:
+                        continue
+                    s = src_set(p)
+                    s = "battle" if s is not None and is_battle_set(s) else s
+                    CRATE_PORTED.update(a for a in addrs if s is None or s == here or lo <= a < hi)
         CRATE_PORTED.add(0)
     return CRATE_PORTED
 
@@ -386,7 +433,7 @@ def make_stub(st, ctx):
 
     def f(em, a0, a1, a2, a3, sp):
         raw = [a0, a1, a2, a3] + [em.r32(sp + 4 * (i - 4)) for i in range(4, len(st.args))]
-        vals, extra, outs, outps = [], [], [], []
+        vals, extra, outs, outps, keeps = [], [], [], [], []
         for i, k in enumerate(st.args):
             if k == "v":
                 vals.append(raw[i])
@@ -410,6 +457,14 @@ def make_stub(st, ctx):
             elif k.startswith("outp:"):  # outp:K:OFS:N, B12-spec: the out word is an address inside pointer argument K
                 _, kk, ofs, n = k.split(":")  # F4a-spec: K = `work` -> the address is inside the work image
                 outps.append((raw[i], kk if kk == "work" else int(kk, 0), int(ofs, 0), int(n, 0), 0x100 * (i + 1)))
+            elif k.startswith("outk:") or k.startswith("outki:"):
+                # Z20: `outk:N:M0/M1/..` = `outm` that keeps the bits outside the masks (byte j = (old & ~M) | (new & M),
+                # a callee that sets only some fields / bits of a record); `outki:OFS:N:M..` = the same on the record
+                # whose address is the u32 at (argument + OFS) (a callee that reaches the record through a struct it gets)
+                t = k.split(":")
+                ptr = raw[i] if t[0] == "outk" else em.r32((raw[i] + int(t[1], 0)) & M)
+                n, m = t[-2], t[-1]
+                keeps.append((ptr, int(n, 0), [int(x, 0) & 0xFF for x in m.split("/")], 0x100 * (i + 1)))
         ctx.log += [st.addr] + vals + extra
         if st.noreturn:
             ctx.halted = st.addr
@@ -432,6 +487,10 @@ def make_stub(st, ctx):
         for ptr, kk, ofs, n, salt in outps:  # B12-spec: base(K) + OFS + 4 * (mix(mix(acc, key + 0x1000 + salt), 0xC0DE) % N)
             base = WORK if kk == "work" else Runner.buf_addr(kk)
             em.wbytes(ptr, struct.pack("<I", (base + ofs + 4 * (mix(mix(acc, key + 0x1000 + salt), 0xC0DE) % n)) & M))
+        for ptr, n, m, salt in keeps:  # Z20 `outk` / `outki`: the `outm` byte under the mask, the old bits elsewhere
+            old = em.rbytes(ptr, n)
+            em.wbytes(ptr, bytes((old[j] & ~m[j % len(m)] & 0xFF)
+                                 | ((mix(mix(acc, key + 0x1000 + salt + j), 0x5EED) >> 8) & 0xFF & m[j % len(m)]) for j in range(n)))
         if st.ret.startswith("seqptr:"):  # P4: `seqptr:argK:OFS:STEP` = base(K) + OFS + n * STEP, n = this stub's 0-based call
             # index in the run (a bump allocator: every call gets its own disjoint block; the value never depends on acc)
             _, kk, ofs, step = st.ret.split(":")

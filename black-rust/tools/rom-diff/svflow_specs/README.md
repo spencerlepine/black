@@ -73,7 +73,8 @@ fn 021ccaa8 ret=none [mode=arm] [inputs=200]
   return `ret(mix(acc, addr & 0xFFFF))`; out byte j = `mix(acc, (addr & 0xFFFF) + 0x1000 + j) & 0xFF`;
   log entry `[addr, v-args..., in-words...]`. `salt` is drawn per input.
 * A stub is **active** only while its address is not in any server_flow module's `PORTED`; once the
-  callee is ported, both sides run the real code (ROM / Rust port).
+  callee is ported, both sides run the real code (ROM / Rust port). (Z20: the black-battle server_flow / client / server
+  lists count only for areas on the battle memory set, see "Z20 additions".)
 
 ## Generic mode (Z16): any crate, any set
 
@@ -114,8 +115,9 @@ fn 02019a9c ret=u16
 * Args are `u8..s32` scalars, `buf N`, `region NAME [OFS]`, `work [OFS]`, `bpp` (black-battle only;
   other crates may add kinds through `black_fndiff::Ext`).
 * A function's callees that are ported run as real code only if their address is in the `PORTED` of
-  the same area (or of a file in `FNDIFF_PORTED_EXTRA`, or of a `server_flow` module). Stubs of a
-  callee ported in another crate are not deactivated automatically.
+  the same area (or of a file in `FNDIFF_PORTED_EXTRA`, or, for a spec on the battle set only, of a black-battle
+  `server_flow` / `client` / `server` module; Z20). Stubs of a callee ported in another crate are not deactivated
+  automatically.
 
 ## B10-specs additions (server_side / events)
 
@@ -488,3 +490,36 @@ every function of the area treated as ported: no fault, stray write or unstubbed
 every out-of-area stub is `force`, also between the four areas; records whose fields a lookup compares with a position are drawn small
 and correlated with the position (several `alt` alternatives of one small range weight it); indirect calls through ROM tables land on
 in-area stubs or force stubs at the table targets, with the table index bounded to the table.
+
+## Z20 additions (harness: PORTED per memory set, `outk` / `outki`, mutation-survivor inputs)
+
+* **PORTED is keyed per memory set.** Overlay addresses mean different code in different sets (field ov21 `021bc550` vs battle
+  ov93 `021bc550`), so `svflow.py` lets the black-battle `server_flow` / `client` / `server` lists deactivate stubs only in
+  areas on the battle set (svflow areas, and check-fn specs with `set battle` or no `set` line: `battle_record`, `softfloat`).
+  A check-fn area on another set sees only its own `--ported-src` files (its area + `FNDIFF_PORTED_EXTRA`). The warning-only
+  `crate_ported()` list drops the overlay addresses of crate areas on another set (the spec's `set` line of
+  `crates/<crate>/src/<area>.rs`; black-battle = battle; ARM9 main addresses count in every set). `tools/check-force.py` scans
+  the svflow specs and the battle-set check-fn specs. Hash-neutral: every svflow and check-fn area gives byte-identical
+  `--json` output before and after (each field spec already had `force` on every colliding stub), and no stub's activation
+  changes in any function of any spec. black-fndiff has no deactivation (the Rust port decides between `env.call` and a
+  direct call), so nothing is mirrored there. Case that broke main before this (438d4f7): black-battle ai1 (ov96) ports
+  `02188990`, fieldmap (field ov21) stubs its own unregistered `02188990`; with per-set PORTED, fieldmap reproduces
+  776501833139141f without the stopgap `force` tokens (main's svflow.py: 306ad419728a756f). `set battle+N` (main + 93 + N)
+  counts as the battle set.
+* Stub argument kind **`outk:N:M0/M1/..`**: `outm:N:M..` that keeps the bits outside the masks, byte j =
+  `(old & ~M[j % len]) | (outm byte j)` (a callee that writes some fields / bits of a record). **`outki:OFS:N:M..`**: the same
+  on the record whose address is the u32 at (argument + OFS) (a callee that reaches the record through a struct it is
+  passed); the Rust port passes the record itself as `Arg::Out` in that position. Mirrored in `black-fndiff` (`stub.rs`);
+  vectors in `stub.rs` tests and `tools/rom-diff/test_svflow.py` (`/tmp/blk/venv/bin/python -I tools/rom-diff/test_svflow.py`).
+* handex `021c9f6c` (and `021c8918`, which runs it): `021bd1e0` / `021bd200` / `021c091c` write the D record behind
+  work + 0x4A8 with the bytes / bits the originals write (`outk`, `outki`), so the save / restore order and the D[5] read are
+  compared (B10b survivor).
+* api `021c7f68`: `021b98ac` is `nullable:4:u32` (empty positions; B10c survivor). server1 `021b6500`: seq 1 and brightness
+  -17..-15 get their own `alt`s, 600 inputs (B11a survivor). script_sys `02158b6c`: each record's offset also draws the negative
+  offsets that land the list on a record start (byte 5 = 0xFF; F7 survivor).
+* client2: `021eaf18` / `021eaf50` / `021eaf78` take the message buffer as `v` (its address: `c+0x58` / `c+0x7C`, or 021ce0f8's
+  r2) and `021cf5b0`'s last argument is `v` (buffer or null, tested by the callee) in every block, so `021ce0f8`, `021cecb4`
+  and `021cf524` are registered. client3 `021d0d38` / `021d0d44` declare args 2 (`u32 any`, overwritten by the thunk) and 3
+  (`buf 0x10`, the adapter list `021eec20`'s `outp:3` points into; before it was undeclared zero memory).
+* events `021c84ac` stubs stay `ret=bool`: the function returns `021c2128`'s result, which is 0 or 1 (comment in events.spec).
+

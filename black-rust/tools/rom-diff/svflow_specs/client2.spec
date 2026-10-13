@@ -10,6 +10,10 @@
 # resource lines the descendants need, so the functions can be ported in any order without a spec edit. Not specced in this batch: the
 # step functions 021cdddc 021cde8c 021cdf58 021ce044 021ce040 021ce170/1b0 (jump tables, `.byte` blocks, `LAB_` entries), 021ce160
 # (indirect call through c+0xD0), 021ce4d0 021ce7d4 021ce8f0 021cea94 021ceeb8 021ceffc 021cf078 021cf220 021cf2f0 (step functions).
+#
+# Z20: the message builders 021eaf18 / 021eaf50 / 021eaf78 (they write the 0x24-byte message record at r0) take the buffer as `v` in
+# every block: the callers pass c+0x58 (c+0x7C for the second yes / no line; 021ce0f8 forwards its r2), so the address says which
+# buffer gets the message. 021cf5b0's last argument is `v` too: the message buffer or 0, and 021cf5b0 tests it for null (021cf5fa).
 area client2
 
 # mon = 021cdf1c(c); if mon: c.u16[0x19C] = BattleMon_Get(mon, 0xD)
@@ -331,7 +335,7 @@ fn 021ce1b0 ret=u32
   stub 021ee6b8 ret=ptr:arg2:0:4 args=v,v,outm:1:0x3F,outm:1:1
   stub 021d3f54 ret=none args=p
   stub 021d3fd0 ret=none args=p
-  stub 021eaf18 ret=none args=p,v,v
+  stub 021eaf18 ret=none args=v,v,v
   stub 021ea614 ret=none args=v,p
   stub 021ea710 ret=pick:0/1 args=v
   stub 021d8434 ret=none args=p
@@ -443,9 +447,9 @@ fn 021ce4d0 ret=u32 inputs=1500
   stub 021cf3b8 ret=none args=p,v
   stub 021e9974 ret=pick:0/1 args=v
   stub 021e9954 ret=none args=v
-  stub 021eaf18 ret=none args=p,v,v
+  stub 021eaf18 ret=none args=v,v,v
   stub 021d5440 ret=u32 args=v
-  stub 021eaf50 ret=none args=p,v
+  stub 021eaf50 ret=none args=v,v
   stub 021ce3b4 ret=none args=p
   stub 0202a298 ret=pick:0/1 args=v,v,v
   stub 021b8588 force ret=pick:0/3 args=v
@@ -555,8 +559,8 @@ fn 021cea94 ret=u32 inputs=1000
   stub 021b9ab0 force ret=pick:0/1/2 args=v
   stub 021d832c ret=pick:0/1 args=p
   stub 021d5778 ret=pick:0/1/4 args=v,v
-  stub 021cf5b0 force ret=pick:0/1 args=p,v,v,p
-  stub 021eaf78 ret=none args=p,v
+  stub 021cf5b0 force ret=pick:0/1 args=p,v,v,v
+  stub 021eaf78 ret=none args=v,v
   stub 021ce3b4 ret=none args=p
   stub 021d5b68 ret=pick:0/1 args=v
   stub 021d8340 ret=u32 args=p
@@ -705,10 +709,10 @@ fn 021cf078 ret=u32 inputs=600
   fix arg0 0x1AD u8 alt const 0 || any
   stub 021b86e4 force ret=pick:0/1/2/3 args=v
   stub 021cf918 force ret=pick:4/0/1 args=p,outm:2:0xFF/0,outm:2:3/0
-  stub 021eaf18 ret=none args=p,v,v
-  stub 021eaf50 ret=none args=p,v
+  stub 021eaf18 ret=none args=v,v,v
+  stub 021eaf50 ret=none args=v,v
   stub 021ce3b4 ret=none args=p
-  stub 021eaf78 ret=none args=p,v
+  stub 021eaf78 ret=none args=v,v
   stub 021ea710 ret=pick:0/1 args=v
   stub 021ce0f8 ret=none args=p,v,p
   stub 021ea65c ret=none args=v,p

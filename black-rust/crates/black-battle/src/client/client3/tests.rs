@@ -37,8 +37,8 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021D0BB0, "20724cedce8a5129"),
     (0x021D0C78, "9c1d5b156db0bb8c"),
     (0x021D0CC4, "9aee8d23a8c9dd13"),
-    (0x021D0D38, "50709a5bda5fd8c0"),
-    (0x021D0D44, "978aea2431f086ed"),
+    (0x021D0D38, "7348b01a87fa6bc7"),
+    (0x021D0D44, "85c362142fb5a62b"),
     (0x021D0D50, "7d3ea84c50e749fd"),
     (0x021D0E74, "e01a0b624c684801"),
     (0x021D0E7C, "cc62bafe81d6d1a6"),
@@ -46,11 +46,6 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021D1058, "9301a77f65df6042"),
 ];
 // svflow-recorded-end
-
-/// Address of pointer argument 3 in the emulator (`0x02E10000 + 3 * 0x10000`). The `021d0d38` / `021d0d44` blocks declare
-/// only two arguments, so the adapter list their `021eec20` stub points at (`outp:3:0:1`) is untouched emulator memory
-/// there: zero bytes.
-const ARG3_ADDR: u32 = 0x02E4_0000;
 
 fn call(addr: u32, c: &mut Case) -> u64 {
     let a0 = c.vals.first().copied().unwrap_or(0);
@@ -134,8 +129,14 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             super::switch_requests(env, o, &mut out[0], &list[0], vals[2]) as u64
         }
         0x021D_0CC4 => super::yes_no_step(env, o, a0, &mut rest[0]) as u64,
-        0x021D_0D38 => super::req5_step(env, o, a0, &mut rest[0], &[0u8; 0x10], ARG3_ADDR) as u64,
-        0x021D_0D44 => super::req6_step(env, o, a0, &mut rest[0], &[0u8; 0x10], ARG3_ADDR) as u64,
+        0x021D_0D38 => {
+            let (st, list) = rest.split_at_mut(2);
+            super::req5_step(env, o, a0, &mut st[0], &list[0], vals[3]) as u64
+        }
+        0x021D_0D44 => {
+            let (st, list) = rest.split_at_mut(2);
+            super::req6_step(env, o, a0, &mut st[0], &list[0], vals[3]) as u64
+        }
         0x021D_0D50 => super::ai_switch_in(env, o, a0, &rest[0], vals[1]) as u64,
         0x021D_0E7C => {
             let (st, list) = rest.split_at_mut(2);

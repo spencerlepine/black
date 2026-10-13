@@ -696,16 +696,19 @@ fn 02158b3c ret=u32 inputs=300
 # record's list (record + 6 + offset) holds 6-byte entries {u16 var, u16 value, u16 script id} (var 0 ends): the first entry
 # whose event var (*020143CC(0201296C(gamedata), var)) equals value gives the id; 0xFFFF otherwise / offset 0 / no record.
 # arg1 layout: 4 records at 0 (offsets point at 0x1F0), list at 0x1F0 (6 entries), var values at 0x300.
+# Z20: offsets >= 2^24 (byte 5 of the record, the `<< 24` term) were never drawn. Inside the buffer they can only be negative (a wrapped
+# u32): each record also gets the offsets that put the list on a record start (record + 6 + offset = 0 / 6 / 12 / 18), so the list
+# walk reads records as entries and ends at the key-0 terminator at 0x18.
 fn 02158b6c ret=u32 inputs=400
   nowork
   arg u32 any
   arg buf 0x400
   arg u32 alt range 0 3 || any
   fix arg1 0 u16 range 0 3 rep=4,6
-  fix arg1 2 u32 alt const 0 || const 0x1EA
-  fix arg1 8 u32 alt const 0 || const 0x1E4
-  fix arg1 0xE u32 alt const 0 || const 0x1DE
-  fix arg1 0x14 u32 alt const 0 || const 0x1D8
+  fix arg1 2 u32 alt const 0 || const 0x1EA || const 0xFFFFFFFA
+  fix arg1 8 u32 alt const 0 || const 0x1E4 || oneof 0xFFFFFFF4 0xFFFFFFFA
+  fix arg1 0xE u32 alt const 0 || const 0x1DE || oneof 0xFFFFFFEE 0xFFFFFFF4 0xFFFFFFFA
+  fix arg1 0x14 u32 alt const 0 || const 0x1D8 || oneof 0xFFFFFFE8 0xFFFFFFEE 0xFFFFFFF4 0xFFFFFFFA
   fix arg1 0x18 u16 const 0
   fix arg1 0x1F0 u16 range 0 3 rep=6,6
   fix arg1 0x1F2 u16 range 0 3 rep=6,6

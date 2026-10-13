@@ -11,11 +11,9 @@
 //! the action-record helpers (`021d8xxx`), the Thumb-to-ARM veneers and the callees in other client areas through
 //! [`FlowEnv::call`]; a callback held in `c+0xD0` is dispatched through `env.call(ptr & !1, ..)`.
 //!
-//! Ported but not registered (UNVERIFIED, see their docs): [`sent_out_message`] (`021ce0f8`), [`fight_table`] (`021cecb4`) and
-//! [`struggle_if_stuck`] (`021cf524`). Their callers' spec blocks list one of their callees with other argument kinds than
-//! their own blocks (`021eaf18` / `021eaf50` / `021eaf78` take the message buffer as `v` in `021ce0f8`'s block and as `p` in
-//! `021ce4d0` / `021cf078`; `021cf5b0`'s last argument is `v` in `021cecb4` / `021cf524` and `p` in `021cea94`), so with them
-//! in `PORTED` one of the two blocks cannot match. The callers reach them through `env.call` (their stub lines stay active).
+//! Message buffers (Z20): the message calls `021eaf18` / `021eaf50` / `021eaf78` and `021cf5b0`'s last argument take the
+//! buffer as its address (`v`: `c+0x58`, `c+0x7C` for the second yes / no line, or 0 = no message), so the ports pass
+//! `c_addr + 0x58` where the original does.
 
 use super::{rd16, rd32, wr16, wr32, ClientUi};
 use crate::calc::u32_div;
@@ -36,6 +34,7 @@ pub const PORTED: &[u32] = &[
     0x021C_E08C,
     0x021C_E0BC,
     0x021C_E0E0,
+    0x021C_E0F8,
     0x021C_E150,
     0x021C_E160,
     0x021C_E170,
@@ -48,6 +47,7 @@ pub const PORTED: &[u32] = &[
     0x021C_E7D4,
     0x021C_E8F0,
     0x021C_EA94,
+    0x021C_ECB4,
     0x021C_ED4C,
     0x021C_EDC0,
     0x021C_EEB8,
@@ -64,6 +64,7 @@ pub const PORTED: &[u32] = &[
     0x021C_F43C,
     0x021C_F448,
     0x021C_F470,
+    0x021C_F524,
     0x021C_F58C,
 ];
 
@@ -75,8 +76,12 @@ const OFS_MON: usize = 0x08;
 const OFS_REC: usize = 0x0C;
 const OFS_READER: usize = 0x14;
 const OFS_VIEW: usize = 0x54;
+/// The message buffer (`021eaf18` ..) and the second one of the yes / no window.
+const OFS_MSG: usize = 0x58;
+const OFS_MSG2: usize = 0x7C;
 /// The fight-menu table of a double battle (3 x 8 bytes, [`fight_table`]).
 const OFS_FIGHT: usize = 0xA4;
+const FIGHT_TABLE_SIZE: usize = 0x18;
 const OFS_BC: usize = 0xBC;
 const OFS_C4: usize = 0xC4;
 const OFS_CB: usize = 0xD0;
@@ -161,14 +166,24 @@ fn rec_skip<E: FlowEnv>(env: &mut E) {
     env.call(0x021D_8434, &mut [Arg::P]);
 }
 
-/// `021eaf18(buf, kind, id)`: starts a message in a message buffer.
-fn msg_start<E: ClientUi>(env: &mut E, kind: u32, id: u32) {
-    env.view(0x021E_AF18, &mut [Arg::P, Arg::V(kind), Arg::V(id)]);
+/// `021eaf18(buf, kind, id)`: starts a message in the message buffer at address `buf`.
+fn msg_start<E: ClientUi>(env: &mut E, buf: u32, kind: u32, id: u32) {
+    env.view(0x021E_AF18, &mut [Arg::V(buf), Arg::V(kind), Arg::V(id)]);
 }
 
-/// `021eaf50(buf, value)`: adds an argument to a message.
-fn msg_arg<E: ClientUi>(env: &mut E, v: u32) {
-    env.view(0x021E_AF50, &mut [Arg::P, Arg::V(v)]);
+/// `021eaf50(buf, value)`: adds an argument to the message at address `buf`.
+fn msg_arg<E: ClientUi>(env: &mut E, buf: u32, v: u32) {
+    env.view(0x021E_AF50, &mut [Arg::V(buf), Arg::V(v)]);
+}
+
+/// `021eaf78(buf, v)`: the message at address `buf` (`v` = 0 or 0xFF).
+fn msg_end<E: ClientUi>(env: &mut E, buf: u32, v: u32) {
+    env.view(0x021E_AF78, &mut [Arg::V(buf), Arg::V(v)]);
+}
+
+/// Address of the client's message buffer (`c+0x58`).
+fn msg_buf(c_addr: u32) -> u32 {
+    c_addr.wrapping_add(OFS_MSG as u32)
 }
 
 /// `021ea710(view)`: has the message window finished?
@@ -417,9 +432,6 @@ pub fn fade_end<E: ClientUi>(env: &mut E, c: &[u8]) {
 
 /// C: `FUN_overlay_d_93__021ce0f8`: the "what will `<mon>` do" message into the buffer `buf`: battle type 3 (`021b8588`) ->
 /// message 0x46 with the client id, else message 0x45 with `021d5440(mon)`; then `021eaf78(buf, 0)`.
-///
-/// UNVERIFIED port of `021ce0f8` (not in `PORTED`): its own spec block matches, but its callers `021ce4d0` / `021cf078` list
-/// the message calls with the buffer as `p`, so the callers reach it through `env.call` (see the module doc).
 pub fn sent_out_message<E: ClientUi>(env: &mut E, c: &[u8], mon: u32, buf: u32) {
     if env.call(0x021B_8588, &mut [Arg::V(rd32(c, OFS_SERVER))]) == 3 {
         env.view(0x021E_AF18, &mut [Arg::V(buf), Arg::V(1), Arg::V(0x46)]);
@@ -430,11 +442,6 @@ pub fn sent_out_message<E: ClientUi>(env: &mut E, c: &[u8], mon: u32, buf: u32) 
         env.view(0x021E_AF50, &mut [Arg::V(buf), Arg::V(name)]);
     }
     env.view(0x021E_AF78, &mut [Arg::V(buf), Arg::V(0)]);
-}
-
-/// The callers' view of [`sent_out_message`] (`021ce0f8(c, mon, &c[0x58])`), reached through `env.call` (module doc).
-fn sent_out_message_call<E: FlowEnv>(env: &mut E, c: &[u8]) {
-    env.call(0x021C_E0F8, &mut [Arg::P, Arg::V(rd32(c, OFS_MON)), Arg::P]);
 }
 
 /// C: `FUN_overlay_d_93__021ce150`: installs the pending callback `cb` (Thumb pointer) at `+0xD0`, its state `+0xD4` = 0.
@@ -507,7 +514,7 @@ pub fn req3_replay<E: ClientUi>(
                 8 => {
                     env.call(0x021D_3FD0, &mut [Arg::P]);
                     if view(c) != 0 {
-                        msg_start(env, 1, 0xB7);
+                        msg_start(env, msg_buf(c_addr), 1, 0xB7);
                         env.view(0x021E_A614, &mut [Arg::V(view(c)), Arg::P]);
                         set_st(state, st(state).wrapping_add(1));
                         return 0;
@@ -520,7 +527,7 @@ pub fn req3_replay<E: ClientUi>(
                     c[OFS_FLAGS] |= 0x20;
                     env.call(0x021D_3FD0, &mut [Arg::P]);
                     if view(c) != 0 {
-                        msg_start(env, 1, 0xB8);
+                        msg_start(env, msg_buf(c_addr), 1, 0xB8);
                         env.view(0x021E_A614, &mut [Arg::V(view(c)), Arg::P]);
                         set_st(state, st(state).wrapping_add(2));
                         return 0;
@@ -696,7 +703,7 @@ pub fn select_loop<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &
         }
         1 => {
             if c[OFS_SHOWN] as i8 as i32 != c[OFS_CUR] as i32 || c[OFS_120] != 0 {
-                sent_out_message_call(env, c);
+                sent_out_message(env, c, rd32(c, OFS_MON), msg_buf(c_addr));
                 env.view(0x021E_A65C, &mut [Arg::V(view(c)), Arg::P]);
                 c[OFS_120] = 0;
                 c[OFS_SHOWN] = c[OFS_CUR];
@@ -804,9 +811,9 @@ pub fn select_loop<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &
         }
         7 => {
             if env.view(0x021E_9974, &mut [Arg::V(view(c))]) != 0 {
-                msg_start(env, 1, 0xC5);
+                msg_start(env, msg_buf(c_addr), 1, 0xC5);
                 let name = env.call(0x021D_5440, &mut [Arg::V(rd32(c, OFS_MON))]);
-                msg_arg(env, name);
+                msg_arg(env, msg_buf(c_addr), name);
                 print_message(env, c);
                 next(state);
             }
@@ -952,8 +959,8 @@ pub fn item_shortcut<E: FlowEnv>(env: &mut E, c: &mut [u8]) -> Option<u16> {
 
 /// C: `sub_021cea94`: callback 0x021CEA95, the fight menu (an 8-way jump table on the state). Returns 0.
 ///
-/// * 0: battle type 3 (`021b8588`) -> the double-battle move table ([`fight_table`], through `env.call`) at `+0xA4`, state 2;
-///   else [`struggle_if_stuck`] (through `env.call`) -> callback [`select_next`], else state 1.
+/// * 0: battle type 3 (`021b8588`) -> the double-battle move table ([`fight_table`]) at `+0xA4`, state 2; else
+///   [`struggle_if_stuck`] -> callback [`select_next`], else state 1.
 /// * 1: `021e97bc(view, mon, rec)`, state 3.   2: `021e9808(view, c+0xA4, rec)`, state 3.
 /// * 3: [`fade_poll_then`]`(c, finish)` -> `021e98ac(view)`; else `021e98b4(view)` -> the record kind `021d8454(rec)`: 0 ->
 ///   callback [`select_loop`], 5 -> [`select_next`]; else the move of the record (bits 7..22 of its first word) and the
@@ -972,9 +979,11 @@ pub fn fight_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &m
     match st(state) {
         0 => {
             if env.call(0x021B_8588, &mut [Arg::V(server)]) == 3 {
-                env.call(0x021C_ECB4, &mut [Arg::P, Arg::P]);
+                let mut table = [0u8; FIGHT_TABLE_SIZE];
+                fight_table(env, c, &mut table);
+                c[OFS_FIGHT..OFS_FIGHT + FIGHT_TABLE_SIZE].copy_from_slice(&table);
                 set_st(state, 2);
-            } else if env.call(0x021C_F524, &mut [Arg::P, Arg::V(rd32(c, OFS_MON)), Arg::P]) != 0 {
+            } else if struggle_if_stuck(env, c, rd32(c, OFS_MON)) != 0 {
                 set_callback(c, CB_NEXT);
             } else {
                 set_st(state, 1);
@@ -1030,8 +1039,12 @@ pub fn fight_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &m
                 }
             }
             let mv = (rec_word(c) >> 7) & 0xFFFF;
-            if env.call(0x021C_F5B0, &mut [Arg::P, Arg::V(mon), Arg::V(mv), Arg::P]) != 0 {
-                env.view(0x021E_AF78, &mut [Arg::P, Arg::V(0xFF)]);
+            if env.call(
+                0x021C_F5B0,
+                &mut [Arg::P, Arg::V(mon), Arg::V(mv), Arg::V(msg_buf(c_addr))],
+            ) != 0
+            {
+                msg_end(env, msg_buf(c_addr), 0xFF);
                 print_message(env, c);
                 set_st(state, 7);
                 return 0;
@@ -1088,9 +1101,6 @@ pub fn fight_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &m
 /// `021b9c00(party +0x118, i)`, `out[8i]` = mon, `out[8i + 4 + j] = 0` (j < 4); a live mon (`021d5b68 == 0`): for
 /// `j < 021d5448(mon)`, `out[8i + 4 + j]` = the move is usable (`021d5584(mon, j)` and not blocked, `021cf5b0(c, mon,
 /// 021d54c0(mon, j), 0)` == 0).
-///
-/// UNVERIFIED port of `021cecb4` (not in `PORTED`): its own block matches, but its caller `021cea94` lists `021cf5b0` with a
-/// pointer last argument, so the caller reaches it through `env.call` (see the module doc).
 pub fn fight_table<E: FlowEnv>(env: &mut E, c: &[u8], out: &mut [u8]) {
     for i in 0..3usize {
         let mon = env.call(
@@ -1311,17 +1321,18 @@ pub fn single_live_mon<E: FlowEnv>(env: &mut E, c: &[u8]) -> u32 {
 /// (`021eaf18(c+0x58, 3, 8)`, `021eaf18(c+0x7C, 3, 9)`, `021eabc4(view, c+0x58, c+0x7C, 1)`), state 4. 4: message done ->
 /// `021eac54(view, &ans)` ? (`ans` ? [`select_loop`] : state 5) : [`fade_poll`] -> callback [`select_finish`].
 /// 5: `021d8414(rec)`, flag bit 4, callback [`select_next`].
-pub fn run_menu<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u32 {
+pub fn run_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &mut [u8]) -> u32 {
+    let buf = msg_buf(c_addr);
     match st(state) {
         0 => match env.call(0x021B_86E4, &mut [Arg::V(rd32(c, OFS_SERVER))]) {
             1 => {
-                msg_start(env, 1, 0x4C);
+                msg_start(env, buf, 1, 0x4C);
                 print_message(env, c);
                 set_st(state, 1);
             }
             2 => {
-                msg_start(env, 1, 0x4D);
-                env.view(0x021E_AF78, &mut [Arg::P, Arg::V(0xFF)]);
+                msg_start(env, buf, 1, 0x4D);
+                msg_end(env, buf, 0xFF);
                 print_message(env, c);
                 set_st(state, 3);
             }
@@ -1337,11 +1348,11 @@ pub fn run_menu<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u32
                 }
                 let b = u16::from_le_bytes(b) as u32;
                 if b != 0 {
-                    msg_start(env, 2, 0x365);
-                    msg_arg(env, a[0] as u32);
-                    msg_arg(env, b);
+                    msg_start(env, buf, 2, 0x365);
+                    msg_arg(env, buf, a[0] as u32);
+                    msg_arg(env, buf, b);
                 } else {
-                    msg_start(env, 1, 0x4A);
+                    msg_start(env, buf, 1, 0x4A);
                 }
                 print_message(env, c);
                 set_st(state, 1);
@@ -1349,7 +1360,7 @@ pub fn run_menu<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u32
         },
         1 => {
             if msg_done(env, c) {
-                sent_out_message_call(env, c);
+                sent_out_message(env, c, rd32(c, OFS_MON), buf);
                 env.view(0x021E_A65C, &mut [Arg::V(view(c)), Arg::P]);
                 set_st(state, 2);
             }
@@ -1362,8 +1373,8 @@ pub fn run_menu<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u32
         3 => {
             msg_done(env, c);
             if env.view(0x021E_A720, &mut [Arg::V(view(c))]) != 0 {
-                msg_start(env, 3, 8);
-                msg_start(env, 3, 9);
+                msg_start(env, buf, 3, 8);
+                msg_start(env, c_addr.wrapping_add(OFS_MSG2 as u32), 3, 9);
                 env.view(
                     0x021E_ABC4,
                     &mut [Arg::V(view(c)), Arg::P, Arg::P, Arg::V(1)],
@@ -1595,9 +1606,6 @@ pub fn mon_answered<E: FlowEnv>(env: &mut E, mon: u32, rec: u32) -> u32 {
 
 /// C: `FUN_overlay_d_93__021cf524`: no usable move (for `j < 021d5448(mon)`: not blocked, `021cf5b0(c, mon, 021d54c0(mon, j),
 /// 0)` == 0, and `021d5584(mon, j)`): [`struggle`] into `rec`, returns 1; else 0.
-///
-/// UNVERIFIED port of `021cf524` (not in `PORTED`): its own block matches, but its caller `021cea94` lists `021cf5b0` with a
-/// pointer last argument, so the caller reaches it through `env.call` (see the module doc).
 pub fn struggle_if_stuck<E: FlowEnv>(env: &mut E, c: &[u8], mon: u32) -> u32 {
     let n = env.call(0x021D_5448, &mut [Arg::V(mon)]);
     let mut usable = 0u32;

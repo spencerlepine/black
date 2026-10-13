@@ -16,23 +16,25 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021CE08C, "0ddbcc975dae779f"),
     (0x021CE0BC, "2a11afd4e1683fa8"),
     (0x021CE0E0, "bd8c6f9e137170f8"),
+    (0x021CE0F8, "5a3a118e14893ff4"),
     (0x021CE150, "08c8233f658a0c9d"),
     (0x021CE160, "2fff96e7cb5e276f"),
     (0x021CE170, "a81e31cafb0dc578"),
-    (0x021CE1B0, "02965173429cbe50"),
+    (0x021CE1B0, "3d2d11f19263d79c"),
     (0x021CE2E8, "5e42850c8f3bd662"),
     (0x021CE308, "df2eb13cfd83b6ed"),
     (0x021CE3B4, "36a6e3f4090f33c8"),
     (0x021CE3C8, "43d40b7553f57bc1"),
-    (0x021CE4D0, "c46f83c441f2202f"),
+    (0x021CE4D0, "0969733607bc3c6e"),
     (0x021CE7D4, "31001349c1338bde"),
     (0x021CE8F0, "7981d226fc3abe02"),
-    (0x021CEA94, "dfe0aac138862877"),
+    (0x021CEA94, "48e7086ad3fded25"),
+    (0x021CECB4, "2d3b435e3b6de9d1"),
     (0x021CED4C, "5634265fe3861a6a"),
     (0x021CEDC0, "6d25d11f01b002c9"),
     (0x021CEEB8, "dfe49dc2a84d4c6d"),
     (0x021CEFFC, "324ec68d6bb52705"),
-    (0x021CF078, "36c1f6ce301dec0e"),
+    (0x021CF078, "caccee7e0e4f7310"),
     (0x021CF220, "ce4827925c4ea1e9"),
     (0x021CF2F0, "8270eb328dbfc326"),
     (0x021CF360, "c958536c3ace52d8"),
@@ -44,6 +46,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021CF43C, "b622fbd723089816"),
     (0x021CF448, "3a8fb19ddd3260b5"),
     (0x021CF470, "d9e36c2deb6d5975"),
+    (0x021CF524, "cdc7d094cd6490e6"),
     (0x021CF58C, "63674693a181dc61"),
 ];
 // svflow-recorded-end
@@ -117,7 +120,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 0x021C_EDC0 => super::party_page(env, o, &mut rest[0]) as u64,
                 0x021C_EEB8 => super::bag_page(env, o, &mut rest[0]) as u64,
                 0x021C_EFFC => super::single_live_mon(env, o) as u64,
-                0x021C_F078 => super::run_menu(env, o, &mut rest[0]) as u64,
+                0x021C_F078 => super::run_menu(env, o, a0, &mut rest[0]) as u64,
                 0x021C_F220 => super::select_next(env, o, a0, &mut rest[0]) as u64,
                 0x021C_F2F0 => super::select_end(env, o, &mut rest[0]) as u64,
                 0x021C_F360 => {
@@ -146,8 +149,6 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 }
                 0x021C_F43C => super::get_130(o, vals[1]) as u64,
                 0x021C_F448 => super::sum_130(o) as u64,
-                // ported but not in PORTED (kind conflicts in their callers' blocks, see client2.rs): wired for
-                // `check-svflow.sh client2 --fn` runs with a temporary PORTED entry
                 0x021C_E0F8 => {
                     super::sent_out_message(env, o, vals[1], vals[2]);
                     0

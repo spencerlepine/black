@@ -11,6 +11,9 @@ every merge batch (coordinator, MIGRATION-AGENT.md §5 rule 6).
   python3 tools/check-force.py --fix    # add `force` to them (force-only edit)
 
 A stub of a function in the spec's own area is left alone (in-area stubs are deactivated by design).
+Only specs on the battle memory set are scanned (Z20, see SPECS below): the battle modules' PORTED
+addresses never deactivate a stub of a field-set (or other set) area, whose overlay addresses mean
+different code.
 """
 import glob
 import os
@@ -19,9 +22,12 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # svflow.py deactivates a stub when the callee is in any PORTED list under these black-battle dirs
-# (`ported_flow`); check-fn specs (tools/rom-diff/specs/<crate>/) only see their own area, so they
-# can't hit this trap and are not scanned.
+# (`ported_flow`), and only for areas on the battle memory set (Z20: PORTED is keyed per set). So the
+# scanned specs are every svflow spec plus the check-fn specs (tools/rom-diff/specs/<crate>/) whose
+# `set` is battle (no `set` line = battle); a check-fn spec on another set (field, ...) sees only its own
+# area and FNDIFF_PORTED_EXTRA, so the battle modules' ports can't deactivate its stubs and it is skipped.
 SPECS = glob.glob(os.path.join(ROOT, "tools/rom-diff/svflow_specs/*.spec"))
+FN_SPECS = glob.glob(os.path.join(ROOT, "tools/rom-diff/specs/*/*.spec"))
 # Unforced on purpose (the caller's Rust port calls the ported callee directly, so both sides run real code):
 # (spec, callee). Each entry is documented in MIGRATION-AGENT.md (§6 B13-spec2 / B10g / B13a merge note).
 EXPECTED = {("client5", 0x021CD9F4), ("core2", 0x021BCB14), ("core2", 0x021BD148), ("client4", 0x021CDF1C)}
@@ -53,12 +59,28 @@ def ported_by_area():
     return out
 
 
+def spec_set(path):
+    """The `set NAME` line of a spec file (None = battle)."""
+    for line in open(path):
+        t = line.split("#")[0].split()
+        if len(t) == 2 and t[0] == "set":
+            return t[1]
+    return None
+
+
+def scanned():
+    """(spec path, area key) of every spec whose stubs the battle modules' PORTED lists can deactivate."""
+    out = [(f, os.path.splitext(os.path.basename(f))[0]) for f in sorted(SPECS)]
+    # a check-fn area is never a black-battle module: every battle module's PORTED is foreign to it
+    out += [(f, None) for f in sorted(FN_SPECS) if spec_set(f) in (None, "battle") or spec_set(f).startswith("battle+")]
+    return out
+
+
 def main():
     fix = "--fix" in sys.argv
     by_area = ported_by_area()
     bad = 0
-    for f in sorted(SPECS):
-        area = os.path.splitext(os.path.basename(f))[0]
+    for f, area in scanned():
         foreign = set().union(*(v for k, v in by_area.items() if k != area))
         lines = open(f).read().split("\n")
         changed = False

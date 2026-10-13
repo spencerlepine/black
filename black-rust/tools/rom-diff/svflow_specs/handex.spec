@@ -84,8 +84,8 @@ fn 021c8918 ret=none inputs=1200
   stub 021bd148 force ret=pick:0/1 args=p,v
   stub 021bd170 force ret=pick:0/1 args=p,v
   stub 021bd1b0 force ret=pick:0/1 args=p,v
-  stub 021bd1e0 force ret=none args=p
-  stub 021bd200 force ret=none args=p,p,v,v
+  stub 021bd1e0 force ret=none args=outk:6:0xFF/0xFF/0xFF/0xFF/0xFF/3
+  stub 021bd200 force ret=none args=outk:6:0/0/0xFF/0xFF/0/3,p,v,v
   stub 021bd43c force ret=none args=p,v,v,v,v
   stub 021bd4e4 force ret=none args=p,v,v,v
   stub 021bd60c force ret=pick:0/1 args=p,v,v
@@ -98,7 +98,7 @@ fn 021c8918 ret=none inputs=1200
   stub 021bf8d4 force ret=none args=p,in:0x10,v,v
   stub 021c0780 force ret=none args=p,v,v,v
   stub 021c0898 force ret=pick:0/1 args=p,v,v,v
-  stub 021c091c force ret=none args=p,in:0x10,v,v,p,v
+  stub 021c091c force ret=none args=outki:0x4A8:6:0/0/0/0/0/3,in:0x10,v,v,p,v
   stub 021c195c force ret=none args=p,v,v
   stub 021c1d60 force ret=pick:0/1 args=p,v,v
   stub 021c1e14 force ret=pick:0/1 args=p,v,v,v
@@ -857,19 +857,23 @@ fn 021c9f4c ret=u32
 # objects at work + 0x860 / + 0x868; a108 -> 5718(work), return 0; bf83c / bf3d8 / bf4ac / bf8d4 (work, &m, mon,
 # work[0x868][, work + 0x1F88]); a118 -> 0; else saves the 3 halfwords of D = *(work + 0x4A8), bd1e0(D), bd200(D, work, mon,
 # w868), D[4] = 1, c091c(work, &m, mon, w868, work + 0x1F88, 1), restores D and returns D[5] & 1 (read before the restore)
+# Z20: the three D-record stubs write D as the originals do (by disassembly / the core2 and core3 ports): bd1e0 resets bytes 0-4 and
+# bits 0-1 of byte 5, bd200 sets bytes 2, 3 and bits 0-1 of byte 5, c091c (D reached through work + 0x4A8) bits 0-1 of byte 5
+# (`outk` / `outki`, mix()-derived values, the other bits kept), so the save / restore order and the D[5] read are compared.
+# Same lines in 021c8918's block (it runs this proc).
 fn 021c9f6c ret=u32 inputs=300
   arg work
   arg buf 0x80
   region D 0x10
   fix work 0x4A8 u32 addrof region:D
   stub 021b9934 force ret=u32 args=v,v
-  stub 021bd1e0 force ret=none args=p
-  stub 021bd200 force ret=none args=p,p,v,v
+  stub 021bd1e0 force ret=none args=outk:6:0xFF/0xFF/0xFF/0xFF/0xFF/3
+  stub 021bd200 force ret=none args=outk:6:0/0/0xFF/0xFF/0/3,p,v,v
   stub 021bf3d8 force ret=none args=p,in:0x10,v,v,p
   stub 021bf4ac force ret=none args=p,in:0x10,v,v,p
   stub 021bf83c force ret=none args=p,in:0x10,v,v
   stub 021bf8d4 force ret=none args=p,in:0x10,v,v
-  stub 021c091c force ret=none args=p,in:0x10,v,v,p,v
+  stub 021c091c force ret=none args=outki:0x4A8:6:0/0/0/0/0/3,in:0x10,v,v,p,v
   stub 021c5718 force ret=none args=p
   stub 021c64b4 force ret=none args=p,v,v,out:0x14
   stub 021ca0b8 ret=none args=v

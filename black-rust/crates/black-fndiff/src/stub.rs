@@ -121,6 +121,11 @@ impl StubEnv {
                     } else if k.starts_with("outp:") {
                         // `outp:K:OFS:N` (B12-spec): one address word
                         Some(4)
+                    } else if k.starts_with("outk:") || k.starts_with("outki:") {
+                        // `outk:N:M..` / `outki:OFS:N:M..` (Z20): N is the second-to-last field; for `outki` the
+                        // port passes the record itself (the original reaches it through the u32 at arg + OFS)
+                        let t: Vec<&str> = k.split(':').collect();
+                        Some(num(t[t.len() - 2]) as usize)
                     } else {
                         None
                     };
@@ -169,6 +174,23 @@ impl StubEnv {
                     let h = mix(mix(acc, key + 0x1000 + 0x100 * (i as u32 + 1)), 0xC0DE);
                     let v = base.wrapping_add(ofs).wrapping_add(4 * (h % n));
                     b.copy_from_slice(&v.to_le_bytes());
+                    continue;
+                }
+                if k.starts_with("outk:") || k.starts_with("outki:") {
+                    // `outk` / `outki` (Z20): the `outm` byte under mask M[j % len], the old bits elsewhere
+                    let m: Vec<u8> = k
+                        .rsplit(':')
+                        .next()
+                        .unwrap()
+                        .split('/')
+                        .map(|x| num(x) as u8)
+                        .collect();
+                    let salt = 0x100 * (i as u32 + 1);
+                    for (j, o) in b.iter_mut().enumerate() {
+                        let mj = m[j % m.len()];
+                        let h = mix(acc, key + 0x1000 + salt + j as u32);
+                        *o = (*o & !mj) | (((mix(h, 0x5EED) >> 8) & 0xFF) as u8 & mj);
+                    }
                     continue;
                 }
                 // `outm:N:M0/M1/..` ANDs byte j with M[j % len]
@@ -381,6 +403,48 @@ mod tests {
         assert_eq!(ret_value("pick:0xfd/0xfe/0xff/7", 0x12345), Some(0xfe));
         // mix(0x12345, 0xC0DE) % 64 = 45 -> WORK + 0x1000 + 180
         assert_eq!(ret_value("ptr:work:0x1000:64", 0x12345), Some(0x02E0_10B4));
+    }
+
+    /// `outk:N:M..` (Z20): the `outm` bytes under the masks, the old bits elsewhere; vectors computed with
+    /// tools/rom-diff/svflow.py (`tools/rom-diff/test_svflow.py`, salt 0x1234, `seq`).
+    #[test]
+    fn outk_keeps_the_bits_outside_the_mask() {
+        let mut e = StubEnv::new(vec![spec("u32", &["v", "outk:5:0xF/0"], true)], 0x1234);
+        let mut out = [0x11u8, 0x22, 0x33, 0x44, 0x55];
+        let r = e.call(0x021B_B798, &mut [Arg::V(0xABCD), Arg::Out(&mut out)]);
+        // bits under 0xF = the `outm:5:0xF` bytes [1, 7, 15, 3, 15], masked 0xF / 0 / 0xF / 0 / 0xF
+        assert_eq!(out, [0x11, 0x22, 0x3F, 0x44, 0x5F]);
+        assert_eq!(e.log, [0x021B_B798, 0xABCD]);
+        let mut m = StubEnv::new(vec![spec("u32", &["v", "outm:5:0xF"], true)], 0x1234);
+        assert_eq!(
+            r,
+            m.call(0x021B_B798, &mut [Arg::V(0xABCD), Arg::Out(&mut [0u8; 5])])
+        );
+        // a full mask is `outm`
+        let mut e = StubEnv::new(vec![spec("u32", &["v", "outk:6:0xFF"], true)], 0x1234);
+        let mut out = [0xAAu8; 6];
+        e.call(0x021B_B798, &mut [Arg::V(0xABCD), Arg::Out(&mut out)]);
+        assert_eq!(out, [113, 135, 79, 211, 223, 219]);
+    }
+
+    /// `outki:OFS:N:M..` (Z20): the port passes the record the original reaches through the u32 at arg + OFS; the bytes
+    /// are those of `outk` at the same argument position (vector from tools/rom-diff/test_svflow.py).
+    #[test]
+    fn outki_is_outk_on_the_record() {
+        let mut e = StubEnv::new(
+            vec![spec("u32", &["outki:0x4A8:6:0/0/0/0/0/3", "v"], true)],
+            0x1234,
+        );
+        let mut rec = [0x10u8, 0x20, 0x30, 0x40, 0x50, 0x67];
+        e.call(0x021B_B798, &mut [Arg::Out(&mut rec), Arg::V(7)]);
+        assert_eq!(rec, [0x10, 0x20, 0x30, 0x40, 0x50, 0x65]);
+        let mut k = StubEnv::new(
+            vec![spec("u32", &["outk:6:0/0/0/0/0/3", "v"], true)],
+            0x1234,
+        );
+        let mut rec2 = [0x10u8, 0x20, 0x30, 0x40, 0x50, 0x67];
+        k.call(0x021B_B798, &mut [Arg::Out(&mut rec2), Arg::V(7)]);
+        assert_eq!(rec, rec2);
     }
 
     /// `outp:K:OFS:N` (B12-spec): the out word is an address inside pointer argument K; vectors

@@ -829,10 +829,13 @@ fn 021d0cc4 ret=u32
   stub 021eabc4 ret=none args=v,p,p,v
   stub 021eac54 ret=pick:0/1 args=v,outm:4:1/0/0/0
 
-# request 5, mode 0: thunk to 021d0e7c(c, state, 2)
+# request 5, mode 0: thunk to 021d0e7c(c, state, 2). Z20: args 2 / 3 as in 021d0e7c's block: r2 (overwritten with the kind) and
+# r3 (unused by the code), whose buffer is the adapter list 021eec20's `outp:3` answer points into (before: undeclared, zero memory)
 fn 021d0d38 ret=u32
   nowork
   arg buf 0x1C0
+  arg buf 0x10
+  arg u32 any
   arg buf 0x10
   stub 021d0e7c ret=pick:0/1 args=p,p,v
   stub 021b8588 force ret=pick:0/1/2/3 args=v
@@ -869,10 +872,13 @@ fn 021d0d38 ret=u32
   stub 021ea814 ret=pick:0/1 args=v
   stub 021eec20 force ret=pick:0/1/2/3/4/6 args=v,outp:3:0:1
 
-# request 6, mode 0: thunk to 021d0e7c(c, state, 1)
+# request 6, mode 0: thunk to 021d0e7c(c, state, 1). Z20: args 2 / 3 as in 021d0e7c's block: r2 (overwritten with the kind) and
+# r3 (unused by the code), whose buffer is the adapter list 021eec20's `outp:3` answer points into (before: undeclared, zero memory)
 fn 021d0d44 ret=u32
   nowork
   arg buf 0x1C0
+  arg buf 0x10
+  arg u32 any
   arg buf 0x10
   stub 021d0e7c ret=pick:0/1 args=p,p,v
   stub 021b8588 force ret=pick:0/1/2/3 args=v

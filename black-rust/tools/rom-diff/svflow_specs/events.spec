@@ -231,6 +231,9 @@ fn 021cc438 ret=u32
   stub 021c88c8 force ret=none args=v,v
 
 # held-item based check: veneer 021cc4f8(item) says "blocked"; else 021c84ac(P, bpp, &flag) -> 1, or 2 if flag is set
+# Z20: `ret=bool` is 021c84ac's true result set: it returns core4 021c2128's result unchanged, and 021c2128 returns r4 = 0 or 1
+# (`movs r4, #0` / `#1`, `adds r0, r4, #0` at 021c21e6; the port's `done as u32`). A `u32` stub would answer values the
+# original never returns and starve the flag branch (this caller tests the low byte: 255 of 256 answers would be "1").
 fn 021cc4ac ret=u32
   arg work
   arg bpp

@@ -157,12 +157,13 @@ fn 021c7f4c ret=bool
   arg work
 
 # positions from 021b8778(work[4], r1, out) -> pokeIDs of the mons there that are not fainted, into the byte list r2
+# Z20: 021b98ac (the mon at a position) is `nullable`: the original tests the mon for null before 021d5b68 (an empty position)
 fn 021c7f68 ret=u32
   arg work
   arg u32 any
   arg buf 8
   stub 021b8778 force ret=pick:0/1/2/3/4/5/6 args=v,v,outm:8:7
-  stub 021b98ac force ret=u32 args=v,v
+  stub 021b98ac force ret=nullable:4:u32 args=v,v
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
   stub 021d5b68 ret=pick:0/1 args=v
 
