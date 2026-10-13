@@ -635,3 +635,11 @@ No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec te
   scripts 8000..=8176; the original reads past it for those ids). fieldmap_event: the stack locals that `0218AED4`, `0218AF90`,
   `0218B0CC`, `0218B13C`, `0218B53C` pass reach `02162564` / `02162B68` (via `021626A8`) as `in:12`, `02162BCC` (via `021626B0`) /
   `0219E570` as `in:8`; `02164240(dir, &x, &z, n)` (from `0218B4B0`) writes the two s16 tiles: `outm:2:0xFF/0xFF` each.
+## F4c-spec additions (black-field trainer_eye)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-field/trainer_eye.spec` (header): closure stubs as in core4 / F4a / F6a (checked with every function of the area treated as
+ported: no fault, stray write or unstubbed callee; `--strict-callees` and `--order-check` clean); every out-of-area stub is `force`;
+MMDLs are values only (the iterator `0216DD1C` and the player-MMDL getter `021A3074` answer from the same four work addresses, so
+identity tests hit); calls through in-area ROM tables (`0x021D9338` line tests, `0x021D9348` task states) get bounded indices; a state
+loop over in-area stubs (`021AE72C`) uses `seq` stubs.

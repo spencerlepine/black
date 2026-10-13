@@ -711,3 +711,89 @@ now says so (doc only, no format change).
   the inputs; WFBC passes only 0 / 1 / 3 / 0xFF). `021A9A5C` with a negative type copies 0 bytes from the caller's r4.
 * `021AACD4` runs the ARM9 soft-float helpers (`0209BDBC` / `0209C95C` / `0209CB8C` / `0209C494`, ALLOW) on both sides: its port must use
   `black_core::softfloat`.
+## F4c-spec: event_trainer_eye.c (trainer line-of-sight spotting; spec + smoke ports)
+
+One spec area under `tools/rom-diff/specs/black-field/` (set `field`), generated with closure stubs (a block lists the stubs of its
+callees and of the callees of all its in-area descendants; with every function of the area treated as ported all blocks run without a
+fault, stray write or unstubbed callee), so F4c can port it in any order. `svflow.py trainer_eye --all --strict-callees` and
+`--order-check` are clean (all-function spec hash `8275afc1452b46ab`).
+
+| area | original | range | specced | coverage (plain / closure) | smoke ports (hash) | area hash |
+|---|---|---|---|---|---|---|
+| `trainer_eye` | `event_trainer_eye.c` (ov21; F1 row 21.40 tail + row 21.41) | `0x021AE0CC..0x021AE948` | 38 | 941/941 / 936/941 | `021AE348` `line_test` (3cc557c88f633dca), `021AE360` `line_up` (a37f5802b499ec4f), `021AE394` `line_down` (46c6d1fbc0f967f0), `021AE3C8` `line_left` (a5e9f4aa51c90424), `021AE3FC` `line_right` (a14f402dedbbaa9d), `021AE5D4` `state_wait_30` (d1dc52683dc56dab) | 7eaf18973a1bd90a |
+
+Coverage = instructions of the function body (Thumb walk from the entry, jump tables decoded) that the spec's inputs execute on the
+original, with the in-area callees stubbed (plain) or real (closure). The closure gap is `021AE0CC`'s "two separate trainers see
+the player at once" path (`0x021AE120..0x021AE12A`), which needs two independent random trainers to pass the whole real search; plain
+mode covers it. Mutation spot check on the smoke ports (each reverted): 4/4 caught (`>=` -> `>` on the near boundary of up / left,
+`<=` -> `<` on down / right, the 30-frame wait `>= 30` -> `> 30`, the wrong cross axis in `line_left`).
+
+**File bounds.** The only `__FILE__` strings referenced from `0x021ADEDC..0x021AE948` are "fldeff_fishing.c" (`021ADEDC`,
+`Heap_AllocDebug(.., 0x18, 1, file, 96)`) and "event_trainer_eye.c" (`021AE454`, line 506). `021ADEDC..0x021AE0C6` are the fishing
+field effects (F5a-spec: render); from `0x021AE0CC` the code works on MMDLs, trainer ids and script records, and line 506 needs ~500
+source lines before `021AE454`, so the file starts at `0x021AE0CC` (F1 put `0x021AE0CC..0x021AE44E` into row 21.40 fldeff_fishing.c)
+and ends at `0x021AE948` (scrcmd_fld, F8-spec2). F1 row 21.43 (`0x021B0808..`, also labelled event_trainer_eye.c) is scrcmd_talk's
+balloon-window placement (F8-spec2), so the file has 38 functions, not F1's 55.
+
+Function list: 38 entries (bl/blx targets of the whole field set, odd code pointers, the ROM tables `0x021D9338` (4 line tests) /
+`0x021D9348` (18 task states), the Ghidra index, a Thumb walk from every entry; the gaps are padding and literal pools). Ghidra misses
+`021AE394`, `021AE3C8`, `021AE3FC`, `021AE4E0`, `021AE5A8`, `021AE650` and lists 20 `LAB_` fragments (shared returns / branch targets,
+header of the spec). No veneers. Render-only functions left out: none; the "!" balloon (`fldeff_gyoe` `021BB528` / `021BB5C8`, field
+effect delete `021AC154`) and the face / walk animations (`fldmmdl_acmd` codes from `02197E7C`, set with `fldmmdl::acmd_set`) are
+callees behind the seam (D3).
+
+Callers outside the file: `021AE0CC` from `fieldmap_event` `02189C18` (the field event check), `021AE198` from `fldmmdl_acmd`
+`0219AE38` (a trainer MMDL re-checking its line), `021AE884` from `fldmmdl_acmd` `0219BBC6`.., `021AE454` / `021AE430` from the trainer
+script commands `021AE948` / `021AE994` (scrcmd_fld: one TASK per EYE HIT slot, then the GMEVENT that runs both).
+
+### Sight algorithm (as the code does it)
+
+* **Who is a trainer** (`021AE79C`): `fldmmdl::kind_434(event_type)` (MMDL `+0x10`): 1 for event types 1, 4..8 and 11..13 (a trainer
+  looking along its display direction), 2 for event type 2 (a trainer that looks in all four directions, tried 0, 1, 2, 3 in turn);
+  anything else is skipped. **Sight range** = `(s16)` header param 0 (MMDL `+0x20`, `fldmmdl::param(m, 0)`). **Direction** = display
+  dir (`+0x18`). **Trainer id** (`021AE884`) = `0215A460(event id)` (MMDL `+0x14`, the script id). **Already fought** (`021AE890`) =
+  `0215A4D8(event work, trainer id)` (script_sys: the trainer's flag), such trainers are skipped.
+* **Line test** (`021AE348` -> ROM `0x021D9338[dir]`): grid positions `s16[3]` x / y / z (`fldmmdl::grid`, MMDL `+0x3C..+0x40`) of the
+  trainer `a` and the player `b`. Up: `a.x == b.x`, `a.y == b.y`, `a.z - range <= b.z < a.z`, distance `a.z - b.z`; down: `a.z < b.z <=
+  a.z + range`; left / right: the same on x with `a.z == b.z`, `a.y == b.y` (so a different height never sees). Otherwise -1. 32-bit
+  wrapping arithmetic, signed compares; range 0 never sees.
+* **Path check** (`021AE7A8(m, dir, dist, enc)`; dist 0 = clear): from the tile in front of the trainer (`dir_dx` / `dir_dz`), each of
+  the `dist - 1` tiles in between must be free (`mmdl_move::step_hits_here(m, x, y, z, dir) & !1 == 0`) and not the active
+  effect-encounter tile (`021AA900(enc, &pos)`: shaking grass etc. blocks the view); the player's tile must hit exactly "an MMDL"
+  (`& !1 == 4`) and not be the effect-encounter tile. Any failure = blocked.
+* **Search** (`021AE1FC(fm, exclude, &rec)`): the first MMDL in use (`fldmmdl` iterator `0216DD1C`, MMDLSYS order) that is not the
+  player's MMDL (`021A3074(FIELD_PLAYER)`), not `exclude`, sees the player and is not defeated -> EYE HIT record.
+* **Event check** (`021AE0CC(fm)` -> GMEVENT or 0): no hit -> 0. `type = 0215A4C8(trainer id)` (the trainer's battle type),
+  `n = 0218B6AC(gamesys)` (party members able to battle). Type 0 (single): with `n >= 2` a second search that excludes the first trainer;
+  found -> both records, kind 2 (two trainers at once = a double battle); else one record, kind 0. Type 1 (a double-battle trainer pair):
+  needs `n >= 2`; the partner is the first other MMDL of trainer kind 1 / 2 with the same trainer id (`021AE8D4`), recorded with the
+  first trainer's distance and direction, kind 1. Types 2 / 3 (triple / rotation): need `n >= 3`, one record, kind 0. Other types, or
+  too few members: 0. The event is the trainer script `02158768(gamesys, 0xE20, m, 1)` (`021AE930`); the records go to its script work
+  with `0215A438(event, slot 0 / 1, &rec)`.
+* EYE HIT record (0x18): `+0` MMDL, `+4` distance, `+8` dir, `+0xC` script id, `+0x10` trainer id, `+0x14` kind (0 one trainer, 1
+  double-battle pair, 2 two separate trainers).
+
+### Approach TASK (0x38, `021AE454`; ROM state table `0x021D9348`, `021AE72C` runs states while they answer 1)
+
+`+0` state, `+4` done, `+8..+0x1F` the EYE HIT record, `+0x20` 0, `+0x24` slot index (0 / 1), `+0x28` frame counter, `+0x2C` the "!"
+effect, `+0x30` fieldmap, `+0x34` FIELD_PLAYER. States: 0 unpause the trainer if its move bit 0x10 is set; 1 wait while move bit 0x10 is set, then show `dir` and pause; 2 wait for the player's acmd
+(move codes 0x33..0x36 go to 7); 3/4 face acmd; 5/6 "!" balloon and its end; 7/8 acmd 0x65 (the other move codes' reaction); 9 wait
+30 frames; 10..12 walk `distance - 1` tiles (acmd walk, `distance <= 1` stops); 13 wait 8 frames; 14 the player turns to the trainer
+(`dir_between` of the grid x / z) unless already facing it, only for slot 0 or kind 2 (the partner of a pair does not turn him again);
+15 wait; 16 end the acmd, move code 0 (the trainer stops wandering); 17 done. The GMEVENT `021AE754` (work = the two TASKs, made by
+`021AE430`) steps both and frees each when done; it ends when both are gone.
+
+### Spec conventions (this area)
+
+* MMDLs are values only (no field is read directly): the iterator `0216DD1C` answers `work+0x100..+0x10C` (`outp:work:0x100:4`), the
+  player's MMDL `021A3074` the same set, so "not the player / not excluded / not itself" hit; blocks without the iterator are `nowork`.
+* Grid positions from `0216D828` are `outm:6:1/0/0/0/1/0` (x, z 0..1, y 0) so the real line tests of the closure runs see the player;
+  the line-test blocks themselves take two `arg buf 8` positions with cross axes mostly 0 and the line axis small (plus `near 0x7FFF`
+  and `any`), range `0..7`, -1, `0x7FFFFFFF`, `0x80000000` or any, 1000 inputs.
+* Table indices are bounded: dir 0..3 (`021AE198`, `021AE348`, `dir_disp` answers 0..3), task state 0..17.
+* The task states are `seq` stubs in `021AE72C` / `021AE754` (the loop runs while they answer 1); `Heap_AllocDebug` answers into an
+  extra `arg buf 0x40` of `021AE454` (5th argument, never read), `020124E8` into an extra `arg buf 0x10` of `021AE430`.
+* Every out-of-area stub is `force`; no grammar change.
+
+Deliberate deviations (smoke ports): none. UNVERIFIED: `line_test` panics for `dir > 3` (the original calls through the ROM words after
+the table).

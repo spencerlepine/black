@@ -32,5 +32,6 @@ pub mod player_grid;
 pub mod season;
 #[cfg(test)]
 mod testenv;
+pub mod trainer_eye;
 pub mod wfbc_data;
 pub mod zonedata;

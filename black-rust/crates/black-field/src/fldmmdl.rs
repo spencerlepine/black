@@ -14,7 +14,7 @@
 //! `0216E40C` ROM proc-table lookups and `0216D8AC` from `0216DDDC`), which go through [`FieldEnv::call`] at their
 //! own address (a real environment dispatches them to [`move_proc_table`] / [`draw_proc_table`] / [`pos_y`]).
 //! Planned next to this module: `fldmmdl_acmd.c` 0x02197D3C-0x0219C552 (overlay 21, 452 fns; F4b) and
-//! `event_trainer_eye.c` 0x021AE454 (F4c).
+//! `event_trainer_eye.c` 0x021AE0CC-0x021AE948 (overlay 21, 38 fns; F4c, specced as [`crate::trainer_eye`]).
 //!
 //! MMDLSYS: `+0x00` flags, `+0x04 u16` MMDL count, `+0x06 s16` objects in use, `+0x18` -> `MMDL[count]` (0x100 each),
 //! `+0x20` task system, `+0x2C` -> save positions, `+0x44` -> OBJ code table. MMDL: `+0x00 u32` status (bit 0 = in
