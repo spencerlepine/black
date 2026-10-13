@@ -318,7 +318,8 @@ Read these sections of <worktree>/MIGRATION-AGENT.md first: §1, §3, §3b, §4,
 Inputs (read-only): pseudo-C in /tmp/blk/re/<set>/pc/ (index.jsonl for callers/callees), packets from tools/re/packet.py once Z8 exists, ROM build at $BLACK_ROM_BUILD (absolute path; not in your worktree).
 Scope: <functions / address range / files you own>. Do not edit: Cargo.toml of other crates, tools/re/signatures.tsv, tools/re/sets.txt, MIGRATION-AGENT.md.
 Method: §3b. Use the decompiled C, not the .s files, unless the C has decompiler warnings. Port per §4. Verify every function with tools/rom-diff (Unicorn) against the original; record hashes.
-Env: . ~/.cargo/env; export CARGO_TARGET_DIR=/tmp/blk/target-<ID>; Unicorn python = /tmp/blk/venv/bin/python -I.
+Env (workers cannot `export`/`.`; prefix each command instead, one plain command per call): `env CARGO_TARGET_DIR=/tmp/blk/target-<ID> BLK_OUT=/tmp/blk/out-<ID> BLACK_ROM_BUILD=$HOME/workplace/black/black-rom/build/black.us GATE_NO_GAME=1 tools/gate.sh` (same prefix for check-*.sh; add `PATH=/home/ec2-user/.cargo/bin:/usr/local/bin:/usr/bin:/bin` first if cargo isn't found). Create/edit files with the Write/Edit tools, not heredocs; put scripts in files and run `python3 <file>`. Unicorn python = /tmp/blk/venv/bin/python -I.
+The job has no time or token limit: finish it in this session (a spec job of ~100 fns is ~300–500k tokens). Never report BLOCKED for size or sandbox friction; only for a real harness defect.
 Do not commit, push, rebase or merge. Stage your changes with git add <explicit paths> (never -A), run tools/gate.sh until green, and leave them staged; the coordinator reviews and commits.
 You may not edit tools/rom-diff/*, existing stubs, check-*.sh, or recorded hashes in tests (except by running the check script, which records only on a match). If the harness is missing or wrong, stop and report "BLOCKED: harness".
 Final message, first line "Task: <ID>" (or "BLOCKED: <reason>"), then: branch, summary, functions ported / verified (+ hashes), deviations, new §8 questions, new prototypes for signatures.tsv, tokens/time spent if known.
@@ -881,6 +882,8 @@ Unknown roles (structure only): 006 (733, ` APS`), 108 (282 × 28 B, pairs with 
 - **2026-10-12** — Session 3 summary: merged F1, B10j-spec, B10-spec3, P-port3, B10i, B12-spec, B10j, B7h, B12-port, B10k-spec, B10-spec4, B10k, B7 batch 1, B10k-fix, B13-spec1 (15 items); every merge re-verified on main (all svflow/handler/check-fn areas + full gate). Milestones: **btl_server_flow complete (503 fns), B12 adapter complete, all battle handler kinds complete, black-pokemon P1/P2/P5 complete**. Closed out on the human's request: no workers, no crons, worktrees removed. Estimate 10% → 16%.
 
 - **2026-10-13** — Session 4 (Linux EC2) started by the coordinator loop: usage GREEN (Bedrock, no cap), doctor green, no `[TODO]` findings. Spawned B10bc-spec, B11-spec, B13-spec2, B7b (Sonnet) and a validator run on the V-0006..V-0019 hand fixes (4fee113..8c93956). Full gate on main running in target-coord.
+
+- **2026-10-13** — All 4 wave-4 Sonnet workers came back early (B11-spec "BLOCKED: sandbox", B13-spec2/B10bc-spec "too big" partials — B10bc's hem hash was the empty-suite FNV basis — and B7b unverified with a weakened effects harness, rejected). Cause: workers can't `export`/`.`/heredoc, so env vars never reached the gate. Added `env CARGO_TARGET_DIR=/tmp/blk/…`-style prefixes to `.claude/settings.json` and the worker template; resumed all 4 with SendMessage.
 
 ---
 

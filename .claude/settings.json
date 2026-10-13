@@ -72,7 +72,11 @@
       "Bash(git revert:*)",
       "Bash(git lfs:*)",
       "Bash(git fetch:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(env PATH=/home/ec2-user/.cargo/bin:*)",
+      "Bash(env CARGO_TARGET_DIR=/tmp/blk/*)",
+      "Bash(env GATE_NO_GAME=1 CARGO_TARGET_DIR=/tmp/blk/*)",
+      "Bash(env BLACK_ROM_BUILD=/home/ec2-user/workplace/black/black-rom/build/black.us *)"
     ],
     "deny": [
       "Bash(git reset --hard:*)",
