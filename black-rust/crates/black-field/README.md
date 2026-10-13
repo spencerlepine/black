@@ -797,3 +797,35 @@ effect, `+0x30` fieldmap, `+0x34` FIELD_PLAYER. States: 0 unpause the trainer if
 
 Deliberate deviations (smoke ports): none. UNVERIFIED: `line_test` panics for `dir > 3` (the original calls through the ROM words after
 the table).
+
+## F4c: `trainer_eye` (38/38) ported
+
+| area | ported | verified (in `PORTED`) | area hash | unverified ports |
+|---|---|---|---|---|
+| `trainer_eye` | 38 | 38 | `9d1854b2d2feadff` | |
+
+`--order-check` is clean; ported from the raw `OVY_21.sbin` disassembly (rizin `-a arm -b 16`). Every callee outside the
+area (fldmmdl getters and acmd calls, mmdl_move `step_hits_here` / `dir_dx` / `dir_dz` / `dir_between`, script_sys trainer
+ids / battle type / defeated flag / EYE HIT store / script event, fieldmap glue, `field_player` MMDL, the effect-encount
+tile test, GMEVENT, heap, and the D3 seam: `fldeff_gyoe` "!" balloon `021BB528` / `021BB5C8`, field effect delete
+`021AC154`, acmd codes `02197E7C`) is reached through `hooks::FieldEnv::call` by address; callees inside the area are Rust
+calls, including both ROM tables (`0x021D9338` = `LINE_TESTS`, `0x021D9348` = `run_state`'s match). The original's stack
+locals that ported callees read or write (EYE HIT records, grid positions, the iterator's MMDL / index words, the found
+direction) are `Mem::push_local` windows; the path check's position (seen only by stubs) is a Rust buffer.
+
+| symbol | Rust item |
+|---|---|
+| `021AE0CC` | `check` (field event check) |
+| `021AE198` / `021AE1FC` / `021AE288` | `sees_dir`, `search`, `sees` |
+| `021AE348` / `360` / `394` / `3C8` / `3FC` | `line_test`, `line_up` / `line_down` / `line_left` / `line_right` |
+| `021AE430` / `021AE454` | `approach_event_new`, `task_new` |
+| `021AE498`..`021AE724` (states 0..17) | `state_unpause`, `state_face`, `state_wait_player`, `state_face_acmd`, `state_face_done`, `state_balloon`, `state_balloon_done`, `state_acmd_65`, `state_acmd_65_done`, `state_wait_30`, `state_walk_check`, `state_walk`, `state_walk_done`, `state_wait_8`, `state_player_turn`, `state_player_turn_done`, `state_end`, `state_done` |
+| `021AE72C` / `021AE754` | `task_step`, `approach_event` |
+| `021AE79C` / `7A8` / `884` / `890` / `8B4` / `8D4` / `930` | `trainer_kind`, `path_blocked`, `trainer_id`, `defeated`, `record_fill`, `partner`, `script_event` |
+
+Mutation spot check (each reverted, `check-fn.sh --fn`): 6/6 caught (path loop `<` -> `<=`, triple/rotation `n >= 3` -> `>= 2`,
+trainer-kind window `> 1` -> `> 2`, player-turn kind `!= 2` -> `!= 1`, partner without the "not itself" skip, the 8-frame
+wait `< 8` -> `<= 8`).
+
+Deliberate deviations: none. UNVERIFIED: `line_test` panics for `dir > 3` and `run_state` for `state > 17` (the original
+calls through the ROM words after the tables); the game only passes display directions 0..3 and states it set itself.
