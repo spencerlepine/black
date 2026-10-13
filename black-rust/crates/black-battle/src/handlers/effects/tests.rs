@@ -11,7 +11,7 @@ fn effects_match_rom() {
     };
     let addrs: Vec<u32> = super::PORTED.to_vec();
     let h = run_effect_suite(&addrs, |a| super::handler::<TestHost>(a).unwrap(), &reg);
-    assert_eq!(h, "40cb21a36bea5a91");
+    assert_eq!(h, "da197eae5f3d6238");
 }
 
 /// The registries read by the harness: 8 field keys, 5 position keys, 14 side keys and 30

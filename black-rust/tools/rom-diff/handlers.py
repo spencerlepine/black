@@ -96,8 +96,37 @@ OVY95_BASE = 0x06898020
 # 0x06898cb8, the table `FUN_06898c10` reads).
 FX_REGISTRIES = [("field", 0x0689D650, 8, 8, 3), ("pos", 0x0689D6C8, 5, 8, 1), ("side", 0x0689D780, 14, 12, 2)]
 FX_TYPE = {kind: ty for kind, _, _, _, ty in FX_REGISTRIES}
-FX_ALT_BD28 = 0x068993B0  # effect handler whose hint makes 0201bd28 answer 4 / 5 (the %3 stub never does)
+FX_ALT_BD28 = 0x068993B0  # effect handler whose hint makes 0201bd28 answer 4 / 5 (the plain stub does so only for 1 key in 4, see wide_param)
 FX_STUB_DE0 = 0x06898DE0  # side-effect layer count (reads the 0x0689E7E0 state array): stubbed, tag 0x155
+
+
+def wide(x, salt, small, mask, signed=False):
+    """V-0007: return domain of the stubbed black-pokemon `waza` getters (0201BD28 and its wrappers). 3 of 4
+    keys keep the small, branch-friendly answer; the 4th gets any value of the real record field (`mask`
+    bits, sign-extended when `signed`), so handler branches on rarer values are reachable without hints."""
+    if mix(x, salt ^ 0x10000) % 4 != 0:
+        return small
+    v = mix(x, salt ^ 0x20000) & mask
+    return (v - (mask + 1) if signed and v > mask >> 1 else v) & M
+
+
+def wide_param(mv, prm):
+    """0201BD28(mv, prm): the domain of each parameter as `waza::record_param` reads it from the record."""
+    small = mix(mv, prm ^ 0xBD28) % 3
+    if prm in (6, 17, 20, 23):
+        return wide(mv, prm ^ 0xBD28, small, 0xFF, signed=True)
+    if prm in (8, 9):
+        return wide(mv, prm ^ 0xBD28, small, 0xF)
+    if prm in (11, 28):
+        return wide(mv, prm ^ 0xBD28, small, 0xFFFF)
+    if prm in (25, 26):
+        return wide(mv, prm ^ 0xBD28, small, 0x7F)
+    if prm in (30, 31):
+        return wide(mv, prm ^ 0xBD28, small, 0xFF) % 129
+    if prm == 29 or prm > 31:
+        return 0
+    v = wide(mv, prm ^ 0xBD28, small, 0xFF)
+    return 100 if prm == 4 and v == 101 else 0 if prm == 7 and v == 6 else v
 
 
 def load_ovy95():
@@ -159,16 +188,16 @@ class Host:
         st(0x0689C8EC, lambda em, mv, *a, sp: (self.log.extend([0x116, mv]), int(mix(mv, 0xC8EC) % 4 == 0))[1])
         st(0x021C8290, lambda em, wk, at, de, mv, sp: (self.log.extend([0x117, at, de, mv]), int(mix(at ^ (de << 8), mv ^ 0x8290) % 4 == 0))[1])
         st(0x021C7D54, self.opponents)
-        st(0x0201C1D8, lambda em, mv, *a, sp: (self.log.extend([0x111, mv]), [0, 1, 1, 40, 60, 90, 120, 250][mix(mv, 0xC1D8) % 8])[1])
-        st(0x0201C1BC, lambda em, mv, *a, sp: (self.log.extend([0x112, mv]), mix(mv, 0xC1BC) % 12)[1])
+        st(0x0201C1D8, lambda em, mv, *a, sp: (self.log.extend([0x111, mv]), wide(mv, 0xC1D8, [0, 1, 1, 40, 60, 90, 120, 250][mix(mv, 0xC1D8) % 8], 0xFF))[1])
+        st(0x0201C1BC, lambda em, mv, *a, sp: (self.log.extend([0x112, mv]), wide(mv, 0xC1BC, mix(mv, 0xC1BC) % 12, 0xFF))[1])
         st(0x0201C314, lambda em, mv, *a, sp: (self.log.extend([0x113, mv]), mix(mv, 0xC314) & 1)[1])
-        st(0x0201C1C8, lambda em, mv, *a, sp: (self.log.extend([0x114, mv]), mix(mv, 0xC1C8) % 18)[1])
+        st(0x0201C1C8, lambda em, mv, *a, sp: (self.log.extend([0x114, mv]), wide(mv, 0xC1C8, mix(mv, 0xC1C8) % 18, 0xFF))[1])
         st(0x021C83D4, lambda em, *a, sp: (self.log.append(0x10C), mix(self.wseed, 0x83D4) & 1)[1])
         st(0x0689C944, lambda em, ab, *a, sp: (self.log.extend([0x10D, ab]), int(mix(ab, 0xC944) % 4 == 0))[1])
         st(0x021C815C, lambda em, *a, sp: (self.log.append(0x10E), mix(self.wseed, 0x815C) % 4)[1])
         st(0x021B9A6C, lambda em, x, y, *a, sp: (self.log.extend([0x10F, x, y]), mix(x ^ (y << 8), 0x9A6C) & 1)[1])
         st(0x021C82B8, lambda em, wk, x, *a, sp: (self.log.extend([0x10B, x]), mix(self.wseed, 0x82B8 ^ x) & 1)[1])
-        st(0x0201BD28, lambda em, mv, prm, *a, sp: (self.log.extend([0x109, mv, prm]), 4 + mix(mv, prm ^ 0xBD29) % 2 if self.alt_hint == FX_ALT_BD28 else mix(mv, prm ^ 0xBD28) % 3)[1])
+        st(0x0201BD28, lambda em, mv, prm, *a, sp: (self.log.extend([0x109, mv, prm]), 4 + mix(mv, prm ^ 0xBD29) % 2 if self.alt_hint == FX_ALT_BD28 else wide_param(mv, prm))[1])
         st(0x0201BEB8, lambda em, mv, fl, *a, sp: (self.log.extend([0x10A, mv, fl]), mix(mv, fl ^ 0xBEB8) & 1)[1])
         st(0x021C8010, self.pos_in_battle)
         st(0x021C7CF4, lambda em, wk, i, *a, sp: MONS_ADDR + 0x200 * i if i < NMONS else 0)
@@ -323,7 +352,7 @@ class Host:
 
     def mv_entry(self, e, mv, index, out, *_, sp):
         self.log += [0x123, mv, index]
-        e.w32(out, ((mix(mv, index ^ 0xC0BC) % 5) - 1) & M)
+        e.w32(out, wide(mv ^ (index << 16), 0xC0BC, ((mix(mv, index ^ 0xC0BC) % 5) - 1) & M, 0xFF, signed=True))
 
     def push_pop(self, e, wk, ty, poke, *_, sp):
         self.log += [0x102, ty, poke]
@@ -344,7 +373,7 @@ class Host:
 
     def category(self, e, mv, *_, sp):
         self.log += [0x106, mv]
-        return mix(mv, 0xC1E8) % 3
+        return wide(mv, 0xC1E8, mix(mv, 0xC1E8) % 3, 0xFF)
 
 
 def _find_action(self, e, wk, poke, out, *_, sp):

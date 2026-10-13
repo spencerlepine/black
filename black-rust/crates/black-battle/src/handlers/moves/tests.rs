@@ -11,7 +11,7 @@ fn moves_match_rom() {
     };
     let addrs: Vec<u32> = super::PORTED.to_vec();
     let h = run_move_suite(&addrs, |a| super::handler::<TestHost>(a).unwrap(), &reg);
-    assert_eq!(h, "e9d0e632c5c9ffdf");
+    assert_eq!(h, "c0c95e82de734115");
 }
 
 /// The registry read by the harness: 258 moves, 337 distinct handlers, handler code in

@@ -17,6 +17,42 @@ pub const LABELS: [u16; 57] = [
 pub const MONS: usize = 8;
 const HANDEX_SIZE: usize = 0x80;
 
+/// V-0007: return domain of the stubbed black-pokemon `waza` getters (`0201BD28` and its wrappers);
+/// mirrors `wide` in handlers.py. 3 of 4 keys keep the small, branch-friendly answer; the 4th gets any
+/// value of the real record field (`mask` bits, sign-extended when `signed`), so handler branches on
+/// rarer values are reachable without hints.
+fn wide(x: u32, salt: u32, small: u32, mask: u32, signed: bool) -> u32 {
+    if !mix(x, salt ^ 0x10000).is_multiple_of(4) {
+        return small;
+    }
+    let v = mix(x, salt ^ 0x20000) & mask;
+    if signed && v > mask >> 1 {
+        v.wrapping_sub(mask + 1)
+    } else {
+        v
+    }
+}
+
+/// `0201BD28(mv, param)`: the domain of each parameter as `waza::record_param` reads it from the
+/// record; mirrors `wide_param` in handlers.py.
+fn wide_param(mv: u32, param: u32) -> u32 {
+    let small = mix(mv, param ^ 0xBD28) % 3;
+    let salt = param ^ 0xBD28;
+    match param {
+        6 | 17 | 20 | 23 => wide(mv, salt, small, 0xFF, true),
+        8 | 9 => wide(mv, salt, small, 0xF, false),
+        11 | 28 => wide(mv, salt, small, 0xFFFF, false),
+        25 | 26 => wide(mv, salt, small, 0x7F, false),
+        30 | 31 => wide(mv, salt, small, 0xFF, false) % 129,
+        29 | 32.. => 0,
+        _ => match wide(mv, salt, small, 0xFF, false) {
+            101 if param == 4 => 100,
+            6 if param == 7 => 0,
+            v => v,
+        },
+    }
+}
+
 /// Mirrors `Host` in tools/rom-diff/handlers.py.
 #[derive(Default)]
 pub struct TestHost {
@@ -125,14 +161,14 @@ impl FlowHost for TestHost {
     }
     fn move_category(&mut self, mv: u32) -> u32 {
         self.log.extend([0x106, mv]);
-        mix(mv, 0xC1E8) % 3
+        wide(mv, 0xC1E8, mix(mv, 0xC1E8) % 3, 0xFF, false)
     }
     fn move_param(&mut self, mv: u32, param: u32) -> u32 {
         self.log.extend([0x109, mv, param]);
         if self.alt_hint == 0x0689_93B0 {
             4 + mix(mv, param ^ 0xBD29) % 2
         } else {
-            mix(mv, param ^ 0xBD28) % 3
+            wide_param(mv, param)
         }
     }
     fn move_flag(&mut self, mv: u32, flag: u32) -> bool {
@@ -169,11 +205,12 @@ impl FlowHost for TestHost {
     }
     fn move_power(&mut self, mv: u32) -> u32 {
         self.log.extend([0x111, mv]);
-        [0, 1, 1, 40, 60, 90, 120, 250][(mix(mv, 0xC1D8) % 8) as usize]
+        let small = [0, 1, 1, 40, 60, 90, 120, 250][(mix(mv, 0xC1D8) % 8) as usize];
+        wide(mv, 0xC1D8, small, 0xFF, false)
     }
     fn move_effect_class(&mut self, mv: u32) -> u32 {
         self.log.extend([0x112, mv]);
-        mix(mv, 0xC1BC) % 12
+        wide(mv, 0xC1BC, mix(mv, 0xC1BC) % 12, 0xFF, false)
     }
     fn move_fun_0201c314(&mut self, mv: u32) -> bool {
         self.log.extend([0x113, mv]);
@@ -181,7 +218,7 @@ impl FlowHost for TestHost {
     }
     fn move_type(&mut self, mv: u32) -> u32 {
         self.log.extend([0x114, mv]);
-        mix(mv, 0xC1C8) % 18
+        wide(mv, 0xC1C8, mix(mv, 0xC1C8) % 18, 0xFF, false)
     }
     fn ability_breakable(&mut self, ability: u32) -> bool {
         self.log.extend([0x115, ability]);
@@ -265,7 +302,8 @@ impl FlowHost for TestHost {
     }
     fn move_fun_0201c0bc(&mut self, mv: u32, index: u32) -> i32 {
         self.log.extend([0x123, mv, index]);
-        (mix(mv, index ^ 0xC0BC) % 5) as i32 - 1
+        let small = ((mix(mv, index ^ 0xC0BC) % 5) as i32 - 1) as u32;
+        wide(mv ^ (index << 16), 0xC0BC, small, 0xFF, true) as i32
     }
     fn fun_021b8c5c(&mut self, rule: u32, pos: u32) -> u32 {
         self.log.extend([0x124, rule, pos]);

@@ -11,7 +11,7 @@ fn items_match_rom() {
     };
     let addrs: Vec<u32> = super::PORTED.to_vec();
     let h = run_item_suite(&addrs, |a| super::handler::<TestHost>(a).unwrap(), &reg);
-    assert_eq!(h, "fff17f74394c0f1b");
+    assert_eq!(h, "3f82b465ccd67971");
 }
 
 /// The registry read by the harness: 171 items, 229 distinct handlers, keys start at 149.
