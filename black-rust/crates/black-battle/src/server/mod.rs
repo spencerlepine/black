@@ -99,16 +99,6 @@ pub mod server1;
 pub mod server2;
 pub mod server3;
 
-/// Little-endian word at `ofs`.
-pub(crate) fn rd32(b: &[u8], ofs: usize) -> u32 {
-    u32::from_le_bytes(b[ofs..ofs + 4].try_into().unwrap())
-}
-
-/// Stores a little-endian word at `ofs`.
-pub(crate) fn wr32(b: &mut [u8], ofs: usize, v: u32) {
-    b[ofs..ofs + 4].copy_from_slice(&v.to_le_bytes());
-}
-
 /// A view of the original address space for the `battle_server.s` ports (B11a): a list of windows `(base address, bytes)`.
 ///
 /// The main module M and the objects it points at (BATTLE_SETUP, party containers, sub-proc slots, received blocks) are
