@@ -938,3 +938,63 @@ ROM 0x021D4A50: `02197DE8` start entry, `02197DF4` wait until the MMDL can take 
 * The list-task work is an `arg buf 0x40` with a 6-entry list at +0x20; `02197D3C`'s allocation lands in a trailing `arg buf` (r2).
 
 Mutation spot check (`check-fn.sh --fn`, reverted): 2 of 2 caught (`list_next` `<` -> `<=`, `anim_held` acmd test inverted).
+
+
+## F5a: `encount_st` (10/10), `enc_pokeset` (25/25), `encount` (15/19), `effect_encount` (29/29), `map_attr` (68/68) ported
+
+| area | ported | verified (in `PORTED`) | area hash | unverified ports |
+|---|---|---|---|---|
+| `encount_st` | 10 | 10 | `0e78a61f591671cc` | |
+| `enc_pokeset` | 25 | 25 | `fc4dbf578e169a8c` | |
+| `encount` | 19 | 15 | `75a53e7247a857c0` | `021A9F40` `step_check`, `021AA0A0` `fixed_battle`, `021AA180` `fishing`, `021AA248` `wfbc_step` (below) |
+| `effect_encount` | 29 | 29 | `bae064b190095912` | |
+| `map_attr` | 68 | 68 | `36aa2102c19d726f` | |
+
+`--order-check` is clean for all five. Callees outside an area (also those in the other F5a areas, which the specs stub with
+`force`) go through `hooks::FieldEnv::call` by address; in-area callees are Rust calls. The stack structs of the originals (EFP 0x2C,
+MON pairs 0x28, slot groups 0x30, FIELD SITUATION 0x10, RTC time, VecFx32 positions, the search window, the attribute query output,
+the MMDL iterator's `m` / `i`) are `Mem::push_local` windows passed as `CArg::In` / `CArg::Out` (the iterator index as `CArg::P`).
+ROM data embedded: `map_attr::GROUND_KINDS` (0x021D8EA0), `enc_pokeset::SWARM_DATA` (0x021D8DE8, read by its ROM address because
+`021A99A8` returns record addresses), `SLOT_PICK` (0x021D8DD8, dispatched to the Rust slot functions; a mode >= 4 panics where the
+original jumps through the swarm table), `ITEM_ODDS` (0x021D8DCC), `effect_encount::WINDOW_OFFSETS` (0x021D8E76), `DUST_RARE`
+(0x021D8E8A), `KIND_PARAMS` (0x021D8E70), `encount_st::SWARM_ZONES`. `021AACD4` computes the tile centres with
+`black_core::softfloat` (`i2f`, `fadd` / `fsub` 0.5, `f2i`), as the original does through the ARM9 helpers. `_u32_div_f`
+(`0209C2B0`) is `enc_pokeset::u32_divmod` (division by zero returns the dividend, as in black-battle; no input divides by 0).
+`021AA490` / `021AA548` allocate `FUN_020173EC()` = 0xDC bytes (that library function returns the constant).
+
+Found in the code (the spec comments differ):
+* `021A9508` stores Pokemon `i` at `mons + 0x14 * accepted`: a Pokemon the level filter rejects is overwritten by the next one.
+* `021A96B8` calls `021A9CAC(pp, per, eyes, dark)` with the Compound Eyes flag (0x200) third and `type == 1` fourth; the odds row is
+  `eyes + 2 * dark` (rows 50/5/0, 60/20/0, 50/5/1, 60/20/5).
+* `021AB5AC`: 0 when `a` is blocked; else 1 when `b` is water and not blocked, or when `b`'s value is 0x41 / 0x44 (also on land).
+* `021AB140`, `021AB3B0`, `021AB458`, `021AB474` test ranges with `(v - k) & 0xFFFF <= 1` (low half only); the other predicates
+  compare the whole register.
+* `021A9810` returns the first halfword of the swarm record, which is its zone (not the species).
+* `021AA0A0` returns the battle event of `0216E7C8` (the spec has `ret=none`).
+
+Unverified ports (doc `UNVERIFIED port of`; not in `PORTED`; their callers' specs keep their stubs): `021A9F40`, `021AA0A0`,
+`021AA180`, `021AA248` build the EFP on their own stack and reach `FUN_021A96B8` / `FUN_021A9780` (through `021AA490` /
+`021AA548`), whose stubs log the EFP pointer as a value (`v`), so the hash holds the emulator's stack address. Spec fix needed
+(encount.spec, blocks 021A9F40 / 021AA0A0 / 021AA180 / 021AA248 / 021AA490 / 021AA548): `stub 021a96b8 ... args=v,in:0x2C,in:0x14`,
+`stub 021a9780 ... args=v,in:0x2C,v`, and `stub 0201347c ... args=v,v,v,in:14,v,v` (the original never writes the FIELD SITUATION's
+padding `+0xE..0x10` and hands stale stack bytes to `0201347C`; seen in `021AA248`). With that fix and `CArg::In(efp, 0x2C)` /
+`CArg::In(sit, 14)` in `setup_wild` / `setup_roamer` (tried in the worktree and reverted) all six functions match.
+
+UNVERIFIED (behaviour the differential tests cannot reach): `021A9B68` with more than 12 typed slots (the original's 12-byte local
+overflows); `021A957C` picks a candidate by `02005728(n)` (always below `n` in the game); the slot-pick mode >= 4 and the window
+offsets / dust table past their ROM tables panic.
+
+Mutation spot check (`tools/check-fn.sh black-field AREA --fn`, each reverted): caught 6 of 11: `021A9508` (`accepted` -> `i`),
+`021AA728` (`< 0xA000` -> `<=`), `021AB3B0` (`<= 1` -> `<= 2`), `0215E2B8` (one-table season not forced to 0), `021AACD4` (height
+from `out +8`), `021A9CAC` (`<` -> `<=`). Equivalent: `021A9BE8` (`>` -> `>=`: equal values give the same level), `021AACD4`
+(`t << 4 > 0` -> `>= 0`: tile 0 gives 0x8000 either way). Input gaps: `021AABF4` `x1 >= 32` -> `> 32` (the gx / gz picks never give a
+tile 27..31 with offset 5: add 0x1B / 0x3B), `021A9828` Cute Charm `< 67` -> `< 66` (with `021A9DC8` ported its in-area threshold
+picks no longer apply; the raw `020056EC` answer hits roll 66 too rarely), `021AA42C` `>` -> `>=` (the `02010FB0` stub answers any
+32-bit word against a roll below 100: `lt:101` or picks near the roll would separate them).
+
+Harness defect found: `tools/check-fn.sh black-field encount` runs `cargo test encount::tests::fndiff_match_rom`, a substring of
+`effect_encount::tests::fndiff_match_rom`, so both suites write `FNDIFF_JSON` and the last one wins (MISSING / MISMATCH depending on
+the thread timing). Workaround: `RUST_TEST_THREADS=1` (libtest then runs `effect_encount` first and `encount` last). Fix: pass
+`-- --exact` (or a per-area JSON path) in check-fn.sh.
+
+Deliberate deviations: none in behaviour.
