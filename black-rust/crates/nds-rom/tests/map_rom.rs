@@ -138,3 +138,58 @@ fn golden_nuvema_town() {
     // Zone 6 and 389 both lie on the 29x27 overworld matrix.
     assert_eq!(d.zones[6].matrix_id, 0);
 }
+
+/// The matrix layout the game reads (`FUN_02159D04`, overlay 10; F2a): with `flags == 1` the land plane
+/// (`width * height` container ids) comes first, then the zone plane. In matrix 0 (the 29x27 overworld) every
+/// overworld block's container is the model `mapXX_YY` of that very column XX and row YY, and Nuvema Town (zone
+/// 389) is block (24, 23) on container 0 (`map24_23`). The old interleaved reading paired neighbouring words.
+#[test]
+fn matrix_planes_match_the_game() {
+    let Some(d) = load() else {
+        nds_rom::testenv::rom_missing("ROM files not found");
+        return;
+    };
+    let m = &d.matrices[0];
+    assert_eq!((m.flags, m.width, m.height), (1, 29, 27));
+    assert_eq!(m.zone_at(24, 23), Some(389));
+    assert_eq!(m.map_at(24, 23), Some(0));
+    assert_eq!(m.zone_at(23, 23), Some(317));
+    let mut named = 0;
+    for y in 0..m.height as usize {
+        for x in 0..m.width as usize {
+            let Some(c) = m.map_at(x, y) else { continue };
+            let con = &d.containers[c as usize];
+            if !con.is_wb() {
+                continue;
+            }
+            let b = nds_rom::g3d::model::Bmd0::parse(con.model().unwrap()).unwrap();
+            let name = &b.models[0].name;
+            let Some((xs, ys)) = name.strip_prefix("map").and_then(|r| r.split_once('_')) else {
+                continue;
+            };
+            if let (Ok(mx), Ok(my)) = (xs.parse::<usize>(), ys.parse::<usize>()) {
+                assert_eq!(
+                    (mx, my),
+                    (x, y),
+                    "matrix 0 block ({x}, {y}) has container {c} = {name}"
+                );
+                named += 1;
+            }
+        }
+    }
+    assert!(named > 100, "only {named} blocks carry a mapXX_YY model");
+    // Both two-plane matrices: the zone plane holds real zone ids (or the empty marker).
+    for i in [0, 175] {
+        let m = &d.matrices[i];
+        let zones = m.cells_b.as_ref().unwrap();
+        assert_eq!(zones.len(), m.cells.len());
+        for (k, &z) in zones.iter().enumerate() {
+            let no = nds_rom::map::matrix::NO_MAP;
+            assert!(
+                z == no || (z as usize) < d.zones.len(),
+                "matrix {i} block {k} zone {z}"
+            );
+        }
+    }
+    assert_eq!(d.matrices.iter().filter(|m| m.flags == 1).count(), 2);
+}

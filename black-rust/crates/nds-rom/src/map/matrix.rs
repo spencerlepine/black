@@ -1,8 +1,11 @@
 //! Map matrices (ARC 009): a grid of map-container ids (ARC 008 members).
 //!
-//! Layout: `flags:u32 width:u16 height:u16` then `width*height` cells in row-major order. With
-//! `flags == 0` a cell is one `u32`; with `flags == 1` (2 of 255 matrices, incl. member 0, the
-//! 29x27 overworld) a cell is two `u32`s `(primary, secondary)`. `0xFFFF_FFFF` = no map.
+//! Layout: `flags:u32 width:u16 height:u16`, then `width*height` map-container ids (`u32`, row-major);
+//! with `flags == 1` (2 of 255 matrices: member 0, the 29x27 overworld, and member 175) a second plane of
+//! `width*height` zone ids follows (`u32` each; the game keeps the low `u16`). `0xFFFF_FFFF` = no map.
+//! This is how the game reads the file (`FUN_02159D04` in overlay 10, F2a `black_field::map_matrix::load_from`):
+//! the land plane is copied whole, then the zone plane; matrices without one give every block the zone's
+//! default zone id.
 
 use super::Rd;
 use crate::error::{Error, Result};
@@ -17,7 +20,7 @@ pub struct MapMatrix {
     pub height: u16,
     /// Map container ids, `width * height`, row-major.
     pub cells: Vec<u32>,
-    /// Second `u32` of each cell when `flags == 1` (role UNVERIFIED), same length as `cells`.
+    /// The zone-id plane when `flags == 1` (zone id of each block, same order and length as `cells`).
     pub cells_b: Option<Vec<u32>>,
 }
 
@@ -31,14 +34,9 @@ impl MapMatrix {
             return Err(Error::invalid("map matrix", format!("flags {flags:#x}")));
         }
         let n = width as usize * height as usize;
-        let mut cells = Vec::with_capacity(n);
-        let mut cells_b = (flags == 1).then(|| Vec::with_capacity(n));
-        for _ in 0..n {
-            cells.push(r.u32()?);
-            if let Some(b) = cells_b.as_mut() {
-                b.push(r.u32()?);
-            }
-        }
+        let mut plane = || (0..n).map(|_| r.u32()).collect::<Result<Vec<u32>>>();
+        let cells = plane()?;
+        let cells_b = if flags == 1 { Some(plane()?) } else { None };
         if !r.rest().is_empty() {
             return Err(Error::invalid("map matrix", "trailing bytes"));
         }
@@ -56,11 +54,8 @@ impl MapMatrix {
         o.extend(self.flags.to_le_bytes());
         o.extend(self.width.to_le_bytes());
         o.extend(self.height.to_le_bytes());
-        for (i, c) in self.cells.iter().enumerate() {
+        for c in self.cells.iter().chain(self.cells_b.iter().flatten()) {
             o.extend(c.to_le_bytes());
-            if let Some(b) = &self.cells_b {
-                o.extend(b[i].to_le_bytes());
-            }
         }
         o
     }
@@ -71,5 +66,13 @@ impl MapMatrix {
             return None;
         }
         Some(self.cells[y * self.width as usize + x]).filter(|&v| v != NO_MAP)
+    }
+
+    /// Zone id of column `x`, row `y` from the zone plane (`flags == 1` only), `None` out of range.
+    pub fn zone_at(&self, x: usize, y: usize) -> Option<u16> {
+        if x >= self.width as usize || y >= self.height as usize {
+            return None;
+        }
+        Some(self.cells_b.as_ref()?[y * self.width as usize + x] as u16)
     }
 }

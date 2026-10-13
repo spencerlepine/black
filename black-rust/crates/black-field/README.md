@@ -106,7 +106,7 @@ inputs reach every instruction of the function (ROM-side coverage, see the table
 of the area (the stubs of the function's callees and of the callees of all its in-area descendants), so the areas
 can be ported in any order without spec edits. Each spec header documents the records it uses.
 
-| area | original | range | specced | coverage | smoke ports (hash) | area hash |
+| area | original | range | specced | coverage | smoke ports (hash) | smoke area hash (F2a: below) |
 |---|---|---|---|---|---|---|
 | `map_matrix` | `map_matrix.c` + `map_replace.c` (ov10) | `0x02159B48..0x0215A07A` | 33 | 569/569 | `02159BC4` `zone_at` (b5615728646bbd48), `02159D68` `block_of` (a09289ab0a748193) | ba958fe99b83be98 |
 | `fieldmap` | `fieldmap.c` part 1 (ov21) | `0x02187F00..0x02189BD0` | 101 | 2313/2313 | `02189B04` `is_hold_zone` (8ff8981a934eb2dd) | c7affe5c7675f21b |
@@ -155,7 +155,10 @@ Cross-check with `nds_rom::map` (A6):
   the code (`02159D04`) reads two consecutive PLANES (`land[w*h]`, then `zone[w*h]` stored as u16), not interleaved
   `(primary, secondary)` pairs as `MapMatrix::parse` does: in matrix 0 the planar reading gives runs of consecutive land ids
   (78, 79, 80) with one zone id (355); the interleaved reading pairs neighbouring cells. So `cells` of the two `flags == 1`
-  matrices (0 and 175) are wrong in `nds_rom` and `cells_b` is the zone plane (reported to the coordinator, nds-rom unchanged).
+  matrices (0 and 175) were wrong in `nds_rom`. **Fixed in F2a:** `MapMatrix::parse` / `to_bytes` now read and write the two
+  planes (`cells` = land ids, `cells_b` = zone ids, `MapMatrix::zone_at`); `nds-rom/tests/map_rom.rs`
+  `matrix_planes_match_the_game` checks it on the ROM (every overworld block of matrix 0 holds the model `mapXX_YY` of its own
+  column and row; Nuvema Town, zone 389, is block (24, 23) on container 0 `map24_23`).
   For `flags == 0` matrices the zone of every block is the load's default zone (the 4th argument of `02159B94`).
 * `zone`: zone record `+2` (`unk_02`, 0..273) is the AREA id handed to `0201407C(heap, area, season)` by the FIELDMAP create
   (`02188030`): seasonal areas add the season, ids >= 282 wrap to 0 (282 = ARC 014 map texture sets). The zone id of a block
@@ -172,3 +175,41 @@ Cross-check with `nds_rom::map` (A6):
 * `global 04000204 4` (EXMEMCNT) in the blocks whose code toggles it; `tools/rom-diff/emu.py` maps the I/O page for
   non-battle sets (F2a-spec harness change). `svflow.py` `ALLOW` gained the MI 16/32-bit clear/copy helpers and `memcmp`.
 
+
+## F2a: the five areas ported (192 of 205 verified)
+
+| area | ported | verified (in `PORTED`) | area hash | unverified ports (reason below) |
+|---|---|---|---|---|
+| `map_matrix` | 33 | 33 | `49c1368306aaed86` | |
+| `fieldmap` | 101 | 95 | `776501833139141f` | `021880C8`, `021885E8`, `021888C8`, `02188990`, `02188AD4`, `021895E8` (a) |
+| `fieldmap_event` | 52 | 45 | `98b331e9367a69db` | `0218AAD0` (a); `0218AED4`, `0218AF90`, `0218B0CC`, `0218B13C`, `0218B4B0`, `0218B53C` (b) |
+| `fieldmap_func` | 13 | 13 | `27f7097f727fa8d4` | |
+| `land_data_patch` | 6 | 6 | `adfc5aaf9bee54a4` | |
+
+Every callee outside an area is reached through `hooks::FieldEnv::call(addr, args)` (`hooks::CArg`: values, pointers into
+the memory window, a caller's local passed as bytes, and `X` for a trailing argument the spec's stub does not list); in-area
+callees that are ported are called as Rust functions. The draw side (the 17 render-only functions, the G2/G3/GX calls) is
+only ever an address behind `FieldEnv::call` (D3). Stack structs of the original that callees read through a pointer are
+`Mem::push_local` windows. ROM tables are embedded (`map_matrix::VAR_TABLE_DATA` / `FLY_TABLE_DATA`,
+`fieldmap::MAP_SETUP_DATA` / `CTRL_KIND` / `PROC_TABLE`, `fieldmap_event::ATTRIBUTE_SCRIPTS`, `fieldmap_func::EMPTY_ID`);
+`FX_SinCosTable_` is computed (`fieldmap::fx_cos`, equal to all 4096 ROM entries). The test environment is
+`src/testenv.rs` (stubs answer `FieldEnv::call`; thunks such as `02008854` -> `020071CC` map to their stubbed target).
+
+Unverified ports (doc `UNVERIFIED port of` on each; not in `PORTED`, so their callers' specs keep their stubs and the callers
+are verified):
+* (a) the spec's stub of a callee logs registers the callee does not read, and those registers are the function's own entry
+  registers (the caller's leftovers, or in the standalone run whatever the previous input left in the emulator), so no port
+  reproduces the hash: `02188d5c`, `02189084`, `021890c8` `args=v,v,v,v`, `02188e38 args=p,v,v,v` (render functions that read
+  only r0), `021c1c04` / `021c1ad0 args=v,v,v,v`, `0218f134 args=v,p,p,v`, `02010ff4 args=v,p,v,v` (one-argument callees).
+* (b) the function hands the address of one of its stack locals to a callee whose stub logs that pointer as a value (`v`), so
+  the hash holds the emulator's stack address: `02162564` / `021626A8` (via `02162B68`) from `0218AED4` / `0218AF90`,
+  `02162BCC` (via `021626B0`) from `0218B2E8` called by `0218B0CC` / `0218B13C`, `02164240` from `0218B4B0`, `0219E570` from
+  `0218B53C`. With `in:12` / `in:8` for those arguments the ports would only need `CArg::In` there.
+
+Where a stub logs an unread register whose value the function itself sets, the port passes that value with a comment (e.g.
+`0218AA74`: r3 = the party pointer `0218AA2C`'s epilogue leaves; `0218AB9C`: r3 = the thunk target 0x020071CD; `021881D8`:
+`021BC388`'s r2, `021C1AF4`'s r1; `02188758`: `0217F914`'s r1). `02189A38` passes zeros for r1..r3 (its entry registers, 0 in
+every harness run; the callee ignores them).
+
+Deviations: none in behaviour. UNVERIFIED (inferred, not checked): the meaning of most callees (named by address), the
+attribute script predicates, the fly-point and var-table field names, `ATTRIBUTE_SCRIPTS` roles.

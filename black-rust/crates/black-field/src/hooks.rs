@@ -114,6 +114,29 @@ impl Mem {
         self.win_mut(w)[o..o + src.len()].copy_from_slice(src);
     }
 
+    /// Add a zeroed window of `size` bytes for a stack local of the original (a struct the caller builds
+    /// on its stack and hands to its callees by address); returns its address. The windows sit at
+    /// [`LOCAL_BASE`] and up, below the emulator's stack (0x02EF0000..), so they never meet a record of the
+    /// differential tests. Release it with [`Mem::pop_local`] (last in, first out).
+    pub fn push_local(&mut self, size: u32) -> u32 {
+        let top = self
+            .extra
+            .iter()
+            .filter(|(b, _)| (LOCAL_BASE..LOCAL_BASE + 0x1_0000).contains(b))
+            .map(|(b, v)| b + v.len() as u32)
+            .max()
+            .unwrap_or(LOCAL_BASE);
+        let at = (top + 3) & !3;
+        self.extra.push((at, vec![0; size as usize]));
+        at
+    }
+
+    /// Drop the window [`Mem::push_local`] returned `addr` for (it must be the last one added).
+    pub fn pop_local(&mut self, addr: u32) {
+        let last = self.extra.pop().expect("pop_local without push_local");
+        assert_eq!(last.0, addr, "pop_local out of order");
+    }
+
     /// Copy `len` bytes from `src` to `dst` (`MI_CpuCopy8`, forward byte order).
     pub fn copy(&mut self, dst: u32, src: u32, len: u32) {
         for i in 0..len {
@@ -122,6 +145,10 @@ impl Mem {
         }
     }
 }
+
+/// Where [`Mem::push_local`] puts the stack locals of the original (an unmapped page of the differential
+/// tests' address space, below their stack at 0x02EF0000).
+pub const LOCAL_BASE: u32 = 0x02EC_0000;
 
 /// Anything that owns the memory window the ported code works in.
 pub trait MemEnv {
@@ -341,3 +368,48 @@ pub trait ZoneHooks: HeapHooks {
     /// C: `FUN_02020E08(0xD, a, b)`.
     fn fun_02020e08(&mut self, a: u32, b: u32, c: u32);
 }
+
+/// One argument of an unported callee reached through [`FieldEnv::call`], in the callee's own
+/// register/stack order (F2a). Pointers stay addresses; a pointer to a local of the caller (a stack
+/// struct of the original) is passed as the bytes themselves.
+pub enum CArg<'a> {
+    /// A scalar, or a pointer whose value the callee's answer depends on.
+    V(u32),
+    /// A pointer (or a register) the callee does not read in the modelled behaviour; the value is
+    /// kept for a real implementation.
+    P(u32),
+    /// Pointer to `len` bytes of the memory window that the callee reads.
+    In(u32, u32),
+    /// Pointer to `len` bytes of the memory window that the callee writes.
+    Out(u32, u32),
+    /// Pointer to a local of the caller that the callee reads.
+    InBuf(&'a [u8]),
+    /// Pointer to a local of the caller that the callee writes.
+    OutBuf(&'a mut [u8]),
+    /// An argument the original passes that the differential spec's stub of the callee does not list
+    /// (a trailing stack word); a real implementation gets it, the test stubs drop it.
+    X(u32),
+}
+
+/// The callees of the F2a areas (`map_matrix`, `fieldmap`, `fieldmap_event`, `fieldmap_func`,
+/// `land_data_patch`) that live in other units or areas: heap, archives, task systems, overlay
+/// loading, the 3D / 2D drawing side (D3: rewritten in G8, never ported here), the field subsystems
+/// of other F items, and the other black-field areas. They are reached by their address; what each
+/// one does is only what the comment at the call site says (taken from the spec), nothing more.
+/// Callees inside the same area that are ported are called as Rust functions instead.
+pub trait FieldEnv: MemEnv {
+    /// Calls the routine at `addr` (Thumb bit clear) with `args`; returns its r0 (0 when it
+    /// returns nothing). A fatal routine (assert) may not return.
+    fn call(&mut self, addr: u32, args: &mut [CArg<'_>]) -> u32;
+
+    /// [`FieldEnv::call`] with scalar arguments only.
+    fn callv(&mut self, addr: u32, args: &[u32]) -> u32 {
+        let mut a: Vec<CArg<'_>> = args.iter().map(|&v| CArg::V(v)).collect();
+        self.call(addr, &mut a)
+    }
+}
+
+/// Address of `Heap_AllocDebug(heap, size, flag, file, line)`.
+pub const HEAP_ALLOC: u32 = 0x0203_0734;
+/// Address of `Heap_Free(block)`.
+pub const HEAP_FREE: u32 = 0x0203_07B0;

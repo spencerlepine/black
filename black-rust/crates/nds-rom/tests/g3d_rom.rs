@@ -155,15 +155,16 @@ fn golden(d: &[u8], tex: Option<Tex0>) -> (gltf::GltfOut, Bmd0) {
     (g, b)
 }
 
-/// Matrix 0 (the 29x27 overworld) cell value 389 (row 25, column 12) is the cell zone 389 sits
-/// on; the zone <-> container link is UNVERIFIED (A6), and the model is named `m_dun1703_00_00`.
+/// Container 389, the model `m_dun1703_00_00` (a dungeon map; A6 took it for Nuvema Town because the
+/// interleaved matrix reading put the word 389, really the zone id of Nuvema in matrix 0's zone plane at block
+/// (24, 23), into the container cells; see `map_rom::matrix_planes_match_the_game`).
 #[test]
 fn nuvema_golden() {
     let (Some(d), Some(c14), Some(m)) = (map_model(389), narc(14), narc(ARC_MAP_MATRIX)) else {
         return;
     };
     let mx = MapMatrix::parse(m.file(0)).unwrap();
-    assert_eq!(mx.cells.iter().position(|&v| v == 389), Some(25 * 29 + 12));
+    assert_eq!(mx.zone_at(24, 23), Some(389));
     let tex = Tex0::parse_btx0(c14.file(251)).unwrap();
     let (g, b) = golden(&d, Some(tex));
     assert_eq!(b.models[0].name, "m_dun1703_00_00");

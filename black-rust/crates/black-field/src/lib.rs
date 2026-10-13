@@ -16,4 +16,6 @@ pub mod map_matrix;
 pub mod mmdl;
 pub mod player;
 pub mod season;
+#[cfg(test)]
+mod testenv;
 pub mod zonedata;
