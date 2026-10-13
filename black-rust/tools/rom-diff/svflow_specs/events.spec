@@ -128,7 +128,7 @@ fn 021cbfa0 ret=u32
   env bpp
   stub 021cbff8 ret=bool args=v,v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 # revive: only for a fainted pokemon; record kind 0x2C {+4 id, +6 hp (item param 0x3A: 0xFD = max/4, 0xFE = max/2,
 # 0xFF = full, else the value)}, str_param(2, 3, id), then 021c84f4(P, id)
@@ -141,7 +141,7 @@ fn 021cc008 ret=u32
   env bpp
   stub 021d805c ret=pick:0xfd/0xfe/0xff/0x20 args=v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
   stub 021c84f4 ret=none args=v,v
 
 # raise stat/flag via put_cmd (real cmd_queue code on the queue in P[0xC]): (P, bpp, r2, amount)
@@ -167,7 +167,7 @@ fn 021cc178 ret=u32
   env bpp
   stub 021d805c ret=pick:0x7f/0x05/0x20/0 args=v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 # PP restore of every move
 fn 021cc214 ret=u32
@@ -177,7 +177,7 @@ fn 021cc214 ret=u32
   env bpp
   stub 021d805c ret=pick:0x7f/0x05/0x20/0 args=v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 # heal: not at full hp and not fainted; record kind 5 {+4 hp (param 0x3A: FD = max/4, FE = max/2, FF = max-hp stat, else value)}
 fn 021cc2c0 ret=u32
@@ -189,7 +189,7 @@ fn 021cc2c0 ret=u32
   env bpp
   stub 021d805c ret=pick:0xfd/0xfe/0xff/0x20 args=v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 # cure one status (5th argument = sick id): record kind 0xB {+4 sick, +8 id, +0x14 = 1}
 fn 021cc350 ret=u32
@@ -202,7 +202,7 @@ fn 021cc350 ret=u32
   fix arg1 0x10 u16 alt const 0 || oneof 50 100 200 || any
   env bpp
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 # cure every status in a veneer-provided list (cc428(i) = i-th sick id, 0 ends it)
 fn 021cc398 ret=u32 inputs=300
@@ -214,7 +214,7 @@ fn 021cc398 ret=u32 inputs=300
   stub 021cc418 ret=mod:2 args=v,v
   stub 021cc428 ret=mod:4 args=v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 # stat stage change: veneer 021cc49c(P+0x1AB8, id) == 6 blocks it; can_change_stage(bpp, stat (5th), amount (r3))
 fn 021cc438 ret=u32
@@ -228,7 +228,7 @@ fn 021cc438 ret=u32
   env bpp
   stub 021cc49c ret=mod:7 args=v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 # held-item based check: veneer 021cc4f8(item) says "blocked"; else 021c84ac(P, bpp, &flag) -> 1, or 2 if flag is set
 fn 021cc4ac ret=u32
@@ -252,14 +252,14 @@ fn 021cc558 ret=u32
   env bpp
   stub 021e869c ret=bool args=v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 fn 021cc5f4 ret=u32
   arg work
   arg bpp
   env bpp
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 # ---- item-effect table wrappers (pool 0x021EFDE4): fixed 5th argument, then the shared body ---------------------
 
@@ -271,7 +271,7 @@ fn 021cbf30 ret=u32
   env bpp
   stub 021cc350 ret=u32 args=v,v,v,v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 fn 021cbf40 ret=u32
   arg work
@@ -281,7 +281,7 @@ fn 021cbf40 ret=u32
   env bpp
   stub 021cc350 ret=u32 args=v,v,v,v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 fn 021cbf50 ret=u32
   arg work
@@ -291,7 +291,7 @@ fn 021cbf50 ret=u32
   env bpp
   stub 021cc350 ret=u32 args=v,v,v,v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 fn 021cbf60 ret=u32
   arg work
@@ -301,7 +301,7 @@ fn 021cbf60 ret=u32
   env bpp
   stub 021cc350 ret=u32 args=v,v,v,v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 fn 021cbf70 ret=u32
   arg work
@@ -311,7 +311,7 @@ fn 021cbf70 ret=u32
   env bpp
   stub 021cc350 ret=u32 args=v,v,v,v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 fn 021cbf80 ret=u32
   arg work
@@ -321,7 +321,7 @@ fn 021cbf80 ret=u32
   env bpp
   stub 021cc350 ret=u32 args=v,v,v,v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 # cc398 takes (P, bpp) only; the constant 7 on the stack is dead
 fn 021cbf90 ret=u32
@@ -334,7 +334,7 @@ fn 021cbf90 ret=u32
   stub 021cc418 ret=mod:2 args=v,v
   stub 021cc428 ret=mod:4 args=v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 fn 021cc098 ret=u32
   arg work
@@ -345,7 +345,7 @@ fn 021cc098 ret=u32
   stub 021cc438 ret=u32 args=v,v,v,v,v
   stub 021cc49c ret=mod:7 args=v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 fn 021cc0a8 ret=u32
   arg work
@@ -356,7 +356,7 @@ fn 021cc0a8 ret=u32
   stub 021cc438 ret=u32 args=v,v,v,v,v
   stub 021cc49c ret=mod:7 args=v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 fn 021cc0b8 ret=u32
   arg work
@@ -367,7 +367,7 @@ fn 021cc0b8 ret=u32
   stub 021cc438 ret=u32 args=v,v,v,v,v
   stub 021cc49c ret=mod:7 args=v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 fn 021cc0c8 ret=u32
   arg work
@@ -378,7 +378,7 @@ fn 021cc0c8 ret=u32
   stub 021cc438 ret=u32 args=v,v,v,v,v
   stub 021cc49c ret=mod:7 args=v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 fn 021cc0d8 ret=u32
   arg work
@@ -389,7 +389,7 @@ fn 021cc0d8 ret=u32
   stub 021cc438 ret=u32 args=v,v,v,v,v
   stub 021cc49c ret=mod:7 args=v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 fn 021cc0e8 ret=u32
   arg work
@@ -400,7 +400,7 @@ fn 021cc0e8 ret=u32
   stub 021cc438 ret=u32 args=v,v,v,v,v
   stub 021cc49c ret=mod:7 args=v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
 
 # ---- who is ahead? (battle-end / forfeit style comparison; cc668 -> cc768 -> cc800) --------------------------------
 
@@ -813,7 +813,7 @@ fn 021cb730 ret=u32 inputs=800
   stub 021cc558 force ret=pick:0/1/2/1 args=v,v,v,v,v
   stub 021cc5f4 force ret=pick:0/1/2/1 args=v,v,v,v,v
   stub 021c88a4 force ret=ptr:work:0x1800:1 args=v,v,v
-  stub 021c88c8 ret=none args=v,v
+  stub 021c88c8 force ret=none args=v,v
   stub 021cc418 ret=mod:2 args=v,v
   stub 021cc428 ret=mod:4 args=v
   stub 021cc49c ret=mod:7 args=v,v
