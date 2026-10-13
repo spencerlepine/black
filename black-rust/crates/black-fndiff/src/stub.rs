@@ -128,6 +128,7 @@ impl StubEnv {
                         || k.starts_with("outm:")
                         || k.starts_with("outn:")
                         || k.starts_with("outw:")
+                        || k.starts_with("outv:")
                     {
                         k.split(':').nth(1).map(|n| num(n) as usize)
                     } else if k.starts_with("outp:") {
@@ -199,6 +200,17 @@ impl StubEnv {
                         let h = mix(mix(acc, key + 0x1000 + salt + j as u32), 0xC0DE);
                         c.copy_from_slice(&w[(h % w.len() as u32) as usize].to_le_bytes());
                     }
+                    continue;
+                }
+                if let Some(p) = k.strip_prefix("outv:") {
+                    // `outv:N:V1/V2/..` (F3a-spec): the out bytes are the low N little-endian bytes of
+                    // V[mix(mix(acc, key + 0x1000 + 0x100 * (i + 1)), 0xC0DE) % count] (N <= 4; the hash of `outp`)
+                    let vs: Vec<u32> = p.split(':').nth(1).unwrap().split('/').map(num).collect();
+                    let h = mix(mix(acc, key + 0x1000 + 0x100 * (i as u32 + 1)), 0xC0DE);
+                    let v = vs[(h % vs.len() as u32) as usize].to_le_bytes();
+                    let n = b.len();
+                    assert!(n <= 4, "stub {addr:#010x}: outv writes at most 4 bytes");
+                    b.copy_from_slice(&v[..n]);
                     continue;
                 }
                 if k.starts_with("outk:") || k.starts_with("outki:") {
@@ -587,5 +599,36 @@ mod tests {
         let mut e = StubEnv::new(vec![spec("u16", &["v", "outp:work:0x20:5"], false)], 0x1234);
         e.call(0x021B_B798, &mut [Arg::V(0), Arg::Out(&mut out)]);
         assert_eq!(u32::from_le_bytes(out), 0x02E0_0030);
+    }
+
+    /// `outv:N:V1/V2/..` (F3a-spec): the out bytes are one of the listed values (low N bytes, little-endian),
+    /// picked like `outp`; vectors computed with tools/rom-diff/svflow.py, salt 0x1234, no `seq`.
+    #[test]
+    fn outv_writes_one_of_the_listed_values() {
+        let mut e = StubEnv::new(
+            vec![spec("u32", &["v", "outv:2:0x3FFF/0/1"], false)],
+            0x1234,
+        );
+        let mut out = [0u8; 2];
+        let r = e.call(0x021B_B798, &mut [Arg::V(0xABCD), Arg::Out(&mut out)]);
+        assert_eq!(out, [0xFF, 0x3F]);
+        assert_eq!(r, 0x731C_9F54);
+        let mut e = StubEnv::new(
+            vec![spec("u32", &["outv:4:0x11223344/5/6/7/8"], false)],
+            0x1234,
+        );
+        let mut out = [0u8; 4];
+        assert_eq!(e.call(0x021B_B798, &mut [Arg::Out(&mut out)]), 0x1868_5E8C);
+        assert_eq!(u32::from_le_bytes(out), 7);
+        // the argument position joins the hash
+        let mut e = StubEnv::new(
+            vec![spec("u32", &["v", "outv:4:0x11223344/5/6/7/8"], false)],
+            0x1234,
+        );
+        assert_eq!(
+            e.call(0x021B_B798, &mut [Arg::V(9), Arg::Out(&mut out)]),
+            0x3512_9D94
+        );
+        assert_eq!(u32::from_le_bytes(out), 6);
     }
 }

@@ -14,11 +14,16 @@ pub mod fieldmap_event;
 pub mod fieldmap_func;
 pub mod fldmmdl;
 pub mod game_data;
+pub mod height_ex;
 pub mod hooks;
 pub mod land_data_patch;
 pub mod map_matrix;
 pub mod mmdl_move;
+pub mod namipoke;
 pub mod player;
+pub mod player_core;
+pub mod player_event;
+pub mod player_grid;
 pub mod season;
 #[cfg(test)]
 mod testenv;

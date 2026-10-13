@@ -459,3 +459,78 @@ depth, y (i16 units), unused }`. Byte round trip unchanged (`nds-rom/tests/map_r
 hidden items' scripts are exactly 8000..=8176, facing rules <= 6, 25 rail bg records; warp exit codes <= 4, 77 rail
 warps, all 809 grid warps centred on a tile (`x & 15 == 8`, `z & 15 == 8`), 6 disabled, sizes 1x1 476 / 3x1 195 / 1x3
 70; trigger kinds 0..4 and 6, `unused` 0 everywhere, 10 rail triggers.
+
+## F3a-spec: the grid player (F1 rows 21.20 / 21.21 / 21.22 / 21.23 / 21.37 / 21.64 / 21.65; specs + smoke ports)
+
+Six spec areas under `tools/rom-diff/specs/black-field/` (set `field`), generated with closure stubs (a block lists the stubs of its
+callees and of the callees of all its in-area descendants and the shared fix lines; with every function of the area treated as ported
+all blocks run without a fault, stray write or unstubbed callee), so each area can be ported in any order. `svflow.py AREA --all
+--strict-callees` and `--order-check` are clean for all six. Every out-of-area stub is `force`, also between the six areas.
+
+| area | original | range | specced | coverage (plain / closure) | smoke ports (hash) | area hash |
+|---|---|---|---|---|---|---|
+| `player` | `fieldmap_ctrl_grid.c` + `field_player.c` (FIELD_PLAYER, grid / no-grid dispatch) | `0x021A2D88..0x021A36E4` | 72 | 917/917 / 917/917 | `021A3190` `entry_code` (5a417f2cf8abdbd6), `021A31A4` `form_code` (c7e81effe976cd55), `021A31D0` `code_entry` (dd5b97749a5b3fb8), `021A36E0` `grid_of` (f93cdd2b02d44263) | 7a77d4f37d4b2fe1 |
+| `player_core` | `field_player_core.c` (PLAYER CORE: MMDL, form, requests, pad -> dir) | `0x021A36E4..0x021A4140` | 64 | 1085/1085 / 1085/1085 | `021A3C24` `remember_keys` (2b8a55792ed82023), `021A3C3C` `key_dir_x` (b1666604ca238329), `021A3C54` `key_dir_z` (8483be8f63ca7b5a), `021A3C94` `first_request` (32fc474f22c818fb), `021A3CB0` `set_requests` (58ef84c83e497712) | b6110fa7fe6d5c7f |
+| `player_grid` | `field_player_grid.c` (PLAYER GRID: move values, acmds, footstep SE, ice / slide) | `0x021A4140..0x021A5880` | 97 | 2444/2445 / 2427/2445 | `021A5304` `set_flags` (5178a9ea306cc7e6), `021A530C` `clear_flags` (53f85f95155c0c9a), `021A5318` `has_flags` (1c2a9a6f8ff3d57f), `021A5768` `set_1c` (68f72573ed797dcc), `021A5778` `state_is_3` (fb7ae193d4545242) | 1560d3655b5196fb |
+| `namipoke` | `fldeff_namipoke.c` (surf Pokemon effect state + position logic) | `0x021ACA38..0x021AD758` | 18 | 943/943 / 941/943 | `021ACBB8` `set_mode` (a69a84dd05f40bfe), `021ACBE4` `follow_speed` (d931040f589761aa), `021ACC04` `ahead_along` (adf6c2eab41c6a30), `021ACCAC` `draw_none` (15e96184e19bea96) | 23d1b071964a9d4b |
+| `height_ex` | `height_ex.c` + unanchored GMEVENTs (build-model events, boulder push) | `0x021C0598..0x021C1024` | 38 | 1140/1140 / 1140/1140 | `021C0598` `rect_contains` (cd3ede0886dfd55c), `021C0688` `count` (0d725dd5e1bf09d1), `021C068C` `record_contains` (b84e81969871669e), `021C06A8` `height` (78dc3b05ac38d1ab), `021C06B4` `extra` (be1a0871baa7f7f0) | 358aff190a331d7a |
+| `player_event` | `field_player_grid_event.c` (surf start / end tasks) | `0x021C1024..0x021C1A08` | 17 | 1067/1067 / 1067/1067 | `021C1094` `surf_start_done` (c18ea68039a0a196), `021C10A0` `surf_start_delete` (fd8ac52e091b8203), `021C12C4` `surf_end_done` (e99d310f2b862f16), `021C12D0` `surf_end_delete` (567e9a5406aa55b1), `021C12E4` `set_ride_offset` (58f3e36eaae0db5c) | cf794bd97b65a59c |
+
+Coverage = instructions of the function body (Thumb walk from the entry, jump tables decoded) that the spec's inputs execute on the
+original, with the in-area callees stubbed (plain) or real (closure): 7596 / 7597 plain, 7577 / 7597 closure. The one plain miss is `021A4E4E` in `021A4DC0`, a
+`b` that no input can reach (the acmd base is 0xC / 0x10 / 0x58 whenever r7 is 1). The closure gaps are hits that need two real callees
+to agree (a pick of one stub that a real in-area callee now computes).
+
+Function list: bl/blx targets of the whole field set, odd code pointers, the Ghidra index and a Thumb walk from every entry: 330 entries
+(021C0598 sits just before the F1 cut of row 21.64 but only height_ex.c calls it; 021C0628 / 021C06C0 have no caller), minus 5 false
+ones (`021A3494`, `021A53AC`, `021AD38C`, `021C0BB8`: ARM code / data in main decodes as `bl`; `021A3562`: a literal), 3 veneers
+(`021A3810` / `021A41A8` -> Heap_Free, `021A575C` -> `021A550C`; callers stub the target), the 7 `fldeff_encount.c` heads `021AD758` ..
+`021AD7A0` (create / delete pairs of the encounter-effect table 0x021D903C, U2) and the 9 render-only functions of `fldeff_namipoke.c` =
+306 specced. Ghidra misses `021A3E48`, `021A3EE0`, `021A408C`, `021ACC3C`, `021AD738`, `021C0628`, `021C06C0`, `021C10B4`, `021C1318`,
+`021C161C` (ROM-table targets). Thin wrappers (`ldr r0, [r0, #k]; ldr r3, =T; bx r3`) are real functions and are specced.
+
+Render-only functions left out (D3, U2; callers stub them by address): `021ACA70` / `021AD410` (load the surf / splash 3D models),
+`021ACB0C` / `021AD530` (free them), `021ACCB0` / `021AD274` (draw the surf Pokemon), `021ACFD8` / `021AD6A4` (free the animations),
+`021AD738` (splash draw position).
+
+### Records (as the code reads them; full tables in the spec headers)
+
+* FIELD_PLAYER (0x10, `field_player.c` 0x4C): `+0` FIELDMAP, `+4` -> CORE, `+8` -> GRID (grid maps), `+0xC` -> the no-grid player
+  (F3b). The map kind (`02188CFC`: 0 grid, 1 rail) picks the half; most functions are wrappers over the core.
+* MAP CTRL grid work (0x10, `fieldmap_ctrl_grid.c` 0x68; the grid entry of the MAP CTRL table 0x021D88F8): `+0 u16` heap, `+4`
+  FIELDMAP, `+0xC` hold flag. Frame `021A2DF0`: pad trigger `020362DC`, pad held `0203630C`, running allowed = event flag 0x963
+  (running shoes) -> `021A41B0` (grid frame).
+* PLAYER CORE (0x34, `field_player_core.c` 0x97): `+4` GAMESYS, `+8` FIELDMAP, `+0xC` PLAYER record (`+0x1C` saved OBJ code, `+0x40`
+  move form), `+0x10` move state, `+0x14` move value, `+0x18` sex (form-table row), `+0x1C` the player MMDL (OBJ id 0xFF; created from
+  the HEADER template ROM 0x021D89A0), `+0x20` / `+0x22` last pad x / z dir, `+0x24` request bits, `+0x28` surf effect task, `+0x2C` /
+  `+0x2E` counters, `+0x30 s16` request step, `+0x32` request done.
+* MOVE FORMS (PLAYER record `+0x40`): 0 walk, 1 cycle, 2 surf, 3 surf variant (request 8). FORM TABLE ROM 0x021D890C (2 rows x 10
+  `{OBJ code, form}`; walk 1 / 4, cycle 2 / 5, surf 3 / 6, special codes 0x88..0xA1) = `player::FORM_TABLE`.
+* REQUESTS (`+0x24` bit i, lowest first): procs ROM 0x021D89C4[i][step]: 0 walk, 1 cycle, 2 surf, 3 the saved form's code, 4 / 5 / 6
+  table entries 4..6, 7 entry 9, 8 surf variant, 9 entry 8. Every proc answers 0, advances `+0x30` or sets `+0x32`.
+* PAD -> DIRECTION (`021A3BB4`): x 0x20 left (2) / 0x10 right (3), z 0x40 up (0) / 0x80 down (1); with both axes pressed the newly
+  pressed one wins unless the MMDL already moves along one of them. B (held bit 1) runs when the running shoes flag is set.
+* PLAYER GRID (0x20, `field_player_grid.c` 0x17D): `+0` move state (0 stand, 1 walk / ride / swim, 2 turn, 3 bump, 5 slide, 7 fall),
+  `+4` move value, `+8` flags (1 forced move, 8 ice spin, 0x10 sliding, 0x20 running), `+0xC` -> CORE, `+0x10` FIELDMAP, `+0x14` /
+  `+0x16` ice-spin counter (60 frames), `+0x18` / `+0x1A` footstep SE (0x546 none) and its frame counter, `+0x1C` one-shot flag.
+* INPUT (0x14, on the stack of `021A41B0`): pad trigger, pad held, `u16` dir (9 none), flags (bit 0 running allowed), slow mode.
+* MOVE VALUE -> ACTION (`021A4444` by form -> `021A4CA8`): walk 0 none, 1 stand, 2 walk / run (acmd bases 0xC / 0x10 / 0x14 / 0x58,
+  slopes 0xA7 / 0x4C / 0xA3), 3 turn (0x24), 4 bump (0x1C + SE 0x55A unless a warp is ahead, `021A5810`), 5 jump (0x38 + SE 0x55E),
+  7 slide (0x34), 9 fall; cycle 0..5 (ride 0x14 / 0x10, dust 0x9B); surf 0..4. `02197E7C(dir, base)` -> `0216D410(MMDL, acmd)`.
+  Footstep SE: flag tables 0x021D8A00 / 0x021D8A0C, predicate tables 0x021D89F4 / 0x021D8A2C (spec header).
+* HEIGHT_EX (8, `height_ex.c` 0x5A): count, -> records of 0x1C (`+0` x, `+4` z, `+8` width, `+0xC` depth, `+0x10` height, `+0x14` in
+  use, `+0x18` extra), read by fieldmap 0218DDxx. Boulder push event work (0x24) and the build-model event works: height_ex header.
+* SURF tasks (`field_player_grid_event.c`): start work 0x18 (0x1E6), end work 0x4C (0x2B3), layouts in the player_event header; the surf
+  effect task work and the splash task work in the namipoke header.
+
+### Spec conventions (these six areas)
+
+* Arena = the `work` image (fixed zones, `fam.py`-style list in each header); the shared fix lines keep the FIELD_PLAYER / CORE / GRID
+  pointers linked and the state fields in range.
+* Pointers to the caller's stack are always `in:N` / `out:N` / `outm` / `outv` stub arguments (no stack address reaches a hash); stubs
+  called in a loop whose answer must change are `seq` (polled callees, the OBJ code while a change is pending, per-tile attributes).
+* New stub argument kind `outv:N:V1/V2/..` (F3a-spec, mirrored in `svflow.py` and `black-fndiff`, vectors in both test suites): an
+  out-parameter that the caller compares with a constant (`020508EC`'s 0x3FFF in `021A3A3C`).
+* The ports call the out-of-area callees through `FieldEnv::call` by address (D3: no draw code is ported).
+* Mutation check of the smoke ports: 6/6 caught (one per area; the first `namipoke` mutation, `min(0x3FFFF)`, was equivalent and the
+  first `height_ex` one exposed a weak rectangle bias in `021C0598`, now fixed).

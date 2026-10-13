@@ -453,7 +453,7 @@ def make_stub(st, ctx):
 
     def f(em, a0, a1, a2, a3, sp):
         raw = [a0, a1, a2, a3] + [em.r32(sp + 4 * (i - 4)) for i in range(4, len(st.args))]
-        vals, extra, outs, outps, keeps, outws = [], [], [], [], [], []
+        vals, extra, outs, outps, keeps, outws, outvs = [], [], [], [], [], [], []
         for i, k in enumerate(st.args):
             if k == "v":
                 vals.append(raw[i])
@@ -481,6 +481,9 @@ def make_stub(st, ctx):
                 _, n, w = k.split(":")
                 assert int(n, 0) % 4 == 0, "outw: N must be a multiple of 4"
                 outws.append((raw[i], int(n, 0), [int(x, 0) & M for x in w.split("/")], 0x100 * (i + 1)))
+            elif k.startswith("outv:"):  # F3a-spec: outv:N:V1/V2/.. = one of the listed values, N <= 4 little-endian bytes
+                _, n, vs = k.split(":")
+                outvs.append((raw[i], int(n, 0), [int(x, 0) & M for x in vs.split("/")], 0x100 * (i + 1)))
             elif k.startswith("outk:") or k.startswith("outki:"):
                 # Z20: `outk:N:M0/M1/..` = `outm` that keeps the bits outside the masks (byte j = (old & ~M) | (new & M),
                 # a callee that sets only some fields / bits of a record); `outki:OFS:N:M..` = the same on the record
@@ -511,6 +514,8 @@ def make_stub(st, ctx):
         for ptr, kk, ofs, n, salt in outps:  # B12-spec: base(K) + OFS + 4 * (mix(mix(acc, key + 0x1000 + salt), 0xC0DE) % N)
             base = WORK if kk == "work" else Runner.buf_addr(kk)
             em.wbytes(ptr, struct.pack("<I", (base + ofs + 4 * (mix(mix(acc, key + 0x1000 + salt), 0xC0DE) % n)) & M))
+        for ptr, n, vs, salt in outvs:  # F3a-spec `outv`: V[mix(mix(acc, key + 0x1000 + salt), 0xC0DE) % count] (as `outp`)
+            em.wbytes(ptr, struct.pack("<I", vs[mix(mix(acc, key + 0x1000 + salt), 0xC0DE) % len(vs)])[:n])
         for ptr, n, m, salt in keeps:  # Z20 `outk` / `outki`: the `outm` byte under the mask, the old bits elsewhere
             old = em.rbytes(ptr, n)
             em.wbytes(ptr, bytes((old[j] & ~m[j % len(m)] & 0xFF)

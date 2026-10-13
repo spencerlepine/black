@@ -579,3 +579,20 @@ is `force`; render / UI functions (D3) are left out and listed in the header (th
 21.97); helpers whose stubs hand out pointers get a trailing `arg buf` arena they never read (`Arena: arg K` in the block
 comment); ROM tables a function indexes are bounded by `pick:` / `oneof` / `range` to their real size. Instruction coverage
 (own body, per-function inputs): 814/814, 553/553, 542/542, 340/340, 1328/1328, 1370/1370, 3054/3054.
+
+## F3a-spec additions (black-field player / player_core / player_grid / namipoke / height_ex / player_event)
+
+New syntax only; no existing spec text or hash changes. Mirrored in `svflow.py` (`make_stub`) and `black-fndiff` (`stub.rs`), with the
+same vectors in `stub.rs` (`outv_writes_one_of_the_listed_values`) and `tools/rom-diff/test_svflow.py` (`OutV`).
+
+* Stub argument kind `outv:N:V1/V2/..`: a pointer to N bytes (N <= 4) that the stub fills with the low N little-endian bytes of one of the
+  listed values, `V[mix(mix(acc, key + 0x1000 + 0x100 * (argpos + 1)), 0xC0DE) % count]` (the hash of `outp`). For an out-parameter
+  the caller compares with a constant that `outm` masks cannot produce (`020508EC(obj, id, &u16)` in `player_core.spec`: the caller
+  tests the u16 for 0x3FFF). The port passes an `Arg::Out` of N bytes.
+
+Conventions of `specs/black-field/{player,player_core,player_grid,namipoke,height_ex,player_event}.spec` (headers): closure stubs as in
+core4 (checked with every function of the area treated as ported: no fault, stray write or unstubbed callee; `--strict-callees` and
+`--order-check` clean); every out-of-area stub is `force`, also between the six areas; the arena is the `work` image with fixed zones;
+pointers to the caller's stack reach stubs only as `in:` / `out:` / `outm:` / `outv:`; a stub whose answer must change between calls of
+one input (polled callees, an OBJ code that a pending change rewrites, an attribute per footprint tile) is `seq` (stub results do not mix
+in the `in:` words, only `v` arguments and the `seq` index).

@@ -39,6 +39,21 @@ def call(args, raw, em, seq=True, salt=0x1234):
     return f(em, raw[0], raw[1], raw[2], raw[3], 0x02EF0000), ctx
 
 
+class OutV(unittest.TestCase):
+    # F3a-spec `outv:N:V1/V2/..`: the same vectors as crates/black-fndiff/src/stub.rs (`outv_writes_one_of_the_listed_values`)
+    def test_outv_picks_a_listed_value(self):
+        em = FakeEm()
+        r, _ = call(["v", "outv:2:0x3FFF/0/1"], [0xABCD, 0x1000], em, seq=False)
+        self.assertEqual(list(em.rbytes(0x1000, 4)), [0xFF, 0x3F, 0, 0])  # only N bytes are written
+        self.assertEqual(r, 0x731C9F54)
+        em = FakeEm()
+        r, _ = call(["outv:4:0x11223344/5/6/7/8"], [0x1000], em, seq=False)
+        self.assertEqual((r, em.r32(0x1000)), (0x18685E8C, 7))
+        em = FakeEm()
+        r, _ = call(["v", "outv:4:0x11223344/5/6/7/8"], [9, 0x1000], em, seq=False)
+        self.assertEqual((r, em.r32(0x1000)), (0x35129D94, 6))
+
+
 class OutK(unittest.TestCase):
     def test_outm_vector_still_holds(self):
         # the B10-specs vector of crates/black-fndiff/src/stub.rs (`outm_masks_the_bytes_and_ptr_returns_an_address`)
