@@ -24,6 +24,7 @@ pub const PORTED: &[u32] = &[
     0x021B_66D4,
     0x021B_6804,
     0x021B_6818,
+    0x021B_6848,
     0x021B_68D8,
     0x021B_6954,
     0x021B_6994,
@@ -462,21 +463,21 @@ pub fn setup_type_is_3(mem: &Mem, setup_p: u32) -> u32 {
     u32::from(mem.r32(setup_p) == 3)
 }
 
-/// UNVERIFIED port of `FUN_overlay_d_93__021b6848` (not in [`PORTED`]: the harness leaves r3 from the previous input, see
-/// below). C: `FUN_overlay_d_93__021b6848`: own client: `M[0x46C] = setup[0x21]`, `M[0x46D] = 8bec(M, id, 0)` (server2),
+/// C: `FUN_overlay_d_93__021b6848`: own client: `M[0x46C] = setup[0x21]`, `M[0x46D] = 8bec(M, id, 0)` (server2),
 /// registers the parties (68d8). Local battles (`021b9114(M) == 0`): `M[0x3E0] = 02007B20(M[0x468])` filled by
 /// `02007C20(.., 02007B44(02012EBC(setup[0x58])))`, `setup[0x44] = 021b997c(M, 0)`. Comm battles: the 4 bytes `setup[0x44..]`
 /// are permuted by side slot (`021ba710(own id, i)`) through a 4-byte stack buffer. That buffer is the slot where the
 /// prologue `push {r3-r7, lr}` saved the caller's r3, so a slot no `021ba710` answer hits keeps a byte of the caller's r3:
-/// `stale_r3` (6dd0 passes 0x42B, the other sub-procs their own entry r3, which is M at 6100's slot call). The svflow
-/// harness does not reset r3 between inputs, so this cannot be checked function by function yet (checked with r3 = 0 by a
-/// harness copy that zeroes r0-r3, B11a report).
+/// `caller_r3`. At the five call sites (disassembly): 6dd0 has `r3 = 0x46C - 0x41 = 0x42B` (its last position-map store,
+/// `sub r3, #0x41` at 0x021B6E02); 6aac / 6c5c / 7050 / 71d4 never write r3 (and 6818 does not touch it), so it is their own
+/// entry r3: M at 6100's slot call (`blx r2` at 0x021B63AE, 6100's entry r3 = M unchanged on that path), 0 under the svflow
+/// entry state (Z19).
 pub fn own_client_init<E: FlowEnv>(
     env: &mut E,
     mem: &mut Mem,
     m: u32,
     setup_p: u32,
-    stale_r3: u32,
+    caller_r3: u32,
 ) {
     let id = mem.r8(setup_p + 0x21);
     mem.w8(m + M_OWN_ID, id);
@@ -496,7 +497,7 @@ pub fn own_client_init<E: FlowEnv>(
         mem.w8(s + 0x44, v as u8);
         return;
     }
-    let mut tmp = stale_r3.to_le_bytes();
+    let mut tmp = caller_r3.to_le_bytes();
     for i in 0..4u32 {
         let own = u32::from(mem.r8(m + M_OWN_ID));
         let k = env.call(0x021B_A710, &mut [Arg::V(own), Arg::V(i)]);
@@ -507,13 +508,6 @@ pub fn own_client_init<E: FlowEnv>(
         let s = setup(mem, m);
         mem.w8(s + j as u32 + 0x44, b);
     }
-}
-
-/// The call `021b6848(M, setup)` of the local sub-procs. While [`own_client_init`] is out of [`PORTED`] it goes through
-/// [`FlowEnv::call`] (its spec stubs are active); a production environment dispatches 0x021B6848 to [`own_client_init`] with
-/// the caller's r3 (UNVERIFIED wiring).
-fn call_own_client_init<E: FlowEnv>(env: &mut E) {
-    env.call(0x021B_6848, &mut [Arg::P, Arg::P]);
 }
 
 /// C: `FUN_overlay_d_93__021b68d8`: registers the parties of the sides of clients 0..3 (`k = 021ba710(M[0x46C], i)`):
@@ -727,12 +721,13 @@ fn set_positions(mem: &mut Mem, m: u32, ids: &[u8]) {
 /// C: `sub_021b6aac`: setup sub-proc of a local single battle (`(state, M)`, state unused): `mode = 6818(setup)`, 2 clients,
 /// positions {0, 1}, 6848, the party containers, the server create (`M[0x46E] = 1`), 69fc, clients (1, 0 / 1), 6a3c, 6a70,
 /// attach (k 1), server start, main loop 83f4. Returns 1.
-pub fn subproc_local_single<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
+/// `entry_r3`: the r3 the sub-proc was entered with, which reaches 6848 untouched (see [`own_client_init`]).
+pub fn subproc_local_single<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, entry_r3: u32) -> u32 {
     let s = setup(mem, m);
     let mode = setup_type_is_3(mem, s);
     mem.w8(m + M_CLIENT_COUNT, 2);
     set_positions(mem, m, &[0, 1]);
-    call_own_client_init(env);
+    own_client_init(env, mem, m, s, entry_r3);
     pokecon_init(env);
     server_create(env, mem, m, mode);
     mem.w8(m + M_IS_SERVER, 1);
@@ -767,13 +762,14 @@ pub fn subproc_exit<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
 
 /// C: `sub_021b6c5c`: setup sub-proc of a local double battle: own id 0, 2 clients, positions {0, 1, 0, 1}, 6848, party
 /// containers, 69fc before the server create, clients (2, 0 / 1), attach with k 2. Returns 1.
-pub fn subproc_local_double<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
+/// `entry_r3`: the r3 the sub-proc was entered with, which reaches 6848 untouched (see [`own_client_init`]).
+pub fn subproc_local_double<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, entry_r3: u32) -> u32 {
     let s = setup(mem, m);
     let mode = setup_type_is_3(mem, s);
     mem.w8(m + M_OWN_ID, 0);
     mem.w8(m + M_CLIENT_COUNT, 2);
     set_positions(mem, m, &[0, 1, 0, 1]);
-    call_own_client_init(env);
+    own_client_init(env, mem, m, s, entry_r3);
     pokecon_init(env);
     own_parties(env, mem, m, s);
     server_create(env, mem, m, mode);
@@ -804,7 +800,7 @@ pub fn subproc_local_multi<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u3
         }
         _ => {}
     }
-    call_own_client_init(env);
+    own_client_init(env, mem, m, s, 0x42B);
     env.call(0x021B_93E0, &mut [Arg::P, Arg::P, Arg::V(0)]);
     env.call(0x021B_93E0, &mut [Arg::P, Arg::P, Arg::V(1)]);
     let present = |env: &mut E, i: u32| env.call(0x021B_8B9C, &mut [Arg::P, Arg::V(i)]) != 0;
@@ -871,13 +867,14 @@ pub fn subproc_local_multi<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u3
 
 /// C: `sub_021b7050`: setup sub-proc of a local rule-2 battle (triple?): 2 clients, server flag, positions {0, 1, 0, 1, 0, 1},
 /// as 6aac with 69fc before the server create and clients / attach with mode 3. Returns 1.
-pub fn subproc_local_triple<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
+/// `entry_r3`: the r3 the sub-proc was entered with, which reaches 6848 untouched (see [`own_client_init`]).
+pub fn subproc_local_triple<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, entry_r3: u32) -> u32 {
     let s = setup(mem, m);
     let mode = setup_type_is_3(mem, s);
     mem.w8(m + M_CLIENT_COUNT, 2);
     mem.w8(m + M_IS_SERVER, 1);
     set_positions(mem, m, &[0, 1, 0, 1, 0, 1]);
-    call_own_client_init(env);
+    own_client_init(env, mem, m, s, entry_r3);
     pokecon_init(env);
     own_parties(env, mem, m, s);
     server_create(env, mem, m, mode);
@@ -887,12 +884,18 @@ pub fn subproc_local_triple<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u
 
 /// C: `sub_021b71d4`: setup sub-proc of a local rule-3 battle (rotation?): positions {0, 1, 0, 1, 0, 1}, as 6aac (69fc after
 /// the server create, clients / attach with mode 1). Returns 1.
-pub fn subproc_local_rotation<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
+/// `entry_r3`: the r3 the sub-proc was entered with, which reaches 6848 untouched (see [`own_client_init`]).
+pub fn subproc_local_rotation<E: FlowEnv>(
+    env: &mut E,
+    mem: &mut Mem,
+    m: u32,
+    entry_r3: u32,
+) -> u32 {
     let s = setup(mem, m);
     let mode = setup_type_is_3(mem, s);
     mem.w8(m + M_CLIENT_COUNT, 2);
     set_positions(mem, m, &[0, 1, 0, 1, 0, 1]);
-    call_own_client_init(env);
+    own_client_init(env, mem, m, s, entry_r3);
     pokecon_init(env);
     server_create(env, mem, m, mode);
     mem.w8(m + M_IS_SERVER, 1);
