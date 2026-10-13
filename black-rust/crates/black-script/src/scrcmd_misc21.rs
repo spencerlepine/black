@@ -383,8 +383,8 @@ pub trait Misc21Hooks: CoreHooks {
     fn fun_0200c0f0(&mut self, save: u32) -> u32;
     /// C: `FUN_0200C234(x)`.
     fn fun_0200c234(&mut self, x: u32) -> u32;
-    /// C: `FUN_0200E878()` (called with r0 = the 02012F38 record left over).
-    fn fun_0200e878(&mut self, r0: u32);
+    /// C: `FUN_0200E878(r)`: clear the 0x10-byte match record `r` (a thunk to `MI_CpuFill8(r, 0, 0x10)`).
+    fn fun_0200e878(&mut self, r: u32);
     /// C: `FUN_02008530(status)`: the player's OT id.
     fn fun_02008530(&mut self, status: u32) -> u32;
     /// C: `FUN_02008550(status)`.
@@ -604,8 +604,8 @@ pub trait Misc21Hooks: CoreHooks {
     fn fun_02186804(&mut self, t: u32);
     /// C: `FUN_02186830(t, k, heap)`: table k of the set.
     fn fun_02186830(&mut self, t: u32, k: u32, heap: u32) -> u32;
-    /// C: `FUN_0218683C(u)`: free the table (`r1` / `r2`: the caller's leftover registers, which the spec stub logs).
-    fn fun_0218683c(&mut self, u: u32, r1: u32, r2: u32);
+    /// C: `FUN_0218683C(u)`: free the table (a thunk to `Heap_Free` 0x020307B0).
+    fn fun_0218683c(&mut self, u: u32);
     /// C: `FUN_02186844(u, i)`: entry i of the first list ({u8 x, u8 z}).
     fn fun_02186844(&mut self, u: u32, i: u32) -> u32;
     /// C: `FUN_0218684C(u, i)`: entry i of the second list.
@@ -935,7 +935,7 @@ pub fn take_slot_event<H: Misc21Hooks>(h: &mut H, gs: u32, _x: u32, i: u32) -> u
 }
 
 /// C: `FUN_overlay_d_21__021cfc4c`: fill_matches_top(GAMESYS, a, b): R = `FUN_02012F38(GAMEDATA)`; a < 0xE9 -> [`fill_matches`]`(
-/// FUN_02009470(SAVE), R, a, b)`; else `FUN_0200E878()` (r0 = R left over).
+/// FUN_02009470(SAVE), R, a, b)`; else `FUN_0200E878(R)` (clears R).
 pub fn fill_matches_top<H: Misc21Hooks>(h: &mut H, gs: u32, a: u32, b: u32) {
     let gd = h.fun_020120f4(gs);
     let r = h.fun_02012f38(gd);
@@ -1915,8 +1915,6 @@ pub fn grotto_check<H: Misc21Hooks>(h: &mut H, gs: u32) -> bool {
     let u = h.fun_02186830(t, (z != 0) as u32, HEAP_GROTTO);
     let x = i32::from(i16::from_le_bytes(px));
     let zz = i32::from(i16::from_le_bytes(pz));
-    // r1 / r2 at the `FUN_0218683C(u)` calls are whatever the compare loop left there (the spec stub logs them)
-    let (mut r1, mut r2) = (0u32, 0u32);
     for second in [false, true] {
         for k in 0..10 {
             let q = if second {
@@ -1925,20 +1923,14 @@ pub fn grotto_check<H: Misc21Hooks>(h: &mut H, gs: u32) -> bool {
                 h.fun_02186844(u, k)
             };
             let (p0, p1) = (i32::from(h.r8(q)), i32::from(h.r8(q + 1)));
-            r2 = p0 as u32;
-            r1 = x as u32;
-            if p0 != x {
-                continue;
-            }
-            r1 = p1 as u32;
-            if p1 == zz {
-                h.fun_0218683c(u, r1, r2);
+            if p0 == x && p1 == zz {
+                h.fun_0218683c(u);
                 h.fun_02186804(t);
                 return false;
             }
         }
     }
-    h.fun_0218683c(u, r1, r2);
+    h.fun_0218683c(u);
     h.fun_02186804(t);
     true
 }

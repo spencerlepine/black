@@ -274,7 +274,7 @@ fn 021b4fb0 ret=u32 inputs=200
   stub 02159ae8 force ret=ptr:arg1:0x600:0x80 args=v,v seq
   stub 0201210c force ret=u32 args=v
   stub 02159b10 force ret=pick:0/1/2 args=v,v seq
-  stub 021c5bd0 force ret=u32 args=v
+  stub 021c5bd0 force ret=u32 args=v,v,v
   stub 0215a5f4 force ret=u32 args=v
   stub 020120f4 force ret=u32 args=v
   stub 0215897c force ret=none args=v,v

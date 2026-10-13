@@ -22,7 +22,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021B6D0C, "1a4c6fd63fb88631"),
     (0x021B6D30, "e92ffde780d256f0"),
     (0x021B6D64, "73c4dfea93108a1e"),
-    (0x021B6D98, "13061a853492d52c"),
+    (0x021B6D98, "444a1526a1c335fe"),
     (0x021B6DC0, "1295b0945e4ed0a1"),
     (0x021B6DE4, "8124154931cea7cf"),
     (0x021B6E0C, "968b7a084de39357"),
@@ -41,13 +41,13 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021B7038, "8d1747f8da552654"),
     (0x021B7068, "2db000a27e677b29"),
     (0x021B707C, "debf610d000ff115"),
-    (0x021B7080, "8ac5a0baaca19c96"),
+    (0x021B7080, "4712a2ce9bf0fc3a"),
     (0x021B7098, "43a6087ae6e56935"),
     (0x021B709C, "e065939aabd66492"),
     (0x021B70D4, "2bb8b2bd9465cef5"),
     (0x021B70D8, "eb1c9c024ee4a956"),
     (0x021B716C, "bd1986ede1109e26"),
-    (0x021B721C, "7e0ce3682ef054d1"),
+    (0x021B721C, "2d429b48977722c8"),
     (0x021B72CC, "8b08b63f8adeae11"),
     (0x021B7364, "099c5513ff7f7e5c"),
     (0x021B7390, "959d782480c74255"),
@@ -511,9 +511,7 @@ impl PokemonFldHooks for Rom<'_> {
         self.stubs.call(0x0200cde0, &mut [Arg::V(dex), Arg::V(mon)]);
     }
     fn fun_0200be48(&mut self, save: u32) -> u32 {
-        // `ret=none` stub: r0 keeps the first argument
-        self.stubs.call(0x0200be48, &mut [Arg::V(save)]);
-        save
+        self.stubs.call(0x0200be48, &mut [Arg::V(save)])
     }
     fn fun_0200bf18(&mut self, block: u32, v: u32) -> u32 {
         self.stubs.call(0x0200bf18, &mut [Arg::V(block), Arg::V(v)])
@@ -543,9 +541,8 @@ impl PokemonFldHooks for Rom<'_> {
             &mut [Arg::V(sys), Arg::Out(&mut obj[..]), Arg::P],
         )
     }
-    // the spec stub of 0201efa4 takes r0..r3 only (`args=v,v,v,v`)
-    fn fun_0201efa4(&mut self, ws: u32, i: u32, n: u32, digits: u32, _a: u32, _b: u32) {
-        self.s(0x0201_EFA4, &[ws, i, n, digits]);
+    fn fun_0201efa4(&mut self, ws: u32, i: u32, n: u32, digits: u32, a: u32, b: u32) {
+        self.s(0x0201_EFA4, &[ws, i, n, digits, a, b]);
     }
 }
 

@@ -3082,7 +3082,7 @@ impl Misc21Hooks for Null {
     fn fun_02186830(&mut self, _t: u32, _k: u32, _heap: u32) -> u32 {
         0
     }
-    fn fun_0218683c(&mut self, _u: u32, _r1: u32, _r2: u32) {}
+    fn fun_0218683c(&mut self, _u: u32) {}
     fn fun_02186844(&mut self, _u: u32, _i: u32) -> u32 {
         0
     }

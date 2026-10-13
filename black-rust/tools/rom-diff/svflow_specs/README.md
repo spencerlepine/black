@@ -674,3 +674,13 @@ unchanged arguments is `seq` (`0219C314`, `02197EDC`, `0216DD1C`); the RNG `0200
 are `force`. Closure stubs (checked with every function of the area treated as ported: no fault, stray write or unstubbed callee);
 `--strict-callees` and `--order-check` clean; instruction coverage (plain / closure) 820/820 / 820/820, 1240/1241 / 1234/1241 (one dead
 `b` in `0219B074`), 1013/1013 / 1013/1013, 718/718 / 718/718.
+## F8e-spec2 fixes (black-script scrcmd_shop / scrcmd_proc_fld / scrcmd_encount / scrcmd_c03center / scrcmd_pokemon_fld / scrcmd_misc21)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged. Stub kinds corrected from the disassembly: `021f36c0` (cmd 418) and
+`0200be48` (pokemon_fld, all blocks) `ret=u32` (the caller passes r0 on); `0218683c` (thunk to Heap_Free) `args=v`; `021c5bd0`
+(cmd 333) `args=v,v,v`; `021b4804` `args=v,v` (both callers pass W2[0x162] in r1); `0201efa4` 6 arguments (r0..r3 + 2 stack words,
+as in scrcmd_fld / scrcmd_talk); `0200e878` (thunk to MI_CpuFill8(r, 0, 0x10)) `args=v`. Input widenings (mutation survivors):
+`021b3370` price at the money ties / money / price 98..100 (1000 inputs), `021b5a18` target angle at the 0x2000 rounding ties,
+`021cfac0` arguments weighted to one position record with y at the window edges (600 inputs), `02009634` answers 0x100 / 0x10002.
+Area hashes: scrcmd_shop 513b651813a0af83, scrcmd_proc_fld 471c1336a0563859, scrcmd_encount 30b6ab1705963b24, scrcmd_c03center
+8157cfade5f75a06, scrcmd_pokemon_fld 8c205c16ea477657, scrcmd_misc21 6b64908e0fc06b7a; `--strict-callees` and `--order-check` clean.

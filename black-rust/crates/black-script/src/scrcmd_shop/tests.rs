@@ -10,7 +10,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021B3158, "baeeaa22250b7fbf"),
     (0x021B3258, "6892310ae428883f"),
     (0x021B3350, "4f196f685167693d"),
-    (0x021B3370, "c4379e9362c73e04"),
+    (0x021B3370, "79e4130b49964349"),
     (0x021B3568, "6fc15635dfb5f1db"),
     (0x021B3834, "3fe2a81e89252e37"),
     (0x021B38E0, "ebfe3f402fbd30bd"),
@@ -405,9 +405,8 @@ impl ShopHooks for Rom<'_> {
             self.mem.w8(count + i as u32, *x);
         }
     }
-    // the spec stub of 021b4804 takes r0 only (`args=v`)
-    fn fun_021b4804(&mut self, w2: u32, _flag: u32) {
-        self.s(0x021B_4804, &[w2]);
+    fn fun_021b4804(&mut self, w2: u32, flag: u32) {
+        self.s(0x021B_4804, &[w2, flag]);
     }
 }
 

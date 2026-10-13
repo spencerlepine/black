@@ -18,7 +18,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021B4EE0, "119c08c6ce2a51bf"),
     (0x021B4F1C, "f30db220b600c350"),
     (0x021B4F68, "019b2bdeadfb17ec"),
-    (0x021B4FB0, "4500f0e7724b7d16"),
+    (0x021B4FB0, "def60a7530c8a04d"),
     (0x021B5008, "512a864798025cc5"),
     (0x021B503C, "c5ce23a1c83cbfe2"),
     (0x021B5094, "c5bf5e6158c45769"),
@@ -401,9 +401,8 @@ impl ProcFldHooks for Rom<'_> {
     fn fun_020124ac_at(&mut self, gamesys: u32, kind: u32, proc_table: u32, param: u32) -> u32 {
         self.s(0x0201_24AC, &[gamesys, kind, proc_table, param])
     }
-    // the spec stub of 021c5bd0 takes r0 only (`args=v`)
-    fn fun_021c5bd0(&mut self, gamesys: u32, _flag: u32, _var: u32) -> u32 {
-        self.s(0x021C_5BD0, &[gamesys])
+    fn fun_021c5bd0(&mut self, gamesys: u32, flag: u32, var: u32) -> u32 {
+        self.s(0x021C_5BD0, &[gamesys, flag, var])
     }
 }
 

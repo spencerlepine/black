@@ -301,7 +301,7 @@ fn 021b5610 ret=u32 inputs=200
   fix arg0 0x1C u32 addrof arg0 0x40
   fix arg0 0xE u8 range 0 2
   fix arg1 0x20 u32 addrof arg1 0x100
-  stub 021f36c0 force ret=none args=v,v,v
+  stub 021f36c0 force ret=u32 args=v,v,v
   stub 0201210c force ret=u32 args=v
   stub 02159b10 force ret=u16 args=v,v seq
   stub 0215a5f4 force ret=u32 args=v

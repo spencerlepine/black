@@ -21,7 +21,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021B5528, "d9f7ae8a5d88e42f"),
     (0x021B55C8, "f00abce46bbf884d"),
     (0x021B55F0, "f009640c96059e7c"),
-    (0x021B5610, "91230241681bcf52"),
+    (0x021B5610, "8da4db0dbb5fb039"),
     (0x021B5650, "62bac2809d072a68"),
     (0x021B568C, "d80e1be15de293b3"),
 ];
@@ -299,10 +299,8 @@ impl EncountHooks for Rom<'_> {
             .call(0x021d2d50, &mut [Arg::V(gamesys), Arg::In(rec)])
     }
     fn fun_021f36c0(&mut self, gamesys: u32, fm: u32, n: u32) -> u32 {
-        // `ret=none` stub: r0 keeps the first argument
         self.stubs
-            .call(0x021f36c0, &mut [Arg::V(gamesys), Arg::V(fm), Arg::V(n)]);
-        gamesys
+            .call(0x021f36c0, &mut [Arg::V(gamesys), Arg::V(fm), Arg::V(n)])
     }
     fn fun_021f36c8(&mut self, n: u32) -> u32 {
         self.stubs.call(0x021f36c8, &mut [Arg::V(n)])

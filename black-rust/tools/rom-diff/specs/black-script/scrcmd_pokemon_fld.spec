@@ -379,7 +379,7 @@ fn 021b6bdc ret=u32 inputs=200
   stub 0200ca1c force ret=u32 args=v
   stub 02007e50 force ret=u32 args=v,v,v,v
   stub 0201292c force ret=u32 args=v
-  stub 0200be48 force ret=none args=v
+  stub 0200be48 force ret=u32 args=v
   stub 0200bf18 force ret=u32 args=v,v
   stub 0201eec4 force ret=none args=v,v,v
   stub 0201f02c force ret=none args=v,v,v
@@ -437,7 +437,7 @@ fn 021b6d30 ret=u32 inputs=200
   stub 02017e1c force ret=pick:0/1 args=v,v,v
   stub 0201ef40 force ret=none args=v,v,v
   stub 0201f184 force ret=none args=v,v,v
-  stub 0200be48 force ret=none args=v
+  stub 0200be48 force ret=u32 args=v
   stub 02012ebc force ret=u32 args=v
   stub 02157e9c force ret=nullable:2:u32 args=v,v,v
   stub 0215a5cc force ret=u16 args=v
@@ -485,7 +485,7 @@ fn 021b6d98 ret=u32 inputs=200
   stub 02007e50 force ret=u32 args=v,v,v,v
   stub 0215a5cc force ret=u16 args=v
   stub 0201292c force ret=u32 args=v
-  stub 0200be48 force ret=none args=v
+  stub 0200be48 force ret=u32 args=v
   stub 0200bf18 force ret=u32 args=v,v
   stub 02012ebc force ret=u32 args=v
   stub 02157e9c force ret=nullable:2:u32 args=v,v,v
@@ -700,7 +700,7 @@ fn 021b7080 ret=u32 inputs=200
   fix arg2 0 u32 alt const 0x23E || range 0 0x280 || any
   fix arg2 0xB0 u16 alt const 0x7FE || any
   fix arg2 0xB3 u8 alt const 2 || any
-  stub 0200be48 force ret=none args=v
+  stub 0200be48 force ret=u32 args=v
   stub 0200bf18 force ret=u32 args=v,v
   stub 02012ebc force ret=u32 args=v
 
@@ -717,7 +717,7 @@ fn 021b709c ret=u32 inputs=200
   stub 0215a5e4 force ret=u32 args=v
   stub 02012944 force ret=u32 args=v
   stub 0201f184 force ret=none args=v,v,v
-  stub 0200be48 force ret=none args=v
+  stub 0200be48 force ret=u32 args=v
   stub 0201f02c force ret=none args=v,v,v
   stub 02012ebc force ret=u32 args=v
 
@@ -778,7 +778,7 @@ fn 021b721c ret=u32 inputs=200
   fix arg1 0x20 u32 addrof arg1 0x100
   fix arg1 0x500 u32 alt range 0 3 || any rep=31,8
   stub 02188c84 force ret=u32 args=v
-  stub 0201efa4 force ret=none args=v,v,v,v
+  stub 0201efa4 force ret=none args=v,v,v,v,v,v
   stub 0204a298 force ret=ptr:arg1:0x500:1 args=v,v,v,v,outm:4:0xF8/0/0/0
   stub 02159b10 force ret=pick:0/1/2/3 args=v,v seq
   stub 020307b0 force ret=none args=v

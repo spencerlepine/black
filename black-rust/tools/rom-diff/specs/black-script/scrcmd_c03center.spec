@@ -51,6 +51,7 @@ set field
 # value (frames); W = Heap_AllocDebug(H, 0x10, 1, "scrcmd_c03center.c", 0x5D); g = 0x021EE724 (u16): *g = *0218ED50(E);
 # 0216CDB8(X, g); a = 0218FE70(E)+0x26 (u16); W = {*g, delta, 0, n} with delta = (a rounded to the nearest multiple of 0x4000)
 # - *g, wrapped into -0x8000..0x7FFF; 02030DA8(T, 0x021B5B0D, W, 0) (TCB add); 0.
+# F8e-spec2: the target angle a (arg1 + 0x566) is drawn at the rounding ties (a = 0x2000 mod 0x4000) and next to them.
 fn 021b5a18 ret=u32 inputs=200
   nowork
   arg buf 0x800
@@ -59,6 +60,7 @@ fn 021b5a18 ret=u32 inputs=200
   fix arg0 0x1C u32 addrof arg0 0x40
   fix arg0 0xE u8 range 0 2
   fix arg1 0x20 u32 addrof arg1 0x100
+  fix arg1 0x566 u16 alt oneof 0x2000 0x6000 0xA000 0xE000 || oneof 0x1FFF 0x2001 0x5FFF 0x6001 0xDFFF 0xE001 || any
   global 021ee724 4
   stub 0215a5e4 force ret=u32 args=v
   stub 02188c84 force ret=u32 args=v

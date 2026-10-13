@@ -14,26 +14,26 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021CFA1C, "97aeccb69611967c"),
     (0x021CFA58, "30b7ba19f4738f64"),
     (0x021CFA88, "131c2a074dd7f6d4"),
-    (0x021CFAC0, "c3be1249fb2a675d"),
+    (0x021CFAC0, "a83f7781c3b1e4e8"),
     (0x021CFB1C, "10bbf18b7d625047"),
     (0x021CFB68, "d1768dd22f31722b"),
     (0x021CFBA8, "bff41902c68340a6"),
     (0x021CFC14, "849101fc6e52db43"),
-    (0x021CFC4C, "c5c74a7db5807edb"),
-    (0x021CFC80, "9d97c53ce6eb43d5"),
+    (0x021CFC4C, "48d67f06545912cb"),
+    (0x021CFC80, "8be75c45f6125a16"),
     (0x021CFCF4, "eb812d1bb178947a"),
-    (0x021CFD08, "11df432a702c3000"),
+    (0x021CFD08, "74f6bf14e11b7cfb"),
     (0x021CFD88, "2ed4e3a15afbdb38"),
-    (0x021CFDBC, "af4b21ffcc66896c"),
+    (0x021CFDBC, "6122af7965cb5ba1"),
     (0x021CFEA0, "89200fdfb492489a"),
     (0x021CFEF0, "dc61627d87112371"),
     (0x021CFF28, "b9b13c386b9961fa"),
-    (0x021CFF78, "ae2db67b60a8c4b2"),
+    (0x021CFF78, "017d1e3a85854a2d"),
     (0x021CFFDC, "4a20c6f91de44c38"),
     (0x021D0014, "a5e0645131b00396"),
     (0x021D004C, "f078e9bb7c000d36"),
-    (0x021D0084, "ee456a2e2fb4d4ad"),
-    (0x021D00B8, "b35a28b70074a536"),
+    (0x021D0084, "1710481d5dd1e428"),
+    (0x021D00B8, "e7f1f059748a2581"),
     (0x021D0114, "1eb706ece983e75e"),
     (0x021D1670, "b84aad03075db956"),
     (0x021D16D8, "4b30ae4641e958ee"),
@@ -70,12 +70,12 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021D2524, "cb59e1d163dd4e5c"),
     (0x021D26D0, "726b949fefce8eb8"),
     (0x021D2710, "92bab45608cd5e9f"),
-    (0x021D2750, "27b1c2b8165bc78b"),
+    (0x021D2750, "d40d96ca6fcebb64"),
     (0x021D297C, "7fe06c653924ac92"),
     (0x021D29A8, "ff74b5361b245b77"),
     (0x021D2ADC, "4906f05f68d06a2c"),
     (0x021D2B18, "10eeb491c16f38ed"),
-    (0x021D2B54, "52d155c282871fc5"),
+    (0x021D2B54, "ce8f4c77e9c0492a"),
     (0x021D2CE8, "9d922d8e6a66a140"),
     (0x021D2D24, "a943047b998980f4"),
     (0x021D2D50, "7c26f8a3a0c0ae3c"),
@@ -753,9 +753,8 @@ impl Misc21Hooks for Rom<'_> {
         self.stubs
             .call(0x02186830, &mut [Arg::V(t), Arg::V(k), Arg::V(heap)])
     }
-    fn fun_0218683c(&mut self, u: u32, r1: u32, r2: u32) {
-        self.stubs
-            .call(0x0218683c, &mut [Arg::V(u), Arg::V(r1), Arg::V(r2)]);
+    fn fun_0218683c(&mut self, u: u32) {
+        self.stubs.call(0x0218683c, &mut [Arg::V(u)]);
     }
     fn fun_02186844(&mut self, u: u32, i: u32) -> u32 {
         self.stubs.call(0x02186844, &mut [Arg::V(u), Arg::V(i)])
@@ -857,13 +856,11 @@ impl Misc21Hooks for Rom<'_> {
             &mut [Arg::V(gamesys), Arg::In(pos), Arg::V(a), Arg::V(b)],
         )
     }
-    // the spec stub of 0200e878 takes no argument
-    fn fun_0200e878(&mut self, _r0: u32) {
-        self.s(0x0200_E878, &[]);
+    fn fun_0200e878(&mut self, r: u32) {
+        self.s(0x0200_E878, &[r]);
     }
-    // the spec stub of 0201efa4 takes r0..r3 only (`args=v,v,v,v`)
-    fn fun_0201efa4(&mut self, ws: u32, i: u32, n: u32, digits: u32, _a: u32, _b: u32) {
-        self.s(0x0201_EFA4, &[ws, i, n, digits]);
+    fn fun_0201efa4(&mut self, ws: u32, i: u32, n: u32, digits: u32, a: u32, b: u32) {
+        self.s(0x0201_EFA4, &[ws, i, n, digits, a, b]);
     }
     fn fun_02045994(&mut self, buf: u32, s: &[u8; 16], n: u32) {
         self.stubs
