@@ -26,16 +26,31 @@
 //!   at 0x021D1E6D-0x021D3D51. Those are the server `BtlCmd` ids of
 //!   [`crate::server_flow::cmd_queue`]; the bulk of the client's work is relaying each one to the view.
 //!
-//! | area | range | fns (labels) | what | specced / ported (B13-spec1) |
+//! | area | range | fns (labels) | what | specced B13-spec1 + B13-spec2 / ported |
 //! |---|---|---|---|---|
-//! | `client1` | 021CD6EC-021CDDDC | 24 | object lifecycle: create `021cd6f0` (0x1F0 bytes, 0x1B8-byte object), free `021cd8e0`, flags, replay reader, step-function setter `021cda0c`, the main step `021cda18` (`.byte` block with a jump table), request-table lookup `021cdd50` | 20 / 2 |
-//! | `client2` | 021CDDDC-021CF5B0 | 56 | first request steps (`021cdddc` 2, `021cdf58` 3, `021ce1b0` 7 ...), their helpers (BGM fade, result block, random choice `021cdfe4`), mon HP ratio, three-slot flags | 19 / 1 |
-//! | `client3` | 021CF5B0-021D10B8 | 46 | selection checks (`021cf5b0` big pick routine, `021cf89c` can-use, `021cf9b4`), 6-slot index list `021cfba4..fbe0`, party/target helpers `021d0980 021d0b6c 021d0bb0 021d0c78` | 11 / 1 |
-//! | `client4` | 021D10B8-021D2FD8 | 39 | tail of the request steps (`021d10b9 .. 021d1a75`) and the first playback handlers (`021d1e6d .. 021d2fd9`: HP bar, status, message relays) | 3 / 0 |
-//! | `client5` | 021D2FD8-021D3F04 | 57 | the rest of the playback handlers (one BattleMon view call each), client getters, cursor accessors | 49 / 1 |
+//! | `client1` | 021CD6EC-021CDDDC | 24 | object lifecycle: create `021cd6f0` (0x1F0 bytes, 0x1B8-byte object), free `021cd8e0`, flags, replay reader, step-function setter `021cda0c`, the main step `021cda18` (`.byte` block with a jump table), request-table lookup `021cdd50` | 20 + 4 / 2 |
+//! | `client2` | 021CDDDC-021CF5B0 | 56 | first request steps (`021cdddc` 2, `021cdf58` 3, `021ce1b0` 7 ...), their helpers (BGM fade, result block, random choice `021cdfe4`), mon HP ratio, three-slot flags; the action-selection callbacks (`021ce308` .. `021cf2f0`, run through `c+0xD0`) | 19 + 26 / 1 |
+//! | `client3` | 021CF5B0-021D10B8 | 46 | selection checks (`021cf5b0` big pick routine, `021cf89c` can-use, `021cf9b4`), 6-slot index list `021cfba4..fbe0`, party/target helpers `021d0980 021d0b6c 021d0bb0 021d0c78`, trainer-AI switch heuristics (64-bit LCG at `c+0xF4`), AI action step `021d0770`, switch-in steps | 11 + 30 / 2 |
+//! | `client4` | 021D10B8-021D2FD8 | 39 | tail of the request steps (`021d10b9 .. 021d1a75`) and the first playback handlers (`021d1e6d .. 021d2fd9`: HP bar, status, message relays), the command player `021d1a74`, level-up / learn-move `021d2a20` / `021d2ca8` | 3 + 51 / 3 |
+//! | `client5` | 021D2FD8-021D3F04 | 57 | the rest of the playback handlers (one BattleMon view call each), client getters, cursor accessors, trainer-item helpers `021d3dc4 021d3e70 021d3ec8`, `021d3d84` (called from overlay 95) | 49 + 18 / 2 |
 //!
 //! The specs are `nowork` (the client object is not an `SvFlowWork`): the object is `arg buf 0x1C0` (allocation 0x1B8).
-//! Remaining functions of each area: the report of B13-spec1 (for B13-spec2).
+//! B13-spec2 specced every remaining function (231 in all; not specced: the ten Thumb-to-ARM veneers `021ce7c4 021cee98 021ceea8 021d0b3c
+//! 021d0b4c 021d0b5c 021d121c 021d122c 021d3558 021d3a10`, which are stubs at their Thumb entry, and the `LAB_` pieces of `.byte`
+//! functions). Conventions of the B13-spec2 blocks (headers of `client1.spec` .. `client5.spec`): closure stubs inside an area, `force`
+//! stubs for callees in another client area, for adapter / server_flow / cmd_queue ports and for the targets of indirect calls (the step
+//! function at `c+0x28`, the request handler at `c+0xC8`, the pending callback at `c+0xD0`, the playback handler at `c+0x17C`).
+//!
+//! # UI-side callees (D3 / D7)
+//!
+//! The client's view calls are all stubs in the specs; a port reaches them through `FlowEnv::call`, which is the future
+//! battle-screen trait surface (U3 / U4 implement it in Bevy):
+//!
+//! * battle view (`battle_view_core`, `c+0x54`): 111 entry points 0x021E90A0-0x021EAF78 (messages `021eaf18 / 021eaf50 / 021eaf78` +
+//!   `021ea614` print, `021ea710` "message done", menus `021e9760 .. 021e9e80`, yes/no `021eabc4 / 021eac54`, animations `021ea0a0 ..
+//!   021ea950`, level-up windows `021eac64 .. 021eadf4`);
+//! * the view-side object at `c+0x34`: `021ef9a8 021ef9c0 021ef9c8 021ef9f4 021efa94 021efad8 021efb34 021efc1c 021efc78`;
+//! * sound and effects: overlay 94 `021f7998 .. 021f88bc` (22 calls) and the main-module sound layer `02005ca4 .. 02006740` (15 calls).
 //!
 //! # Client object (0x1B8 bytes)
 //!
@@ -55,6 +70,7 @@
 pub mod client1;
 pub mod client2;
 pub mod client3;
+pub mod client4;
 pub mod client5;
 
 /// Little-endian word at `ofs`.

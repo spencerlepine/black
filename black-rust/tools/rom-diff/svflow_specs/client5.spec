@@ -434,3 +434,285 @@ fn 021d3d9c ret=none
   nowork
   arg buf 0x1C0
   stub 021b9f84 ret=u32 args=v,v,v
+
+# ---------------------------------------------------------------------------------------------------------------------------------- B13-spec2
+# B13-spec2 specs every function the B13-spec1 header above lists as "not specced in this batch" (list in client/mod.rs).
+# The rest of the playback handlers (`u32 handler(c, u32 *state, u32 *args)`: arg 1 = state word `arg buf 0x10`, arg 2 = the argument words
+# `arg buf 0x40`; one-shot handlers ignore the state) and the trainer-item helpers 021d3dc4 / 021d3e70 / 021d3ec8 (021d0770 uses them).
+# 021d32e0 keeps a counter in the overlay global 0x021F3B64 + 4 (`global 021f3b64 0x20`, shared with client4 021d2a20).
+# ROM tables read as data: 0x021EFF80 (4 x u16 message ids, 021d2fd8), 0x021EFF74 (4 bytes), 0x021EFF94 (6 x {u8, u8}), 0x021EFFA0 (7 x
+# {u8, u8}). Veneers 021d3558, 021d3a10 (Thumb `bx pc` to ARM thunks to 0x0689xxxx) are stubbed at the Thumb entry.
+# 021b9a24 (same side) is a plain stub here (it is real code only under `env bpp`).
+# Note for B13: the B13-spec1 block of 021d3c44 lists `stub 021cd9f4`, which is PORTED (client1 counter_add): that stub is inactive, so the ROM
+# side runs the real counter_add and a port of 021d3c44 must call client1::counter_add (not env.call).
+
+# command 0x46 (exp gain; 5-way jump table, data 021d2ff6-021d3000): 0: 021f7cfc(021b8e70(server, (u8) args[0]), (u16) args[5], (u8)
+# args[1], args[2], args[4]), state 1. 1: !021f7eb4(): args[2] -> message 0x41 with 021d5440(021b98ac(pokecon, (u8) args[0])),
+# 021f883c(0x518); else message u16 0x021EFF80[args[1]] (args[1] < 4) or 0x3D; 021ea614(view, c+0x58), state 2. 2: 021ea710(view) ->
+# args[2] ? (021ba2d4(server, 021b98ac(..)), state 3) : 1. 3: !02005f38() -> 021f7c0c(), 02005d90(0x47C, 0xFFFF), 021b92a0(server); args[3]
+# -> message 0x42 (021b98ac, 021d5440), 021ea614, state 4; else 1. 4: 021ea710 -> state 5. Other states: 1.
+fn 021d2fd8 ret=u32
+  nowork
+  arg buf 0x1C0
+  arg buf 0x10
+  arg buf 0x40
+  fix arg1 0 u32 alt range 0 5 || any
+  fix arg2 4 u32 alt range 0 4 || any
+  fix arg2 8 u32 alt const 0 || any
+  fix arg2 0xC u32 alt const 0 || any
+  stub 021b8e70 ret=u32 args=v,v
+  stub 021f7cfc ret=none args=v,v,v,v,v
+  stub 021f7eb4 ret=pick:0/1 args=
+  stub 021b98ac ret=u32 args=v,v
+  stub 021eaf18 ret=none args=p,v,v
+  stub 021d5440 ret=u32 args=v
+  stub 021eaf50 ret=none args=p,v
+  stub 021f883c ret=none args=v
+  stub 021ea614 ret=none args=v,p
+  stub 021ea710 ret=pick:0/1 args=v
+  stub 021ba2d4 ret=none args=v,v
+  stub 02005f38 ret=pick:0/1 args=
+  stub 021f7c0c ret=none args=
+  stub 02005d90 ret=none args=v,v
+  stub 021b92a0 ret=none args=v
+
+# command 0x47: 0: 021f7d44(021b8e70(server, (u8) args[0]), (u16) args[1]), state 1. 1: !021f7eb4() -> message 0x43, 021ea614, state 2.
+# 2: 021ea710(view) -> 1.
+fn 021d3138 ret=u32
+  nowork
+  arg buf 0x1C0
+  arg buf 0x10
+  arg buf 0x40
+  fix arg1 0 u32 alt range 0 2 || any
+  stub 021b8e70 ret=u32 args=v,v
+  stub 021f7d44 ret=none args=v,v
+  stub 021f7eb4 ret=pick:0/1 args=
+  stub 021eaf18 ret=none args=p,v,v
+  stub 021ea614 ret=none args=v,p
+  stub 021ea710 ret=pick:0/1 args=v
+
+# command 0x48 (k = u8 args[0], slot = u8 args[1]): 0: 021b9c50(021b9aec(pokecon, k), slot, 0, 0), 021eaa6c(view, k, slot), state 1. 1:
+# 021eaad8(view) -> args[1] == 1 -> 1; else f = (u8) 021b9f70(server, (u8) args[0]): message (slot 3 ? (f ? 0x26 : 0x27) : (f ? 0x28 : 0x29))
+# 021ea678(view, id, args), state 2. 2: 021ea710(view) -> 1.
+fn 021d31a0 ret=u32
+  nowork
+  arg buf 0x1C0
+  arg buf 0x10
+  arg buf 0x40
+  fix arg1 0 u32 alt range 0 2 || any
+  fix arg2 4 u8 alt range 1 3 || any
+  stub 021b9aec ret=u32 args=v,v
+  stub 021b9c50 ret=none args=v,v,v,v
+  stub 021eaa6c ret=none args=v,v,v
+  stub 021eaad8 ret=pick:0/1 args=v
+  stub 021b9f70 ret=pick:0/1 args=v,v
+  stub 021ea678 ret=none args=v,v,p
+  stub 021ea710 ret=pick:0/1 args=v
+
+# command 0x49 (k = u8 args[0], s = 021b8d8c(server, pokecon, k)): 0: idle (021cd9e0) -> 021d66d0(021b9934(pokecon, k), args[1]), 1; else
+# 021ea768(view, s, 0), state 1. 1: 021ea778(view, s) -> 021d66d0(mon, args[1]), 021ea7a8(view, s), state 2. 2: 021ea7b8(view, s) -> state
+# 3. 3: 1.
+fn 021d324c ret=u32
+  nowork
+  arg buf 0x1C0
+  arg buf 0x10
+  arg buf 0x40
+  fix arg1 0 u32 alt range 0 3 || any
+  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021cd9e0 force ret=pick:0/0/1 args=p
+  stub 021b9934 ret=u32 args=v,v
+  stub 021d66d0 ret=none args=v,v
+  stub 021ea768 ret=none args=v,v,v
+  stub 021ea778 ret=pick:0/1 args=v,v
+  stub 021ea7a8 ret=none args=v,v
+  stub 021ea7b8 ret=pick:0/1 args=v,v
+
+# command 0x4A (two mons a = u8 args[0], b = u8 args[1], values u16 args[2] / args[3]; 7-way jump table, data 021d3346-021d3354): s = 021b8d8c
+# (a), t = 021b8d8c(b), ma / mb = 021b9934(pokecon, a / b). 0: idle or same side (021b9a24(a, b)) -> 021d66d0(ma, args[2]), 021d66d0(mb,
+# args[3]), 1; else 021ea768(view, s, 0), g[4] = 8, state 1. 1: 021ea778(view, s); g[4] ? g[4]-- : (021ea768(view, t, 0), state 2).
+# 2: both 021ea778(view, s) and (view, t) -> state 3. 3: both 021d66d0, g[4] = 0, state 4. 4: ++g[4] > 8 -> 021ea7a8(view, s), state 5.
+# 5: 021ea7b8(view, s) -> 021ea7a8(view, t), state 6. 6: 021ea7b8(view, t) -> state 7. 7: 1.
+fn 021d32e0 ret=u32 inputs=400
+  nowork
+  arg buf 0x1C0
+  arg buf 0x10
+  arg buf 0x40
+  global 021f3b64 0x20
+  fix arg1 0 u32 alt range 0 7 || any
+  fix global0 4 u32 alt range 0 9 || any
+  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b9934 ret=u32 args=v,v
+  stub 021cd9e0 force ret=pick:0/0/1 args=p
+  stub 021d66d0 ret=none args=v,v
+  stub 021b9a24 ret=pick:0/0/1 args=v,v
+  stub 021ea768 ret=none args=v,v,v
+  stub 021ea778 ret=pick:0/1/1 args=v,v
+  stub 021ea7a8 ret=none args=v,v
+  stub 021ea7b8 ret=pick:0/1 args=v,v
+
+# command 0x4B: 0: s = 021b8d8c(server, pokecon, (u8) args[0]), m = 021b9934(pokecon, args[0]), i = 021cd9e0(c) (idle); 021d6c2c(m);
+# 021ea868(view, s, i), state 1. 1: 021ea878(view) -> state 2. 2: 1.
+fn 021d344c ret=u32
+  nowork
+  arg buf 0x1C0
+  arg buf 0x10
+  arg buf 0x40
+  fix arg1 0 u32 alt range 0 2 || any
+  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b9934 ret=u32 args=v,v
+  stub 021cd9e0 force ret=pick:0/1 args=p
+  stub 021d6c2c ret=none args=v
+  stub 021ea868 ret=none args=v,v,v
+  stub 021ea878 ret=pick:0/1 args=v
+
+# command 0x4C (SE): state 0: idle -> 1; 021f7998(args[0]), state 1. Other states: !021f7eb4() -> 1.
+fn 021d34b0 ret=u32
+  nowork
+  arg buf 0x1C0
+  arg buf 0x10
+  arg buf 0x40
+  fix arg1 0 u32 alt range 0 1 || any
+  stub 021cd9e0 force ret=pick:0/0/1 args=p
+  stub 021f7998 ret=none args=v
+  stub 021f7eb4 ret=pick:0/1 args=
+
+# command 0x4D: p = 021b8e70(server, (u8) args[0]); state 0: idle -> 1; !021b8590(server) and veneer 021d3558((u16) args[1]) -> 1;
+# 021ea3b8(view, p, (u16) args[1]), state 1. Other states: 021ea3d4(view) -> 1.
+fn 021d34e8 ret=u32
+  nowork
+  arg buf 0x1C0
+  arg buf 0x10
+  arg buf 0x40
+  fix arg1 0 u32 alt range 0 1 || any
+  stub 021b8e70 ret=u32 args=v,v
+  stub 021cd9e0 force ret=pick:0/0/1 args=p
+  stub 021b8590 ret=pick:0/1 args=v
+  stub 021d3558 ret=pick:0/1 args=v
+  stub 021ea3b8 ret=none args=v,v,v
+  stub 021ea3d4 ret=pick:0/1 args=v
+
+# command 0x4E: state 0: idle -> 1; 021ea3e8(view, 021b8e70(server, (u8) args[0]), 021b8e70(server, (u8) args[1]), (u16) args[2]), state 1.
+# Other states: 021ea3f8(view) -> 1.
+fn 021d3568 ret=u32
+  nowork
+  arg buf 0x1C0
+  arg buf 0x10
+  arg buf 0x40
+  fix arg1 0 u32 alt range 0 1 || any
+  stub 021cd9e0 force ret=pick:0/0/1 args=p
+  stub 021b8e70 ret=u32 args=v,v
+  stub 021ea3e8 ret=none args=v,v,v,v
+  stub 021ea3f8 ret=pick:0/1 args=v
+
+# command 0x4F: 0: p = 021b8e70(server, 021b8d8c(server, pokecon, (u8) args[0])); 021d66d8(021b9934(pokecon, args[0]), (u8) args[1]);
+# 021ea888(view, p), state 1. 1: 021ea8a4(view) -> state 2. 2: 1.
+fn 021d35c8 ret=u32
+  nowork
+  arg buf 0x1C0
+  arg buf 0x10
+  arg buf 0x40
+  fix arg1 0 u32 alt range 0 2 || any
+  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b8e70 ret=u32 args=v,v
+  stub 021b9934 ret=u32 args=v,v
+  stub 021d66d8 ret=none args=v,v
+  stub 021ea888 ret=none args=v,v
+  stub 021ea8a4 ret=pick:0/1 args=v
+
+# command 0x57: s = 021b8d8c(server, pokecon, (u8) args[0]); 0: idle -> 1; 021ea768(view, s, 1), state 1. 1: 021ea778(view, s) -> state 2.
+# 2: 1.
+fn 021d3630 ret=u32
+  nowork
+  arg buf 0x1C0
+  arg buf 0x10
+  arg buf 0x40
+  fix arg1 0 u32 alt range 0 2 || any
+  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021cd9e0 force ret=pick:0/0/1 args=p
+  stub 021ea768 ret=none args=v,v,v
+  stub 021ea778 ret=pick:0/1 args=v,v
+
+# command 0x58: s = 021b8d8c(server, pokecon, (u8) args[0]) (passed in r1); 0: 021ea788(view, s), state 1. 1: 021ea798(view, s) -> 1.
+fn 021d3688 ret=u32
+  nowork
+  arg buf 0x1C0
+  arg buf 0x10
+  arg buf 0x40
+  fix arg1 0 u32 alt range 0 1 || any
+  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021ea788 ret=none args=v,v
+  stub 021ea798 ret=pick:0/1 args=v,v
+
+# command 0x12 (switch in): from the client object's own argument copy (c+0x138 id, c+0x13C slot a, c+0x140 slot b, u8 each) and u16 args[3]:
+# party = 021b9aec(pokecon, c+0x138); a != b -> BattleParty_SwapSlots(party, a, b); m = 021b9bf0(party, a); 021d63ec(m, args[3]);
+# 021d6580(m). Returns 1.
+fn 021d3934 ret=u32
+  nowork
+  arg buf 0x1C0
+  arg u32 any
+  arg buf 0x40
+  fix arg0 0x140 u8 alt range 0 5 || any
+  fix arg0 0x13C u8 range 0 5
+  stub 021b9aec ret=u32 args=v,v
+  stub 021b9c10 ret=none args=v,v,v
+  stub 021b9bf0 ret=u32 args=v,v
+  stub 021d63ec ret=none args=v,v
+  stub 021d6580 ret=none args=v
+
+# command 0x15 (n = args[1] rounds, k = args[0] mons from the list 021d8090(args[2], list)): for i < n: e = veneer 021d3a10(i), 0 -> stop;
+# each alive listed mon m = 021b9934(pokecon, list[j]) -> 021d6064(m, e, 0, 0). Returns 1. (k <= 8: an 8-byte stack list.)
+fn 021d39a8 ret=u32
+  nowork
+  arg buf 0x1C0
+  arg u32 any
+  arg buf 0x40
+  fix arg2 0 u32 range 0 8
+  fix arg2 4 u32 alt range 0 4 || range 0 0x10
+  stub 021d8090 ret=none args=v,outm:8:0xFF
+  stub 021d3a10 ret=nullable:4:u32 args=v
+  stub 021b9934 ret=u32 args=v,v
+  stub 021d5b68 ret=pick:0/0/1 args=v
+  stub 021d6064 ret=none args=v,v,v,v
+
+# trainer item to use on mon r1 (party r2): flag 0x13 (021d62c4) -> 0; for i < 4 while the ROM byte 0x021EFF74[i] >= 021b9b94(party): item
+# c.u16[0xE8 + 2i] != 0: 021d805c(item, 0x29) ? (HP 021d59b4(mon, 0xD) <= 021d7b60(mon, 4)) : (021d3e70(item, mon) or 021d3ec8(item, mon))
+# -> c.u16[0xE8 + 2i] = 0, return item. Returns 0.
+fn 021d3dc4 ret=u16
+  nowork
+  arg buf 0x1C0
+  arg u32 any
+  arg u32 any
+  fix arg0 0xE8 u16 alt const 0 || any rep=4,2
+  stub 021b9b94 ret=pick:0/1/2/3/6 args=v
+  stub 021d62c4 ret=pick:0/0/1 args=v,v
+  stub 021d805c ret=pick:0/1 args=v,v
+  stub 021d59b4 ret=u16 args=v,v
+  stub 021d7b60 ret=u16 args=v,v
+  stub 021d3e70 ret=pick:0/1 args=v,v
+  stub 021d5d14 ret=pick:0/1 args=v,v,v
+  stub 021d5f14 ret=pick:0/1 args=v
+
+# item r0 cures / boosts mon r1: for the 6 {kind, stat} pairs of the ROM table 0x021EFF94: 021d805c(item, kind) and 021d5d14(mon, stat, 1) -> 1;
+# 021d805c(item, 0x24) and !021d5f14(mon) -> 1; else 0
+fn 021d3e70 ret=u32
+  nowork
+  arg u32 any
+  arg u32 any
+  stub 021d805c ret=pick:0/0/0/1 args=v,v
+  stub 021d5d14 ret=pick:0/1 args=v,v,v
+  stub 021d5f14 ret=pick:0/1 args=v
+
+# item r0 heals a status of mon r1: for the 7 {kind, flag} pairs of the ROM table 0x021EFFA0: 021d805c(item, kind) and 021d62c4(mon, flag) -> 1
+fn 021d3ec8 ret=u32
+  nowork
+  arg u32 any
+  arg u32 any
+  stub 021d805c ret=pick:0/0/0/1 args=v,v
+  stub 021d62c4 ret=pick:0/1 args=v,v
+
+# view-side accessor (called from overlay 95; found by the B13-spec2 reachability scan, not a label in battle_client.s): tail call to
+# 021ef9a8(c+0x34) (`ldr r0, [r0, 0x34]; ldr r3, =0x021EF9A9; bx r3`; the callee returns (u8) *obj)
+fn 021d3d84 ret=u32
+  nowork
+  arg buf 0x1C0
+  stub 021ef9a8 ret=u8 args=v

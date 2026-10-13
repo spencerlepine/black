@@ -323,6 +323,28 @@ objects in zones; a function that only allocates gets a trailing `arg buf` arena
 or unused register); one `02030734` stub serves every allocation of a block (`ptr:argK:OFS:N`, blocks may overlap; deterministic);
 fake callbacks at 0x02EE0011 / 0x02EE0021 / 0x02EE0031; a vm.c function ported in `vm` keeps its stubs in `script_sys` active.
 
+## B13-spec2 additions (client1..client5 complete)
+
+No new syntax; no existing spec text or hash changes. Harness change: `svflow.py` `ALLOW` += `02082a90` (MI_CpuCopy32, a pure word copy;
+client4 `021d1a74` copies the adapter data into the command queue with it).
+
+* Every block of the B13-spec2 sections follows the closure-stub convention inside its area (checked with the whole area treated as
+  ported: no fault, budget exhaustion, stray write or unstubbed callee). A callee in **another client area** is a `force` stub (ported or
+  not), so porting order across areas needs no spec edit; the port calls it through `env.call`. A client smoke port called from another area
+  without a stub line runs as real code (`021cdee8` from client4 `021d1c40`, its stubs are listed).
+* Indirect calls (`blx rN` through a function-pointer field: `c+0x28` step, `c+0xC8` request handler, `c+0xD0` pending callback, `c+0x17C`
+  playback handler) go to `force` stubs at the target addresses; the field is fixed with `oneof` to those addresses. A port dispatches the
+  pointer through `env.call(ptr)`.
+* Out-pointer data that the function dereferences (adapter `021eec20` data, record pointers of `021ee6b8`) lives in an extra `arg buf`
+  that the function never reads as a register (its r1 / r2 / r3 is overwritten first); the stub answers `outp:K:0:1` / `ptr:argK:0:N` into
+  it. Such an extra argument is part of the port's test wiring only.
+* Loops whose bound comes from the input are bounded by `fix` lines where the original would loop forever or overrun a stack array (u8
+  counters against a u32 bound: `021d09e0`, `021d215c`, `021d39a8`); the comment says why.
+* Function list: `battle_client.s` labels + the `sub_` seeds of `mkelf.py` + every odd pointer / `bl` target into the range, minus the
+  `LAB_` pieces of `.byte` functions, plus a static reachability scan of the range for code no known start reaches (found `021d3d84`,
+  called from overlay 95). The ten Thumb-to-ARM veneers (`bx pc` + `ldr ip; bx ip` to 0x0689xxxx) are not specced: callers stub them at
+  the Thumb entry.
+
 ## What is compared (per input, in this order)
 
 `halt` (0, or 1 + stub address) , `ret`, `work` (all 0x212C bytes), `argN` for each buf/bpp,

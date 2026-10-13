@@ -153,3 +153,114 @@ fn 021cdda0 ret=u32
 fn 021cddcc ret=bool
   nowork
   arg buf 0x1C0
+
+# ---------------------------------------------------------------------------------------------------------------------------------- B13-spec2
+# B13-spec2 specs every function the B13-spec1 header above lists as "not specced in this batch" (list in client/mod.rs).
+# The four functions left by B13-spec1. Indirect calls (`blx` through c+0x28 / c+0xC8, the step function of the request table) go to
+# `force` stubs at the target address: a port dispatches a function pointer through `env.call(ptr)`, so the ROM side must stop there too
+# even once the target is ported. The pointer fields are fixed to step functions of the request table (0x021CDDDD = request 1 mode 0,
+# 0x021CDF59 = request 2 mode 0). Adapter calls (021eea58 021eebe8 021eec20 021eec4c, all PORTED by B12) are `force` stubs.
+
+# create(server, pokecon, r2, r3, [sp] client id, u16 [sp+4], mode [sp+8], [sp+0xC], [sp+0x10], 0x18-byte block* [sp+0x14], heap [sp+0x18]):
+# c = Heap_AllocDebug(heap, 0x1B8, 1, "btl_client.c", 0x209) (here: arg 11), every field initialised, c+0x50 = adapter create
+# 021eea58(r3, id, r2 != 0 && mode != 0, heap), c+0x118 = 021b9af8(pokecon, id), c+0x134 = Heap_AllocDebug(heap, 0xBC0, 1, .., 0x21A),
+# c+0x34 = 021ba08c(server), 021d8230(c+0x2C), cursor init 021d3f04(c+0x18), 021d3d9c(c), c+0xF4 = the 0x18-byte block; mode 1 and
+# [sp+0x10] == 0: c+0xF0 = AI create 02187f00 (overlay 96) else 0; c+0x112.. = 0 1 2 3; mode 0 and 021b90f8(server): c+0x10 =
+# BattleRecord_New(heap) else 0. Returns c.
+fn 021cd6f0 ret=ofs:arg11
+  nowork
+  arg u32 any
+  arg u32 any
+  arg u32 alt const 0 || any
+  arg u32 any
+  arg u32 alt range 0 3 || any
+  arg u32 any
+  arg u32 alt range 0 2 || any
+  arg u32 any
+  arg u32 alt const 0 || any
+  arg buf 0x18
+  arg u32 any
+  arg buf 0x1C0
+  stub 02030734 ret=ptr:arg11:0:1 args=v,v,v,v,v
+  stub 021eea58 force ret=u32 args=v,v,v,v
+  stub 021b9af8 ret=u32 args=v,v
+  stub 021ba08c ret=u32 args=v
+  stub 021d8230 ret=none args=p
+  stub 021d3f04 ret=none args=p
+  stub 021d3d9c force ret=none args=p
+  stub 021b9fbc ret=u32 args=v,v
+  stub 021ba820 ret=u32 args=v
+  stub 02187f00 ret=u32 args=v,v,v,v,v
+  stub 021b90f8 ret=pick:0/1 args=v
+  stub 021ee5e4 ret=u32 args=v
+
+# run the current step: (c->step)(c, c->step) (r1 is the pointer itself); returns its result
+fn 021cd97c ret=u32
+  nowork
+  arg buf 0x1C0
+  fix arg0 0x28 u32 oneof 0x021CDA19 0x021CDC0D
+  stub 021cda18 force ret=pick:0/1 args=p,v
+  stub 021cdc0c force ret=pick:0/1 args=p,v
+
+# the main step (`.byte` block, 8-way jump table on the phase c[0x1A8]; table data 021cda3e-021cda4e): 021d3fdc(c, cursor) first.
+# 0: code = 021eebe8(adapter); replay (mode 2) with flag bit 4 or 5 and no code -> 0; 021cdd34 (result clear); code 9: the
+#    request pair c+0x2C/0x30 from 021eec20, phase 3; code: c+0xC8 = 021cdd50(c, code, &aux), aux ? (021d3fac(cursor) ? : phase 6)
+#    : 021d3fc4(cursor); c+0xC8 ? phase 1 : phase 2 (c+0xCC = 0); no code: flag bit 1 -> 1
+# 1: (c+0xC8)(c, &c+0xCC) done -> flag bit 1 -> 1, else phase 021d3f4c(cursor) ? 4 : 2
+# 2: 021eec4c(adapter, c+0xD8, c+0xDC) -> phase 0; flag bit 1 -> 1      3: the same, phase 7
+# 4: 021d3f60(cursor) == 1 -> phase 7, else (view: 02005ca4(1, 0x3E), 02006740()) phase 5      6: 021d3f4c -> phase 4
+# 5: !02005e50(): n = 021d3fa8(cursor), 02005ca4(0, 1), 021ba73c(server, n), 02006734(0)      7: return 1; other phases 0
+fn 021cda18 ret=u32
+  nowork
+  arg buf 0x1C0
+  fix arg0 0x1A8 u8 alt range 0 7 || range 8 0xFF
+  fix arg0 0x1A7 u8 alt const 2 || any
+  fix arg0 0x54 u32 alt const 0 || any
+  fix arg0 0xC8 u32 oneof 0x021CDDDD 0x021CDF59
+  stub 021d3fdc ret=none args=p,p
+  stub 021eebe8 force ret=pick:0/0/9/1/2/3/7 args=v
+  stub 021eec20 force ret=none args=v,outp:0:0x1B8:1
+  stub 021cdd50 ret=pick:0/0x021CDDDD/0x021CDF59 args=p,v,outm:4:1/0/0/0
+  stub 021d3fac ret=pick:0/1 args=p
+  stub 021d3fc4 ret=none args=p
+  stub 021cdddc force ret=pick:0/1 args=p,p
+  stub 021cdf58 force ret=pick:0/1 args=p,p
+  stub 021d3f4c ret=pick:0/1 args=p
+  stub 021eec4c force ret=pick:0/1 args=v,v,v
+  stub 021d3f60 ret=pick:0/1/2 args=p
+  stub 02005ca4 ret=none args=v,v
+  stub 02006740 ret=none args=
+  stub 02005e50 ret=pick:0/1 args=
+  stub 021d3fa8 ret=u16 args=p
+  stub 021ba73c ret=none args=v,v
+  stub 02006734 ret=none args=v
+
+# the wait-for-request step (`.byte` block, 6-way jump table on c[0x1A8]; table data 021cdc30-021cdc3c): 021d3fdc(c, cursor) first.
+# 0: phase 1, then as 1.  1: 021d3f98(cursor) ? (view: 02005ca4(1, 1), 021eae24(view), 02005df8(0x1E), 021f88bc(0), 02006740()) phase 4
+#    : code = 021eebe8(adapter); code: c+0xC8 = 021cdd50(c, code, 0), c+0xC8 ? phase 2 (c+0xCC = 0) : (021cdd34, phase 3)
+# 2: (c+0xC8)(c, &c+0xCC) done -> phase 3, c+0xCC = 0, 021f8678() -> 021f88bc(1)      3: 021eec4c(adapter, c+0xD8, c+0xDC) -> phase 1
+# 4: view and 021eae34(view) and !02005e50(): n = (u16) 021d3fa8(cursor), 021eae74(view, n, n), 021ba7f8(server)      5: return 1
+fn 021cdc0c ret=u32 inputs=600
+  nowork
+  arg buf 0x1C0
+  fix arg0 0x1A8 u8 alt range 0 5 || range 6 0xFF
+  fix arg0 0x54 u32 alt const 0 || any
+  fix arg0 0xC8 u32 oneof 0x021CDDDD 0x021CDF59
+  stub 021d3fdc ret=none args=p,p
+  stub 021d3f98 ret=pick:0/1 args=p
+  stub 021eebe8 force ret=pick:0/0/1/2/3 args=v
+  stub 021cdd50 ret=pick:0/0x021CDDDD/0x021CDF59 args=p,v,v
+  stub 021cdddc force ret=pick:0/1 args=p,p
+  stub 021cdf58 force ret=pick:0/1 args=p,p
+  stub 02005ca4 ret=none args=v,v
+  stub 021eae24 ret=none args=v
+  stub 02005df8 ret=none args=v
+  stub 021f88bc ret=none args=v
+  stub 02006740 ret=none args=
+  stub 021f8678 ret=pick:0/1 args=
+  stub 021eec4c force ret=pick:0/1 args=v,v,v
+  stub 021eae34 ret=pick:0/1 args=v
+  stub 02005e50 ret=pick:0/1 args=
+  stub 021d3fa8 ret=u16 args=p
+  stub 021eae74 ret=none args=v,v,v
+  stub 021ba7f8 ret=none args=v
