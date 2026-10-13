@@ -210,7 +210,8 @@ fn mon_state<E: FlowEnv>(env: &mut E, mon: u32) -> u32 {
     env.call(0x021D_62A8, &mut [Arg::V(mon)])
 }
 
-/// `FUN_0201beb8`: bit `bit` of the flag table entry of the item / ability id `id`.
+/// `FUN_0201beb8`: flag `bit` of the move data record of move `id` (`black-pokemon::waza`; B10-wire:
+/// the callers pass move IDs, not item / ability IDs).
 fn id_has_flag<E: FlowEnv>(env: &mut E, id: u32, bit: u32) -> u32 {
     env.call(0x0201_BEB8, &mut [Arg::V(id), Arg::V(bit)])
 }
@@ -342,9 +343,9 @@ pub fn build_f9a4<E: FlowEnv>(env: &mut E, a: u32, b: u32, rec: &[u8]) -> u32 {
     r
 }
 
-/// C: `FUN_overlay_d_93__021bfa00`: in battle type 2 (`021b8588` of the main module): 0 when the
-/// item / ability `item` has flag 0xb; else 1 when `021b9a6c` of the two mons' clients
-/// (`021b8d8c`) is 0. 0 in any other battle type.
+/// C: `FUN_overlay_d_93__021bfa00`: in rule 2 (triple; `021b8588` of the main module): 0 when the
+/// move `item` (nonzero) has move flag 0xb; else 1 when `021b9a6c` of the two mons' positions
+/// (`021b8d8c`) is 0 (out of reach). 0 under any other rule.
 pub fn same_side_gate<E: FlowEnv>(env: &mut E, w: &SvFlowWork, a: u32, b: u32, item: u32) -> u32 {
     let main = w.u32_at(OFS_MAIN);
     if env.call(0x021B_8588, &mut [Arg::V(main)]) != 2 {

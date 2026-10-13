@@ -18,6 +18,7 @@ pub mod env;
 pub mod events;
 pub mod handex;
 pub mod hem;
+pub mod host;
 pub mod server_side;
 
 #[cfg(test)]

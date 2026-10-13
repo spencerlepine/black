@@ -2,7 +2,10 @@
 //!
 //! [`Battle`] owns the state handlers read and write directly: the event-variable stack, the
 //! battle RNG and the battle Pokemon. Everything else a handler calls in the server-flow layer
-//! (asm/battle_server.s, asm/battle_ungrouped.s, not yet ported) goes through [`FlowHost`].
+//! (asm/battle_server.s, asm/battle_ungrouped.s) goes through [`FlowHost`]: the handler tests stub
+//! it (`handlers::testkit::TestHost`, identical to the ROM-side stubs), the production
+//! implementation is [`crate::server_flow::host::FlowWorkHost`] (B10-wire), which calls the
+//! verified ports (method -> port table in the crate README).
 
 use crate::battle_mon::{BattleMon, BppEnv};
 use crate::calc::BattleCalc;
@@ -17,7 +20,9 @@ pub const POKE_ID_NONE: u32 = 0x1F;
 /// Handle to a handler-effect ("HANDEX") work being filled in.
 pub type HandexId = usize;
 
-/// Undecompiled server-flow routines handlers call.
+/// Server-flow routines handlers call. Doc comments give the behaviour of the verified port the
+/// production host ([`crate::server_flow::host::FlowWorkHost`]) calls; names in parentheses are
+/// inferred. Methods without a port in this crate are marked "(no port in this crate)".
 pub trait FlowHost: BppEnv {
     /// C: `FUN_overlay_d_93__021c88a4(wk, type, poke_id)`: pushes a handler-effect work of
     /// `ty` and returns it (zeroed) for the handler to fill.
@@ -29,22 +34,31 @@ pub trait FlowHost: BppEnv {
     /// C: `FUN_overlay_d_93__021c88b4(wk, type, poke_id)`: pushes and immediately pops a work
     /// with no parameters.
     fn handex_push_pop(&mut self, ty: u32, poke_id: u32);
-    /// C: `FUN_overlay_d_93__021c7d00(wk, poke_id)`: the Pokemon's battle position.
+    /// C: `FUN_overlay_d_93__021c7d00(wk, poke_id)`: the Pokemon's battle position (the index the
+    /// overlay-95 veneer `7d24(wk + 0x1AB8, poke_id)` finds), 6 when `021b86a0(main, pos)`
+    /// rejects it.
     fn poke_pos(&mut self, poke_id: u32) -> u32;
-    /// C: `FUN_overlay_d_93__021c7f68(wk, code, out)`: expands a position code into Pokemon
-    /// IDs written to `out`; returns how many (`FUN_overlay_d_93__021c8120` supplies `out`).
+    /// C: `FUN_overlay_d_93__021c7f68(wk, code, out)`: the positions `021b8778(main, code)`
+    /// expands `code` into -> the IDs of the Pokemon there that exist and are not fainted, written
+    /// to `out`; returns how many. Some callers pass the scratch `wk + 0x1FEC`
+    /// (`FUN_overlay_d_93__021c8120`), the handler ports a local buffer.
     fn expand_poke_ids(&mut self, code: u32, out: &mut [u8]) -> u32;
     /// C: `FUN_overlay_d_93__021c8288` (-> `021c2ab0`): the current weather.
     fn weather(&mut self) -> u32;
-    /// C: `FUN_0201C1E8(move)`: the move's damage category (1 = physical, 2 = special).
+    /// C: `FUN_0201C1E8(move)`: the move's damage category (1 = physical, 2 = special). ARM9 move
+    /// data, like the other `FUN_0201xxxx` move methods: no port in this crate (ported in
+    /// `black-pokemon::waza`).
     fn move_category(&mut self, mv: u32) -> u32;
     /// C: `FUN_0201BD28(move, param)`: move data parameter.
     fn move_param(&mut self, mv: u32, param: u32) -> u32;
     /// C: `FUN_0201BEB8(move, flag)`: move data flag.
     fn move_flag(&mut self, mv: u32, flag: u32) -> bool;
-    /// C: `FUN_overlay_d_93__021c82b8(wk, x)` (tail call into the battle main module).
+    /// C: `FUN_overlay_d_93__021c82b8(wk, x)`: tail call to `021b911c`, which reads no argument
+    /// and returns 0, so this is always false (`x` is unused; `roll_percent_or_forced` never
+    /// forces).
     fn fun_021c82b8(&mut self, x: u32) -> bool;
-    /// C: `FUN_overlay_d_93__021c83d4(wk)` (-> `021bc2b0`).
+    /// C: `FUN_overlay_d_93__021c83d4(wk)`: thunk to core1 `021bc2b0`: true when one of the two
+    /// teams has no client with a usable party (the battle is decided).
     fn fun_021c83d4(&mut self) -> bool;
     /// C: `FUN_0689C944(ability)` via the ARM thunks at 0x021DA2D0 / 0x021DA2E0 and the tail-call
     /// veneer `sub_0689c93c`: the ability cannot be copied (Trace). The ROM body is
@@ -53,12 +67,17 @@ pub trait FlowHost: BppEnv {
     fn ability_uncopyable(&mut self, ability: u32) -> bool {
         ability != 0x19 && self.fun_0689c91c(ability)
     }
-    /// C: `FUN_overlay_d_93__021c815c(wk)`: the battle rule (2 = triple).
+    /// C: `FUN_overlay_d_93__021c815c(wk)`: tail call `021b8588(main)`, the rule word of the
+    /// battle setup (1 double, 2 triple, 3 rotation (names inferred)).
     fn rule(&mut self) -> u32;
-    /// C: `FUN_overlay_d_93__021b9a6c(pos_a, pos_b)`: positions are adjacent (triples).
+    /// C: `FUN_overlay_d_93__021b9a6c(a, b)`: `b` is in one of the two position lists of record
+    /// `a` of the ROM table 0x021EFD70 (the triple-battle reach of position `a`: the foe positions
+    /// in front of it and the positions of its own side next to it, `a` itself included). Not
+    /// symmetric in general; `a` must be below 6.
     fn positions_adjacent(&mut self, a: u32, b: u32) -> bool;
-    /// C: `FUN_overlay_d_93__021c7d54(wk, poke_id, out)`: IDs of the Pokemon on the other
-    /// side (written to `out`); returns how many.
+    /// C: `FUN_overlay_d_93__021c7d54(wk, poke_id, out)`: the IDs of the existing, non-fainted
+    /// Pokemon the core2 iterator (`021bd2b4` / `021bd34c`) visits that are not on `poke_id`'s
+    /// side (`021b9a24`; side = ID >= 12), written to `out`; returns how many.
     fn opponent_ids(&mut self, poke_id: u32, out: &mut [u8]) -> u32;
     /// C: `FUN_0201C1D8(move)`: base power (`u8`).
     fn move_power(&mut self, mv: u32) -> u32;
@@ -72,16 +91,23 @@ pub trait FlowHost: BppEnv {
     fn ability_breakable(&mut self, ability: u32) -> bool;
     /// C: `FUN_0689C8EC(move)` via `FUN_021DB550`: the move cannot be redirected.
     fn move_unredirectable(&mut self, mv: u32) -> bool;
-    /// C: `FUN_overlay_d_93__021c8290(wk, attacker, defender, move)`.
+    /// C: `FUN_overlay_d_93__021c8290(wk, attacker, defender, move)`: core3 `021bfa00` on the two
+    /// Pokemon: only in a triple battle (rule 2), and only for a move without move flag 0xB
+    /// (`0201BEB8`; move 0 skips the flag test): true when the defender's position is not within
+    /// reach ([`Self::positions_adjacent`]) of the attacker's. False otherwise.
     fn fun_021c8290(&mut self, attacker: u32, defender: u32, mv: u32) -> bool;
-    /// C: `FUN_overlay_d_93__021c804c(wk, poke_id, &out)`: finds the Pokemon's queued action;
-    /// writes it to `out` and returns whether found.
+    /// C: `FUN_overlay_d_93__021c804c(wk, poke_id, &out)`: finds the Pokemon's queued action
+    /// record (`wk[0x782]` records of 0x10 bytes from +0x7E0) whose kind (`word & 0xF`) is not 6;
+    /// writes its action word to `out` and returns whether found.
     fn find_action(&mut self, poke_id: u32, out: &mut u32) -> bool;
-    /// C: `FUN_overlay_d_93__021c8010(wk, poke_id)`: the Pokemon's position, or 6 if it is not
-    /// in battle.
+    /// C: `FUN_overlay_d_93__021c8010(wk, poke_id)`: tail call `021b8d8c(main, pokecon,
+    /// poke_id)`: the Pokemon's position, or 6 if it is not in battle.
     fn poke_pos_in_battle(&mut self, poke_id: u32) -> u32;
-    /// C: `FUN_overlay_d_93__021c8234(wk, poke_id)`: flow query on a Pokemon (Arena Trap
-    /// uses it to decide whether a foe is trapped).
+    /// C: `FUN_overlay_d_93__021c8234(wk, poke_id)`: core6 `021c6f0c(wk, mon, 1)`: field effect 2
+    /// is inactive (`021ef948(2)`) and the event 0x12 query (message 0x2FBC, reply 0x51 defaulting
+    /// to `021d5814(mon, 2)` = has type 2, cancelled by reply 0x41) answers non-zero. (The Pokemon
+    /// is airborne: Flying type or an event says so, and no Gravity; Arena Trap does not trap
+    /// it.)
     fn fun_021c8234(&mut self, poke_id: u32) -> bool;
     /// C: `FUN_0689C8DC(move)` via the ARM thunk at 0x021DB99C.
     fn move_fun_0689c8dc(&mut self, mv: u32) -> bool;
@@ -91,14 +117,18 @@ pub trait FlowHost: BppEnv {
     fn item_fun_0689c980(&mut self, item: u32) -> bool;
     /// C: `FUN_0689C990(item)` via the ARM thunk at 0x021E868C.
     fn item_fun_0689c990(&mut self, item: u32) -> bool;
-    /// C: `FUN_overlay_d_93__021c80ac(wk, poke_id)`.
+    /// C: `FUN_overlay_d_93__021c80ac(wk, poke_id)`: every queued action record (see
+    /// [`Self::find_action`]) of a Pokemon other than `poke_id` has its done byte (+0xD) set.
     fn fun_021c80ac(&mut self, poke_id: u32) -> bool;
-    /// C: `FUN_overlay_d_93__021c8168(wk)` (-> `021b86b8`).
+    /// C: `FUN_overlay_d_93__021c8168(wk)`: tail call `021b86b8(main)`, the battle type word of
+    /// the battle setup; true when it is nonzero (every caller compares with 0).
     fn fun_021c8168(&mut self) -> bool;
-    /// C: `FUN_overlay_d_93__021b8ddc(poke_id)`; callers test for 1.
+    /// C: `FUN_overlay_d_93__021b8ddc(poke_id)`: thunk to `021b8d08`, the client (0..3) of a
+    /// Pokemon ID (ID ranges 0-5 -> 0, 12-17 -> 1, 6-11 -> 2, 18-23 -> 3, from 0x021EFCF0; else 0).
     fn fun_021b8ddc(&mut self, poke_id: u32) -> u32;
-    /// C: `FUN_overlay_d_93__021c8434(wk, poke_id, attacker)`: bounces the current move
-    /// back (Magic Bounce).
+    /// C: `FUN_overlay_d_93__021c8434(wk, poke_id, attacker)`: core2 `021be52c` appends
+    /// `(poke_id, attacker, 845c(wk + 0x1AB8, attacker))` to the list behind `wk[0x4B0]` (the
+    /// move to bounce back, Magic Bounce; `845c` is an overlay-95 veneer).
     fn fun_021c8434(&mut self, poke_id: u32, attacker: u32);
     /// C: `FUN_020213c0(item)` (Unnerve and Harvest use it as the berry test).
     fn item_fun_020213c0(&mut self, item: u32) -> bool;
@@ -106,26 +136,33 @@ pub trait FlowHost: BppEnv {
     fn move_fun_0201c020(&mut self, mv: u32) -> u32;
     /// C: `FUN_0201C0BC(move, index, &out)`: entry `index` (signed).
     fn move_fun_0201c0bc(&mut self, mv: u32, index: u32) -> i32;
-    /// C: `FUN_overlay_d_93__021b8c5c(rule, pos)`: position paired with `pos` (Imposter).
+    /// C: `sub_021b8c5c(rule, pos)`: the opposing position facing `pos` under `rule` (rule 1:
+    /// slot `((pos >> 1) & 0xFF) ^ 1`, rule 2: the mirrored slot, else slot 0 of the other side).
     fn fun_021b8c5c(&mut self, rule: u32, pos: u32) -> u32;
-    /// C: `FUN_overlay_d_93__021c8020(wk, pos)`: ID of the Pokemon at `pos`.
+    /// C: `sub_021c8020(wk, pos)`: ID of the Pokemon at `pos` (`021d5440(021b98ac(pokecon,
+    /// pos))`).
     fn poke_id_at_pos(&mut self, pos: u32) -> u32;
-    /// C: `FUN_021c7ec4(wk)`: tests a flow-work field for non-zero (read by several item
-    /// handlers).
+    /// C: `FUN_021c7ec4(wk)`: the nesting counter `wk[0x774]` is nonzero, i.e. the event runs
+    /// inside the simulated type / damage check `021c7dac` / `021c7e14`.
     fn fun_021c7ec4(&mut self) -> bool;
-    /// C: `FUN_overlay_d_93__021c7f24(wk, poke_id)`: flow query on a Pokemon (-> `021b9bc4`).
+    /// C: `FUN_overlay_d_93__021c7f24(wk, poke_id)`: `021b9bc4(party, n) != 0` for the party of
+    /// the Pokemon's client (`021b9af8`) and `n` = 3 in rule 3, else byte +9 of the client record
+    /// `021bb85c` returns.
     fn fun_021c7f24(&mut self, poke_id: u32) -> bool;
-    /// C: `FUN_021c818c(wk, poke_id)`: loops over the Pokemon's species data (-> `0201b718`).
+    /// C: `FUN_021c818c(wk, poke_id)`: `0201b718(wk[0x4A4], 021d5444(mon), 0, i)` holds for some
+    /// `i < 7`.
     fn fun_021c818c(&mut self, poke_id: u32) -> bool;
-    /// C: `FUN_021c830c(wk)`: low bit of a flow-work byte.
+    /// C: `FUN_021c830c(wk)`: bit 0 of the flag byte `wk[0x78A]`.
     fn fun_021c830c(&mut self) -> bool;
-    /// C: `FUN_overlay_d_93__021c8374(wk, poke_id)`: flow query on a Pokemon (tests condition
-    /// 0x21 and `021c8348`).
+    /// C: `FUN_overlay_d_93__021c8374(wk, poke_id)`: `x = 021d69ac(mon, 4)` is in 1..=0x18, or
+    /// the Pokemon has condition 0x21 (`021d62c4`).
     fn fun_021c8374(&mut self, poke_id: u32) -> bool;
-    /// C: `sub_021c8408(wk, poke_id)` (-> `021bb914`); no result.
+    /// C: `sub_021c8408(wk, poke_id)`: server_side `021bb914(wk[0])` when the battle type
+    /// (`021b86b8`) is at most 1 and the Pokemon's client is `021b8ff4(main)`; no result.
     fn fun_021c8408(&mut self, poke_id: u32);
     /// C: `FUN_overlay_d_93__021d805c(item, param)`: item data parameter (tail call through a
-    /// function pointer into the ARM9 item data reader, heap ID from a global).
+    /// function pointer into the ARM9 item data reader, heap ID from a global; no port in this
+    /// crate).
     fn item_param(&mut self, item: u32, param: u32) -> u32;
     /// C: `FUN_021D7E34(index)` -> `FUN_0689C9E4(index)`: condition ID `index` of a 6-entry
     /// table (overlay 95), 0 past the end.
@@ -133,65 +170,83 @@ pub trait FlowHost: BppEnv {
     /// C: `FUN_020189D0(pokemon, x)`: Pokemon query returning -1 or a small value (berry
     /// flavour dislike check).
     fn fun_020189d0(&mut self, pp: u32, x: u32) -> i32;
-    /// C: `FUN_021c7d34(wk, poke_id)` (tail call into the battle main module): the Pokemon's
-    /// battle position, 6 = none (guess).
+    /// C: `FUN_021c7d34(wk, poke_id)`: tail call into overlay 95 (no port in this crate; the
+    /// meaning "battle position, 6 = none" is a guess).
     fn fun_021c7d34(&mut self, poke_id: u32) -> u32;
-    /// C: `FUN_overlay_d_93__021c7d44(wk)` (tail call): a Pokemon ID, 0x1F = none (guess).
+    /// C: `FUN_overlay_d_93__021c7d44(wk)`: tail call into overlay 95 (no port in this crate):
+    /// a Pokemon ID, 0x1F = none (guess).
     fn fun_021c7d44(&mut self) -> u32;
-    /// C: `FUN_021c7ed8(wk, poke_id)`: small count about the Pokemon's position (guess).
+    /// C: `FUN_021c7ed8(wk, poke_id)`: `021b997c(main, client)` for the Pokemon's client: outside
+    /// comm mode `02007C70(p)` of the client's object `p = main[0x3E0 + 4 client]` when
+    /// `02007B50(p)` holds (else 0), in comm mode byte `0x44 + client` of the battle setup. (The
+    /// Chatter recording's level: only Chatot's handler `021e12a4` reads it.)
     fn fun_021c7ed8(&mut self, poke_id: u32) -> u32;
-    /// C: `FUN_overlay_d_93__021c7fcc(wk, poke_id)`: the party of the Pokemon's side, a struct
-    /// read with `021b9b94` (count) and `021b9c00` (member). Writes the member Pokemon IDs to
-    /// `out` and returns how many.
+    /// C: `FUN_overlay_d_93__021c7fcc(wk, poke_id)`: the party of the Pokemon's client
+    /// (`021b9af8(pokecon, client)`), which callers read with `021b9b94` (count) and `021b9c00`
+    /// (member). Modelled as: writes the member Pokemon IDs (`021d5440`) to `out` and returns how
+    /// many.
     fn party_ids(&mut self, poke_id: u32, out: &mut [u8]) -> u32;
-    /// C: `FUN_overlay_d_93__021c7fe0(wk, poke_id)`: the second party of the side (partner in
-    /// a double battle), `None` when there is none (null pointer). Same layout as `party_ids`.
+    /// C: `FUN_overlay_d_93__021c7fe0(wk, poke_id)`: the party of the partner client
+    /// (`021b9010(main, client)`) when `021b8b9c(main, partner)` holds, `None` (a null pointer)
+    /// otherwise. Same model as `party_ids`.
     fn partner_party_ids(&mut self, poke_id: u32, out: &mut [u8]) -> Option<u32>;
-    /// C: `FUN_overlay_d_93__021c8030(wk, poke_id, x)` (-> `021d80bc`, which ignores `poke_id`):
-    /// returns 6 or a value written to event variable 0xD (meaning unverified).
+    /// C: `FUN_overlay_d_93__021c8030(wk, poke_id, move)`: battle_calc `021d80bc(main, pokecon,
+    /// mon, move)`, the target position of `move` used by the Pokemon (6 = no target;
+    /// `calc_target::fun_021d80bc`).
     fn fun_021c8030(&mut self, poke_id: u32, x: u32) -> u32;
-    /// C: `FUN_021c8114(wk)`: a move ID, 0 = none (guess).
+    /// C: `FUN_021c8114(wk)`: the u16 at `wk + 0x1F74` (a move ID, 0 = none: Copycat reads it as
+    /// the last move used).
     fn fun_021c8114(&mut self) -> u32;
     /// C: `FUN_overlay_d_93__021c8138(wk)`: the current turn number (`wk +0x10`, low half).
     fn fun_021c8138(&mut self) -> u32;
-    /// C: `FUN_overlay_d_93__021c814c(wk, poke_id)` (tail call): flow query on a Pokemon.
+    /// C: `FUN_overlay_d_93__021c814c(wk, poke_id)`: tail call into overlay 95 (no port in this
+    /// crate): flow query on a Pokemon.
     fn fun_021c814c(&mut self, poke_id: u32) -> bool;
-    /// C: `FUN_021c8174(wk)`: the ground/terrain kind (0-16, switch in Nature Power-like
-    /// handlers).
+    /// C: `FUN_021c8174(wk)`: word +4 of the record `021b8714(main)` returns (`setup + 8`), i.e.
+    /// the battle setup word at +0xC (the terrain kind 0-16 Nature Power / Camouflage switch on).
     fn fun_021c8174(&mut self) -> u32;
-    /// C: `FUN_021c8180(wk)` (tail call): small count.
+    /// C: `FUN_021c8180(wk)`: tail call `021b8670(main)`: by rule 0 -> 1, 1 -> 2, 2 -> 3,
+    /// else 1 (the positions per side).
     fn fun_021c8180(&mut self) -> u32;
-    /// C: `sub_021c81c8(wk, bpp, 0)` (tail call): a stat of a battle Pokemon (speed-like;
-    /// used as a divisor). `poke_id` is the Pokemon behind the `bpp` pointer.
+    /// C: `sub_021c81c8(wk, bpp, x)`: thunk to core1 `021bc948`, the speed value of the battle
+    /// Pokemon (event 0x13, at most 10000; with `x` != 0 `10000 - v` when event variable 0x4A is
+    /// set). `poke_id` is the Pokemon behind the `bpp` pointer.
     fn fun_021c81c8(&mut self, poke_id: u32, x: u32) -> u32;
-    /// C: `FUN_overlay_d_93__021c824c(wk, poke_id)`: flow query on a Pokemon (tests ability
-    /// 0x67 and conditions).
+    /// C: `FUN_overlay_d_93__021c824c(wk, poke_id)`: false when the Pokemon's ability
+    /// (`BattleMon_Get` 0x11) is 0x67 or it has condition 0x13, else field effect 7 is inactive.
+    /// (It can use its held item: Klutz, Embargo, Magic Room.)
     fn fun_021c824c(&mut self, poke_id: u32) -> bool;
-    /// C: `FUN_021c82c4(wk, side, kind)` (tail call; kinds 9 and 10): side condition test.
+    /// C: `FUN_021c82c4(wk, side, kind)`: tail call into overlay 95 (no port in this crate;
+    /// kinds 9 and 10): side condition test.
     fn fun_021c82c4(&mut self, side: u32, kind: u32) -> bool;
-    /// C: `FUN_021c8300(wk, x)` (tail call): small value, 4 = none (guess).
+    /// C: `FUN_021c8300(wk, x)`: tail call `021b9010(main, x)`: the partner client of client `x`,
+    /// `(x + 2) & 3` when that client is present, else 4.
     fn fun_021c8300(&mut self, x: u32) -> u32;
-    /// C: `FUN_021c831c(wk, poke_id)`: appends a Pokemon ID to a list of at most 6 in the flow
-    /// work; no result.
+    /// C: unlabeled routine at `0x021C831C(wk, poke_id)`: appends the ID (a byte) to the 6-entry
+    /// list at `wk + 0x78B` (count `wk[0x788]`; no-op when full); no result.
     fn fun_021c831c(&mut self, poke_id: u32);
-    /// C: `FUN_overlay_d_93__021c83a0(wk, poke_id)`: weight-like value of a Pokemon (compared
-    /// with 1000 and 2000, used as a divisor), at least 1.
+    /// C: `FUN_overlay_d_93__021c83a0(wk, poke_id)`: `max(1, 021d7b10(021d67e8(mon), core4
+    /// 021c2af0(wk, mon)))`: the weight times its modifier, at least 1.
     fn fun_021c83a0(&mut self, poke_id: u32) -> u32;
-    /// C: `FUN_overlay_d_93__021c83dc(wk, v)`: stores a byte flag in the flow work; no result.
+    /// C: `FUN_overlay_d_93__021c83dc(wk, v)`: byte +4 of the per-turn record `wk[0x4A8]` points
+    /// to (inside the current move-record block) := `v`; no result.
     fn fun_021c83dc(&mut self, v: u32);
-    /// C: `FUN_021c83e8(wk, n)`: when the battle rule is below 2, forwards `n` through
-    /// `021bb908` and returns true.
+    /// C: `FUN_021c83e8(wk, n)`: when the battle type (`021b86b8`, not the rule) is at most 1,
+    /// server_side `021bb908(wk[0], n)` and true; else false.
     fn fun_021c83e8(&mut self, n: u32) -> bool;
-    /// C: `FUN_021c846c(wk, poke_id, target, &out)` (-> `021bfeac`): flow query; `out` receives
-    /// a pointer or null (modelled as 0/1, only compared with 0).
+    /// C: `FUN_021c846c(wk, poke_id, target, &out)`: core3 `021bfeac` on the two Pokemon: `out`
+    /// := 0; when `target` is not fainted, not `021d6d7c` and has none of flag-B bits 3-6
+    /// (`021d5c30`): with flag A 7 (`021d5bb0`) puts message 0x20B and sets `out` := 1, else does
+    /// the swap bookkeeping and returns true; false otherwise. `out` is a u32 0/1, not a pointer.
     fn fun_021c846c(&mut self, poke_id: u32, target: u32, out: &mut u32) -> bool;
-    /// C: `FUN_overlay_d_93__021c8494(wk, poke_id)` (-> `021bff60`): no result.
+    /// C: `FUN_overlay_d_93__021c8494(wk, poke_id)`: core3 `021bff60(wk, mon, 1)`; no result.
     fn fun_021c8494(&mut self, poke_id: u32);
-    /// C: `FUN_overlay_d_93__021c2e4c(wk)`: increments a counter in the flow work (1 after
-    /// wrapping to 0) and returns it.
+    /// C: `FUN_overlay_d_93__021c2e4c(wk)` (handlers call the api thunk at 0x021C83CC):
+    /// increments the counter `wk[0x778]` (1 after wrapping to 0) and returns it.
     fn fun_021c2e4c(&mut self) -> u32;
-    /// C: `sub_06898cf4(side, kind)`: whether the side has state `kind` (overlay 95 side
-    /// table at +kind*0x10, stride 0xE0 per side).
+    /// C: `sub_06898cf4(side, kind)`: whether the side has state `kind` (no port in this crate;
+    /// from the disassembly: the factor word of entry `(side, kind)` of the side-effect layer array
+    /// 0x0689E7E0, `handlers::effects::SideEffects`, is nonzero).
     fn fun_06898cf4(&mut self, side: u32, kind: u32) -> bool;
     /// C: `sub_0689c8ac(move)`: tests `move` against a 6-entry move list.
     fn fun_0689c8ac(&mut self, mv: u32) -> bool;
@@ -232,10 +287,10 @@ pub trait FlowHost: BppEnv {
     /// returns true.
     fn fun_021c7f4c(&mut self) -> bool;
 
-    /// C: Side-effect layer array query (B7b). Returns the layer count for a side effect (0 if not
-    /// present). The layer array at 0x0689E7E0 is seeded by the harness before each handler call;
-    /// on the ROM side 06898de0 reads from real memory, on the Rust side this method reads from
-    /// TestHost's seeded array.
+    /// C: the read of `06898de0` (B7b): the low byte of the layer word of entry `(side, key)` of
+    /// the side-effect layer array 0x0689E7E0 (`handlers::effects::SideEffects`), 0 when not
+    /// present or `side >= 2` / `key >= 14`. The handler tests seed the array per input (the ROM
+    /// side runs the real 06898de0 on it).
     fn side_effect_layers(&mut self, side: u32, key: u32) -> u32;
 }
 

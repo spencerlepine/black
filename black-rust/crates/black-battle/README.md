@@ -94,6 +94,73 @@ Guard, 3 Pledge combos). The "type-2 adder at 0x06898328" is the Wish handler; t
 `06898c10`. 30 distinct handlers (`tools/rom-diff/handlers.py effects --list`), checked with
 `tools/check-handlers.sh effects`.
 
+## Production FlowHost (B10-wire): `server_flow::host::FlowWorkHost`
+
+Handlers reach the server flow through the `flow::FlowHost` trait. The handler differential tests
+keep their stub host (`handlers::testkit::TestHost`, the same stubs as `tools/rom-diff/handlers.py`;
+that is how the handlers are verified, and it is unchanged). `FlowWorkHost<E: FlowEnv, U: Unported>`
+is the production implementation: it owns the `SvFlowWork` image (`work`, at address `waddr`), the
+overlay-95 side-effect layer array (`side_effects`) and calls the verified ports. Callees those ports
+reach outside their own area go through `E` (the battle's call dispatcher), as in the ports' own
+differential tests. Methods with no port in this crate call the `Unported` hook trait `U` (one method
+each, plus `BppEnv`), so the gap stays visible; nothing is `unimplemented!`. Unit tests
+(`server_flow/host/tests.rs`) check each wired method against its port on random work images: same
+answer, same callee calls in order, same work bytes.
+
+87 trait methods: **42 mapped**, **6 adapted**, **38 unported**, 1 default body (`ability_uncopyable`
+= `ability != 0x19 && fun_0689c91c(ability)`).
+
+| FlowHost method | port |
+|---|---|
+| `handex_push` / `handex` / `handex_pop` / `handex_push_pop` | `hem::handex_push` (88a4; the id is the record's work offset) / the record bytes / `hem::handex_pop` (88c8) / `hem::handex_push_exec` (88b4) |
+| `poke_pos` | `api::poke_pos` (7d00) |
+| `expand_poke_ids` | `api::expand_poke_ids` (7f68) |
+| `weather` | `api::weather` (8288) |
+| `fun_021c82b8` | `api::main_911c` (always 0) |
+| `fun_021c83d4` | `api::core1_bc2b0` (83d4) |
+| `rule` | `api::rule` (815c) |
+| `opponent_ids` | `api::list_foes` (7d54) |
+| `fun_021c8290` | `api::mon_pair_bfa00` |
+| `find_action` | `api::find_action` (804c; `out` as 4 bytes) |
+| `poke_pos_in_battle` | `api::poke_pos_in_battle` (8010) |
+| `fun_021c8234` | `api::mon_query_6f0c` |
+| `fun_021c80ac` | `api::others_actions_done` |
+| `fun_021c8168` | `api::main_86b8` |
+| `fun_021c8434` | `api::bounce_move` |
+| `poke_id_at_pos` | `api::poke_id_at_pos` (8020) |
+| `fun_021c7ec4` / `fun_021c7f24` / `fun_021c818c` / `fun_021c830c` / `fun_021c8374` / `fun_021c8408` | `api::in_type_check` / `party_check` / `species_check` / `flag_78a_bit0` / `mon_check_8374` / `server_bb914` |
+| `fun_021c7ed8` / `fun_021c8030` / `fun_021c8114` / `fun_021c8138` / `fun_021c8174` / `fun_021c8180` | `api::client_value_997c` / `mon_query_80bc` / `word_1f74` / `turn_count` / `main_8714_word4` / `main_8670` |
+| `fun_021c824c` / `fun_021c8300` / `fun_021c831c` / `fun_021c83a0` / `fun_021c83e8` / `fun_021c8494` / `fun_021c7f4c` | `api::mon_check_824c` / `main_9010` / `list6_push` / `mon_weight` / `server_bb908` / `mon_bff60` / `take_flag_78a_bit3` |
+| `fun_021b8ddc` | `server2::mon_id_client` (thunk target 021b8d08) |
+| `fun_021b8c5c` | `server2::facing_pos` |
+| `positions_adjacent` | `server3::pos_list_contains` (021b9a6c; ROM table 0x021EFD70) |
+| `side_effect_layers` | `SideEffects` entry layers, low byte (06898de0's read, B7b) |
+| adapter `party_ids` / `partner_party_ids` | `api::party_of` / `partner_party_of`, then `021b9b94` / `021b9c00` / `021d5440` through `E` (the original returns the party pointer; handlers read it) |
+| adapter `fun_021c81c8` | `api::mon_by_id` + `api::mon_stat` (handlers pass the BattleMon pointer) |
+| adapter `fun_021c83dc` | `api::set_turn_rec_byte4` on the record `work[0x4A8]` points to; a pointer outside the work goes to `Unported::store_u8` |
+| adapter `fun_021c846c` | `api::mon_pair_bfeac` with `out` as an output buffer (the api port passes it through) |
+| adapter `fun_021c2e4c` | `core4::counter_next` (handlers call the api thunk 0x021C83CC, whose target is ported) |
+
+`Battle::mon` is not a FlowHost method (the battle owns its `BattleMon`s); `FlowWorkHost::mon_addr`
+is the same lookup as the flow ports see it (`api::mon_by_id`, 7cf4). The integrating dispatcher `E`
+must map `021b9934(pokecon, id)` to the BattleMon of `Battle::mons[id]`.
+
+Unported (`Unported` trait): ARM9 move data `move_category`, `move_param`, `move_flag`, `move_power`,
+`move_effect_class`, `move_fun_0201c314`, `move_type`, `move_fun_0201c020`, `move_fun_0201c0bc` (ported
+in `black-pokemon::waza`, not a dependency of this crate); ARM9 item / Pokemon data `item_fun_020213c0`,
+`item_param`, `fun_020189d0`; overlay 95 `ability_breakable`, `move_unredirectable`, `move_fun_0689c8dc`,
+`move_fun_0689c8cc`, `item_fun_0689c980`, `item_fun_0689c990`, `sick_list_entry`, `fun_06898cf4`,
+`fun_0689c8ac`, `fun_0689c8bc`, `fun_0689c91c`, `fun_0689ca1c`, `fun_0689ca3c`, `fun_0689ca5c`,
+`fun_0689ca7c`, `fun_0689ca8c`, `fun_0689d064`, `fun_0689d098`, `fun_0689d0c8`, `fun_0689d174`,
+`fun_0689d184`; api tail calls into overlay 95 `fun_021c7d34`, `fun_021c7d44`, `fun_021c814c`,
+`fun_021c82c4`; and `msg_param` (the event's string buffer, not in the work).
+
+Deviations: a failed HANDEX push (id 0; the original hands the handler a null pointer) gives a
+stand-in buffer for `handex(0)`, and `handex_pop(0)` panics (the original executes the null record
+and frees relative to address 0). `positions_adjacent(a, _)` panics for `a >= 6` (the original reads
+past the 6-record table). The handlers' `wk + 0x1FEC` scratch (`021c8120`) is a local buffer in the
+handler ports, so the host does not leave the expanded IDs there.
+
 ## Deviations
 
 - Function and argument types are narrowed to what callers pass (`u8` types, `u16` type pairs
