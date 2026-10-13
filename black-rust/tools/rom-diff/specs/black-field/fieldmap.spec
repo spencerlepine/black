@@ -101,7 +101,7 @@ fn 02187fd0 ret=u32 inputs=200
   stub 021885e8 ret=pick:0/1/2/3 args=v,v  # in-area
   stub 02188758 ret=pick:0/1/2/3 args=v,v  # in-area
   stub 02188910 ret=pick:0/1/2/3 args=v,v  # in-area
-  stub 02188990 ret=pick:0/1/2/3 args=v,v  # in-area
+  stub 02188990 force ret=pick:0/1/2/3 args=v,v  # in-area
   stub 02188ad4 ret=pick:0/1/2/3 args=p,v  # in-area
   stub 020433e0 force ret=none args=v  # graphics init (table)
   stub 02188d5c force ret=none args=v,v,v,v  # fieldmap
@@ -1051,7 +1051,7 @@ fn 02188b58 ret=u32 inputs=300
   stub 021885e8 ret=pick:0/1/2/3 args=v,v  # in-area
   stub 02188758 ret=pick:0/1/2/3 args=v,v  # in-area
   stub 02188910 ret=pick:0/1/2/3 args=v,v  # in-area
-  stub 02188990 ret=pick:0/1/2/3 args=v,v  # in-area
+  stub 02188990 force ret=pick:0/1/2/3 args=v,v  # in-area
   stub 02188ad4 ret=pick:0/1/2/3 args=p,v  # in-area
   stub 020433e0 force ret=none args=v  # graphics init (table)
   stub 02188d5c force ret=none args=v,v,v,v  # fieldmap
