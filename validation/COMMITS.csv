@@ -65,3 +65,44 @@ f250bbe,SKIPPED,2026-10-13T09:13Z,2026-10-13T09:54Z,R-20261013-0913,docs/ledger 
 7bebb11,SKIPPED,2026-10-13T09:13Z,2026-10-13T09:54Z,R-20261013-0913,docs/ledger only (MIGRATION-AGENT.md / validation / SYMBOLS.md),,F4a port started (17% complete)
 ae7ebb3,REVIEWED,2026-10-13T09:13Z,2026-10-13T09:54Z,R-20261013-0913,fn:black-script/scrcmd_fld;scrcmd_talk;scrcmd_obj;scrcmd_screen,,"F8-spec2: ov21 scrcmd specced as black-script areas scrcmd_fld (97 fns, 80 cmds; 3a3b6fd5c3a80131), scrcmd_talk (70, 33 cmds, incl. row 21.43 balloon placement; 03a53d82f880c36f), scrcmd_obj (63, 55 cmds; 719910d5290037ee), scrcmd_screen (36, 29 cmds; 6e9a0a809f9d93e1); 7188/7206 insns, strict + closure clean, 22 smoke ports; ScriptHost rewritten from call sites (MessageRequest, yes/no poll, FadeRequest = fade.c 0204E720) (17% complete)"
 1e70399,REVIEWED,2026-10-13T09:13Z,2026-10-13T09:54Z,R-20261013-0913,fn:black-field/fldmmdl;fn:black-field/event_battle_head;harness:outp:work,,"F4a-spec: black-field areas fldmmdl (0216CC58–0216E62C, 253 fns, 2754/2754; cf1b5fcbd5cf11de) + event_battle_head (0216E62C–0216E954, 7 fns; c22d9c951e9751cb), strict/closure/order clean, 7 smoke ports; MMDLSYS 0x48 / MMDL 0x100 / HEADER 0x24 layouts; grammar outp:work:OFS:N (mirrored, tested) (17% complete)"
+e1700e5,TODO,2026-10-13T13:05Z,,,,,Checkpoint: F8-spec2 + F4a-spec merged; §2 overall 19%; §9 (19% complete)
+b13f798,TODO,2026-10-13T13:05Z,,,,,check-force.py: read the scanned PORTED dirs from svflow.py (was missing crates/black-battle/src/ai; found by B14) (19% complete)
+bf38d08,TODO,2026-10-13T13:05Z,,,,,B14 done (merge pending); Z21 ai1 harness job started (19% complete)
+b796072,TODO,2026-10-13T13:05Z,,,,,"B14: battle AI ai1 161 fns ported, 143 verified (a9de4467dc5162a2), Mem by address, 120-entry cmd table embedded; 14 unregistered with exact spec fixes (operand bounds, call64 forwarding, stub kinds, check-force ai dir); 2/10 mutations (thresholds/constants untested → bias job) (19% complete)"
+417eb69,TODO,2026-10-13T13:05Z,,,,,F8a done (merge pending); F6a-spec started (19% complete)
+438d4f7,TODO,2026-10-13T13:05Z,,,,,Fix main: fieldmap.spec forces its in-area 02188990 stub (ai1 ports the same address in ov96; PORTED keyed by address); fieldmap back to 776501833139141f; §8 note (19% complete)
+95db562,TODO,2026-10-13T13:05Z,,,,,"F8a: black-script scrcmd_core 53/53 (3467bfc999c8890b) + scrcmd_work 130/130 (d7e9a9ae52796e75) ported and verified; command dispatch table for 138 ported ids (scrcmd::commands/handler/dispatch, checked against ROM table 0x0217062C); CoreHooks/WorkHooks; 6/6 mutations (19% complete)"
+55d640f,TODO,2026-10-13T13:05Z,,,,,Checkpoint: B14 + F8a merged and verified on main; §2 hashes (19% complete)
+8d3d9e0,TODO,2026-10-13T13:05Z,,,,,Z20 done (verifying in worktree); F8b port started (19% complete)
+02e4908,TODO,2026-10-13T13:05Z,,,,,"Validator R-20261013-0913: V-0022/V-0023 (high, ret=none hid return values) + V-0021 (low) imported as one fix job with a class audit; ledger (19% complete)"
+7447b98,TODO,2026-10-13T13:05Z,,,,,"F4a: black-field fldmmdl 253/253 (1aff530db0eefc54) + event_battle_head 7/7 (7fec025df763bb42) ported and verified; FieldEnv seam, Mem windows, 4 ROM tables embedded; nds_rom events::Npc fields named from the MMDL header (obj_code, move_code, event_*, script, dir, params, limits, kind, z, height) + ROM test; 5/5 mutations (19% complete)"
+b58e246,TODO,2026-10-13T13:05Z,,,,,F4a merged (fldmmdl 260/260) (19% complete)
+e60e5ca,TODO,2026-10-13T13:05Z,,,,,F8c port started (19% complete)
+dd1a031,TODO,2026-10-13T13:05Z,,,,,"F6a-spec: ov10 0x02161D98–0x02164768 specced as black-field areas wfbc_data (40; bfa64f2c43e3e8cc), eventdata (56; a3c5804a426adb7a), mmdl_move (70; b006cfa1a82757fc), eventdata_tail (19; bb4944f39966a046) = 185 fns, strict/order clean, 100% plain coverage, 6 smoke ports; EVENTDATA_SYSTEM 0xAA8 + BG/WARP/TRIGGER layouts and A6 mismatches documented; ALLOW += 02082C60 memset (19% complete)"
+9fc2b5c,TODO,2026-10-13T13:05Z,,,,,F6a-spec merged (eventdata 185 fns specced) (19% complete)
+c571894,TODO,2026-10-13T13:05Z,,,,,F6a port started (19% complete)
+4243e78,TODO,2026-10-13T13:05Z,,,,,F8b done (merge pending) (19% complete)
+fd0804e,TODO,2026-10-13T13:05Z,,,,,F8-spec3 started (19% complete)
+cf78da5,TODO,2026-10-13T13:05Z,,,,,"F8b: black-script scrcmd_talk 70/70 (f52686b3e04f16d2) + scrcmd_screen 36/36 (a8af20a1036b361b) ported and verified; dispatch now 200 ids (+call_event/call_init_proc/call_task); host.rs fixes (fade_done == 0, MessageWindow InfoBoard/Sized/Window67/Window69); 5/6 mutations (19% complete)"
+e77406b,TODO,2026-10-13T13:05Z,,,,,"Z20: PORTED keyed per memory set (battle-set lists only deactivate stubs in battle-set areas; hash-neutral on all 49 areas); client2 45/45 (021ce0f8/cecb4/cf524 registered; message buffer + 021cf5b0 last arg are v); client3 d0d38/d0d44 list buffer declared; mutation survivors caught (handex 9f6c via new outk/outki stub kinds, api 7f68 nullable, server1 6500 bias, script_sys 8b6c offsets); test_svflow.py (19% complete)"
+049b75c,TODO,2026-10-13T13:05Z,,,,,F8c done (merge pending); F3a-spec started (19% complete)
+b270698,TODO,2026-10-13T13:05Z,,,,,F6a done (merge pending); Z22 field-harness strength job queued (19% complete)
+9f408b3,TODO,2026-10-13T13:05Z,,,,,Z22 started (19% complete)
+2acf4d4,TODO,2026-10-13T13:05Z,,,,,F8-spec3 done (merge pending); F8d port started (19% complete)
+8aa5f81,TODO,2026-10-13T13:05Z,,,,,F8c: black-script scrcmd_fld 97/97 (c4d23e2d7aaf61b2) + scrcmd_obj 63/63 (c450ae3e75c7410b) ported and verified; FldHooks/ObjHooks on CoreHooks; dispatch extended (273 ids); 3 ov21 ROM tables embedded; 6/8 mutations (19% complete)
+26ed87e,TODO,2026-10-13T13:05Z,,,,,"F6a: black-field wfbc_data 40/40 (721154b28c4c24fa), eventdata 56/56 (e2fedff5ec7feede), mmdl_move 70/70 (854080fe99c7c86c), eventdata_tail 18/19 (366498360545b869; 02164708 needs a spec bound); nds_rom BgEvent/Warp/Trigger renamed + ROM test over 428 members; 5/10 mutations (input gaps listed) (19% complete)"
+8189d3c,TODO,2026-10-13T13:05Z,,,,,"F8-spec3: black-script areas scrcmd_proc (0215C63C–0215CE97: 22 fns / 17 cmds; 8ace4d03c9fe46a6), scrcmd_sodateya (0215CE98–0215D34B: 18 / 15; e3a1ae75de9be143), scrcmd_misc10 (rows 10.33+10.35 + cmd 359: 33 / 30; 2029557f4ba29478); 100% coverage, strict/order/closure clean, 16 smoke ports; file bounds from __FILE__ strings (F1 rows 10.15–10.17 off) (19% complete)"
+4479261,TODO,2026-10-13T13:05Z,,,,,"Checkpoint: Z20 verified on main (67 areas); F8c, F6a, F8-spec3 merged (19% complete)"
+9c0c95d,TODO,2026-10-13T13:05Z,,,,,V-0022/23/21 fix done (verifying in worktree) (19% complete)
+7e5192c,TODO,2026-10-13T13:05Z,,,,,B10-wire started (19% complete)
+4a5a419,TODO,2026-10-13T13:05Z,,,,,Z21 done (merge pending); F8-spec4 started (19% complete)
+363aa8b,TODO,2026-10-13T13:05Z,,,,,F8d done (merge pending); F5a-spec started (19% complete)
+d97af7e,TODO,2026-10-13T13:05Z,,,,,"V-0022/V-0023/V-0021: ret=none specs that hid real returns fixed — server3 021b9244 (4f31dfc994eab1f3), core1 021bc220 (4c30bb905e3aee45), core5 021c4838/021c493c (b8568eb2869df86d) + audit tools/re/retscan.py over 894 ret=none fns found 4 more (game_data 02012bf8, zonedata 0201407c, waza 0201c0bc, box_data 020079bc; all fixed); sync-docs parses all /// C: forms (+~680 SYMBOLS rows) + gate check tools/check-symbols.py; fieldmap/fieldmap_event +4 registered (19% complete)"
+59ce0c0,TODO,2026-10-13T13:05Z,,,,,"Z21: battle AI ai1 161/161 verified (1550770c5c35b804): 18 registered (operand lists/bounds, call64 forwarding, stub kinds, check-force fixes); grammar ret=nth:K0;K1.. and ret=ticks:STEP (mirrored, tested); input biases → 58/60 mutations caught (2 equivalent) (19% complete)"
+2773e90,TODO,2026-10-13T13:05Z,,,,,"F8d: black-script scrcmd_proc 22/22 (3ec48c52d531838d), scrcmd_sodateya 18/18 (6f0e40c19a57626b), scrcmd_misc10 32/32 (6b303e0a9940ca36; cmd 359 musical X2 excluded); dispatch + call_wait/call_event/call_callback; app-proc → ScriptHost mapping proposal; 5/6 mutations (19% complete)"
+f4fc41d,TODO,2026-10-13T13:05Z,,,,,"Checkpoint: V-0022/23/21 fix, Z21, F8d merged (19% complete)"
+2d73f80,TODO,2026-10-13T13:05Z,,,,,F3a-spec done (merge pending) (19% complete)
+c7130eb,TODO,2026-10-13T13:05Z,,,,,F3a port started (19% complete)
+d0a4480,TODO,2026-10-13T13:05Z,,,,,B10-wire done (merge pending); B10-wire2 queued; dependency decision recorded (19% complete)
+fdf8ae9,TODO,2026-10-13T13:05Z,,,,,B10-wire2 started (19% complete)
+706dc9d,TODO,2026-10-13T13:05Z,,,,,F8-spec4 done (merge pending) (19% complete)
