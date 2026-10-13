@@ -37,14 +37,32 @@ if [ -n "$PERFN" ]; then
   if [ -n "$RUST" ] && python3 -I tools/rom-diff/diffmaps.py maps "$PJ" "$RJ" >"$D/handler-bad-$MOD.txt"; then ROM=$RUST; else ROM=per-function-mismatch; fi
 else
   ROM=$($PY -I tools/rom-diff/handlers.py "$MOD" | awk '{print $2}')
-  RUST=$(cargo test -q -p black-battle "${MOD}_match_rom" 2>&1 | sed -n 's/.*left: "\([0-9a-f]*\)".*/\1/p')
-  if [ -z "$RUST" ]; then RUST=$(sed -n 's/.*assert_eq!(h, "\([0-9a-f]*\)").*/\1/p' "$T"); fi
+  # The Rust hash comes from the file the suite writes itself (HANDLER_JSON), never from the hash
+  # recorded in tests.rs: a Rust side that does not compile or panics before the suite finished
+  # leaves no file, so RUST stays empty and the check reports MISMATCH.
+  D=${CARGO_TARGET_DIR:-target}
+  D=${BLK_OUT:-$D}
+  mkdir -p "$D"
+  RJ=$D/handler-hashes-$MOD.json
+  rm -f "$RJ"
+  HANDLER_JSON=$RJ cargo test -q -p black-battle "${MOD}_match_rom" >"$D/handler-test-$MOD.log" 2>&1 || true
+  RUST=$(sed -n 's/^{"hash": "\([0-9a-f]*\)".*/\1/p' "$RJ" 2>/dev/null | head -1)
+  if [ -z "$RUST" ]; then
+    echo "Rust test produced no hash (compile error or panic); last lines of $D/handler-test-$MOD.log:"
+    tail -20 "$D/handler-test-$MOD.log"
+  fi
 fi
-echo "rom=$ROM rust=$RUST"
+# In --per-function mode ROM is only set to the Rust hash after the per-function maps were equal
+# (the ROM side has no module hash there), so say so instead of printing it as an independent hash.
+if [ -n "$PERFN" ] && [ "$ROM" != per-function-mismatch ]; then
+  echo "rom=$ROM (per-function maps equal) rust=$RUST"
+else
+  echo "rom=$ROM rust=$RUST"
+fi
 if [ -n "$COV" ]; then
   $PY -I tools/rom-diff/coverage.py "$MOD" --jobs "${JOBS:-8}" || true
 fi
-if [ "$ROM" = "$RUST" ]; then
+if [ -n "$RUST" ] && [ "$ROM" = "$RUST" ]; then
   sed -i.bak "s/assert_eq!(h, \"[0-9a-fA-Z_]*\");/assert_eq!(h, \"$ROM\");/" "$T" && rm -f "$T.bak"
   echo "MATCH: recorded"
 else
