@@ -1,8 +1,6 @@
 //! `box_savedata.c` (S2): the PC box data model, main ARM9 `0x02007454..0x02007AF4` (33 functions).
-//! Verified per function with `tools/check-fn.sh black-storage box` (spec
-//! `tools/rom-diff/specs/black-storage/box.spec`; the area is called `box` there, a Rust keyword, so
-//! run it with `FNDIFF_SRC=crates/black-storage/src/box_data.rs
-//! FNDIFF_TESTS=crates/black-storage/src/box_data/tests.rs FNDIFF_FILTER=box_data::tests::fndiff_match_rom`).
+//! Verified per function with `tools/check-fn.sh black-storage box_data` (spec
+//! `tools/rom-diff/specs/black-storage/box_data.spec`).
 //!
 //! # Layout
 //!

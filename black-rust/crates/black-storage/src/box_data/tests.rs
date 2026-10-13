@@ -236,13 +236,13 @@ fn call(addr: u32, c: &mut Case) -> u64 {
 }
 
 /// Every ported function against the original
-/// (`tools/check-fn.sh black-storage box`, see the module docs for the env overrides).
+/// (`tools/check-fn.sh black-storage box_data`).
 #[test]
 fn fndiff_match_rom() {
     run_suite(
         &Suite::new(
             "box",
-            include_str!("../../../../tools/rom-diff/specs/black-storage/box.spec"),
+            include_str!("../../../../tools/rom-diff/specs/black-storage/box_data.spec"),
             super::PORTED,
             RECORDED,
         ),
