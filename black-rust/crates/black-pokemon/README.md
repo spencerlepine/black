@@ -74,3 +74,26 @@ that Ghidra lists are the record-loop head and a case label inside `FUN_0201B2B0
 `FUN_0201BF58` returns the caller's `r3` low halfword when record byte 0xB is 0 (an uninitialised read in the
 original; specified, not ported).
 
+
+## P4: waza remainder, icon
+
+`waza` gained the cache constructor `FUN_0201C328` (`waza::cache_create`; the allocator is the new
+`WazaHooks::alloc`, specced with a `seqptr` bump-allocator stub) and is complete for `waza_tool.c`
+(0x0201BD28-0x0201C41C, 31 functions). `FUN_0201ADD0` (`read_learnset`) now fills a slice through
+`WazaHooks::load_learnset(index, dst)`, so a production hook can copy the ARC 18 member from the assets (D4).
+
+`icon` (new, `icon.rs`): the Pokemon icon helpers at 0x0201BA68-0x0201BD28 (between `shinka_check.c` and
+`waza_tool.c`; T1 had them as waza_tool, and Ghidra's "`FUN_0201BC40`" was a merge with `FUN_0201BD28`).
+
+| C | Rust |
+|---|------|
+| `FUN_0201BC3C` | `icon::palette_member` (ARC 7 member 0) |
+| `FUN_0201BC40` / `FUN_0201BC78` | `icon::cell_member` (main / sub DISPCNT) |
+| `FUN_0201BCB4` / `FUN_0201BCEC` | `icon::anim_member` (main / sub DISPCNT) |
+| `FUN_0201BABC` | `icon::graphics_member` |
+| `FUN_0201BB5C` | `icon::palette_of` (+ `palette_index`) |
+| `FUN_0201BA68` / `FUN_0201BBE8` | `icon::mon_graphics_member` / `mon_palette` |
+
+Deliberate deviations: the DISPCNT helpers take the register value as an argument (the original reads
+0x04000000 / 0x04001000 itself); the 712-byte palette table (main 0x0209E474) is a slice argument (asset data,
+not embedded).

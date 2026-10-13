@@ -369,3 +369,18 @@ command you ran. The harness job generates a draft with
     python3 -I tools/rom-diff/genspec.py <addr>... --area <area>
 
 and resolves every `NEEDS-HAND` against the disassembly.
+
+## P4 additions (waza / icon)
+
+New syntax only; no existing spec text or hash changes (black-pokemon poke_tool / create / personal / growth / evolution hashes
+re-verified; waza's 30 earlier functions keep their hashes and the area hash of those 30 is still 4f85bade6b03f326). Mirrored in
+`svflow.py` and `black-fndiff` (`stub.rs`, parity vector `seqptr_hands_out_consecutive_blocks`).
+
+* Stub result kind `seqptr:argK:OFS:STEP`: the n-th call (0-based, per run, per stub address, with or without `seq`) returns
+  `0x02E10000 + K * 0x10000 + OFS + n * STEP`, independent of the arguments: a bump allocator whose blocks never overlap (an
+  allocator stub for a constructor that makes several allocations and links them, `FUN_0201C328` in `waza.spec`; the arena is an
+  `arg buf` the function itself ignores). `ptr:argK` cannot do this (its addresses are random, so blocks alias).
+* A `global` outside the mapped RAM (0x02000000-0x02FFFFFF), e.g. the I/O register `REG_DISPCNT` 0x04000000, gets its 4 KiB pages
+  mapped (zero-filled) by the ROM side; it is filled, fixed and hashed like any global (`icon.spec`). The Rust side needs nothing.
+* `svflow.py` `ALLOW`: `02018438` (level from EXP, black-pokemon `create::level_of`), which `02017fb0` (waza) runs as real code by
+  design; its callee `0201850c` stays a stub. This removes the waza unstubbed-callee warning; hash-neutral.

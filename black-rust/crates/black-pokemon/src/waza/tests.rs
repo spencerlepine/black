@@ -33,6 +33,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x0201C1F4, "20e393038b9cd7d1"),
     (0x0201C284, "824153906dd21900"),
     (0x0201C314, "a8f49c1ed4436dd6"),
+    (0x0201C328, "d9b23e19fa367f0b"),
     (0x0201C3C0, "2538d1458b25543d"),
     (0x0201C408, "1355386cc1ed8b5b"),
 ];
@@ -41,6 +42,8 @@ const RECORDED: &[(u32, &str)] = &[
 /// The callees outside the area, routed to the spec's stub lines (same model as the ROM side).
 struct Rom<'a> {
     env: &'a mut StubEnv,
+    /// Emulator address of the learnset buffer `load_learnset` gets (the stub logs it).
+    dst: u32,
 }
 
 impl WazaHooks for Rom<'_> {
@@ -58,10 +61,11 @@ impl WazaHooks for Rom<'_> {
         self.env
             .call(0x0201_AFD4, &mut [Arg::V(species), Arg::V(form)])
     }
-    fn load_learnset(&mut self, dst: u32, index: u32) {
+    fn load_learnset(&mut self, index: u32, _dst: &mut [u8]) {
+        // the stub writes nothing (`args=v,v,v`): only the call is compared
         self.env.call(
             0x0204_8F4C,
-            &mut [Arg::V(dst), Arg::V(LEARNSET_ARC), Arg::V(index)],
+            &mut [Arg::V(self.dst), Arg::V(LEARNSET_ARC), Arg::V(index)],
         );
     }
     fn learnset_read(&mut self, species: u32, form: u32, dst: u32, _buf: &mut [u8]) {
@@ -73,6 +77,12 @@ impl WazaHooks for Rom<'_> {
     }
     fn free(&mut self, block: u32) {
         self.env.call(0x0203_07B0, &mut [Arg::V(block)]);
+    }
+    fn alloc(&mut self, heap: u32, size: u32, line: u32) -> u32 {
+        self.env.call(
+            0x0203_0734,
+            &mut [Arg::V(heap), Arg::V(size), Arg::V(0), Arg::P, Arg::V(line)],
+        )
     }
 }
 
@@ -170,7 +180,10 @@ fn with_cache(
 ) -> u64 {
     let mut p = plant(c);
     let r = {
-        let mut h = Rom { env: &mut c.env };
+        let mut h = Rom {
+            env: &mut c.env,
+            dst: 0,
+        };
         let cache = if p.has_cache {
             Some(&mut p.cache)
         } else {
@@ -186,7 +199,10 @@ fn with_cache(
 fn with_mon(c: &mut Case, f: impl FnOnce(&mut [u8], &mut Rom) -> u64) -> u64 {
     let mut mon = c.region("mon").to_vec();
     let r = {
-        let mut h = Rom { env: &mut c.env };
+        let mut h = Rom {
+            env: &mut c.env,
+            dst: 0,
+        };
         f(&mut mon, &mut h)
     };
     c.region_mut("mon").copy_from_slice(&mon);
@@ -199,12 +215,52 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x0201_BDB4 => record_param(c.region("rec"), v[1]) as u64,
         0x0201_BF44 => flag_test(c.region("rec"), v[1]) as u64,
         0x0201_C158 => {
-            let mut h = Rom { env: &mut c.env };
+            let mut h = Rom {
+                env: &mut c.env,
+                dst: 0,
+            };
             max_pp(v[0], v[1], &mut h) as u64
         }
         0x0201_ADD0 => {
-            let mut h = Rom { env: &mut c.env };
-            read_learnset(v[0], v[1], v[2], &mut h);
+            let mut h = Rom {
+                env: &mut c.env,
+                dst: v[2],
+            };
+            // `dst` is a plain scalar in the spec: the stubbed load writes nothing, so any buffer will do
+            read_learnset(v[0], v[1], &mut [0u8; 4], &mut h);
+            0
+        }
+        0x0201_C328 => {
+            // global 0x02146530 = the cache pointer; the allocator hands out blocks of the arena `arg buf` (bufs[2])
+            let had = c.globals[0][..4] != [0; 4];
+            let mut cache = had.then(|| MoveCache::new(0));
+            let blocks = {
+                let mut h = Rom {
+                    env: &mut c.env,
+                    dst: 0,
+                };
+                cache_create(&mut cache, v[0], v[1], &mut h)
+            };
+            if let Some(b) = blocks {
+                let base = 0x02E1_0000 + 2 * 0x10000;
+                let arena = &mut c.bufs[2];
+                let mut put = |addr: u32, bytes: &[u8]| {
+                    let o = (addr - base) as usize;
+                    arena[o..o + bytes.len()].copy_from_slice(bytes);
+                };
+                put(b.cache, &b.bufs.to_le_bytes());
+                put(b.cache + 4, &b.ids.to_le_bytes());
+                let n = cache.as_ref().unwrap().ids.len() as u32;
+                put(b.cache + 8, &n.to_le_bytes());
+                for (i, &r) in b.recs.iter().enumerate() {
+                    put(b.bufs + 4 * i as u32, &r.to_le_bytes());
+                    put(
+                        b.ids + 2 * i as u32,
+                        &cache.as_ref().unwrap().ids[i].to_le_bytes(),
+                    );
+                }
+                c.globals[0][..4].copy_from_slice(&b.cache.to_le_bytes());
+            }
             0
         }
         0x0201_BD28 => with_cache(c, |cache, s, h| move_param(v[0], v[1], cache, s, h) as u64),
@@ -227,7 +283,10 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x0201_C1F4 => with_cache(c, |cache, s, h| record_is_101(v[0], cache, s, h) as u64),
         0x0201_C284 => with_cache(c, |cache, s, h| record_is_6(v[0], cache, s, h) as u64),
         0x0201_C1BC | 0x0201_C1C8 | 0x0201_C1D8 | 0x0201_C1E8 | 0x0201_C314 => {
-            let mut h = Rom { env: &mut c.env };
+            let mut h = Rom {
+                env: &mut c.env,
+                dst: 0,
+            };
             let r = match addr {
                 0x0201_C1BC => param1(v[0], &mut h),
                 0x0201_C1C8 => param0_u8(v[0], &mut h),
@@ -256,7 +315,10 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             };
             let mut opt = has_cache.then(|| MoveCache::new(count));
             {
-                let mut h = Rom { env: &mut c.env };
+                let mut h = Rom {
+                    env: &mut c.env,
+                    dst: 0,
+                };
                 cache_free(&mut opt, &blocks, &mut h);
             }
             c.globals[0][..4].copy_from_slice(&0u32.to_le_bytes());
@@ -276,7 +338,10 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x0201_BA34 => {
             let mut party = c.region("party").to_vec();
             {
-                let mut h = Rom { env: &mut c.env };
+                let mut h = Rom {
+                    env: &mut c.env,
+                    dst: 0,
+                };
                 restore_party(&mut party, &mut h);
             }
             c.region_mut("party").copy_from_slice(&party);
@@ -425,11 +490,16 @@ impl WazaHooks for Fake {
     fn form_record_index(&mut self, species: u32, form: u32) -> u32 {
         species * 10 + form
     }
-    fn load_learnset(&mut self, dst: u32, index: u32) {
-        self.loads.push(dst + index);
+    fn load_learnset(&mut self, index: u32, dst: &mut [u8]) {
+        self.loads.push(index);
+        dst[..4].copy_from_slice(&[0x21, 0, 1, 0]);
     }
     fn learnset_read(&mut self, _: u32, _: u32, _: u32, _: &mut [u8]) {}
     fn free(&mut self, _: u32) {}
+    fn alloc(&mut self, _heap: u32, size: u32, line: u32) -> u32 {
+        self.loads.push(line);
+        0x0230_0000 + 0x100 * self.loads.len() as u32 + size
+    }
 }
 
 #[test]
@@ -483,6 +553,21 @@ fn max_pp_formula() {
 #[test]
 fn learnset_reader_goes_through_the_form_index() {
     let mut h = Fake { loads: vec![] };
-    read_learnset(25, 3, 0x1000, &mut h);
-    assert_eq!(h.loads, [0x1000 + 253]);
+    let mut buf = [0xFFu8; 8];
+    read_learnset(25, 3, &mut buf, &mut h);
+    assert_eq!(h.loads, [253]);
+    assert_eq!(buf, [0x21, 0, 1, 0, 0xFF, 0xFF, 0xFF, 0xFF]);
+}
+
+#[test]
+fn cache_constructor_allocates_once() {
+    let mut h = Fake { loads: vec![] };
+    let mut cache = None;
+    let b = cache_create(&mut cache, 2, 0, &mut h).unwrap();
+    assert_eq!(h.loads, [0x241, 0x242, 0x243, 0x248, 0x248]);
+    assert_eq!(b.recs.len(), 2);
+    assert_eq!(cache, Some(MoveCache::new(2)));
+    // a second call finds the cache and does nothing
+    assert!(cache_create(&mut cache, 5, 0, &mut h).is_none());
+    assert_eq!(h.loads.len(), 5);
 }

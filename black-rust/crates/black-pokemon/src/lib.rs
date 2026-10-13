@@ -6,6 +6,7 @@ pub mod create;
 pub mod evolution;
 pub mod growth;
 pub mod hooks;
+pub mod icon;
 pub mod personal;
 pub mod poke_tool;
 pub mod waza;

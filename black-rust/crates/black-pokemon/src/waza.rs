@@ -10,7 +10,9 @@
 //! `C020`, `C0BC`, `C1F4`, `C284`), the wrappers over `FUN_0201BD28` (`C1BC`, `C1C8`, `C1D8`, `C1E8`, `C314`),
 //! `0201C184`, the cache free `0201C3C0` and test `0201C408`, the move-slot helpers `0201B920` / `B970` /
 //! `B9F0` / `BA34` and the learning helpers `02017FB0`, `02018094`, `020180FC`, `020181A0`, `020181FC`,
-//! `02018240`, `020182A8`. `FUN_0201C328` (cache constructor) is not specified (see the spec header).
+//! `02018240`, `020182A8`, and the cache constructor `0201C328` (P4).
+//!
+//! `waza_tool.c` is 0x0201BD28-0x0201C41C; 0x0201BA68-0x0201BD28 is the Pokemon icon code ([`crate::icon`]).
 //!
 //! Verified per function with `tools/check-fn.sh black-pokemon waza --per-function`. The data comes in
 //! through [`WazaHooks`] (and [`PokeToolHooks`] for the Pokemon routines), so the crate stays free of
@@ -47,6 +49,7 @@ pub const PORTED: &[u32] = &[
     0x0201_C184,
     0x0201_C3C0,
     0x0201_C408,
+    0x0201_C328,
     0x0201_B920,
     0x0201_B970,
     0x0201_B9F0,
@@ -201,8 +204,9 @@ pub trait WazaHooks {
     fn form_record_index(&mut self, species: u32, form: u32) -> u32;
 
     /// Callee `ArcLoadMember(dst, 0x12, index)`: load ARC 18 member `index` (the learnset: `(u16 move, u16
-    /// level)` pairs ending in `0xFFFF 0xFFFF`) into the buffer at address `dst`.
-    fn load_learnset(&mut self, dst: u32, index: u32);
+    /// level)` pairs ending in `0xFFFF 0xFFFF`) into `dst`. The production hook copies the member from the
+    /// extracted assets (D4); the differential test stubs the call (it logs the buffer's address).
+    fn load_learnset(&mut self, index: u32, dst: &mut [u8]);
 
     /// Callee `FUN_0201ADD0(species, form, dst)` as a whole (the learn routines call it; the learn specs stub
     /// it). `buf` is the learnset buffer at `dst` ([`LEARNSET_BUF`]): the production hook fills it, the
@@ -211,6 +215,10 @@ pub trait WazaHooks {
 
     /// Callee `FUN_020307B0(block)`: free a heap block (the cache free routine).
     fn free(&mut self, block: u32);
+
+    /// Callee `FUN_02030734(heap, size, 0, "waza_tool.c", line)`: allocate a heap block (the cache
+    /// constructor); returns its address. The file string (0x020A7340) is not passed.
+    fn alloc(&mut self, heap: u32, size: u32, line: u32) -> u32;
 }
 
 /// The heap blocks of a move cache as the game allocated them: the cache struct, its id array, its record
@@ -655,11 +663,48 @@ pub fn max_pp(move_id: u32, pp_ups: u32, h: &mut impl WazaHooks) -> u32 {
     (base + bonus) & 0xFF
 }
 
-/// C: `FUN_0201ADD0`: load the learnset of `species` / `form` into the buffer at `dst`
-/// (`ArcLoadMember(dst, 0x12, FUN_0201AFD4(species, form))`).
-pub fn read_learnset(species: u32, form: u32, dst: u32, h: &mut impl WazaHooks) {
+/// C: `FUN_0201ADD0`: load the learnset of `species` / `form` into `dst`
+/// (`ArcLoadMember(dst, 0x12, FUN_0201AFD4(species, form))`): ARC 18 member = the per-form record index.
+pub fn read_learnset(species: u32, form: u32, dst: &mut [u8], h: &mut impl WazaHooks) {
     let index = h.form_record_index(species, form);
-    h.load_learnset(dst, index);
+    h.load_learnset(index, dst);
+}
+
+/// `FUN_0201C328` allocation lines (the `line` argument of the allocator, `0x241 + k`).
+pub mod alloc_line {
+    pub const CACHE: u32 = 0x241;
+    pub const BUFS: u32 = 0x242;
+    pub const IDS: u32 = 0x243;
+    pub const RECORD: u32 = 0x248;
+}
+
+/// C: `FUN_0201C328(count, heap)`: build the move-record cache unless one exists: allocate the cache struct
+/// (0xC bytes), the record-pointer array (`4 * count`), the id array (`2 * count`) and `count` records of 36
+/// bytes on `heap`, all ids 0 (free). Returns the blocks (what [`cache_free`] releases), `None` when a cache
+/// already existed. `count <= 0` allocates no records (the arrays still get their wrapped sizes).
+pub fn cache_create(
+    cache: &mut Option<MoveCache>,
+    count: u32,
+    heap: u32,
+    h: &mut impl WazaHooks,
+) -> Option<CacheBlocks> {
+    if cache.is_some() {
+        return None;
+    }
+    let st = h.alloc(heap, 0xC, alloc_line::CACHE);
+    let bufs = h.alloc(heap, count.wrapping_shl(2), alloc_line::BUFS);
+    let ids = h.alloc(heap, count.wrapping_shl(1), alloc_line::IDS);
+    let n = (count as i32).max(0) as usize;
+    let recs = (0..n)
+        .map(|_| h.alloc(heap, RECORD_SIZE as u32, alloc_line::RECORD))
+        .collect();
+    *cache = Some(MoveCache::new(n));
+    Some(CacheBlocks {
+        cache: st,
+        ids,
+        bufs,
+        recs,
+    })
 }
 
 #[cfg(test)]

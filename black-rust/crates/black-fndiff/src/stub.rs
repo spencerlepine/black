@@ -29,6 +29,8 @@ pub struct StubEnv {
     halted: Option<u32>,
     /// Calls so far per stub address (`seq` stubs).
     counts: Vec<(u32, u32)>,
+    /// Calls so far per stub address (`seqptr` results, P4).
+    seqptr: Vec<(u32, u32)>,
 }
 
 impl StubEnv {
@@ -39,6 +41,7 @@ impl StubEnv {
             salt,
             halted: None,
             counts: Vec::new(),
+            seqptr: Vec::new(),
         }
     }
 
@@ -177,6 +180,30 @@ impl StubEnv {
                 }
             }
         }
+        if let Some(p) = st.ret.strip_prefix("seqptr:arg") {
+            // `seqptr:argK:OFS:STEP` (P4): base(K) + OFS + n * STEP, n = this stub's 0-based call index in the
+            // run (a bump allocator; independent of acc)
+            let mut it = p.split(':');
+            let (kk, ofs, step) = (
+                num(it.next().unwrap()),
+                num(it.next().unwrap()),
+                num(it.next().unwrap()),
+            );
+            let n = match self.seqptr.iter_mut().find(|c| c.0 == addr) {
+                Some(c) => {
+                    c.1 += 1;
+                    c.1 - 1
+                }
+                None => {
+                    self.seqptr.push((addr, 1));
+                    0
+                }
+            };
+            return BUF_BASE
+                .wrapping_add(kk.wrapping_mul(BUF_STRIDE))
+                .wrapping_add(ofs)
+                .wrapping_add(n.wrapping_mul(step));
+        }
         if let Some(k) = st.ret.strip_prefix("lt:") {
             // `lt:K` (B10-spec4): mix(acc, key) % argK, 0 when argK is 0 (a `rand_range(n)` answer below n)
             let n = match args[num(k) as usize] {
@@ -266,6 +293,28 @@ mod tests {
         let rb = b.call(0x021B_B798, &mut [Arg::V(0x59B1)]);
         assert_eq!(ra, rb);
         assert_eq!(a.log, b.log);
+    }
+
+    /// `seqptr:argK:OFS:STEP` (P4): consecutive blocks of one pointer argument, whatever the arguments
+    /// and `seq`; vector computed with tools/rom-diff/svflow.py (`make_stub`, salt 0x1234, `seq`).
+    #[test]
+    fn seqptr_hands_out_consecutive_blocks() {
+        let mut e = StubEnv::new(vec![spec("seqptr:arg2:0x10:0x40", &["v"], true)], 0x1234);
+        let got: Vec<u32> = (0..3)
+            .map(|_| e.call(0x021B_B798, &mut [Arg::V(0xABCD)]))
+            .collect();
+        assert_eq!(got, [0x02E3_0010, 0x02E3_0050, 0x02E3_0090]);
+        assert_eq!(
+            e.log,
+            [
+                0x021B_B798,
+                0xABCD,
+                0x021B_B798,
+                0xABCD,
+                0x021B_B798,
+                0xABCD
+            ]
+        );
     }
 
     /// `lt:K` (B10-spec4): below argument K, 0 for a zero bound.

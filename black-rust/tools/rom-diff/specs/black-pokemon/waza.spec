@@ -1,5 +1,7 @@
 # fndiff spec: waza_tool.c (P4): move data access, the learnset reader and the move-learning helpers of
-# poke_tool.c, main ARM9 code (0x0201BD28-0x0201C408, 0x0201ADD0, 0x02017FB0-0x020182C0, 0x0201B920-0x0201BA68).
+# poke_tool.c, main ARM9 code (0x0201BD28-0x0201C41C, 0x0201ADD0, 0x02017FB0-0x020182C0, 0x0201B920-0x0201BA68).
+# waza_tool.c starts at 0x0201BD28: 0x0201BA68-0x0201BD28 is the Pokemon icon code (area `icon`, P4; T1's "FUN_0201BC40
+# loads ARC 21" was a Ghidra merge of the icon helpers with FUN_0201BD28).
 # Run: tools/check-fn.sh black-pokemon waza --per-function
 #
 # Move records (ARC 21, 36 bytes) are loaded by ArcLoadMember (FUN_02048F4C(dst, 0x15, move)) into a small
@@ -263,10 +265,19 @@ fn 0201c184 ret=u32 inputs=300
   nowork
   arg s32 alt oneof 240 241 201 258 || range 0 300 || any
 
-# FUN_0201C328(n, heap), the cache constructor, is NOT specified: it makes four allocations of different sizes from
-# FUN_02030734 (S, bufs, ids, n records) and stores pointers into the blocks; the stub model can hand out only
-# addresses on a fixed grid that cannot be made disjoint, so aliased blocks corrupt each other's pointers (a
-# fault in the ROM run). The cache layout it builds is what every cache user below plants.
+# FUN_0201C328(n, heap), the cache constructor (P4): unless the global already holds a cache, allocate (FUN_02030734(heap,
+# size, 0, "waza_tool.c", line)) the struct S (0xC, line 0x241), the record-pointer array (4n, 0x242), the id array (2n,
+# 0x243) and n records (0x24 each, line 0x248), store S in the global, S = {bufs, ids, n}, bufs[i] = record i, ids[i] = 0.
+# The allocator is a `seqptr` stub: call k returns arena + k * 0xC0 (disjoint blocks, 0xC0 >= 4 * 48), the arena being an
+# extra `arg buf` the function never reads (r2). n = 48 is what the only caller (ov96 0x02187F92) passes.
+fn 0201c328 ret=none inputs=600
+  nowork
+  global 02146530 4
+  arg s32 alt range 0 8 || range 1 3 || const 48
+  arg u32 any
+  arg buf 0x2800
+  fix global0 0 u32 alt const 0 || const 0 || const 0 || any
+  stub 02030734 ret=seqptr:arg2:0:0xC0 args=v,v,v,p,v
 
 # FUN_0201C3C0(): free the records, the arrays and S, and clear the global.
 fn 0201c3c0 ret=none inputs=300
@@ -417,6 +428,7 @@ fn 0201ba34 ret=none inputs=300
 # FUN_02017FB0(mon): forget all four moves, then learn every move of the species' learnset (ARC 18, stubbed: the
 # global 0x02146330 holds the planted (u16 move, u16 level) pairs, ending at 0xFFFF 0xFFFF) up to the mon's
 # level (FUN_02018438 -> the growth routine FUN_0201850C, stubbed) through FUN_02018094 / FUN_020180FC.
+# FUN_02018438 itself runs as real code on both sides (create's `level_of`; svflow.py ALLOW, P4).
 fn 02017fb0 ret=none inputs=600
   nowork
   global 02146330 0x100
@@ -447,7 +459,7 @@ fn 02017fb0 ret=none inputs=600
   stub 0201c158 force ret=mod:64 args=v,v
   stub 02017f50 ret=pick:0/1/2 args=v,v,v
 
-# FUN_02018094(mon, move): 0xFFFF after learning `move` into the first empty slot (FUN_020181FC), 0xFFFE if it
+# FUN_02018094(mon, move): `move` after learning it into the first empty slot (FUN_020181FC), 0xFFFE if it
 # is already known, else 0xFFFF (all four slots full: the caller then shifts them).
 fn 02018094 ret=u32 inputs=800
   nowork

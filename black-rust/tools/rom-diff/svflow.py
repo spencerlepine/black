@@ -420,6 +420,12 @@ def make_stub(st, ctx):
             em.wbytes(ptr, data)
         for ptr, kk, ofs, n, salt in outps:  # B12-spec: base(K) + OFS + 4 * (mix(mix(acc, key + 0x1000 + salt), 0xC0DE) % N)
             em.wbytes(ptr, struct.pack("<I", (Runner.buf_addr(kk) + ofs + 4 * (mix(mix(acc, key + 0x1000 + salt), 0xC0DE) % n)) & M))
+        if st.ret.startswith("seqptr:"):  # P4: `seqptr:argK:OFS:STEP` = base(K) + OFS + n * STEP, n = this stub's 0-based call
+            # index in the run (a bump allocator: every call gets its own disjoint block; the value never depends on acc)
+            _, kk, ofs, step = st.ret.split(":")
+            n = ctx.counts.get(("seqptr", st.addr), 0)
+            ctx.counts[("seqptr", st.addr)] = n + 1
+            return (Runner.buf_addr(int(kk[3:])) + int(ofs, 0) + n * int(step, 0)) & M
         if st.ret.startswith("lt:"):  # B10-spec4: `lt:K` = mix(...) % argK (0 when argK == 0): a rand_range(n) answer below n
             n = raw[int(st.ret[3:], 0)]
             return mix(acc, key) % n if n else 0
@@ -465,6 +471,9 @@ ALLOW = {0x0209C2B0, 0x0209C054, 0x0209C074, 0x02082BCC, 0x02082D44, 0x02082AC0,
          # them): 020173ec returns 0xDC (PARTY_MON_SIZE), 02017ed8 shiny test, 02017f08 gender, 0201808c / 020181fc move-slot teach/put,
          # 02018430 thunk to 02018438 (level from EXP, calls growth's 0201850c)
          0x020173EC, 0x02017ED8, 0x02017F08, 0x0201808C, 0x020181FC, 0x02018430,
+         # P4: 02018438 (level from EXP; `create::level_of`, its callee 0201850c is a stub): real code in waza 02017fb0 by design,
+         # the Rust port calls `level_of` (create's hash covers it through the 02018430 thunk)
+         0x02018438,
          # black-text `wordset`: message-tag helpers of another file (0201d5c4 / d5cc / d60c / d670 / d688), real code on the ROM side by
          # design (wordset.spec header); private Rust helpers in wordset.rs, covered by the wordset hash
          0x0201D5C4, 0x0201D5CC, 0x0201D60C, 0x0201D670, 0x0201D688,
@@ -502,6 +511,13 @@ class Runner:
             self.owned.append((self.region_addr(k), self.region_addr(k) + n))
         for (ga, gn) in fs.globals:
             self.owned.append((ga, ga + gn))
+            # P4: a global outside the mapped RAM (an I/O register such as DISPCNT 0x04000000) gets its 4 KiB pages mapped,
+            # zero-filled; the random fill then writes it like any other global (no existing spec has one: hash-neutral)
+            mapped = [(lo, hi) for lo, hi, _ in e.uc.mem_regions()]
+            for pg in range(ga & ~0xFFF, ga + gn, 0x1000):
+                if not any(lo <= pg <= hi for lo, hi in mapped):
+                    e.uc.mem_map(pg, 0x1000)
+                    mapped.append((pg, pg + 0xFFF))
         for st in fs.stubs:
             if st.addr in active_stubs:
                 e.stub(st.addr, make_stub(st, self.ctx))
