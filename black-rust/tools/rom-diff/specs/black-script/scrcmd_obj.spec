@@ -514,7 +514,7 @@ fn 021b1e74 ret=u32 inputs=200
 
 # cmd 119: dirs = the u16 table 0x021D93FC {0, 1, 2, 3} (stack copy); 021A3038(player = 02188CB4(field map), &pos); the
 # first d of dirs with 021627C8(02012844(GAMEDATA), 0201296C(GAMEDATA), &pos, d) != 0 (none: d is the caller's r7, never
-# set: the stub always answers nonzero, so only d = 0 is exercised); d == 021A3050(player) -> 0; d 0..3 -> child event
+# set; Z19 makes it 0. Z23 (V-0024): the stub answers 0..3, so every d and the loop continuation run); d == 021A3050(player) -> 0; d 0..3 -> child event
 # 021618A0(GAMESYS, field map, 0xFF, the 8-byte ROM record 0x021D941C / 9414 / 940C / 9404 of d); yield.
 fn 021b1e80 ret=u32 inputs=200
   nowork
@@ -527,7 +527,7 @@ fn 021b1e80 ret=u32 inputs=200
   stub 021618a0 force ret=u32 args=v,v,v,in:8
   stub 0215a5e4 force ret=u32 args=v
   stub 02012844 force ret=u32 args=v
-  stub 021627c8 force ret=pick:1/2/3 args=v,v,in:12,v
+  stub 021627c8 force ret=pick:0/1/2/3 args=v,v,in:12,v   # Z23 (V-0024): 0 too, so the loop also tries d = 1 / 2 / 3
   stub 0201296c force ret=u32 args=v
   stub 021a3050 force ret=pick:0/1/2/3 args=v
   stub 0215a5f4 force ret=u32 args=v

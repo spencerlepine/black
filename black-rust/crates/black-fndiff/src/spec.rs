@@ -152,6 +152,8 @@ pub(crate) fn ret_value(kind: &str, val: u32) -> Option<u32> {
                 // one of V1/V2/... chosen by mix(val, 0xC0DE) % count
                 let vs: Vec<u32> = p.split('/').map(num).collect();
                 Some(vs[crate::mix(val, 0xC0DE) as usize % vs.len()])
+            } else if let Some(p) = k.strip_prefix("pick+") {
+                Some(pick_any(k, p, val))
             } else if let Some(p) = k.strip_prefix("ptr:work:") {
                 // stub result: an address inside the work image, `ptr:work:OFS:N` = WORK + OFS + 4 * (mix(val, 0xC0DE) % N)
                 let (ofs, n) = p.split_once(':').unwrap();
@@ -183,6 +185,49 @@ pub(crate) fn ret_value(kind: &str, val: u32) -> Option<u32> {
             }
         }
     }
+}
+
+/// Selector salt of `pick+W:` (independent of the 0xC0DE list index; `PICK_ANY_SALT` in svflow.py).
+pub(crate) const PICK_ANY_SALT: u32 = 0xA11;
+/// 1 in `PICK_ANY_FULL` answers of `pick+W:` is full-width (`PICK_ANY_FULL` in svflow.py).
+pub(crate) const PICK_ANY_FULL: u32 = 4;
+
+/// `pick+W:V1/V2/..` (Z23; W = u8 | u16 | u32 | i32): a weighted `pick:` that keeps the whole width W reachable.
+/// When `mix(mix(val, 0xA11), 0x5EED) % 4 == 0` the answer is the plain W kind (`val` & the mask of W), otherwise
+/// `V[mix(val, 0xC0DE) % count]` (the value `pick:V1/V2/..` gives for the same `val`). Every V must fit W
+/// (`pick_any` in svflow.py). The selector is mixed twice: `mix(val, a) ^ mix(val, b)` is a constant, so a single
+/// mix would decide the low bits of the list index (a 4-value list would never draw one of its values).
+fn pick_any(kind: &str, p: &str, val: u32) -> u32 {
+    let (w, list) = p
+        .split_once(':')
+        .unwrap_or_else(|| panic!("fndiff spec: bad ret kind {kind}"));
+    let mask = match w {
+        "u8" => 0xFF,
+        "u16" => 0xFFFF,
+        "u32" | "i32" => u32::MAX,
+        _ => panic!("fndiff spec: bad ret kind {kind}"),
+    };
+    assert!(!list.is_empty(), "fndiff spec: bad ret kind {kind}");
+    let vs: Vec<u64> = list.split('/').map(num64).collect();
+    assert!(
+        vs.iter().all(|&v| v <= u64::from(mask)),
+        "fndiff spec: ret kind {kind}: value wider than {w}"
+    );
+    if crate::mix(crate::mix(val, PICK_ANY_SALT), 0x5EED).is_multiple_of(PICK_ANY_FULL) {
+        return val & mask;
+    }
+    vs[crate::mix(val, 0xC0DE) as usize % vs.len()] as u32
+}
+
+/// `int(x, 0)` for a list value that may not fit 32 bits (`pick+W:` rejects it instead of wrapping).
+fn num64(s: &str) -> u64 {
+    let s = s.trim();
+    let r = if let Some(h) = s.strip_prefix("0x").or_else(|| s.strip_prefix("0X")) {
+        u64::from_str_radix(h, 16)
+    } else {
+        s.parse()
+    };
+    r.unwrap_or_else(|_| panic!("fndiff spec: bad number {s}"))
 }
 
 #[derive(Clone, Debug)]

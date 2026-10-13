@@ -684,3 +684,29 @@ as in scrcmd_fld / scrcmd_talk); `0200e878` (thunk to MI_CpuFill8(r, 0, 0x10)) `
 `021cfac0` arguments weighted to one position record with y at the window edges (600 inputs), `02009634` answers 0x100 / 0x10002.
 Area hashes: scrcmd_shop 513b651813a0af83, scrcmd_proc_fld 471c1336a0563859, scrcmd_encount 30b6ab1705963b24, scrcmd_c03center
 8157cfade5f75a06, scrcmd_pokemon_fld 8c205c16ea477657, scrcmd_misc21 6b64908e0fc06b7a; `--strict-callees` and `--order-check` clean.
+## Z23 additions (harness: weighted `pick+W:` results, V-0024 / V-0025)
+
+New syntax: stub result kind **`pick+W:V1/V2/..`**, `W` = `u8` | `u16` | `u32` | `i32` (the width the callee really returns). Mirrored in
+`svflow.py` (`ret_value` / `pick_any`) and `black-fndiff` (`spec.rs` `ret_value` / `pick_any`); parity vectors in `stub.rs`
+(`pick_any_weights_the_list_and_keeps_the_width`), `tools/rom-diff/test_svflow.py` (`PickAny`) and `svflow.py --selftest`
+(`pick_any_selftest`).
+
+* On the usual mix value `val`: when `mix(mix(val, 0xA11), 0x5EED) % 4 == 0` the answer is the plain `W` kind (`val & 0xFF` /
+  `0xFFFF` / `val`), otherwise `V[mix(val, 0xC0DE) % count]`, which is exactly the `pick:V1/V2/..` answer for the same `val`. So 3 of 4
+  answers stay on the listed values (the compared constants that give the mutation strength), 1 of 4 is any `W` value and the whole width
+  stays reachable. Every `V` must fit `W` (else both parsers reject the kind); an unknown `W` is an error. It works inside `nth:`
+  (`nth:pick+u32:0/1/2/3/4;u32`). It is a stub result kind; it means nothing as a function's own `ret=`.
+* The selector is mixed twice on purpose: `mix(val, a) ^ mix(val, b)` is the same constant for every `val`, so with a single
+  `mix(val, 0xA11)` the selector would fix the low bits of `mix(val, 0xC0DE)` and a 4-value list would never draw one of its values
+  (checked: `test_svflow.py PickAny`). The same XOR relation holds between `nullable:Z:` (`mix(val, 0x1234)`) and an inner `pick:` /
+  `ptr:` (`mix(val, 0xC0DE)`): with a power-of-two `Z` and slot count the non-null answers skip some slots. Found by Z23, not changed
+  (a fix changes hashes): `nullable:2:ptr:arg1:0x10:16` / `nullable:2:ptr:arg3:0x10:16` (adapter.spec, 8 of 16 slots reachable) and
+  `nullable:4:ptr:arg1:0x300:0x10` (scrcmd_fld.spec, 12 of 16); `nullable:Z:u32` / `ptr:..:1` and odd `Z` are unaffected.
+* Rule for specs: a closed `pick:` is for a callee whose every possible answer is in the list (a bounded getter). A callee that can
+  return more gets `pick+W:` with its real width. ai1.spec (V-0025): Z21's closed sets on full-width callees are `pick+W:` now, except
+  021d5bdc (0/1 only), 021d5478 (<= 4 moves), 021b8c38 (2 * rank + side = 0..5), and script operands the script itself bounds (02188b1c /
+  02188b64 list offset, 021895c4 table index, 02189fc0 jump-table bound and offset): outside values read past the 0x600-byte script
+  buffer, garbage on the ROM side and an unmapped access in the Rust `Mem`, so they are not a comparison.
+* V-0024 class (a callee that answers 0 on a real path, stubbed with a list without 0, so the caller's 0 branch never runs):
+  scrcmd_obj 021b1e80's 021627c8 is `pick:0/1/2/3`; client3 021e8b80 / 021e8afc / 021d62d8 and core3 021e8b80 (sick-condition field
+  extractors that return 0 for the other condition kinds) list 0 too.

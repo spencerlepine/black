@@ -441,7 +441,7 @@ fn 021c001c ret=u32 inputs=1500
   stub 021d5bb0 ret=pick:0/0/0/0/1 args=v,v
   stub 021d62c4 ret=pick:0/0/1 args=v,v
   stub 021d6314 ret=u32 args=v,v
-  stub 021e8b80 ret=pick:1/2/3/4/5/0xa5 args=v
+  stub 021e8b80 ret=pick:0/1/2/3/4/5/0xa5 args=v   # Z23 (V-0024 class): 021e8b80 answers 0 for kinds 0/5/6/7
   stub 0201beb8 ret=pick:0/0/0/1 args=v,v
   stub 021ef948 ret=pick:0/1/1 args=v
   stub 021d67b8 ret=pick:0xa5/1/2/3/4 args=v

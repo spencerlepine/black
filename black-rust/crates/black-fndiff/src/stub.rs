@@ -492,6 +492,76 @@ mod tests {
         }
     }
 
+    /// `pick+W:V1/V2/..` (Z23): 1 in 4 answers is the full width W, the others are the `pick:` answer for the same
+    /// value. Vectors computed with svflow.py `ret_value` / `make_stub` (the same as `PickAny` in
+    /// tools/rom-diff/test_svflow.py and `svflow.py --selftest`).
+    #[test]
+    fn pick_any_weights_the_list_and_keeps_the_width() {
+        let kinds = [
+            "pick+u8:0/1/2/3/4/5",
+            "pick+u16:0/1/2/3/0xB6",
+            "pick+i32:0xFFFFFFFF/0/1/2/3",
+            "pick+u32:7",
+        ];
+        for (val, want) in [
+            (0x12340, [0x0, 0x2, 0x1, 0x7]),
+            (0x12343, [0x43, 0x2343, 0x12343, 0x12343]),
+            (0x12345, [0x1, 0x3, 0x2, 0x7]),
+            (0x1234a, [0x1, 0x0, 0xFFFF_FFFF, 0x7]),
+            (0x1234f, [0x4f, 0x234f, 0x1234f, 0x1234f]),
+            (0xDEAD_BEEF, [0x1, 0x1, 0x0, 0x7]),
+            (0, [0, 0, 0, 0]),
+        ] {
+            let got: Vec<u32> = kinds.iter().map(|k| ret_value(k, val).unwrap()).collect();
+            assert_eq!(got, want, "val {val:#x}");
+        }
+        // the list branch is exactly `pick:`, the full branch reaches every u8
+        let mut seen = [false; 256];
+        let mut r = crate::Rng::new(7);
+        for _ in 0..20000 {
+            let v = r.next();
+            let a = ret_value("pick+u8:0/1/2/3/4/5", v).unwrap();
+            if a > 5 || ret_value("pick:0/1/2/3/4/5", v) != Some(a) {
+                assert_eq!(a, v & 0xFF);
+            }
+            seen[a as usize] = true;
+        }
+        assert!(seen.iter().all(|&s| s));
+        // inside `nth:` and through a stub (salt 0x1234, one `v` argument)
+        let mut e = StubEnv::new(
+            vec![spec(
+                "nth:pick+u32:0/1/2/3/4;pick+u16:0/1/0xB6",
+                &["v"],
+                true,
+            )],
+            0x1234,
+        );
+        let got: Vec<u32> = (0..8)
+            .map(|_| e.call(0x021B_B798, &mut [Arg::V(0xABCD)]))
+            .collect();
+        assert_eq!(got, [0x1, 0xb6, 0x12c9, 0x86c6, 0x1, 0xdb2f, 0xb6, 0xb48]);
+        let mut e = StubEnv::new(vec![spec("pick+u8:0/1/2/3/4/5", &["v"], false)], 0x1234);
+        let got: Vec<u32> = (0..16)
+            .map(|x| e.call(0x021B_B798, &mut [Arg::V(x)]))
+            .collect();
+        assert_eq!(
+            got,
+            [3, 0xd9, 5, 3, 4, 0x2c, 3, 2, 1, 0, 5, 1, 3, 0x18, 5, 3]
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "wider than u8")]
+    fn pick_any_rejects_a_value_wider_than_the_width() {
+        ret_value("pick+u8:0x100", 1);
+    }
+
+    #[test]
+    #[should_panic(expected = "bad ret kind")]
+    fn pick_any_rejects_an_unknown_width() {
+        ret_value("pick+s8:1", 1);
+    }
+
     /// `ticks:STEP` (Z21): call n answers n * STEP as a 64-bit value, whatever the arguments (svflow.py `ticks_ret`).
     #[test]
     fn ticks_advance_by_step() {

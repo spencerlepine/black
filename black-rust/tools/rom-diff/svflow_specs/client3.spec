@@ -61,7 +61,7 @@ fn 021cfdcc ret=u32
   arg u32 any
   stub 021d62c4 ret=pick:0/1 args=v,v
   stub 021d6314 ret=u32 args=v,v
-  stub 021e8afc ret=pick:1/2/3 args=v
+  stub 021e8afc ret=pick:0/1/2/3 args=v   # Z23 (V-0024 class): 021e8afc answers 0 unless kind 2/4
   stub 021d631c ret=pick:0/1/2 args=v,v
 
 # list the party slots that 021d5b7c accepts, starting at 021d7f2c(battle type, c[0x11C]); out[k++] = slot (out may be null); returns k
@@ -130,7 +130,7 @@ fn 021cf5b0 ret=u32 inputs=600
   stub 021cf89c ret=pick:0/1 args=p,v
   stub 021d62c4 ret=pick:0/0/1 args=v,v
   stub 021d6314 ret=u32 args=v,v
-  stub 021e8b80 ret=pick:1/2/3/4 args=v
+  stub 021e8b80 ret=pick:0/1/2/3/4 args=v   # Z23 (V-0024 class): 021e8b80 answers 0 for kinds 0/5/6/7
   stub 021d5750 ret=pick:0/1 args=v,v
   stub 021eaf18 ret=none args=p,v,v
   stub 021d5b40 ret=u32 args=v
@@ -138,7 +138,7 @@ fn 021cf5b0 ret=u32 inputs=600
   stub 021d5440 ret=u32 args=v
   stub 0201c314 ret=pick:0/1 args=v
   stub 021d67b8 ret=pick:1/2/3/4 args=v
-  stub 021d62d8 ret=pick:1/2/3/4/0xA5 args=v,v
+  stub 021d62d8 ret=pick:0/1/2/3/4/0xA5 args=v,v   # Z23 (V-0024 class): 021d62d8 answers 0 unless kind 2/3/4
   stub 0201beb8 ret=pick:0/1 args=v,v
   stub 021efce4 ret=pick:0/1 args=v,v
   stub 021efc1c ret=pick:0/1 args=v,v,v,v
@@ -163,10 +163,10 @@ fn 021cf81c ret=u32
   stub 021d59b4 ret=pick:0/0x67/5 args=v,v
   stub 021d5b40 ret=u32 args=v
   stub 021d62c4 ret=pick:0/0/1 args=v,v
-  stub 021d62d8 ret=pick:1/2/3/4/0xA5 args=v,v
+  stub 021d62d8 ret=pick:0/1/2/3/4/0xA5 args=v,v   # Z23 (V-0024 class): 021d62d8 answers 0 unless kind 2/3/4
   stub 021d6314 ret=u32 args=v,v
   stub 021d67b8 ret=pick:1/2/3/4 args=v
-  stub 021e8b80 ret=pick:1/2/3/4 args=v
+  stub 021e8b80 ret=pick:0/1/2/3/4 args=v   # Z23 (V-0024 class): 021e8b80 answers 0 for kinds 0/5/6/7
   stub 021eaf18 ret=none args=p,v,v
   stub 021eaf50 ret=none args=p,v
   stub 021efc1c ret=pick:0/1 args=v,v,v,v
@@ -317,15 +317,15 @@ fn 021cfbf0 ret=u32 inputs=600
   stub 021d5b7c ret=pick:0/1 args=v
   stub 021d5c44 ret=pick:0/0x31FFF/0x32000/0x40000 args=v
   stub 021d62c4 ret=pick:0/1 args=v,v
-  stub 021d62d8 ret=pick:1/2/3/4/0xA5 args=v,v
+  stub 021d62d8 ret=pick:0/1/2/3/4/0xA5 args=v,v   # Z23 (V-0024 class): 021d62d8 answers 0 unless kind 2/3/4
   stub 021d6314 ret=u32 args=v,v
   stub 021d631c ret=pick:0/1/2 args=v,v
   stub 021d67b8 ret=pick:1/2/3/4 args=v
   stub 021d6940 ret=pick:0/1/1/1 args=v,v,v,outm:8:0xFF/0xFF/0xFF/0xFF/0xF/0/0xFF/0xFF
   stub 021d799c ret=pick:0/1/2/3/4/5 args=v,v
   stub 021d7f2c ret=pick:0/1/2 args=v,v
-  stub 021e8afc ret=pick:1/2/3 args=v
-  stub 021e8b80 ret=pick:1/2/3/4 args=v
+  stub 021e8afc ret=pick:0/1/2/3 args=v   # Z23 (V-0024 class): 021e8afc answers 0 unless kind 2/4
+  stub 021e8b80 ret=pick:0/1/2/3/4 args=v   # Z23 (V-0024 class): 021e8b80 answers 0 for kinds 0/5/6/7
   stub 021eaf18 ret=none args=p,v,v
   stub 021eaf50 ret=none args=p,v
   stub 021efc1c ret=pick:0/1 args=v,v,v,v
@@ -367,12 +367,12 @@ fn 021cfe08 ret=u32
   stub 021d5b40 ret=u32 args=v
   stub 021d5b68 ret=pick:0/0/1 args=v
   stub 021d62c4 ret=pick:0/0/1 args=v,v
-  stub 021d62d8 ret=pick:1/2/3/4/0xA5 args=v,v
+  stub 021d62d8 ret=pick:0/1/2/3/4/0xA5 args=v,v   # Z23 (V-0024 class): 021d62d8 answers 0 unless kind 2/3/4
   stub 021d6314 ret=u32 args=v,v
   stub 021d67b8 ret=pick:1/2/3/4 args=v
   stub 021d799c ret=pick:0/1/2/3/4/5 args=v,v
   stub 021d7f2c ret=pick:0/1/2 args=v,v
-  stub 021e8b80 ret=pick:1/2/3/4 args=v
+  stub 021e8b80 ret=pick:0/1/2/3/4 args=v   # Z23 (V-0024 class): 021e8b80 answers 0 for kinds 0/5/6/7
   stub 021eaf18 ret=none args=p,v,v
   stub 021eaf50 ret=none args=p,v
   stub 021efc1c ret=pick:0/1 args=v,v,v,v
@@ -407,11 +407,11 @@ fn 021cfe98 ret=u32
   stub 021d5b40 ret=u32 args=v
   stub 021d5b68 ret=pick:0/0/1 args=v
   stub 021d62c4 ret=pick:0/0/1 args=v,v
-  stub 021d62d8 ret=pick:1/2/3/4/0xA5 args=v,v
+  stub 021d62d8 ret=pick:0/1/2/3/4/0xA5 args=v,v   # Z23 (V-0024 class): 021d62d8 answers 0 unless kind 2/3/4
   stub 021d6314 ret=u32 args=v,v
   stub 021d67b8 ret=pick:1/2/3/4 args=v
   stub 021d7f2c ret=pick:0/1/2 args=v,v
-  stub 021e8b80 ret=pick:1/2/3/4 args=v
+  stub 021e8b80 ret=pick:0/1/2/3/4 args=v   # Z23 (V-0024 class): 021e8b80 answers 0 for kinds 0/5/6/7
   stub 021eaf18 ret=none args=p,v,v
   stub 021eaf50 ret=none args=p,v
   stub 021efc1c ret=pick:0/1 args=v,v,v,v
@@ -447,7 +447,7 @@ fn 021cffac ret=u32
   stub 021d59b4 ret=pick:0/0x67/5 args=v,v
   stub 021d5b40 ret=u32 args=v
   stub 021d5b68 ret=pick:0/0/1 args=v
-  stub 021d62d8 ret=pick:1/2/3/4/0xA5 args=v,v
+  stub 021d62d8 ret=pick:0/1/2/3/4/0xA5 args=v,v   # Z23 (V-0024 class): 021d62d8 answers 0 unless kind 2/3/4
   stub 021d67b8 ret=pick:1/2/3/4 args=v
   stub 021d7f2c ret=pick:0/1/2 args=v,v
   stub 021eaf18 ret=none args=p,v,v
@@ -485,12 +485,12 @@ fn 021d0100 ret=u32 inputs=600
   stub 021d5b40 ret=u32 args=v
   stub 021d5b68 ret=pick:0/0/1 args=v
   stub 021d62c4 ret=pick:0/0/1 args=v,v
-  stub 021d62d8 ret=pick:1/2/3/4/0xA5 args=v,v
+  stub 021d62d8 ret=pick:0/1/2/3/4/0xA5 args=v,v   # Z23 (V-0024 class): 021d62d8 answers 0 unless kind 2/3/4
   stub 021d6314 ret=u32 args=v,v
   stub 021d67b8 ret=pick:1/2/3/4 args=v
   stub 021d799c ret=pick:0/1/2/3/4/5 args=v,v
   stub 021d7f2c ret=pick:0/1/2 args=v,v
-  stub 021e8b80 ret=pick:1/2/3/4 args=v
+  stub 021e8b80 ret=pick:0/1/2/3/4 args=v   # Z23 (V-0024 class): 021e8b80 answers 0 for kinds 0/5/6/7
   stub 021eaf18 ret=none args=p,v,v
   stub 021eaf50 ret=none args=p,v
   stub 021efc1c ret=pick:0/1 args=v,v,v,v
@@ -548,10 +548,10 @@ fn 021d0304 ret=u32 inputs=600
   stub 021d5b40 ret=u32 args=v
   stub 021d5b68 ret=pick:0/0/1 args=v
   stub 021d62c4 ret=pick:0/0/1 args=v,v
-  stub 021d62d8 ret=pick:1/2/3/4/0xA5 args=v,v
+  stub 021d62d8 ret=pick:0/1/2/3/4/0xA5 args=v,v   # Z23 (V-0024 class): 021d62d8 answers 0 unless kind 2/3/4
   stub 021d6314 ret=u32 args=v,v
   stub 021d67b8 ret=pick:1/2/3/4 args=v
-  stub 021e8b80 ret=pick:1/2/3/4 args=v
+  stub 021e8b80 ret=pick:0/1/2/3/4 args=v   # Z23 (V-0024 class): 021e8b80 answers 0 for kinds 0/5/6/7
   stub 021eaf18 ret=none args=p,v,v
   stub 021eaf50 ret=none args=p,v
   stub 021efc1c ret=pick:0/1 args=v,v,v,v
@@ -598,11 +598,11 @@ fn 021d055c ret=u32
   stub 021d5b40 ret=u32 args=v
   stub 021d5b68 ret=pick:0/0/1 args=v
   stub 021d62c4 ret=pick:0/0/1 args=v,v
-  stub 021d62d8 ret=pick:1/2/3/4/0xA5 args=v,v
+  stub 021d62d8 ret=pick:0/1/2/3/4/0xA5 args=v,v   # Z23 (V-0024 class): 021d62d8 answers 0 unless kind 2/3/4
   stub 021d6314 ret=u32 args=v,v
   stub 021d67b8 ret=pick:1/2/3/4 args=v
   stub 021d799c ret=pick:0/1/2/3/4/5 args=v,v
-  stub 021e8b80 ret=pick:1/2/3/4 args=v
+  stub 021e8b80 ret=pick:0/1/2/3/4 args=v   # Z23 (V-0024 class): 021e8b80 answers 0 for kinds 0/5/6/7
   stub 021eaf18 ret=none args=p,v,v
   stub 021eaf50 ret=none args=p,v
   stub 021efc1c ret=pick:0/1 args=v,v,v,v
@@ -647,10 +647,10 @@ fn 021d0644 ret=u32
   stub 021d59b4 ret=pick:0/0x67/5 args=v,v
   stub 021d5b40 ret=u32 args=v
   stub 021d62c4 ret=pick:0/0/1 args=v,v
-  stub 021d62d8 ret=pick:1/2/3/4/0xA5 args=v,v
+  stub 021d62d8 ret=pick:0/1/2/3/4/0xA5 args=v,v   # Z23 (V-0024 class): 021d62d8 answers 0 unless kind 2/3/4
   stub 021d6314 ret=u32 args=v,v
   stub 021d67b8 ret=pick:1/2/3/4 args=v
-  stub 021e8b80 ret=pick:1/2/3/4 args=v
+  stub 021e8b80 ret=pick:0/1/2/3/4 args=v   # Z23 (V-0024 class): 021e8b80 answers 0 for kinds 0/5/6/7
   stub 021eaf18 ret=none args=p,v,v
   stub 021eaf50 ret=none args=p,v
   stub 021efc1c ret=pick:0/1 args=v,v,v,v
@@ -749,14 +749,14 @@ fn 021d0770 ret=u32 inputs=600
   stub 021d5b40 ret=pick:0x127/0/5 args=v
   stub 021d5b7c ret=pick:0/1 args=v
   stub 021d5c44 ret=pick:0/0x31FFF/0x32000/0x40000 args=v
-  stub 021d62d8 ret=pick:1/2/3/4/0xA5 args=v,v
+  stub 021d62d8 ret=pick:0/1/2/3/4/0xA5 args=v,v   # Z23 (V-0024 class): 021d62d8 answers 0 unless kind 2/3/4
   stub 021d631c ret=pick:0/1/2 args=v,v
   stub 021d67b8 ret=pick:1/2/3/4 args=v
   stub 021d6940 ret=pick:0/1/1/1 args=v,v,v,outm:8:0xFF/0xFF/0xFF/0xFF/0xF/0/0xFF/0xFF
   stub 021d6c24 ret=pick:0/1 args=v
   stub 021d799c ret=pick:0/1/2/3/4/5 args=v,v
   stub 021d7f2c ret=pick:0/1/2 args=v,v
-  stub 021e8afc ret=pick:1/2/3 args=v
+  stub 021e8afc ret=pick:0/1/2/3 args=v   # Z23 (V-0024 class): 021e8afc answers 0 unless kind 2/4
   stub 021eaf18 ret=none args=p,v,v
   stub 021eaf50 ret=none args=p,v
   stub 021efc1c ret=pick:0/1 args=v,v,v,v

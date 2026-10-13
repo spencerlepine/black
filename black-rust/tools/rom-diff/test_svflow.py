@@ -140,6 +140,34 @@ class InFeedsTheAnswer(unittest.TestCase):
         self.assertEqual(ctx.log, [0x021BB798, 7, 0xAAAAAA])
 
 
+class PickAny(unittest.TestCase):
+    """Z23: `pick+W:V1/V2/..` = `pick:` on 3 of 4 answers, the full width W on the 4th. Same vectors as
+    `pick_any_weights_the_list_and_keeps_the_width` in crates/black-fndiff/src/stub.rs (and `svflow.py --selftest`)."""
+
+    def test_vectors(self):
+        self.assertEqual(S.pick_any_selftest(), [])
+
+    def test_list_branch_is_pick_and_full_branch_reaches_the_width(self):
+        from emu import Rng
+        r = Rng(7)
+        seen = set()
+        for _ in range(20000):
+            v = r.next()
+            a = S.ret_value("pick+u8:0/1/2/3/4/5", v)
+            if a > 5 or a != S.ret_value("pick:0/1/2/3/4/5", v):
+                self.assertEqual(a, v & 0xFF)
+            seen.add(a)
+        self.assertEqual(len(seen), 256)
+        # every list value is drawn (the selector must not decide the list index: 4-value list)
+        drawn = {S.ret_value("pick+u16:0/1/2/0xB6", r.next()) for _ in range(2000)}
+        self.assertTrue({0, 1, 2, 0xB6} <= drawn)
+
+    def test_rejects_bad_kinds(self):
+        for bad in ("pick+u8:0x100", "pick+s8:1", "pick+u16:", "pick+u16:-1", "pick+u8"):
+            with self.assertRaises(ValueError):
+                S.ret_value(bad, 1)
+
+
 class PortedPerSet(unittest.TestCase):
     """Z20: the black-battle modules' PORTED lists deactivate stubs only in battle-set areas."""
 

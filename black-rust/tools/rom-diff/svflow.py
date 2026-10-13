@@ -10,6 +10,7 @@ tools/rom-diff/svflow_specs/README.md.
   svflow.py AREA --order-check    (Z19) exit 1 if an input's hash changes when the inputs run in reverse order
                                   after junk in r0-r12 / flags / the stack window (combine with --all / --fn)
   svflow.py --selftest            (Z19) reset probes (r3, r4, r12, stack, flags) + order check of server1 021b6848
+                                  + (Z23) `pick+W:` parity vectors
 
 Generic mode (any crate; tools/check-fn.sh passes these):
   --spec FILE         spec file (default svflow_specs/AREA.spec)
@@ -405,6 +406,8 @@ def ret_value(kind, val):
     if kind.startswith("pick:"):  # B10-specs: one of V1/V2/... chosen by mix(val, 0xC0DE) % count
         vs = [int(x, 0) for x in kind[5:].split("/")]
         return vs[mix(val, 0xC0DE) % len(vs)] & M
+    if kind.startswith("pick+"):
+        return pick_any(kind, val)
     if kind.startswith("ptr:work:"):  # B10-specs: stub result = address inside the work image, ptr:work:OFS:N
         ofs, n = kind[9:].split(":")
         return (WORK + int(ofs, 0) + 4 * (mix(val, 0xC0DE) % int(n, 0))) & M
@@ -416,6 +419,51 @@ def ret_value(kind, val):
     if kind.startswith("ofs:arg"):  # pointer into pointer argument K: compared as an offset, 0 stays 0
         return val if val == 0 else (val - Runner.buf_addr(int(kind[7:]))) & M
     raise ValueError("ret kind " + kind)
+
+
+PICK_ANY_WIDTH = {"u8": 0xFF, "u16": 0xFFFF, "u32": M, "i32": M}
+PICK_ANY_SALT = 0xA11  # selector salt of `pick+W:` (independent of the 0xC0DE list index)
+PICK_ANY_FULL = 4  # 1 in PICK_ANY_FULL answers is full-width
+
+
+def pick_any(kind, val):
+    """Z23: `pick+W:V1/V2/..` (W = u8 | u16 | u32 | i32) = a weighted `pick:` that keeps the whole width W reachable:
+    when mix(mix(val, 0xA11), 0x5EED) % 4 == 0 the answer is the plain W kind (val & mask of W), otherwise it is
+    V[mix(val, 0xC0DE) % count] (the very value `pick:V1/V2/..` gives for the same val). Every V must fit W.
+    The selector is mixed twice: mix(val, a) ^ mix(val, b) is a constant, so a single mix would make the selector
+    decide the low bits of the list index (a 4-value list would never draw one of its values)."""
+    w, _, lst = kind[5:].partition(":")
+    if w not in PICK_ANY_WIDTH or not lst:
+        raise ValueError("ret kind " + kind)
+    vs = [int(x, 0) for x in lst.split("/")]
+    if any(v < 0 or v > PICK_ANY_WIDTH[w] for v in vs):
+        raise ValueError("ret kind %s: value wider than %s" % (kind, w))
+    if mix(mix(val, PICK_ANY_SALT), 0x5EED) % PICK_ANY_FULL == 0:
+        return val & PICK_ANY_WIDTH[w]
+    return vs[mix(val, 0xC0DE) % len(vs)]
+
+
+def pick_any_selftest():
+    """Z23 parity vectors of `pick+W:` (the same numbers as `pick_any_weights_the_list_and_keeps_the_width` in
+    crates/black-fndiff/src/stub.rs); returns the list of mismatches."""
+    bad = []
+    kinds = ("pick+u8:0/1/2/3/4/5", "pick+u16:0/1/2/3/0xB6", "pick+i32:0xFFFFFFFF/0/1/2/3", "pick+u32:7")
+    for val, want in ((0x12340, [0x0, 0x2, 0x1, 0x7]), (0x12343, [0x43, 0x2343, 0x12343, 0x12343]),
+                      (0x12345, [0x1, 0x3, 0x2, 0x7]), (0x1234A, [0x1, 0x0, 0xFFFFFFFF, 0x7]),
+                      (0x1234F, [0x4F, 0x234F, 0x1234F, 0x1234F]), (0xDEADBEEF, [0x1, 0x1, 0x0, 0x7]), (0, [0, 0, 0, 0])):
+        got = [ret_value(k, val) for k in kinds]
+        if got != want:
+            bad.append("pick+ %#x: %s != %s" % (val, got, want))
+    for kind, seq, argv, want in (
+            ("nth:pick+u32:0/1/2/3/4;pick+u16:0/1/0xB6", True, [0xABCD] * 8, [0x1, 0xB6, 0x12C9, 0x86C6, 0x1, 0xDB2F, 0xB6, 0xB48]),
+            ("pick+u8:0/1/2/3/4/5", False, list(range(16)), [3, 0xD9, 5, 3, 4, 0x2C, 3, 2, 1, 0, 5, 1, 3, 0x18, 5, 3])):
+        ctx = Ctx()
+        ctx.salt = 0x1234
+        f = make_stub(Stub(0x021BB798, kind, ["v"], False, seq), ctx)
+        got = [f(None, x, 0, 0, 0, 0) for x in argv]
+        if got != want:
+            bad.append("%s: %s != %s" % (kind, [hex(x) for x in got], [hex(x) for x in want]))
+    return bad
 
 
 class Ctx:
@@ -955,6 +1003,7 @@ def selftest():
     e.wbytes(a, struct.pack("<HHHH", 0x18C0, 0x9900, 0x1840, 0x4770))  # adds r0,r0,r3; ldr r1,[sp]; adds r0,r0,r1; bx lr
     if e.call(a, 5, 0, 0, 7, stack_args=(9,))[0] != 21:
         fails.append("arguments r0/r3/stack word 0 not passed")
+    fails += pick_any_selftest()  # Z23: `pick+W:` parity vectors (mirrored in black-fndiff stub.rs)
     checks = [("server1", 0x021B6848)] + [("selftest", f.addr) for f in load_spec("selftest")]
     for area, addr in checks:
         spec = {f.addr: f for f in load_spec(area)}
@@ -966,7 +1015,7 @@ def selftest():
     if fails:
         print("selftest FAILED:\n  " + "\n  ".join(fails))
         return 1
-    print("selftest ok (%d reset probes, %d order checks)" % (len(probes) + 1, len(checks)))
+    print("selftest ok (%d reset probes, pick+ parity vectors, %d order checks)" % (len(probes) + 1, len(checks)))
     return 0
 
 
