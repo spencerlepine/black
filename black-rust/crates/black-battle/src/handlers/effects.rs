@@ -43,8 +43,9 @@
 //!   later adds while `layers < max layers` (third registry field) only raise `layers`; else it
 //!   returns 0; the remover `06898d10(side, key)` removes the factor and clears factor, layers
 //!   and the low 3 bits of `cont` (ported as [`SideEffects::add`] / [`SideEffects::remove`],
-//!   B7b2, verified by `handlers.py effect-sides`). `06898de0(factor, side)` reads the layer
-//!   count of the factor's key. The max
+//!   B7b2, verified by `handlers.py effect-sides`); `06898cf4(side, key)` tests the factor
+//!   word ([`SideEffects::has_factor`], B10-wire2, `handlers.py effect-side-factor`).
+//!   `06898de0(factor, side)` reads the layer count of the factor's key. The max
 //!   layers are 1 except key 6 (3) and key 7 (2). Keys (from the move handlers that push HANDEX
 //!   0x19 with that key in `+4`): 0 Reflect (115), 1 Light Screen (113), 2 Safeguard (219),
 //!   3 Mist (54), 4 Tailwind (366), 5 Lucky Chant (381), 6 Spikes (191), 7 Toxic Spikes (390),
@@ -670,14 +671,30 @@ impl SideEffects {
     /// The entry the original addresses for `(side, key)` (`side * 0xE0 + key * 0x10`, 32-bit
     /// wrapping). Panics where that lies outside the array (the original reads / writes past
     /// it, into whatever follows the overlay-95 BSS); `who` names the caller.
-    fn entry_mut(&mut self, side: u32, key: u32, who: &str) -> &mut SideEffectEntry {
+    fn entry_index(side: u32, key: u32, who: &str) -> usize {
         let off = side.wrapping_mul(0xE0).wrapping_add(key << 4);
         let i = (off >> 4) as usize;
         assert!(
             i < SIDE_ENTRIES,
             "{who}: side {side} key {key} is outside the layer array (the original accesses memory past it)"
         );
-        &mut self.entries[i]
+        i
+    }
+
+    fn entry_mut(&mut self, side: u32, key: u32, who: &str) -> &mut SideEffectEntry {
+        &mut self.entries[Self::entry_index(side, key, who)]
+    }
+
+    /// C: `sub_06898cf4`: `(side, key)`, overlay 95: the factor word of entry `(side, key)` is
+    /// nonzero (side effect `key` is active on `side`). Verified by `handlers.py
+    /// effect-side-factor` (B10-wire2).
+    ///
+    /// Deviation: panics when the entry lies outside the array (`side * 14 + key >= 28`), where
+    /// the original reads the word past it.
+    pub fn has_factor(&self, side: u32, key: u32) -> bool {
+        self.entries[Self::entry_index(side, key, "06898cf4")]
+            .factor
+            .is_some()
     }
 
     /// C: `sub_06898c10`: `(side, key, cont)`, overlay 95, reached through the thunks

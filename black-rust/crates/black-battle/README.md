@@ -98,17 +98,28 @@ Guard, 3 Pledge combos). The "type-2 adder at 0x06898328" is the Wish handler; t
 
 Handlers reach the server flow through the `flow::FlowHost` trait. The handler differential tests
 keep their stub host (`handlers::testkit::TestHost`, the same stubs as `tools/rom-diff/handlers.py`;
-that is how the handlers are verified, and it is unchanged). `FlowWorkHost<E: FlowEnv, U: Unported>`
-is the production implementation: it owns the `SvFlowWork` image (`work`, at address `waddr`), the
-overlay-95 side-effect layer array (`side_effects`) and calls the verified ports. Callees those ports
+that is how the handlers are verified, and it is unchanged). `FlowWorkHost<E: FlowEnv, U: Unported,
+W: WazaHooks>` is the production implementation: it owns the `SvFlowWork`
+image (`work`, at address `waddr`), the overlay-95 side-effect layer array (`side_effects`), the ARM9
+move-data state (`moves: MoveData<W>`: the move record cache of global 0x02146530, the static record
+0x02146534 and the record source `W`) and calls the verified ports. Callees those ports
 reach outside their own area go through `E` (the battle's call dispatcher), as in the ports' own
 differential tests. Methods with no port in this crate call the `Unported` hook trait `U` (one method
 each, plus `BppEnv`), so the gap stays visible; nothing is `unimplemented!`. Unit tests
 (`server_flow/host/tests.rs`) check each wired method against its port on random work images: same
 answer, same callee calls in order, same work bytes.
 
-87 trait methods: **42 mapped**, **6 adapted**, **38 unported**, 1 default body (`ability_uncopyable`
-= `ability != 0x19 && fun_0689c91c(ability)`).
+87 trait methods: **51 mapped**, **7 adapted**, **28 unported**, 1 default body (`ability_uncopyable`
+= `ability != 0x19 && fun_0689c91c(ability)`). B10-wire2 added the 9 move-data methods and
+`fun_06898cf4`.
+
+Move data (B10-wire2): this crate depends on `black-pokemon` (logic crate, no cycle) and calls the
+`black_pokemon::waza` ports (P4, `waza.spec` 31/31). The record source is the generic `W:
+black_pokemon::waza::WazaHooks` given to `FlowWorkHost::new` (no global): the getters call only its
+`load_move` (ARC 21 member = move id; the production source copies the extracted record, D4). The
+wrappers' callee `FUN_0201BD28` is not `W::move_param` but `waza::move_param` over the host's cache /
+static record (adapter `Getters`), as the original's wrappers tail-call it. There is no cache unless
+the integrator sets `moves.cache` (the original builds one only for the AI, `0201C328` from overlay 96).
 
 | FlowHost method | port |
 |---|---|
@@ -135,6 +146,10 @@ answer, same callee calls in order, same work bytes.
 | `fun_021b8c5c` | `server2::facing_pos` |
 | `positions_adjacent` | `server3::pos_list_contains` (021b9a6c; ROM table 0x021EFD70) |
 | `side_effect_layers` | `SideEffects` entry layers, low byte (06898de0's read, B7b) |
+| `fun_06898cf4` | `SideEffects::has_factor` (06898cf4: factor word != 0; `handlers.py effect-side-factor` **337dea218d0ba4d8**, mirrored by `effect_side_factor_match_rom`) |
+| `move_param` / `move_flag` / `move_fun_0201c020` | `waza::move_param` (0201BD28) / `record_flag` (0201BEB8) / `record_pp_ups_count` (0201C020) |
+| `move_category` / `move_effect_class` / `move_type` / `move_power` / `move_fun_0201c314` | `waza::param2` (0201C1E8) / `param1` (C1BC) / `param0_u8` (C1C8) / `param3_u16` (C1D8) / `param3_nonzero` (C314) |
+| adapter `move_fun_0201c0bc` | `waza::record_signed_if_set` (0201C0BC); returns the `out` word (handlers ignore the flag byte the function returns, V-0022) |
 | adapter `party_ids` / `partner_party_ids` | `api::party_of` / `partner_party_of`, then `021b9b94` / `021b9c00` / `021d5440` through `E` (the original returns the party pointer; handlers read it) |
 | adapter `fun_021c81c8` | `api::mon_by_id` + `api::mon_stat` (handlers pass the BattleMon pointer) |
 | adapter `fun_021c83dc` | `api::set_turn_rec_byte4` on the record `work[0x4A8]` points to; a pointer outside the work goes to `Unported::store_u8` |
@@ -145,12 +160,9 @@ answer, same callee calls in order, same work bytes.
 is the same lookup as the flow ports see it (`api::mon_by_id`, 7cf4). The integrating dispatcher `E`
 must map `021b9934(pokecon, id)` to the BattleMon of `Battle::mons[id]`.
 
-Unported (`Unported` trait): ARM9 move data `move_category`, `move_param`, `move_flag`, `move_power`,
-`move_effect_class`, `move_fun_0201c314`, `move_type`, `move_fun_0201c020`, `move_fun_0201c0bc` (ported
-in `black-pokemon::waza`, not a dependency of this crate); ARM9 item / Pokemon data `item_fun_020213c0`,
+Unported (`Unported` trait): ARM9 item / Pokemon data `item_fun_020213c0`,
 `item_param`, `fun_020189d0`; overlay 95 `ability_breakable`, `move_unredirectable`, `move_fun_0689c8dc`,
-`move_fun_0689c8cc`, `item_fun_0689c980`, `item_fun_0689c990`, `sick_list_entry`, `fun_06898cf4`,
-`fun_0689c8ac`, `fun_0689c8bc`, `fun_0689c91c`, `fun_0689ca1c`, `fun_0689ca3c`, `fun_0689ca5c`,
+`move_fun_0689c8cc`, `item_fun_0689c980`, `item_fun_0689c990`, `sick_list_entry`, `fun_0689c8ac`, `fun_0689c8bc`, `fun_0689c91c`, `fun_0689ca1c`, `fun_0689ca3c`, `fun_0689ca5c`,
 `fun_0689ca7c`, `fun_0689ca8c`, `fun_0689d064`, `fun_0689d098`, `fun_0689d0c8`, `fun_0689d174`,
 `fun_0689d184`; api tail calls into overlay 95 `fun_021c7d34`, `fun_021c7d44`, `fun_021c814c`,
 `fun_021c82c4`; and `msg_param` (the event's string buffer, not in the work).
@@ -158,7 +170,8 @@ in `black-pokemon::waza`, not a dependency of this crate); ARM9 item / Pokemon d
 Deviations: a failed HANDEX push (id 0; the original hands the handler a null pointer) gives a
 stand-in buffer for `handex(0)`, and `handex_pop(0)` panics (the original executes the null record
 and frees relative to address 0). `positions_adjacent(a, _)` panics for `a >= 6` (the original reads
-past the 6-record table). The handlers' `wk + 0x1FEC` scratch (`021c8120`) is a local buffer in the
+past the 6-record table); likewise `fun_06898cf4(side, kind)` for `side * 14 + kind >= 28` (the
+original reads past the layer array). The handlers' `wk + 0x1FEC` scratch (`021c8120`) is a local buffer in the
 handler ports, so the host does not leave the expanded IDs there.
 
 ## Deviations

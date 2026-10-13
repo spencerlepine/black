@@ -5,6 +5,7 @@ Usage: python -I handlers.py abilities
        python -I handlers.py moves [--list]
        python -I handlers.py effects [--list]   (B7h: overlay-95 field / position / side effect handlers)
        python -I handlers.py effect-sides [--coverage]   (B7b2: side-effect adder 06898c10 / remover 06898d10)
+       python -I handlers.py effect-side-factor   (B10-wire2: side-effect factor query 06898cf4)
 """
 import os
 import re
@@ -1255,6 +1256,55 @@ def effect_sides(cov=None):
     return h.hex()
 
 
+FX_SIDE_HAS = 0x06898CF4  # side-effect query (side, key) -> factor word of the entry != 0
+
+
+def effect_side_factor():
+    """B10-wire2: direct differential suite for the overlay-95 query `06898cf4(side, key)` (the
+    factor word of layer-array entry `(side, key)` is nonzero; `FlowHost::fun_06898cf4`); mirrors
+    `effect_side_factor_match_rom` in handlers/effects/tests.rs. The function runs as real ROM code;
+    there are no stubs (it calls nothing). Per seed: a random layer array as in `effect_sides`
+    (factor null or any pool slot, random cont / +8 word, layers 0..4 or 32-bit noise), then 32
+    queries with the `effect_sides` side / key distribution (side 0/1 in 7 of 8 else 2..20, key
+    0..13 in 7 of 8 else 14..100). Hashed per query: side, key, the result. Out of range: the entry
+    is `state + side * 0xE0 + key * 0x10`, unchecked; past the array the original reads the word
+    there and the Rust port panics. The ROM side detects the read with a memory hook over
+    [state + 0x1C0, 0x068A0000) and hashes `OOB` instead of the result. Any write to the overlay-95
+    region fails the suite (the query writes nothing)."""
+    e = Emu()
+    e.uc.mem_map(0x06898000, FX_SIDE_MAPPED_END - 0x06898000)
+    e.uc.mem_write(OVY95_BASE, load_ovy95())
+    from unicorn import UC_HOOK_MEM_READ, UC_HOOK_MEM_WRITE
+    acc = {"r": False, "w": False}
+    end = FX_SIDE_STATE + FX_SIDE_STATE_SIZE
+    e.uc.hook_add(UC_HOOK_MEM_READ, lambda uc, a, ad, sz, v, _: acc.__setitem__("r", True), None, end, FX_SIDE_MAPPED_END - 1)
+    e.uc.hook_add(UC_HOOK_MEM_WRITE, lambda uc, a, ad, sz, v, _: acc.__setitem__("w", True), None, 0x06898000, FX_SIDE_MAPPED_END - 1)
+    h = Fnv()
+    for seed in range(200):
+        r = Rng(0xCF4 + seed)
+        arr = bytearray(FX_SIDE_STATE_SIZE)
+        for i in range(28):
+            f = r.next()
+            fac = 0 if f % 3 == 0 else POOL + 0x3C * ((f >> 8) % 0x84)
+            cont, w8, lr = r.next(), r.next(), r.next()
+            layers = lr % 5 if lr % 8 else lr
+            struct.pack_into("<4I", arr, 0x10 * i, fac, cont, w8, layers)
+        e.wbytes(FX_SIDE_STATE, bytes(FX_SIDE_MAPPED_END - FX_SIDE_STATE))
+        e.wbytes(FX_SIDE_STATE, arr)
+        for _ in range(32):
+            s, k = r.next(), r.next()
+            side = s % 2 if s % 8 else 2 + s % 19
+            key = k % 14 if k % 8 else 14 + k % 87
+            h.w(side); h.w(key)
+            acc["r"] = acc["w"] = False
+            ret = e.call(FX_SIDE_HAS, side, key)[0]
+            assert not acc["w"], "06898cf4 wrote to overlay 95"
+            off = (side * 0xE0 + key * 0x10) & M
+            assert acc["r"] == (off >= FX_SIDE_STATE_SIZE)
+            h.w(OOB if acc["r"] else ret)
+    return h.hex()
+
+
 def effect_sides_coverage():
     """Instruction coverage of 06898c10 / 06898d10 under `effect_sides` (denominator: the Thumb
     instructions statically reachable from the entry, as in coverage.py)."""
@@ -1315,6 +1365,8 @@ if __name__ == "__main__":
             print("\n".join(effect_sides_coverage()))
         elif mod == "effect-sides":
             print(mod, effect_sides())
+        elif mod == "effect-side-factor":
+            print(mod, effect_side_factor())
         elif mod == "movestubs":
             print(mod, move_stub_check())
         elif mod == "items" and "--list" in args0:

@@ -148,3 +148,50 @@ fn effect_sides_match_rom() {
     }
     assert_eq!(h.hex(), "b426e443c888a200");
 }
+
+/// B10-wire2: the side-effect query `06898cf4` (`SideEffects::has_factor`, the production
+/// `FlowHost::fun_06898cf4`) against the original code (`tools/rom-diff/handlers.py
+/// effect-side-factor`, which documents the input distribution). No stubs: the ROM function calls
+/// nothing. A query whose entry lies outside the layer array (the original reads past it) must
+/// panic here; both sides hash `OOB`. Needs no ROM data on this side (the layer array is random).
+#[test]
+fn effect_side_factor_match_rom() {
+    use super::{SideEffectEntry, SideEffects};
+    use crate::event_factor::{FactorId, FACTOR_POOL};
+    use crate::testutil::{Fnv, Rng};
+    use std::panic::{catch_unwind, AssertUnwindSafe};
+    const OOB: u32 = 0xBAD;
+    let mut h = Fnv::new();
+    for seed in 0..200u32 {
+        let mut r = Rng::new(0xCF4 + seed);
+        let mut fx = SideEffects::default();
+        for e in fx.entries.iter_mut() {
+            let f = r.next();
+            let factor = if f.is_multiple_of(3) {
+                None
+            } else {
+                Some(((f >> 8) % FACTOR_POOL as u32) as FactorId)
+            };
+            let (cont, w8, lr) = (r.next(), r.next(), r.next());
+            let layers = if lr % 8 != 0 { lr % 5 } else { lr };
+            *e = SideEffectEntry {
+                factor,
+                cont,
+                w8,
+                layers,
+            };
+        }
+        let before = fx;
+        for _ in 0..32 {
+            let (s, k) = (r.next(), r.next());
+            let side = if s % 8 != 0 { s % 2 } else { 2 + s % 19 };
+            let key = if k % 8 != 0 { k % 14 } else { 14 + k % 87 };
+            h.w(side);
+            h.w(key);
+            let ret = catch_unwind(AssertUnwindSafe(|| fx.has_factor(side, key) as u32));
+            h.w(ret.unwrap_or(OOB));
+        }
+        assert_eq!(fx, before, "seed {seed}: the query changed the layer array");
+    }
+    assert_eq!(h.hex(), "337dea218d0ba4d8");
+}

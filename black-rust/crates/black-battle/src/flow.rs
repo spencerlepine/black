@@ -45,13 +45,15 @@ pub trait FlowHost: BppEnv {
     fn expand_poke_ids(&mut self, code: u32, out: &mut [u8]) -> u32;
     /// C: `FUN_overlay_d_93__021c8288` (-> `021c2ab0`): the current weather.
     fn weather(&mut self) -> u32;
-    /// C: `FUN_0201C1E8(move)`: the move's damage category (1 = physical, 2 = special). ARM9 move
-    /// data, like the other `FUN_0201xxxx` move methods: no port in this crate (ported in
-    /// `black-pokemon::waza`).
+    /// C: `FUN_0201C1E8(move)`: `FUN_0201BD28(move, 2)`, record byte 2, the move's damage
+    /// category (1 = physical, 2 = special). ARM9 move data, like the other `FUN_0201xxxx` move
+    /// methods: ported in `black_pokemon::waza` (`param2`; the move record is ARC 21 member `move`).
     fn move_category(&mut self, mv: u32) -> u32;
-    /// C: `FUN_0201BD28(move, param)`: move data parameter.
+    /// C: `FUN_0201BD28(move, param)`: parameter `param` (0..=31, else 0) of the move record
+    /// (`black_pokemon::waza::move_param` / `record_param`, which documents the parameters).
     fn move_param(&mut self, mv: u32, param: u32) -> u32;
-    /// C: `FUN_0201BEB8(move, flag)`: move data flag.
+    /// C: `FUN_0201BEB8(move, flag)`: bit `flag` of the record's flag word at +0x20 (low byte of
+    /// `flag`; 32..=255 give false; `black_pokemon::waza::record_flag`).
     fn move_flag(&mut self, mv: u32, flag: u32) -> bool;
     /// C: `FUN_overlay_d_93__021c82b8(wk, x)`: tail call to `021b911c`, which reads no argument
     /// and returns 0, so this is always false (`x` is unused; `roll_percent_or_forced` never
@@ -79,13 +81,17 @@ pub trait FlowHost: BppEnv {
     /// Pokemon the core2 iterator (`021bd2b4` / `021bd34c`) visits that are not on `poke_id`'s
     /// side (`021b9a24`; side = ID >= 12), written to `out`; returns how many.
     fn opponent_ids(&mut self, poke_id: u32, out: &mut [u8]) -> u32;
-    /// C: `FUN_0201C1D8(move)`: base power (`u8`).
+    /// C: `FUN_0201C1D8(move)`: `FUN_0201BD28(move, 3)` as a halfword, record byte 3, the base
+    /// power (`black_pokemon::waza::param3_u16`).
     fn move_power(&mut self, mv: u32) -> u32;
-    /// C: `FUN_0201C1BC(move)`: move effect class (9 = one-hit KO).
+    /// C: `FUN_0201C1BC(move)`: `FUN_0201BD28(move, 1)`, record byte 1, the move effect class
+    /// (9 = one-hit KO; `black_pokemon::waza::param1`).
     fn move_effect_class(&mut self, mv: u32) -> u32;
-    /// C: `FUN_0201C314(move)`.
+    /// C: `sub_0201C314(move)`: `FUN_0201BD28(move, 3) != 0`, the move has a base power
+    /// (`black_pokemon::waza::param3_nonzero`).
     fn move_fun_0201c314(&mut self, mv: u32) -> bool;
-    /// C: `FUN_0201C1C8(move)`: move type.
+    /// C: `FUN_0201C1C8(move)`: `FUN_0201BD28(move, 0)` as a byte, record byte 0, the move type
+    /// (`black_pokemon::waza::param0_u8`).
     fn move_type(&mut self, mv: u32) -> u32;
     /// C: `FUN_0689C9B0(ability)` via the ARM thunk at 0x021DB1C4: Mold Breaker ignores it.
     fn ability_breakable(&mut self, ability: u32) -> bool;
@@ -132,9 +138,12 @@ pub trait FlowHost: BppEnv {
     fn fun_021c8434(&mut self, poke_id: u32, attacker: u32);
     /// C: `FUN_020213c0(item)` (Unnerve and Harvest use it as the berry test).
     fn item_fun_020213c0(&mut self, item: u32) -> bool;
-    /// C: `FUN_0201C020(move)`: number of entries `FUN_0201C0BC` can return.
+    /// C: `FUN_0201C020(move)`: how many of record bytes 0x15..=0x17 are nonzero (the number of
+    /// entries `FUN_0201C0BC` reads; `black_pokemon::waza::record_pp_ups_count`).
     fn move_fun_0201c020(&mut self, mv: u32) -> u32;
-    /// C: `FUN_0201C0BC(move, index, &out)`: entry `index` (signed).
+    /// C: `FUN_0201C0BC(move, index, &out)`: `out` = signed record byte `0x18 + index` if byte
+    /// `0x15 + index` is nonzero, else 0 (`black_pokemon::waza::record_signed_if_set`). Returns
+    /// `out`; the function's own result (byte `0x15 + index`, V-0022) is not used by handlers.
     fn move_fun_0201c0bc(&mut self, mv: u32, index: u32) -> i32;
     /// C: `sub_021b8c5c(rule, pos)`: the opposing position facing `pos` under `rule` (rule 1:
     /// slot `((pos >> 1) & 0xFF) ^ 1`, rule 2: the mirrored slot, else slot 0 of the other side).
@@ -244,9 +253,9 @@ pub trait FlowHost: BppEnv {
     /// C: `FUN_overlay_d_93__021c2e4c(wk)` (handlers call the api thunk at 0x021C83CC):
     /// increments the counter `wk[0x778]` (1 after wrapping to 0) and returns it.
     fn fun_021c2e4c(&mut self) -> u32;
-    /// C: `sub_06898cf4(side, kind)`: whether the side has state `kind` (no port in this crate;
-    /// from the disassembly: the factor word of entry `(side, kind)` of the side-effect layer array
-    /// 0x0689E7E0, `handlers::effects::SideEffects`, is nonzero).
+    /// C: `sub_06898cf4(side, kind)`: side effect `kind` is active on `side`: the factor word of
+    /// entry `(side, kind)` of the side-effect layer array 0x0689E7E0 is nonzero
+    /// (`handlers::effects::SideEffects::has_factor`, `handlers.py effect-side-factor`).
     fn fun_06898cf4(&mut self, side: u32, kind: u32) -> bool;
     /// C: `sub_0689c8ac(move)`: tests `move` against a 6-entry move list.
     fn fun_0689c8ac(&mut self, mv: u32) -> bool;

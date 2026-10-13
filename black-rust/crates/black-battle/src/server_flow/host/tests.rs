@@ -2,11 +2,12 @@
 //! wired to returns, makes the same callee calls (addresses, scalar arguments, input bytes, in
 //! order) and leaves the same work image, on random work images. The ports themselves are verified
 //! against the original code by their own suites (`check-svflow.sh api` / `hem`, server2/3, core4,
-//! `handlers.py effect-sides`); these tests check the wiring (right port, argument order,
+//! `handlers.py effect-sides` / `effect-side-factor`, `check-fn.sh black-pokemon waza`); these tests check the wiring (right port, argument order,
 //! conversions, adapters).
 
 use super::*;
 use crate::battle_mon::tests::{mix, MockEnv};
+use crate::handlers::effects::SideEffectEntry;
 use crate::testutil::Rng;
 
 /// Address of the work image in the tests.
@@ -125,33 +126,6 @@ macro_rules! rec {
 }
 
 impl Unported for RecUnported {
-    fn move_category(&mut self, mv: u32) -> u32 {
-        rec!(self, "move_category", mv + 1)
-    }
-    fn move_param(&mut self, mv: u32, param: u32) -> u32 {
-        rec!(self, "move_param", mv ^ param)
-    }
-    fn move_flag(&mut self, _: u32, _: u32) -> bool {
-        rec!(self, "move_flag", true)
-    }
-    fn move_power(&mut self, mv: u32) -> u32 {
-        rec!(self, "move_power", mv + 2)
-    }
-    fn move_effect_class(&mut self, mv: u32) -> u32 {
-        rec!(self, "move_effect_class", mv + 3)
-    }
-    fn move_fun_0201c314(&mut self, _: u32) -> bool {
-        rec!(self, "move_fun_0201c314", true)
-    }
-    fn move_type(&mut self, mv: u32) -> u32 {
-        rec!(self, "move_type", mv + 4)
-    }
-    fn move_fun_0201c020(&mut self, mv: u32) -> u32 {
-        rec!(self, "move_fun_0201c020", mv + 5)
-    }
-    fn move_fun_0201c0bc(&mut self, _: u32, _: u32) -> i32 {
-        rec!(self, "move_fun_0201c0bc", -1)
-    }
     fn item_fun_020213c0(&mut self, _: u32) -> bool {
         rec!(self, "item_fun_020213c0", true)
     }
@@ -181,9 +155,6 @@ impl Unported for RecUnported {
     }
     fn sick_list_entry(&mut self, index: u32) -> u32 {
         rec!(self, "sick_list_entry", index + 6)
-    }
-    fn fun_06898cf4(&mut self, _: u32, _: u32) -> bool {
-        rec!(self, "fun_06898cf4", true)
     }
     fn fun_0689c8ac(&mut self, _: u32) -> bool {
         rec!(self, "fun_0689c8ac", true)
@@ -247,7 +218,58 @@ impl Unported for RecUnported {
     }
 }
 
-type Host = FlowWorkHost<RecEnv, RecUnported>;
+/// A move record source: logs every call, loads a record of bytes `mix(salt ^ move, i)`.
+#[derive(Clone, Default)]
+struct RecWaza {
+    log: Vec<u32>,
+    salt: u32,
+}
+
+impl RecWaza {
+    fn record(&self, mv: u32) -> [u8; RECORD_SIZE] {
+        let mut r = [0u8; RECORD_SIZE];
+        for (i, b) in r.iter_mut().enumerate() {
+            *b = mix(self.salt ^ mv, i as u32) as u8;
+        }
+        // Byte 4 = 101 and byte 0xE = 6 (special-cased by `record_param`) now and then.
+        if mix(mv, 0x65).is_multiple_of(4) {
+            r[4] = 101;
+            r[0xE] = 6;
+        }
+        r
+    }
+}
+
+impl WazaHooks for RecWaza {
+    fn load_move(&mut self, move_id: u32, dst: &mut [u8; RECORD_SIZE]) {
+        self.log.extend([0x15, move_id]);
+        *dst = self.record(move_id);
+    }
+    fn move_param(&mut self, move_id: u32, param: u32) -> u32 {
+        // Not reached by the host: the getters' `0201BD28` runs over the host's cache.
+        self.log.extend([0xBD28, move_id, param]);
+        0xDEAD
+    }
+    fn form_record_index(&mut self, species: u32, form: u32) -> u32 {
+        self.log.extend([0xAFD4, species, form]);
+        0
+    }
+    fn load_learnset(&mut self, index: u32, _: &mut [u8]) {
+        self.log.extend([0x12, index]);
+    }
+    fn learnset_read(&mut self, species: u32, form: u32, dst: u32, _: &mut [u8]) {
+        self.log.extend([0xADD0, species, form, dst]);
+    }
+    fn free(&mut self, block: u32) {
+        self.log.extend([0x07B0, block]);
+    }
+    fn alloc(&mut self, heap: u32, size: u32, line: u32) -> u32 {
+        self.log.extend([0x0734, heap, size, line]);
+        0
+    }
+}
+
+type Host = FlowWorkHost<RecEnv, RecUnported, RecWaza>;
 
 /// A host over a random work image, plus the same environment and work for running the port.
 fn setup(seed: u32) -> (Host, RecEnv, SvFlowWork, [u32; 3]) {
@@ -265,7 +287,11 @@ fn setup(seed: u32) -> (Host, RecEnv, SvFlowWork, [u32; 3]) {
         ..RecEnv::default()
     };
     let args = [r.next() % 0x20, r.next() % 0x20, r.next() % 0x230];
-    let host = FlowWorkHost::new(w.clone(), WADDR, env.clone(), RecUnported::default());
+    let waza = RecWaza {
+        salt: seed,
+        ..RecWaza::default()
+    };
+    let host = FlowWorkHost::new(w.clone(), WADDR, env.clone(), RecUnported::default(), waza);
     (host, env, w, args)
 }
 
@@ -661,20 +687,265 @@ fn side_effect_layers() {
     }
 }
 
+#[test]
+fn fun_06898cf4() {
+    for seed in 0..SEEDS {
+        let (mut host, ..) = setup(seed);
+        let mut r = Rng::new(seed ^ 0x8CF4);
+        for e in host.side_effects.entries.iter_mut() {
+            let f = r.next();
+            *e = SideEffectEntry {
+                factor: (!f.is_multiple_of(3)).then_some(((f >> 8) % 0x84) as u8),
+                cont: r.next(),
+                w8: r.next(),
+                layers: r.next() % 5,
+            };
+        }
+        let before = host.side_effects;
+        for side in 0..2 {
+            for kind in 0..14 {
+                let want = before.entries[(side * 14 + kind) as usize].factor.is_some();
+                assert_eq!(
+                    host.fun_06898cf4(side, kind),
+                    want,
+                    "seed {seed}: {side} {kind}"
+                );
+                assert_eq!(host.fun_06898cf4(side, kind), before.has_factor(side, kind));
+            }
+        }
+        // Unchecked like the original: side 0 kind 14 + k is side 1 kind k.
+        for k in 0..14 {
+            assert_eq!(host.fun_06898cf4(0, 14 + k), host.fun_06898cf4(1, k));
+        }
+        assert!(
+            host.side_effects == before,
+            "seed {seed}: the query writes nothing"
+        );
+        assert!(host.env.log.is_empty() && host.unported.calls.is_empty());
+    }
+}
+
+#[test]
+#[should_panic(expected = "06898cf4: side 2 key 0 is outside the layer array")]
+fn fun_06898cf4_outside_the_array_panics() {
+    let (mut host, ..) = setup(0);
+    host.fun_06898cf4(2, 0);
+}
+
+// ---- ARM9 move data (black-pokemon::waza) ----
+
+/// The port side of the move-data tests: the waza routines over their own record source, cache
+/// and static record, with `0201BD28` as the wrappers' callee (what the original's wrappers
+/// tail-call).
+struct RefWaza {
+    source: RecWaza,
+    cache: Option<MoveCache>,
+    scratch: [u8; RECORD_SIZE],
+}
+
+impl RefWaza {
+    fn bd28(&mut self, mv: u32, param: u32) -> u32 {
+        waza::move_param(
+            mv,
+            param,
+            self.cache.as_mut(),
+            &mut self.scratch,
+            &mut self.source,
+        )
+    }
+}
+
+/// `RefWaza` as the wrappers' hooks: `move_param` is `0201BD28` over the same state.
+impl WazaHooks for RefWaza {
+    fn load_move(&mut self, move_id: u32, dst: &mut [u8; RECORD_SIZE]) {
+        self.source.load_move(move_id, dst)
+    }
+    fn move_param(&mut self, move_id: u32, param: u32) -> u32 {
+        self.bd28(move_id, param)
+    }
+    fn form_record_index(&mut self, species: u32, form: u32) -> u32 {
+        self.source.form_record_index(species, form)
+    }
+    fn load_learnset(&mut self, index: u32, dst: &mut [u8]) {
+        self.source.load_learnset(index, dst)
+    }
+    fn learnset_read(&mut self, species: u32, form: u32, dst: u32, buf: &mut [u8]) {
+        self.source.learnset_read(species, form, dst, buf)
+    }
+    fn free(&mut self, block: u32) {
+        self.source.free(block)
+    }
+    fn alloc(&mut self, heap: u32, size: u32, line: u32) -> u32 {
+        self.source.alloc(heap, size, line)
+    }
+}
+
+/// Moves of one test run: drawn from a small pool so a cache gets hits, misses and reuse of its
+/// last slot.
+fn waza_case(seed: u32) -> (Vec<(u32, u32)>, Option<MoveCache>) {
+    let mut r = Rng::new(seed ^ 0x0201_BD28);
+    let calls = (0..24)
+        .map(|_| (1 + r.next() % 9, r.next()))
+        .collect::<Vec<_>>();
+    // Without a cache (the battle's case: 0201C328 is called by the AI only) for half the seeds,
+    // else a cache of 1..4 slots, some already holding moves (with stale records).
+    let cache = if seed.is_multiple_of(2) {
+        None
+    } else {
+        let n = 1 + (r.next() % 4) as usize;
+        let mut c = MoveCache::new(n);
+        for i in 0..n {
+            if r.next().is_multiple_of(2) {
+                c.ids[i] = (1 + r.next() % 9) as u16;
+                for b in c.bufs[i].iter_mut() {
+                    *b = r.next() as u8;
+                }
+            }
+        }
+        Some(c)
+    };
+    (calls, cache)
+}
+
+/// `waza_wired!(test, |host, mv, x| host call, |port, mv, x| port call)`: for every seed, a
+/// sequence of calls on the host and on the waza port over the same record source and cache give
+/// the same answers, record loads (in order), cache and static record. `x` is a random word for
+/// the second argument. The record-level answer is checked separately by `move_data_semantics`.
+macro_rules! waza_wired {
+    ($name:ident, |$h:ident, $mv:ident, $x:ident| $host:expr, |$p:ident, $pm:ident, $px:ident| $port:expr) => {
+        #[test]
+        fn $name() {
+            for seed in 0..SEEDS {
+                let (mut host, ..) = setup(seed);
+                let (calls, cache) = waza_case(seed);
+                host.moves.cache = cache.clone();
+                let mut port = RefWaza {
+                    source: host.moves.source.clone(),
+                    cache,
+                    scratch: [0; RECORD_SIZE],
+                };
+                for &(mv, x) in &calls {
+                    let got = {
+                        let $h = &mut host;
+                        let ($mv, $x) = (mv, x);
+                        $host
+                    };
+                    let want = {
+                        let $p = &mut port;
+                        let ($pm, $px) = (mv, x);
+                        $port
+                    };
+                    assert_eq!(got, want, "seed {seed}: move {mv} x {x:#x}");
+                }
+                assert_eq!(host.moves.source.log, port.source.log, "seed {seed}: loads");
+                assert!(!host.moves.source.log.is_empty(), "seed {seed}: no load");
+                assert_eq!(host.moves.cache, port.cache, "seed {seed}: cache");
+                assert_eq!(
+                    host.moves.scratch, port.scratch,
+                    "seed {seed}: static record"
+                );
+                assert!(host.env.log.is_empty() && host.unported.calls.is_empty());
+            }
+        }
+    };
+}
+
+waza_wired!(
+    move_category,
+    |h, mv, _x| h.move_category(mv),
+    |p, mv, _x| waza::param2(mv, p)
+);
+waza_wired!(
+    move_param,
+    |h, mv, x| h.move_param(mv, x % 34),
+    |p, mv, x| p.bd28(mv, x % 34)
+);
+waza_wired!(
+    move_flag,
+    |h, mv, x| h.move_flag(mv, x % 40),
+    |p, mv, x| waza::record_flag(mv, x % 40, p.cache.as_mut(), &mut p.scratch, &mut p.source) != 0
+);
+waza_wired!(move_power, |h, mv, _x| h.move_power(mv), |p, mv, _x| {
+    waza::param3_u16(mv, p)
+});
+waza_wired!(
+    move_effect_class,
+    |h, mv, _x| h.move_effect_class(mv),
+    |p, mv, _x| waza::param1(mv, p)
+);
+waza_wired!(
+    move_fun_0201c314,
+    |h, mv, _x| h.move_fun_0201c314(mv),
+    |p, mv, _x| waza::param3_nonzero(mv, p) != 0
+);
+waza_wired!(move_type, |h, mv, _x| h.move_type(mv), |p, mv, _x| {
+    waza::param0_u8(mv, p)
+});
+waza_wired!(
+    move_fun_0201c020,
+    |h, mv, _x| h.move_fun_0201c020(mv),
+    |p, mv, _x| waza::record_pp_ups_count(mv, p.cache.as_mut(), &mut p.scratch, &mut p.source)
+);
+waza_wired!(
+    move_fun_0201c0bc,
+    |h, mv, x| h.move_fun_0201c0bc(mv, x % 3),
+    |p, mv, x| {
+        let mut out = [0x55u8; 4];
+        waza::record_signed_if_set(
+            mv,
+            x % 3,
+            &mut out,
+            p.cache.as_mut(),
+            &mut p.scratch,
+            &mut p.source,
+        );
+        i32::from_le_bytes(out)
+    }
+);
+
+/// Without a cache every getter loads the move's record into the static record once and answers
+/// from its bytes (`waza::record_param` parameters 0 / 1 / 2 / 3, flag word 0x20, bytes
+/// 0x15..0x1A), the record source's `move_param` is never called.
+#[test]
+fn move_data_semantics() {
+    for seed in 0..SEEDS {
+        let (mut host, ..) = setup(seed);
+        let mv = 1 + seed % 700;
+        let rec = host.moves.source.record(mv);
+        let p = |i| waza::record_param(&rec, i);
+        assert_eq!(host.move_type(mv), p(0) & 0xFF);
+        assert_eq!(host.move_effect_class(mv), p(1));
+        assert_eq!(host.move_category(mv), p(2));
+        assert_eq!(host.move_power(mv), p(3) & 0xFFFF);
+        assert_eq!(host.move_fun_0201c314(mv), p(3) != 0);
+        for prm in 0..34 {
+            assert_eq!(host.move_param(mv, prm), p(prm));
+        }
+        let flags = u32::from_le_bytes(rec[0x20..0x24].try_into().unwrap());
+        for bit in 0..32 {
+            assert_eq!(host.move_flag(mv, bit), flags >> bit & 1 != 0);
+        }
+        let n = (0x15..0x18).filter(|&o| rec[o] != 0).count() as u32;
+        assert_eq!(host.move_fun_0201c020(mv), n);
+        for i in 0..3 {
+            let want = if rec[0x15 + i] != 0 {
+                rec[0x18 + i] as i8 as i32
+            } else {
+                0
+            };
+            assert_eq!(host.move_fun_0201c0bc(mv, i as u32), want);
+        }
+        let calls = 5 + 34 + 32 + 1 + 3;
+        assert_eq!(host.moves.source.log, [0x15, mv].repeat(calls));
+        assert_eq!(host.moves.scratch, rec);
+    }
+}
+
 // ---- unported hooks ----
 
 #[test]
 fn unported_methods_reach_the_hooks() {
     let (mut host, ..) = setup(0);
-    assert_eq!(host.move_category(1), 2);
-    assert_eq!(host.move_param(3, 1), 2);
-    assert!(host.move_flag(0, 0));
-    assert_eq!(host.move_power(1), 3);
-    assert_eq!(host.move_effect_class(1), 4);
-    assert!(host.move_fun_0201c314(0));
-    assert_eq!(host.move_type(1), 5);
-    assert_eq!(host.move_fun_0201c020(1), 6);
-    assert_eq!(host.move_fun_0201c0bc(0, 0), -1);
     assert!(host.item_fun_020213c0(0));
     assert_eq!(host.item_param(2, 3), 5);
     assert_eq!(host.fun_020189d0(0, 0), -1);
@@ -685,7 +956,6 @@ fn unported_methods_reach_the_hooks() {
     assert!(host.item_fun_0689c980(0));
     assert!(host.item_fun_0689c990(0));
     assert_eq!(host.sick_list_entry(1), 7);
-    assert!(host.fun_06898cf4(0, 0));
     assert!(host.fun_0689c8ac(0));
     assert!(host.fun_0689c8bc(0));
     assert!(host.fun_0689c91c(0));
@@ -707,9 +977,10 @@ fn unported_methods_reach_the_hooks() {
     // The default body: ability 0x19 never reaches the hook.
     assert!(!host.ability_uncopyable(0x19));
     assert!(host.ability_uncopyable(1));
-    assert_eq!(host.unported.calls.len(), 39);
-    assert_eq!(host.unported.calls[38], "fun_0689c91c");
+    assert_eq!(host.unported.calls.len(), 29);
+    assert_eq!(host.unported.calls[28], "fun_0689c91c");
     assert!(host.env.log.is_empty());
+    assert!(host.moves.source.log.is_empty());
     // BppEnv goes to the hooks too.
     host.pp_put(1, 2, 3);
     assert_eq!(host.unported.bpp.log, [[2, 1, 2, 3]]);

@@ -12,7 +12,11 @@
 //! - the battle main-module ports in [`server2`] / [`server3`] (B11a/b) for the three pure helpers
 //!   handlers call directly (`021b8ddc` -> `021b8d08`, `021b8c5c`, `021b9a6c`),
 //! - core4's [`core4::counter_next`] (B10i) behind the api thunk at `0x021C83CC`,
-//! - the overlay-95 side-effect layer array [`SideEffects`] (B7b2) for `06898de0`.
+//! - the overlay-95 side-effect layer array [`SideEffects`] (B7b2) for `06898de0` and `06898cf4`
+//!   (B10-wire2),
+//! - the ARM9 move-data getters of `black_pokemon::waza` (P4, `waza.spec` 31/31) over a
+//!   [`MoveData`] (B10-wire2): the move record cache and static record of the original plus the
+//!   record source `W` ([`WazaHooks::load_move`], ARC 21).
 //!
 //! Callees those ports reach outside their own area go through the [`FlowEnv`] `E`, exactly as in
 //! the ports' own differential tests (the production `E` is the battle's call dispatcher, B11/B16).
@@ -22,6 +26,8 @@
 //!
 //! `waddr` is the address of the work in the battle memory map: the api ports compare pointers the
 //! callees return against it (see the [`api`] module doc).
+
+use black_pokemon::waza::{self, MoveCache, WazaHooks, RECORD_SIZE};
 
 use super::env::{Arg, FlowEnv};
 use super::{api, core4, hem, SvFlowWork};
@@ -38,25 +44,6 @@ const NULL_RECORD_SIZE: usize = 0x80;
 /// battle Pokemon layer makes). Each method has the meaning documented on the [`FlowHost`] method of
 /// the same name; the note says where its code lives.
 pub trait Unported: BppEnv {
-    // ARM9 move data (ported in `black-pokemon::waza`, which this crate does not depend on).
-    /// `FUN_0201C1E8` (`black-pokemon::waza`).
-    fn move_category(&mut self, mv: u32) -> u32;
-    /// `FUN_0201BD28` (`black-pokemon::waza::record_param`).
-    fn move_param(&mut self, mv: u32, param: u32) -> u32;
-    /// `FUN_0201BEB8` (`black-pokemon::waza`).
-    fn move_flag(&mut self, mv: u32, flag: u32) -> bool;
-    /// `FUN_0201C1D8` (`black-pokemon::waza`).
-    fn move_power(&mut self, mv: u32) -> u32;
-    /// `FUN_0201C1BC` (`black-pokemon::waza`).
-    fn move_effect_class(&mut self, mv: u32) -> u32;
-    /// `sub_0201C314` (`black-pokemon::waza`).
-    fn move_fun_0201c314(&mut self, mv: u32) -> bool;
-    /// `FUN_0201C1C8` (`black-pokemon::waza`).
-    fn move_type(&mut self, mv: u32) -> u32;
-    /// `FUN_0201C020` (`black-pokemon::waza`).
-    fn move_fun_0201c020(&mut self, mv: u32) -> u32;
-    /// `FUN_0201C0BC` (`black-pokemon::waza`).
-    fn move_fun_0201c0bc(&mut self, mv: u32, index: u32) -> i32;
     // ARM9 item / Pokemon data (not ported in this crate).
     /// `FUN_020213C0`.
     fn item_fun_020213c0(&mut self, item: u32) -> bool;
@@ -80,9 +67,6 @@ pub trait Unported: BppEnv {
     fn item_fun_0689c990(&mut self, item: u32) -> bool;
     /// `021D7E34` -> `0689C9E4`.
     fn sick_list_entry(&mut self, index: u32) -> u32;
-    /// `06898cf4` (from the disassembly: `*(0x0689E7E0 + side * 0xE0 + kind * 0x10) != 0`, the
-    /// factor word of a [`SideEffects`] entry; not harness-verified).
-    fn fun_06898cf4(&mut self, side: u32, kind: u32) -> bool;
     /// `0689c8ac`.
     fn fun_0689c8ac(&mut self, mv: u32) -> bool;
     /// `0689c8bc`.
@@ -127,8 +111,86 @@ pub trait Unported: BppEnv {
     fn store_u8(&mut self, addr: u32, v: u8);
 }
 
+/// The state of the ARM9 move-data getters (`waza_tool.c`) and where their records come from.
+///
+/// The original keeps a move record cache behind the global 0x02146530 (`FUN_0201C328` builds it;
+/// its only caller is the AI, overlay 96) and otherwise loads each record into the static record at
+/// 0x02146534 on every call. `source` is the record source: the getters call only its
+/// [`WazaHooks::load_move`] (ARC 21 member = move id; the production source copies it from the
+/// extracted assets, D4). Its [`WazaHooks::move_param`] is not used: the wrappers' callee
+/// `FUN_0201BD28` is run as [`waza::move_param`] over this cache and static record, as in the
+/// original (the private adapter `Getters`).
+#[derive(Debug, Clone)]
+pub struct MoveData<W: WazaHooks> {
+    /// The record source (ARC 21 loader).
+    pub source: W,
+    /// The move record cache (global 0x02146530; `None` = null).
+    pub cache: Option<MoveCache>,
+    /// The static record (0x02146534).
+    pub scratch: [u8; RECORD_SIZE],
+}
+
+impl<W: WazaHooks> MoveData<W> {
+    /// No cache, a zeroed static record.
+    pub fn new(source: W) -> Self {
+        MoveData {
+            source,
+            cache: None,
+            scratch: [0; RECORD_SIZE],
+        }
+    }
+
+    /// The [`WazaHooks`] the wrapper getters (`0201C1BC` / `C1C8` / `C1D8` / `C1E8` / `C314`) get.
+    fn getters(&mut self) -> Getters<'_, W> {
+        Getters {
+            source: &mut self.source,
+            cache: &mut self.cache,
+            scratch: &mut self.scratch,
+        }
+    }
+}
+
+/// Adapter: the [`WazaHooks`] of the move getters in the battle. `move_param` (callee
+/// `FUN_0201BD28`) is [`waza::move_param`] over the [`MoveData`] cache / static record; everything
+/// else goes to the record source.
+struct Getters<'a, W: WazaHooks> {
+    source: &'a mut W,
+    cache: &'a mut Option<MoveCache>,
+    scratch: &'a mut [u8; RECORD_SIZE],
+}
+
+impl<W: WazaHooks> WazaHooks for Getters<'_, W> {
+    fn load_move(&mut self, move_id: u32, dst: &mut [u8; RECORD_SIZE]) {
+        self.source.load_move(move_id, dst)
+    }
+    fn move_param(&mut self, move_id: u32, param: u32) -> u32 {
+        waza::move_param(
+            move_id,
+            param,
+            self.cache.as_mut(),
+            self.scratch,
+            self.source,
+        )
+    }
+    fn form_record_index(&mut self, species: u32, form: u32) -> u32 {
+        self.source.form_record_index(species, form)
+    }
+    fn load_learnset(&mut self, index: u32, dst: &mut [u8]) {
+        self.source.load_learnset(index, dst)
+    }
+    fn learnset_read(&mut self, species: u32, form: u32, dst: u32, buf: &mut [u8]) {
+        self.source.learnset_read(species, form, dst, buf)
+    }
+    fn free(&mut self, block: u32) {
+        self.source.free(block)
+    }
+    fn alloc(&mut self, heap: u32, size: u32, line: u32) -> u32 {
+        self.source.alloc(heap, size, line)
+    }
+}
+
 /// The production [`FlowHost`]: the flow work image plus the environment its ports call into.
-pub struct FlowWorkHost<E: FlowEnv, U: Unported> {
+pub struct FlowWorkHost<E: FlowEnv, U: Unported, W: WazaHooks> {
     /// The `BTL_SVFLOW_WORK` image.
     pub work: SvFlowWork,
     /// Address of [`Self::work`] in the battle memory map.
@@ -139,20 +201,25 @@ pub struct FlowWorkHost<E: FlowEnv, U: Unported> {
     pub unported: U,
     /// The overlay-95 side-effect layer array (0x0689E7E0).
     pub side_effects: SideEffects,
+    /// The ARM9 move-data getters' cache, static record and record source.
+    pub moves: MoveData<W>,
     /// Stand-in for the null record of a failed HANDEX push (see [`FlowHost::handex`]).
     null_record: [u8; NULL_RECORD_SIZE],
     /// The ROM table `021b9a6c` reads (0x021EFD70).
     pos_lists: server3::Mem,
 }
 
-impl<E: FlowEnv, U: Unported> FlowWorkHost<E, U> {
-    pub fn new(work: SvFlowWork, waddr: u32, env: E, unported: U) -> Self {
+impl<E: FlowEnv, U: Unported, W: WazaHooks> FlowWorkHost<E, U, W> {
+    /// `moves` is the move record source (see [`MoveData`]); the host starts without a move
+    /// record cache and with an empty side-effect layer array.
+    pub fn new(work: SvFlowWork, waddr: u32, env: E, unported: U, moves: W) -> Self {
         FlowWorkHost {
             work,
             waddr,
             env,
             unported,
             side_effects: SideEffects::default(),
+            moves: MoveData::new(moves),
             null_record: [0; NULL_RECORD_SIZE],
             pos_lists: server3::Mem::new(),
         }
@@ -180,7 +247,7 @@ impl<E: FlowEnv, U: Unported> FlowWorkHost<E, U> {
     }
 }
 
-impl<E: FlowEnv, U: Unported> BppEnv for FlowWorkHost<E, U> {
+impl<E: FlowEnv, U: Unported, W: WazaHooks> BppEnv for FlowWorkHost<E, U, W> {
     fn pp_get(&mut self, pp: u32, id: u32) -> u32 {
         self.unported.pp_get(pp, id)
     }
@@ -231,7 +298,7 @@ impl<E: FlowEnv, U: Unported> BppEnv for FlowWorkHost<E, U> {
     }
 }
 
-impl<E: FlowEnv, U: Unported> FlowHost for FlowWorkHost<E, U> {
+impl<E: FlowEnv, U: Unported, W: WazaHooks> FlowHost for FlowWorkHost<E, U, W> {
     // ---- HANDEX records (hem, B10b) ----
 
     /// [`hem::handex_push`]; the id is the record's work offset (0 = the push failed).
@@ -439,36 +506,67 @@ impl<E: FlowEnv, U: Unported> FlowHost for FlowWorkHost<E, U> {
         }
         self.side_effects.entries[(side * SIDE_KEYS + key) as usize].layers & 0xFF
     }
+    /// [`SideEffects::has_factor`] (`06898cf4`). Panics where the entry lies outside the array
+    /// (`side * 14 + kind >= 28`; the original reads past it).
+    fn fun_06898cf4(&mut self, side: u32, kind: u32) -> bool {
+        self.side_effects.has_factor(side, kind)
+    }
+
+    // ---- ARM9 move data (black-pokemon::waza, P4; B10-wire2) ----
+
+    /// `FUN_0201C1E8` = [`waza::param2`].
+    fn move_category(&mut self, mv: u32) -> u32 {
+        waza::param2(mv, &mut self.moves.getters())
+    }
+    /// `FUN_0201BD28` = [`waza::move_param`].
+    fn move_param(&mut self, mv: u32, param: u32) -> u32 {
+        let m = &mut self.moves;
+        waza::move_param(mv, param, m.cache.as_mut(), &mut m.scratch, &mut m.source)
+    }
+    /// `FUN_0201BEB8` = [`waza::record_flag`].
+    fn move_flag(&mut self, mv: u32, flag: u32) -> bool {
+        let m = &mut self.moves;
+        waza::record_flag(mv, flag, m.cache.as_mut(), &mut m.scratch, &mut m.source) != 0
+    }
+    /// `FUN_0201C1D8` = [`waza::param3_u16`].
+    fn move_power(&mut self, mv: u32) -> u32 {
+        waza::param3_u16(mv, &mut self.moves.getters())
+    }
+    /// `FUN_0201C1BC` = [`waza::param1`].
+    fn move_effect_class(&mut self, mv: u32) -> u32 {
+        waza::param1(mv, &mut self.moves.getters())
+    }
+    /// `sub_0201C314` = [`waza::param3_nonzero`].
+    fn move_fun_0201c314(&mut self, mv: u32) -> bool {
+        waza::param3_nonzero(mv, &mut self.moves.getters()) != 0
+    }
+    /// `FUN_0201C1C8` = [`waza::param0_u8`].
+    fn move_type(&mut self, mv: u32) -> u32 {
+        waza::param0_u8(mv, &mut self.moves.getters())
+    }
+    /// `FUN_0201C020` = [`waza::record_pp_ups_count`].
+    fn move_fun_0201c020(&mut self, mv: u32) -> u32 {
+        let m = &mut self.moves;
+        waza::record_pp_ups_count(mv, m.cache.as_mut(), &mut m.scratch, &mut m.source)
+    }
+    /// Adapter: `FUN_0201C0BC(move, index, &out)` = [`waza::record_signed_if_set`]; handlers read
+    /// `out` (the returned flag byte is not used by them).
+    fn move_fun_0201c0bc(&mut self, mv: u32, index: u32) -> i32 {
+        let m = &mut self.moves;
+        let mut out = [0u8; 4];
+        waza::record_signed_if_set(
+            mv,
+            index,
+            &mut out,
+            m.cache.as_mut(),
+            &mut m.scratch,
+            &mut m.source,
+        );
+        i32::from_le_bytes(out)
+    }
 
     // ---- no port in this crate ----
 
-    fn move_category(&mut self, mv: u32) -> u32 {
-        self.unported.move_category(mv)
-    }
-    fn move_param(&mut self, mv: u32, param: u32) -> u32 {
-        self.unported.move_param(mv, param)
-    }
-    fn move_flag(&mut self, mv: u32, flag: u32) -> bool {
-        self.unported.move_flag(mv, flag)
-    }
-    fn move_power(&mut self, mv: u32) -> u32 {
-        self.unported.move_power(mv)
-    }
-    fn move_effect_class(&mut self, mv: u32) -> u32 {
-        self.unported.move_effect_class(mv)
-    }
-    fn move_fun_0201c314(&mut self, mv: u32) -> bool {
-        self.unported.move_fun_0201c314(mv)
-    }
-    fn move_type(&mut self, mv: u32) -> u32 {
-        self.unported.move_type(mv)
-    }
-    fn move_fun_0201c020(&mut self, mv: u32) -> u32 {
-        self.unported.move_fun_0201c020(mv)
-    }
-    fn move_fun_0201c0bc(&mut self, mv: u32, index: u32) -> i32 {
-        self.unported.move_fun_0201c0bc(mv, index)
-    }
     fn item_fun_020213c0(&mut self, item: u32) -> bool {
         self.unported.item_fun_020213c0(item)
     }
@@ -498,9 +596,6 @@ impl<E: FlowEnv, U: Unported> FlowHost for FlowWorkHost<E, U> {
     }
     fn sick_list_entry(&mut self, index: u32) -> u32 {
         self.unported.sick_list_entry(index)
-    }
-    fn fun_06898cf4(&mut self, side: u32, kind: u32) -> bool {
-        self.unported.fun_06898cf4(side, kind)
     }
     fn fun_0689c8ac(&mut self, mv: u32) -> bool {
         self.unported.fun_0689c8ac(mv)
