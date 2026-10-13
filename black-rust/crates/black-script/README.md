@@ -19,6 +19,10 @@ Undecompiled callees go in `hooks` as traits (§4 porting pattern); pointers sta
 | `scrcmd_screen` | overlay-21 screen effects 0x021B2830-0x021B2FD7 (row 21.44 tail, 21.45 `scrcmd_screeneffects.c`, cmd 594; 36 fns, 29 ids) | `tools/rom-diff/specs/black-script/scrcmd_screen.spec` | `tools/check-fn.sh black-script scrcmd_screen` | 36 specced (F8-spec2, 773/773), **5 smoke ports verified, area hash 6e9a0a809f9d93e1** |
 | `scrcmd` | F8 index (doc only: which area holds which commands) | | | |
 
+| `scrcmd_core` | scrcmd core: overlay 10 0x02159204-0x0215995E, commands 0..48 + 4 helpers (53 fns) | `tools/rom-diff/specs/black-script/scrcmd_core.spec` | `tools/check-fn.sh black-script scrcmd_core` | **53/53 verified, area hash 3467bfc999c8890b** (F8a; F8-spec1 spec, 747/747 insns covered) |
+| `scrcmd_work` | `scrcmd_work.c`: overlay 10 0x0215A514-0x0215C63A minus the ctx getters and the Heap_Free veneer (130 fns, 86 command ids) | `tools/rom-diff/specs/black-script/scrcmd_work.spec` | `tools/check-fn.sh black-script scrcmd_work` | **130/130 verified, area hash d7e9a9ae52796e75** (F8a; F8-spec1 spec, 3451/3451 insns covered) |
+| `scrcmd` | F8 index + the command-id -> handler table of the ported commands (`commands`, `handler`, `dispatch`, `call_wait`) | | `cargo test -p black-script scrcmd` (ids unique, every ported id dispatches) | 138 ids (49 core, 86 work, 3 script_sys) |
+
 Every function of both areas is specced with closure stubs (porting order needs no spec edit). The spec headers are the
 reference for the layouts; summary:
 
@@ -61,8 +65,8 @@ Data flow per frame: the field's event loop calls the script event function (`sc
 | trait / method | original | notes |
 |---|---|---|
 | `HeapHooks::heap_alloc` / `heap_free` | `Heap_AllocDebug` 0x02030734 / `Heap_Free` 0x020307B0 (+ veneers 0x02011264, 0x02158824, 0x0215A554) | same as `black_field::hooks::HeapHooks` |
-| `CommandDispatch::command(handler, vm, ctx)` | `table[cmd](vm, ctx)` at 0x02011312 | handler = word of the table at `VM+4` (0x0217062C: `script_sys::CMD_TABLE`, 609 entries); F8 maps addresses to ports; 49 / 50 / 311 are `script_sys::cmd_wait_pad_a` / `cmd_wait_pad_b` / `cmd_311` |
-| `VmHooks::call_wait(f, vm, ctx)` | `(VM+0x10)(vm, ctx)` at 0x020112B8 | script_sys callbacks 0x02159961 / 0x02159985 / 0x021599A9 = `wait_pad_a` / `wait_pad_b` / `wait_311`; the rest are F8's |
+| `CommandDispatch::command(handler, vm, ctx)` | `table[cmd](vm, ctx)` at 0x02011312 | handler = word of the table at `VM+4` (0x0217062C: `script_sys::CMD_TABLE`, 609 entries); `scrcmd::dispatch` maps the addresses of commands 0..48 and the 86 `scrcmd_work` ids to their ports, `script_sys::call_known` has 49 / 50 / 311 (see "Command dispatch (F8a)") |
+| `VmHooks::call_wait(f, vm, ctx)` | `(VM+0x10)(vm, ctx)` at 0x020112B8 | script_sys callbacks 0x02159961 / 0x02159985 / 0x021599A9 = `wait_pad_a` / `wait_pad_b` / `wait_311`; `scrcmd::call_wait`: 0x02159255 (command 3, `scrcmd_core::wait_countdown`), 0x021595A1 (command 28, `wait_call_script`); the menu polls 0x0215A954 / 0x0215A990 are `scrcmd_work::menu_poll` / `menu_poll_x` (called by overlay-21 commands) |
 | `VmHooks::call_hook(f, vm, ctx, arg, cmd)` | `(VM+0x24)(vm, ctx, VM+0x28, cmd)` at 0x020112FC | scripts install 0x02158DE9 = `script_sys::dispatch_hook` (arg = GAMESYS) |
 | `script_sys::call_known(h, f, args)` | — | helper for implementors: routes the 8 code addresses of this area (waits, commands 49/50/311, the hook, the event fn) to their ports |
 | `ScriptSysHooks::fun_0201xxxx` (vm.c) | 0x0201121C .. 0x020113D0 | default to the `vm` ports; the `script_sys` test overrides them with the spec's stubs (the two areas are verified separately) |
@@ -99,9 +103,37 @@ ROM tables embedded in `script_sys/tables.rs` (copied from overlay 10 data): `CM
   builder, system / Pokedex / time / party / box queries and setters, give Pokemon / egg. Layouts in the spec header.
 * Both specs list every command id with its handler in the header. Roles are read from the code; names of the main / overlay-21
   callees (PokeParam ids, Pokedex, party) are inferred (UNVERIFIED unless the spec says otherwise).
-* The smoke ports call their callees through per-area traits (`scrcmd_core::CoreHooks`, `scrcmd_work::WorkHooks`); the F8 port
-  job extends them (one method per callee address, as `ScriptSysHooks`). ROM tables the commands index are embedded
-  (`scrcmd_core::COND` 0x021705DC, `scrcmd_work::TABLE_562` 0x02171160; tests compare them with the ROM build).
+* F8a ported both areas completely. Callees are trait methods named by address: `scrcmd_core::CoreHooks` (vm.c, the
+  scrcmd ctx getters, script_sys, the scrcmd_work helpers command 3 / 28 use, main, overlay 21) and `scrcmd_work::WorkHooks:
+  CoreHooks` (the rest; the shared callees come from `CoreHooks`). Callees that need only memory default to their ports
+  (vm.c `vm::*`, the `script_sys::ctx_*` getters, `scrcmd_work::set_countdown` / `countdown` / `set_wait_slot` /
+  `wait_slot`); each area's test overrides them with the spec's stubs. In-area callees are called as Rust (the ROM side runs
+  them as real code). ROM tables the commands index are embedded and compared with the ROM build by the tests:
+  `scrcmd_core::COND` 0x021705DC, `scrcmd_work::{MENU_HEADER 0x02171140, TABLE_562 0x02171160, TABLE_563 0x02171170,
+  TABLE_281 0x02171180, PARAM_WHITELIST 0x02171182, IV_TABLE 0x0217118E}`, `scrcmd_work::VERSION` (main 0x0209DF08).
+* Stack records the original passes to callees are byte arrays (`&mut [u8; N]` for outs, `&[u8; N]` for reads): the
+  0x24-byte give-Pokemon record `scrcmd_work::GiveMonRec`, the 0x1C-byte location record of commands 219 / 220, the
+  0x20-byte list-menu header, the 2-byte cursor index, the time records of commands 212 / 214 / 312.
+
+### Command dispatch (F8a)
+
+`scrcmd::commands()` is the table of every ported command id -> handler address (138 ids: `scrcmd_core::COMMANDS` 0..48,
+`scrcmd_work::COMMANDS` (86 ids), `scrcmd::SCRIPT_SYS_COMMANDS` 49 / 50 / 311; each area test checks its words against the ROM
+table 0x0217062C). `scrcmd::handler(id)` looks one up. A game-side `CommandDispatch` implementation is:
+
+```rust,ignore
+impl CommandDispatch for Game {
+    fn command(&mut self, handler: u32, vm: u32, ctx: u32) -> u32 {
+        scrcmd::dispatch(self, handler, vm, ctx)                       // commands 0..48 + scrcmd_work ids
+            .or_else(|| script_sys::call_known(self, handler, &[vm, ctx])) // 49 / 50 / 311
+            .unwrap_or_else(|| todo!("command handler {handler:#x}: unported F8 job"))
+    }
+}
+```
+
+and `VmHooks::call_wait` likewise tries `scrcmd::call_wait` then `script_sys::call_known`. Commands of the remaining F8 jobs
+(overlay-21 message / yes-no / menu / fade files, `scrcmd_proc.c`, ...) are not in the table yet; `scrcmd_core` command 46
+forwards to the overlay-21 handler `0x021B1BB8` through `CoreHooks::fun_021b1bb8`.
 
 ## F8 areas (F8-spec2, overlay 21)
 
@@ -128,6 +160,15 @@ ROM tables embedded in `script_sys/tables.rs` (copied from overlay 10 data): `CM
 * `0x02159B38` (`ctx_zone_id`) takes the ctx in r0, unlike the `(vm, ctx)` command helpers next to it.
 
 ## Deliberate deviations / UNVERIFIED
+
+* scrcmd_core / scrcmd_work: command roles and callee names are read from the code; names of main / overlay-21 callees
+  (PokeParam ids, Pokedex, party, options) are inferred (UNVERIFIED unless the doc says otherwise). ROM tables indexed by a
+  script operand (`COND`, `TABLE_562` / `563` / `281`) panic past their end where the original reads the following bytes.
+* `scrcmd_work::cmd_289` (0x0215B994): the jump table gives v 1 and 2 the same case (`FUN_020079A0`), v 3 the difference and
+  v 5 the free places, v 4 = 0; the spec header comment lists them shifted by one from case 2 (the port follows the code).
+* `scrcmd_work::cmd_270` / `cmd_291` read eight value operands (the spec header says nine).
+* `scrcmd_work::cmd_222` (0x0215AEE8): the first operand is the mode, the second the species (the spec header names them the
+  other way round).
 
 * `script_sys::wait_311` (0x021599A8): for a status `FUN_02012DD0` > 3 the original returns its caller's r4 (never set on
   that path; in the game the VM step's caller's r4, e.g. the SYS slot index). The port returns
