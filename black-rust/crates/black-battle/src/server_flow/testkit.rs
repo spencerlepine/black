@@ -35,6 +35,23 @@ impl FlowEnv for TestEnv {
     }
 }
 
+impl TestEnv {
+    /// A `ret=u64` stub (B14-spec, e.g. OS_GetTick 0x020870D0): forwards to [`fnd::StubEnv::call64`], `r1 << 32 | r0`
+    /// (Z21: the AI ports reach it through `ai::AiEnv::call64`).
+    pub fn call64(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u64 {
+        let mut conv: Vec<fnd::Arg<'_>> = args
+            .iter_mut()
+            .map(|a| match a {
+                Arg::V(v) => fnd::Arg::V(*v),
+                Arg::P => fnd::Arg::P,
+                Arg::In(b) => fnd::Arg::In(b),
+                Arg::Out(b) => fnd::Arg::Out(b),
+            })
+            .collect();
+        self.stub.call64(addr, &mut conv)
+    }
+}
+
 /// One generated input. `vals[i]` is argument `i` as passed to the original (a scalar, or the
 /// fixed emulator address of a pointer argument); `bufs[i]` holds the bytes behind a `buf`/`bpp`
 /// argument (empty for scalars). The port runs on these and the testkit hashes them afterwards.

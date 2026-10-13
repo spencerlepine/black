@@ -31,6 +31,11 @@ pub struct StubEnv {
     counts: Vec<(u32, u32)>,
     /// Calls so far per stub address (`seqptr` results, P4).
     seqptr: Vec<(u32, u32)>,
+    /// Calls so far per stub address (`nth:` results, Z21).
+    nth: Vec<(u32, u32)>,
+    /// Calls so far per stub address (`ticks:` results, Z21) and the last 64-bit `ticks:` answer.
+    ticks: Vec<(u32, u32)>,
+    last_ticks: u64,
 }
 
 impl StubEnv {
@@ -42,6 +47,9 @@ impl StubEnv {
             halted: None,
             counts: Vec::new(),
             seqptr: Vec::new(),
+            nth: Vec::new(),
+            ticks: Vec::new(),
+            last_ticks: 0,
         }
     }
 
@@ -58,12 +66,15 @@ impl StubEnv {
             .iter()
             .find(|s| s.addr == addr)
             .map(|s| s.ret.clone());
-        assert_eq!(
-            ret.as_deref(),
-            Some("u64"),
-            "stub {addr:#010x}: call64 needs ret=u64"
+        let ticks = ret.as_deref().is_some_and(|r| r.starts_with("ticks:"));
+        assert!(
+            ticks || ret.as_deref() == Some("u64"),
+            "stub {addr:#010x}: call64 needs ret=u64 or ret=ticks:STEP"
         );
         let lo = self.call(addr, args);
+        if ticks {
+            return self.last_ticks;
+        }
         u64::from(lo) | (u64::from(mix(lo, 0x6464)) << 32)
     }
 
@@ -219,6 +230,22 @@ impl StubEnv {
                 }
             }
         }
+        if let Some(step) = st.ret.strip_prefix("ticks:") {
+            // `ticks:STEP` (Z21): the n-th call answers the 64-bit n * STEP (r0 here, r1 through `call64`); a clock
+            // that advances by STEP per read, independent of acc (`ticks_ret` in svflow.py)
+            let n = match self.ticks.iter_mut().find(|c| c.0 == addr) {
+                Some(c) => {
+                    c.1 += 1;
+                    c.1 - 1
+                }
+                None => {
+                    self.ticks.push((addr, 1));
+                    0
+                }
+            };
+            self.last_ticks = u64::from(n) * u64::from(num(step));
+            return self.last_ticks as u32;
+        }
         if let Some(p) = st.ret.strip_prefix("seqptr:arg") {
             // `seqptr:argK:OFS:STEP` (P4): base(K) + OFS + n * STEP, n = this stub's 0-based call index in the
             // run (a bump allocator; independent of acc)
@@ -252,7 +279,27 @@ impl StubEnv {
             let r = mix(acc, key);
             return if n == 0 { 0 } else { r % n };
         }
+        if let Some(p) = st.ret.strip_prefix("nth:") {
+            return self.nth_ret(addr, p, mix(acc, key));
+        }
         ret_value(&st.ret, mix(acc, key)).unwrap_or(0)
+    }
+
+    /// `ret=nth:K0;K1;...` (Z21): the n-th call (0-based, per run, per stub address, with or without `seq`) answers
+    /// with kind `K_n` (the last kind for every later call), applied to the usual mix value (`nth_ret` in svflow.py).
+    fn nth_ret(&mut self, addr: u32, kinds: &str, val: u32) -> u32 {
+        let n = match self.nth.iter_mut().find(|c| c.0 == addr) {
+            Some(c) => {
+                c.1 += 1;
+                c.1 - 1
+            }
+            None => {
+                self.nth.push((addr, 1));
+                0
+            }
+        };
+        let ks: Vec<&str> = kinds.split(';').collect();
+        ret_value(ks[(n as usize).min(ks.len() - 1)], val).unwrap_or(0)
     }
 }
 
@@ -366,6 +413,33 @@ mod tests {
         let v = e.call64(0x021B_B798, &mut [Arg::V(0xABCD)]);
         assert_eq!(v as u32, lo);
         assert_eq!(v, 0x5a15_fb42_731c_9f54);
+    }
+
+    /// `nth:K0;K1;..` (Z21): the call index picks the result kind (the last one repeats); vectors computed with
+    /// svflow.py `make_stub` (salt 0x1234, one `v` argument 0xABCD; call 1 with `seq` equals the `seq` vector above).
+    #[test]
+    fn nth_picks_the_result_kind_by_call_index() {
+        for (seq, want) in [
+            (true, [0x1, 0xcd27_d8e5, 0x5, 0x6]),
+            (false, [0x1, 0x731c_9f54, 0x2, 0x2]),
+        ] {
+            let mut e = StubEnv::new(vec![spec("nth:pick:0/1/2;u32;mod:7", &["v"], seq)], 0x1234);
+            let got: Vec<u32> = (0..4)
+                .map(|_| e.call(0x021B_B798, &mut [Arg::V(0xABCD)]))
+                .collect();
+            assert_eq!(got, want);
+        }
+    }
+
+    /// `ticks:STEP` (Z21): call n answers n * STEP as a 64-bit value, whatever the arguments (svflow.py `ticks_ret`).
+    #[test]
+    fn ticks_advance_by_step() {
+        let mut e = StubEnv::new(vec![spec("ticks:0x80000000", &["v"], true)], 0x1234);
+        let got: Vec<u64> = (0..4)
+            .map(|i| e.call64(0x021B_B798, &mut [Arg::V(i)]))
+            .collect();
+        assert_eq!(got, [0, 0x8000_0000, 0x1_0000_0000, 0x1_8000_0000]);
+        assert_eq!(e.call(0x021B_B798, &mut [Arg::V(0)]), 0);
     }
 
     /// `lt:K` (B10-spec4): below argument K, 0 for a zero bound.

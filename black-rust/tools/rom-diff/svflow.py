@@ -428,6 +428,26 @@ class Ctx:
         self.counts = {}  # stub address -> calls so far in this run (`seq` stubs)
 
 
+def nth_ret(st, ctx, val):
+    """Z21: `ret=nth:K0;K1;...` = the result kind of the n-th call (0-based, per run, per stub address, with or without
+    `seq`) is K_n (the last one for every later call), applied to the usual mix value: per-operand bounds for a
+    script-operand reader (the first operand 0..2, the second any u32)."""
+    ks = st.ret[4:].split(";")
+    n = ctx.counts.get(("nth", st.addr), 0)
+    ctx.counts[("nth", st.addr)] = n + 1
+    return ret_value(ks[min(n, len(ks) - 1)], val)
+
+
+def ticks_ret(st, ctx):
+    """Z21: `ret=ticks:STEP` = the 64-bit value n * STEP in r0:r1 for the n-th call (0-based, per run, per stub address;
+    independent of the arguments and of `seq`): a clock that advances by STEP per read (OS_GetTick 020870d0 polled by a
+    time-budget loop; `ret=u64` answers are random, so a "more than N ticks passed" test is decided on the first poll)."""
+    n = ctx.counts.get(("ticks", st.addr), 0)
+    ctx.counts[("ticks", st.addr)] = n + 1
+    v = n * int(st.ret[6:], 0)
+    return (v & M, (v >> 32) & M)
+
+
 def make_stub(st, ctx):
     key = st.addr & 0xFFFF
 
@@ -500,9 +520,13 @@ def make_stub(st, ctx):
         if st.ret.startswith("lt:"):  # B10-spec4: `lt:K` = mix(...) % argK (0 when argK == 0): a rand_range(n) answer below n
             n = raw[int(st.ret[3:], 0)]
             return mix(acc, key) % n if n else 0
+        if st.ret.startswith("ticks:"):
+            return ticks_ret(st, ctx)
         if st.ret == "u64":  # B14-spec: r0 = mix(acc, key), r1 = mix(r0, 0x6464) (a 64-bit result such as OS_GetTick)
             lo = mix(acc, key)
             return (lo, mix(lo, 0x6464))
+        if st.ret.startswith("nth:"):
+            return nth_ret(st, ctx, mix(acc, key))
         return ret_value(st.ret, mix(acc, key))
 
     return f

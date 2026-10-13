@@ -12,11 +12,21 @@ use crate::server_flow::env::{Arg, FlowEnv};
 
 /// Functions of this area that are ported and checked by `tests::svflow_match_rom`.
 pub const PORTED: &[u32] = &[
+    0x0218_7F00,
+    0x0218_7FB0,
+    0x0218_8080,
+    0x0218_80BC,
+    0x0218_8134,
+    0x0218_8140,
+    0x0218_814C,
+    0x0218_8284,
+    0x0218_85BC,
     0x0218_871C,
     0x0218_872C,
     0x0218_873C,
     0x0218_874C,
     0x0218_875C,
+    0x0218_878C,
     0x0218_87B4,
     0x0218_87C4,
     0x0218_87D4,
@@ -47,13 +57,17 @@ pub const PORTED: &[u32] = &[
     0x0218_8AD8,
     0x0218_8AE8,
     0x0218_8AF8,
+    0x0218_8B1C,
+    0x0218_8B64,
     0x0218_8BB0,
     0x0218_8C1C,
     0x0218_8C88,
+    0x0218_8CA0,
     0x0218_8D48,
     0x0218_8D5C,
     0x0218_8E00,
     0x0218_8E24,
+    0x0218_8E90,
     0x0218_8F08,
     0x0218_8F14,
     0x0218_8F2C,
@@ -98,10 +112,12 @@ pub const PORTED: &[u32] = &[
     0x0218_9548,
     0x0218_9590,
     0x0218_95AC,
+    0x0218_95C4,
     0x0218_9620,
     0x0218_9630,
     0x0218_9640,
     0x0218_9668,
+    0x0218_9694,
     0x0218_96E0,
     0x0218_9718,
     0x0218_9758,
@@ -124,6 +140,7 @@ pub const PORTED: &[u32] = &[
     0x0218_9D30,
     0x0218_9D38,
     0x0218_9D40,
+    0x0218_9D48,
     0x0218_9E70,
     0x0218_9E80,
     0x0218_9E90,
@@ -147,6 +164,7 @@ pub const PORTED: &[u32] = &[
     0x0218_A2FC,
     0x0218_A308,
     0x0218_A310,
+    0x0218_A324,
     0x0218_A378,
     0x0218_A384,
     0x0218_A390,
@@ -197,10 +215,9 @@ fn bpv<E: FlowEnv>(env: &mut E, addr: u32, x: u32) -> u32 {
     env.call(addr, &mut [Arg::P, Arg::V(x)])
 }
 
-/// Env wrapper: `021d59b4(bpp, id)` (BattleMon value by id). The spec stub lists only the pointer, so `id` is not passed
-/// to the environment (it would be the second register; UNVERIFIED in the harness).
-fn mon_value<E: FlowEnv>(env: &mut E, _bpp: u32, _id: u32) -> u32 {
-    env.call(0x021D_59B4, &mut [Arg::P])
+/// Env wrapper: `021d59b4(bpp, id)` (BattleMon value by id; both registers are logged, Z21).
+fn mon_value<E: FlowEnv>(env: &mut E, bpp: u32, id: u32) -> u32 {
+    call(env, 0x021D_59B4, &[bpp, id])
 }
 
 /// Env wrapper: `021d5448(bpp)`, the number of moves (0..4).
@@ -219,8 +236,8 @@ fn mon_id<E: FlowEnv>(env: &mut E, _bpp: u32) -> u32 {
 }
 
 /// Env wrapper: `021d5b68(bpp)`, nonzero when fainted (UNVERIFIED).
-fn fainted<E: FlowEnv>(env: &mut E, _bpp: u32) -> u32 {
-    bp(env, 0x021D_5B68)
+fn fainted<E: FlowEnv>(env: &mut E, bpp: u32) -> u32 {
+    call(env, 0x021D_5B68, &[bpp])
 }
 
 /// Env wrapper: `021c7e14(flow, atk_id, def_id, waza, 1, x)` (damage-like score; UNVERIFIED).
@@ -378,8 +395,7 @@ pub fn reset_scores(m: &mut Mem, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__0218a324`: remember the iterated mon's last move (`021d67a8`) in its 4-entry table
 /// `ai[0x4C + 8 * pos]` (first free entry, unless already there); returns the last `021d67a8` result.
-/// UNVERIFIED port of 0218a324: its ai1.spec block does not bound `ai[0x95]` (0..3 elsewhere), so the original writes
-/// past the 0x100-byte AI buffer (stray writes).
+/// (ai1.spec bounds `ai[0x95]` to a position 0..5; Z21.)
 pub fn note_last_move<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
     mon_at(env, m, ai, m.r8(ai + ITER_POS));
     let mut last = 0;
@@ -574,7 +590,6 @@ pub fn mon_trait<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32, slot: u32, pos: 
 /// 473)`), fill its handles (`020490f4(0xAB, heap)` at +0xA4, `02020f14(heap)` at +0xA8, M / flow / setup, kind
 /// `021b8588(M)`, aux `021b86b8(M)`, mask), create its VM on the init record ([`INIT_RECORD`]) with the AI object as
 /// context, create the waza cache once (`0201c328(0x30, heap)` unless `0201c408()`), create the global table; returns the VM.
-/// UNVERIFIED port of 02187f00: ai1.spec stubs 02020f14 `ret=none`, but it returns a value (tail call into 020490f4).
 #[allow(clippy::too_many_arguments)]
 pub fn ai_create<E: FlowEnv>(
     env: &mut E,
@@ -612,8 +627,6 @@ pub fn ai_create<E: FlowEnv>(
 
 /// C: `FUN_overlay_d_96__02188080` (`ai_delete`): free the AI object's handles, the object and its VM, the waza cache
 /// (`0201c3c0` when `0201c408()` == 1) and the global table; returns 0.
-/// UNVERIFIED port of 02188080: matches ai1.spec, but registering it deactivates the non-`force` `02188080` stub in client1.spec:37 (the
-/// battle client's call into the AI); `tools/check-force.py` does not scan `ai/` yet, see the B14 report.
 pub fn ai_delete<E: FlowEnv>(env: &mut E, m: &mut Mem, _vm: u32) -> u32 {
     let ai = env.call(0x0201_1324, &mut [Arg::P]);
     let _ = (m.r32(ai + 0xA4), m.r32(ai + 0xA8));
@@ -630,8 +643,6 @@ pub fn ai_delete<E: FlowEnv>(env: &mut E, m: &mut Mem, _vm: u32) -> u32 {
 /// C: `FUN_overlay_d_96__021880bc` (`ai_start`): reset the per-turn state of the AI object (of `vm`) for the own position
 /// `pos`: base scores 0 / 100 by `usable[i]`, priorities `100 - rand >> 28`, random word `ai[0xCC] = rand >> 24`; returns
 /// that word.
-/// UNVERIFIED port of 021880bc: matches ai1.spec, but registering it deactivates the non-`force` `021880bc` stub in client3.spec:706 (the
-/// battle client's call into the AI); `tools/check-force.py` does not scan `ai/` yet, see the B14 report.
 pub fn ai_start<E: FlowEnv>(env: &mut E, m: &mut Mem, _vm: u32, usable: u32, pos: u32) -> u32 {
     let ai = env.call(0x0201_1324, &mut [Arg::P]);
     m.w8(ai, 0);
@@ -656,16 +667,12 @@ pub fn ai_start<E: FlowEnv>(env: &mut E, m: &mut Mem, _vm: u32, usable: u32, pos
 }
 
 /// C: `FUN_overlay_d_96__02188134`: the chosen move slot `ai[0x46]` of the AI object of `vm`.
-/// UNVERIFIED port of 02188134: matches ai1.spec, but registering it deactivates the non-`force` `02188134` stub in client3.spec:709 (the
-/// battle client's call into the AI); `tools/check-force.py` does not scan `ai/` yet, see the B14 report.
 pub fn chosen_move<E: FlowEnv>(env: &mut E, m: &Mem) -> u32 {
     let ai = env.call(0x0201_1324, &mut [Arg::P]);
     m.r8(ai + 0x46)
 }
 
 /// C: `FUN_overlay_d_96__02188140`: the chosen target position `ai[0x47]` of the AI object of `vm`.
-/// UNVERIFIED port of 02188140: matches ai1.spec, but registering it deactivates the non-`force` `02188140` stub in client3.spec:710 (the
-/// battle client's call into the AI); `tools/check-force.py` does not scan `ai/` yet, see the B14 report.
 pub fn chosen_target<E: FlowEnv>(env: &mut E, m: &Mem) -> u32 {
     let ai = env.call(0x0201_1324, &mut [Arg::P]);
     m.r8(ai + 0x47)
@@ -725,7 +732,6 @@ fn pick_best_slot<E: FlowEnv>(env: &mut E, m: &Mem, ai: u32) -> (u32, u32) {
 
 /// C: `FUN_overlay_d_96__0218814c`: think for a single target (`ai[0x95]`): run the scripts, then pick the best-scoring
 /// move slot (4 = abort when `ai[0x44]` bit 1); returns 1 when out of time, else 0.
-/// UNVERIFIED port of 0218814c: reads `020870d0` (OS tick, `ret=u64`), which the svflow test env cannot answer yet.
 pub fn think_single<E: AiEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
     let s = mon_at(env, m, ai, m.r8(ai + OWN_POS));
     m.w32(ai + SELF_MON, s);
@@ -753,7 +759,6 @@ pub fn think_single<E: AiEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32
 /// score (`ai[0x30 + pos]`, `ai[0x24 + 2 * pos]`; -1 for none / self / fainted), then a random target among the best
 /// scores, its slot, and the target fix-ups for self-targeting (move param 0x1B) and non-adjacent (flag 0xB) moves;
 /// returns 1 when out of time, else 0.
-/// UNVERIFIED port of 02188284: reads `020870d0` (OS tick, `ret=u64`), which the svflow test env cannot answer yet.
 pub fn think_multi<E: AiEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
     let cnt = if m.r32(ai + KIND) == 1 { 4 } else { 6 };
     if m.r8(ai + FLAGS) & 0x10 == 0 {
@@ -842,7 +847,7 @@ pub fn think_multi<E: AiEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 
 /// C: `FUN_overlay_d_96__021885bc`: score every move slot of the current script: phase 0 loads the slot's move and the
 /// script (`0218a494`, `0201127c`), phase 1 steps the VM (`02011298`) until the script ends (bit 0 of `ai[0x44]`) or
 /// 500 ticks pass (sets bit 4); unusable / non-adjacent moves score 0. Returns the phase `ai[0]`.
-/// UNVERIFIED port of 021885bc: reads `020870d0` (OS tick, `ret=u64`), which the svflow test env cannot answer yet.
+/// The OS tick is read through [`AiEnv::call64`] (the test env answers the spec's `ticks:100` clock; Z21).
 pub fn run_moves<E: AiEnv>(env: &mut E, m: &mut Mem, _vm: u32, ai: u32) -> u32 {
     while m.r8(ai) != 2 && m.r8(ai + FLAGS) & 0x10 == 0 {
         let ph = m.r8(ai);
@@ -914,7 +919,6 @@ pub fn run_moves<E: AiEnv>(env: &mut E, m: &mut Mem, _vm: u32, ai: u32) -> u32 {
 /// C: `FUN_overlay_d_96__02187fb0` (`ai_think`): pick the move and target: single battles ([`think_single`] on the
 /// opposite position), double / triple ([`think_multi`]), otherwise a random opposing position that is not fainted
 /// (target 0 when the think yields nothing).
-/// UNVERIFIED port of 02187fb0: runs the VM loop of [`run_moves`], which reads the OS tick (`ret=u64`).
 pub fn ai_think<E: AiEnv>(env: &mut E, m: &mut Mem, vm: u32) -> u32 {
     let ai = env.call(0x0201_1324, &mut [Arg::P]);
     let k = m.r32(ai + KIND);
@@ -989,8 +993,6 @@ wrapper!(
     cmd_03 => if_rand_h(3));
 
 /// C: `FUN_overlay_d_96__0218878c`: command 4, add the operand to the current slot's score (clamped at 0).
-/// UNVERIFIED port of 0218878c: ai1.spec leaves the slot index `ai[1]` unbounded, so the original writes past the
-/// 0x100-byte AI buffer (stray writes the Rust side of the harness cannot report).
 pub fn cmd_add_score<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
     let v = op(env);
     let p = ai + 4 + 4 * m.r8(ai + 1);
@@ -1167,7 +1169,6 @@ fn list_word(m: &Mem, tbl: u32, i: u32) -> u32 {
 }
 
 /// C: `FUN_overlay_d_96__02188b1c`: command 27, `if ai[0x38] in list(a): goto b` (script list ended by -1).
-/// UNVERIFIED port of 02188b1c: the list lives in script memory at `vm[0x14] + a` with an unbounded operand `a`.
 pub fn cmd_if_result_in<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
     let a = op(env);
     let tbl = m.r32(vm + VM_BASE).wrapping_add(a);
@@ -1189,7 +1190,6 @@ pub fn cmd_if_result_in<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) 
 }
 
 /// C: `FUN_overlay_d_96__02188b64`: command 28, `if ai[0x38] not in list(a): goto b`.
-/// UNVERIFIED port of 02188b64: the list lives in script memory at `vm[0x14] + a` with an unbounded operand `a`.
 pub fn cmd_if_result_not_in<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
     let a = op(env);
     let tbl = m.r32(vm + VM_BASE).wrapping_add(a);
@@ -1256,15 +1256,13 @@ pub fn cmd_get_8138<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
     status(m, ai)
 }
 
-/// Env wrapper: `021d57fc(bpp)`, the packed types of a BattleMon. The spec stub lists four value arguments (the
-/// callee reads only r0), so this port cannot match it; see [`cmd_get_type`].
+/// Env wrapper: `021d57fc(bpp)`, the packed types of a BattleMon (the callee reads only r0).
 fn mon_types<E: FlowEnv>(env: &mut E, bpp: u32) -> u32 {
     call(env, 0x021D_57FC, &[bpp])
 }
 
 /// C: `FUN_overlay_d_96__02188ca0`: command 32, `ai[0x38]` = a type (`021e8cfc` first / `021e8d04` second of the packed
 /// `021d57fc` types) of self (0..3), the current move param 0 (4) or the mons in front (5..8); other selectors keep it.
-/// UNVERIFIED port of 02188ca0: ai1.spec stubs 021d57fc as `args=v,v,v,v` (it takes only the BattleMon in r0).
 pub fn cmd_get_type<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
     let sel = op(env);
     let t1 = mon_types(env, m.r32(ai + SELF_MON));
@@ -1345,12 +1343,18 @@ pub fn cmd_last_move<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 }
 
 /// C: `FUN_overlay_d_96__02188e24`: command 38, compare a `021c81c8(flow, self, 1)` value with the target's under kind
-/// `k` (0 -> `>`, 1 -> `<`, 2 -> `==`, others as given): speed order? The spec stub logs no arguments.
+/// `k` (0 -> `>`, 1 -> `<`, 2 -> `==`, others as given): speed order? (`021c81c8` is a thunk: its target gets r0..r2.)
 pub fn cmd_cmp_speed<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
     let k = op(env);
     let b = op(env);
-    let a = call(env, 0x021C_81C8, &[]);
-    let c = call(env, 0x021C_81C8, &[]);
+    let a = env.call(
+        0x021C_81C8,
+        &mut [Arg::P, Arg::V(m.r32(ai + SELF_MON)), Arg::V(1)],
+    );
+    let c = env.call(
+        0x021C_81C8,
+        &mut [Arg::P, Arg::V(m.r32(ai + TARGET_MON)), Arg::V(1)],
+    );
     let k = match k {
         0 => 1,
         1 => 0,
@@ -1361,15 +1365,13 @@ pub fn cmd_cmp_speed<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 
     status(m, ai)
 }
 
-/// Env wrapper: `021d5b7c(bpp)` (UNVERIFIED: "can act"). The spec stub lists `p,v,v,v` (it reads only r0); see
-/// [`cmd_count_party_5b7c`].
-fn mon_5b7c<E: FlowEnv>(env: &mut E, _bpp: u32) -> u32 {
-    bp(env, 0x021D_5B7C)
+/// Env wrapper: `021d5b7c(bpp)` (UNVERIFIED: "can act"; the callee reads only r0).
+fn mon_5b7c<E: FlowEnv>(env: &mut E, bpp: u32) -> u32 {
+    call(env, 0x021D_5B7C, &[bpp])
 }
 
 /// C: `FUN_overlay_d_96__02188e90`: command 39, `ai[0x38]` = number of party members (from the client's first index) with
 /// `021d5b7c` set.
-/// UNVERIFIED port of 02188e90: ai1.spec stubs 021d5b7c as `args=p,v,v,v` (it takes only the BattleMon in r0).
 pub fn cmd_count_party_5b7c<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
     let s = op(env);
     let pos = pos_of(env, m, ai, s);
@@ -1757,8 +1759,7 @@ pub fn cmd_end<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__021895c4`: command 78, `if speed(self) <K[a]> speed(target): goto b` with `K = {1, 0, 2}`
 /// ([`INIT_RECORD`] words 3..5, copied to the stack), value 0xF of both mons.
-/// UNVERIFIED port of 021895c4: the original indexes its 3-word stack copy with the unbounded operand `a` (the port panics
-/// for `a >= 3`).
+/// For `a >= 3` the original reads past its stack copy (the port panics); ai1.spec bounds the operand to 0..2 (Z21).
 pub fn cmd_cmp_value_f<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
     let a = op(env);
     let b = op(env);
@@ -1800,7 +1801,6 @@ pub fn cmd_if_same_side<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u
 }
 
 /// C: `FUN_overlay_d_96__02189694`: command 82, `ai[0x38]` = the mon at a slot has type `t`.
-/// UNVERIFIED port of 02189694: ai1.spec stubs 021d57fc as `args=v,v,v,v` (it takes only the BattleMon in r0).
 pub fn cmd_has_type<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
     let s = op(env);
     let t = op(env) & 0xFF;
@@ -2077,7 +2077,6 @@ pub fn cmd_value_diff<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__02189d48`: command 105, `ai[0x38]` = 0 (self not in the party / current move scores 0), 2 (no
 /// other party member does better), 1 (another `021d5b7c` party member has a move that outscores the current one).
-/// UNVERIFIED port of 02189d48: ai1.spec stubs 021d5b7c as `args=p,v,v,v` (it takes only the BattleMon in r0).
 pub fn cmd_party_outscores<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
     let x = op(env);
     let (party, cnt) = party_of(env, m, ai, m.r8(ai + OWN_POS));

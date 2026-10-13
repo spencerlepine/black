@@ -34,7 +34,7 @@ fn 021cd8e0 ret=none
   fix arg0 0x10 u32 alt const 0 || any
   fix arg0 0xF0 u32 alt const 0 || any
   stub 021ee600 ret=none args=v
-  stub 02188080 ret=none args=
+  stub 02188080 force ret=none args=
   stub 020307b0 ret=none args=v
 
 # flags |= 2 (request done)
@@ -190,7 +190,7 @@ fn 021cd6f0 ret=ofs:arg11
   stub 021d3d9c force ret=none args=p
   stub 021b9fbc force ret=u32 args=v,v
   stub 021ba820 force ret=u32 args=v
-  stub 02187f00 ret=u32 args=v,v,v,v,v
+  stub 02187f00 force ret=u32 args=v,v,v,v,v
   stub 021b90f8 force ret=pick:0/1 args=v
   stub 021ee5e4 ret=u32 args=v
 

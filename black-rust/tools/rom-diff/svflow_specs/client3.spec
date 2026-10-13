@@ -703,11 +703,11 @@ fn 021d0770 ret=u32 inputs=600
   stub 021cf81c ret=pick:0/1/4 args=p,v,p
   stub 021d5440 ret=u32 args=v
   stub 021b8d8c force ret=u32 args=v,v,v
-  stub 021880bc ret=none args=v,p,v
+  stub 021880bc force ret=none args=v,p,v
   stub 021cf58c force ret=none args=p,p,v
-  stub 02187fb0 ret=pick:0/1 args=v
-  stub 02188134 ret=pick:0/1/4 args=v
-  stub 02188140 ret=u32 args=v
+  stub 02187fb0 force ret=pick:0/1 args=v
+  stub 02188134 force ret=pick:0/1/4 args=v
+  stub 02188140 force ret=u32 args=v
   stub 021d54c0 ret=u16 args=v,v
   stub 021d8414 ret=none args=p
   stub 0201beb8 ret=pick:0/1 args=v,v

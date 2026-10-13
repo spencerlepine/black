@@ -63,6 +63,14 @@ pub trait AiEnv: FlowEnv {
     fn call64(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u64;
 }
 
+/// The svflow test environment answers `ret=u64` stubs (Z21).
+#[cfg(test)]
+impl AiEnv for crate::server_flow::testkit::TestEnv {
+    fn call64(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u64 {
+        crate::server_flow::testkit::TestEnv::call64(self, addr, args)
+    }
+}
+
 /// C: `0x0218A574`, the VM init record of `ai_create` (`0201121c(heap, &rec)`): word 0 = 0x80010, word 1 = the command
 /// table [`CMD_TABLE`], word 2 = its length 120; words 3..5 (0x0218A580) = the kind table `{1, 0, 2}` of `021895c4`;
 /// words 6..12 (0x0218A58C) = the value ids `{1..7}` of `02189c8c`.

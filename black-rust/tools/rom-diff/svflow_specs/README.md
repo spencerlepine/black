@@ -537,3 +537,27 @@ No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec te
   under the Z19 entry state they read 0 on every input (`--order-check` clean), and the header says so.
 * Checked with every function of each area treated as ported (no fault, stray write or unstubbed callee); `--strict-callees` and
   `--order-check` clean; instruction coverage 824/824, 463/463, 1305/1305.
+
+## Z21 additions (ai1 strength; harness job)
+
+New syntax only; no existing spec text changes meaning and no other area's hash changes. Mirrored in `svflow.py`
+(`nth_ret`, `ticks_ret`) and `black-fndiff` (`stub.rs`, parity vectors `nth_picks_the_result_kind_by_call_index` and
+`ticks_advance_by_step`, computed with `svflow.py make_stub`).
+
+* Stub result kind `nth:K0;K1;...;Kn`: the n-th call of the stub (0-based, per run, per stub address, counted with or without
+  `seq`) answers with result kind `K_n`, every later call with the last one; each `K` is any `ret_value` kind (`u32`, `pick:`,
+  `mod:`, `ptr:`, `nullable:` ...), applied to the usual mix value (so `seq` still decorrelates the calls). For a script-operand
+  reader whose operands have different domains: `0201134c ... ret=nth:pick:0/1/2/3/4;pick:0/1/25/50/100;u32` = a slot, a
+  compared value, a jump offset (ai1 command handlers), or a list offset that must land on a list planted with `fix`
+  (02188b1c / 02188b64), or an index into a 3-word table (021895c4).
+* Stub result kind `ticks:STEP` (64-bit, like `u64`): the n-th call answers `n * STEP` in `r0:r1`, independent of the
+  arguments and of `seq` (a clock: OS_GetTick `020870d0` polled by the 500-tick budget loop of `021885bc`; `ret=u64` answers
+  are random, so such a loop either never ends or always times out on the first poll). The port reads it through
+  `StubEnv::call64` (`server_flow::testkit::TestEnv::call64`, `ai::AiEnv` for the test env).
+
+ai1.spec conventions (header): the AI-object fields that thresholds and indices read are biased (`alt` small range `|| any`:
+slot `+0x01`, move `+0x02`, result `+0x38`, script kind `+0x45`, remembered moves `+0x4C`, battle kind `+0x98`, turn word
+`+0xCC`; phase / flags / masks / scores / tick start in the four think blocks), getters whose answers are compared get
+`pick:` sets around the compared constants (stat stages 5..7, traits 0x17 / 0x2A / 0x47, HP percentages around 1 / 50 / 100,
+tying scores, last moves 0xB6 / 0xC5 / 0xCB), and BattleMon getters log the mon (`021d59b4 args=v,v`, `021d57fc` /
+`021d5b7c` / `021d5b68 args=v`, `021c81c8 args=p,v,v`) so that self / target / party members answer differently.
