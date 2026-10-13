@@ -98,3 +98,77 @@ embedded halfwords returns 0 (the original reads whatever follows the ROM table)
 cannot load the spec (BLOCKED: harness). With `-1` replaced by `0` in a scratch copy all 84 functions match; no
 hash is recorded yet. The zone functions assume the zone cache exists (the original dereferences null, this port
 panics at the `Mem` window).
+
+## F2a-spec: fieldmap, map matrix, fieldmap_func, land_data_patch (specs + smoke ports)
+
+Five spec areas under `tools/rom-diff/specs/black-field/` (set `field`), 205 functions, every one with a block whose
+inputs reach every instruction of the function (ROM-side coverage, see the table) and whose stub list is the closure
+of the area (the stubs of the function's callees and of the callees of all its in-area descendants), so the areas
+can be ported in any order without spec edits. Each spec header documents the records it uses.
+
+| area | original | range | specced | coverage | smoke ports (hash) | area hash |
+|---|---|---|---|---|---|---|
+| `map_matrix` | `map_matrix.c` + `map_replace.c` (ov10) | `0x02159B48..0x0215A07A` | 33 | 569/569 | `02159BC4` `zone_at` (b5615728646bbd48), `02159D68` `block_of` (a09289ab0a748193) | ba958fe99b83be98 |
+| `fieldmap` | `fieldmap.c` part 1 (ov21) | `0x02187F00..0x02189BD0` | 101 | 2313/2313 | `02189B04` `is_hold_zone` (8ff8981a934eb2dd) | c7affe5c7675f21b |
+| `fieldmap_event` | `fieldmap.c` part 2 (ov21) | `0x02189BD0..0x0218B752` | 52 | 2938/2938 | `0218AE48` `front_position` (dbde03b23eab1ea5) | 754132cfaf4ee687 |
+| `fieldmap_func` | `fieldmap_func.c` (ov21) | `0x021BB890..0x021BBCB8` | 13 | 454/462 | `021BBBD8` `ring_take` (9e53e76363c37cdd) | 61a0e7e0c0bfa557 |
+| `land_data_patch` | `land_data_patch.c` (ov21) | `0x021C939C..0x021C94BC` | 6 | 131/131 | `021C94AC` `attr_section` (2cd30edea097d968) | 44fb04626e38522e |
+
+Coverage = instructions of the function that the spec's inputs execute on the original (control-flow walk of the
+function, jump tables decoded). The 8 instructions `0x021BBAC8..0x021BBAD6` of `021BBA70` are unreachable under the
+spec model: the second assert can only be reached after the first one, and the assert `02034714` is a `noreturn`
+stub (in the game it returns when no assert hook is installed, and the function then reads through a null pointer).
+
+Function list: the F1 Ghidra index counts 222 functions in these ranges; the real set is 226 entries (Ghidra misses
+`02159BF4`, `021880C8`, `02188AD4`, `02188C60`/`C64`/`C70`/`CE0`, `02189108`, `02189140`, `02189758`..`021897BC`, `02189810`,
+`021899F0`, `02189A08`, `02189A38`/`A48`/`A60`/`A68`, `0218A0E4`, `0218B32C`, found from bl/blx targets, pointer tables and
+calls from other overlays) and lists 18 fragments of other functions (shared tails, switch cases) as functions.
+Of the 226: 205 specced, 17 render-only, 4 veneers.
+
+Render-only (G8; graphics / hardware calls without FIELDMAP logic, callers stub them by address): `02188D5C` (2D/3D mode
+setup + DISPCNT write), `02188DB0` / `02188DF0` (camera matrix + model draw), `02188E38` (3D swap/flush), `02188E50` (display
+register init), `02188EE4` (camera / light / render object creation), `02189084` / `021890AC` (draw dispatch through the
+tables 0x021D35D8 / 0x021D35B4), `021890C8` (render object teardown), `02189108` (VBlank task), `02189140` (render callback),
+`02189154` (edge marking / BG setup, 0x04000060), `021891C0` (light / fog object), `021897DC` (map draw calls), `02189810`
+(main 3D draw, NNS matrix stack), `02189998` / `021899C4` (sub-screen blend). Veneers skipped: `02159BBC` (-> Heap_Free),
+`02189B28` (-> `02013B50`), `0218AECC` (-> `021626B8`), `02188DA0` (`0203FC28(0x021D35F4)`).
+
+### Records (offsets in bytes; full tables in the spec headers)
+
+* MAP MATRIX (0x152C, `map_matrix.c` 0x4B): `+0 u16` heap, `+2 u16` default zone, `+4 u32` matrix id (ARC 9), `+8 u16`
+  width, `+0xA u16` height (blocks, each <= 30, w*h <= 900), `+0xC u16` layout flag, `+0x10 u32` cells, `+0x14 u16 zone[900]`,
+  `+0x71C u32 land[900]` (map container per cell). World position (fx32) -> block: `v / 4096 / 16 / 32` (rounding toward zero).
+* MAP REPLACE (0x2C, `map_replace.c` 0x77): ARC 10 handle, record count, a 13-byte STATE (season, flags from event vars
+  0x4031..0x403A) and the current 16-byte replacement RECORD (matrix id, kind, selector, `u16 value[6]`).
+* FIELDMAP (0x154, `fieldmap.c` 0x209): heap, gamesys, gamedata, ~60 subsystem handles, the proc state (`+0xC0..+0xCC`),
+  zone ids (`+0xD0` setup, `+0xD8` current), the player LOCATION (`+0xD4`), position (`+0xF0`/`+0xF4`), MAP CTRL (`+0x108`),
+  a slot (`+0x118`), the draw mode (`+0x12C`). MAP CTRL = ROM 0x021D88F8 (grid) / 0x021D8AD8 (rail): `kind` + setup / frame /
+  teardown functions. MAP SETUP table 0x021D3700 (8 x 0x48, by zone kind `02013B50`). PROC table 0x021D36B8 (6 steps x 2).
+* EVENT REQUEST (0x40 on the stack, built by `0218A4E0`): heap, gamesys, gamedata, zone events, zone id, fieldmap, player,
+  move state, facing, pending script, key masks, trigger direction, position pointer, FLAGS word (bit layout in the spec).
+* FIELDMAP FUNC system (0x18) + SLOT (0x18) + FUNC DATA (ROM, create / delete / update / draw callbacks), the 30 x 0x24
+  pass-by ring at `object + 0x30E0`.
+* LAND DATA PATCH (4 bytes -> ARC 156 file: attribute section of 0x18-byte cells, building section of 16-byte records).
+
+Cross-check with `nds_rom::map` (A6):
+* `matrix`: the header matches (`flags` u32 (the code reads only the low u16), `width`/`height` u16), but for `flags == 1`
+  the code (`02159D04`) reads two consecutive PLANES (`land[w*h]`, then `zone[w*h]` stored as u16), not interleaved
+  `(primary, secondary)` pairs as `MapMatrix::parse` does: in matrix 0 the planar reading gives runs of consecutive land ids
+  (78, 79, 80) with one zone id (355); the interleaved reading pairs neighbouring cells. So `cells` of the two `flags == 1`
+  matrices (0 and 175) are wrong in `nds_rom` and `cells_b` is the zone plane (reported to the coordinator, nds-rom unchanged).
+  For `flags == 0` matrices the zone of every block is the load's default zone (the 4th argument of `02159B94`).
+* `zone`: zone record `+2` (`unk_02`, 0..273) is the AREA id handed to `0201407C(heap, area, season)` by the FIELDMAP create
+  (`02188030`): seasonal areas add the season, ids >= 282 wrap to 0 (282 = ARC 014 map texture sets). The zone id of a block
+  comes from the matrix zone plane (`02159BD4`, read by the zone-change check `021893C0`).
+
+### Spec conventions (these five areas)
+
+* The arena is the `work` image (0x212C bytes at 0x02E00000; record zones listed in each header); pointer results of stubs
+  are `ptr:work:OFS:1`, function-pointer fields hold FAKE callbacks in 0x02EE0000.. (stubbed there).
+* Every out-of-area stub is `force` (overlay addresses collide with battle-overlay ports, e.g. `021BC550`; ARM9 callees are
+  ported in other black-field areas); in-area stubs are plain (they deactivate when the callee is ported).
+* Event checks: callers that build the EVENT REQUEST on their stack see a stub `0218A4E0` that fills it with masked bytes;
+  port `0218A4E0` before or with its consumers (a real consumer with a stubbed builder reads a zero request).
+* `global 04000204 4` (EXMEMCNT) in the blocks whose code toggles it; `tools/rom-diff/emu.py` maps the I/O page for
+  non-battle sets (F2a-spec harness change). `svflow.py` `ALLOW` gained the MI 16/32-bit clear/copy helpers and `memcmp`.
+

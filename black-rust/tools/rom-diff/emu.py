@@ -37,6 +37,9 @@ class Emu:
             self.images.append((0x021B6100, self.ovy))
         else:
             self.ovy = b""
+            # F2a-spec: the I/O register page, so field code that toggles a register (EXMEMCNT 0x04000204 around card
+            # access) runs; a spec owns and hashes such a register with `global 04000204 4` (an undeclared write is a stray).
+            uc.mem_map(0x04000000, 0x2000)
             for n in overlays:
                 blob = open(f"{B}/OVY_{n}.sbin", "rb").read()
                 base = overlay_base(n)

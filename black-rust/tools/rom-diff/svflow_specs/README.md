@@ -384,3 +384,20 @@ re-verified; waza's 30 earlier functions keep their hashes and the area hash of 
   mapped (zero-filled) by the ROM side; it is filled, fixed and hashed like any global (`icon.spec`). The Rust side needs nothing.
 * `svflow.py` `ALLOW`: `02018438` (level from EXP, black-pokemon `create::level_of`), which `02017fb0` (waza) runs as real code by
   design; its callee `0201850c` stays a stub. This removes the waza unstubbed-callee warning; hash-neutral.
+
+## F2a-spec additions (black-field map_matrix / fieldmap / fieldmap_event / fieldmap_func / land_data_patch)
+
+No new syntax; no existing spec text or hash changes. Harness changes (small, additive):
+
+* `emu.py`: for non-battle sets (`Emu([overlays])`) the I/O page 0x04000000-0x04001FFF is mapped (zero-filled), so field code
+  that toggles a register (EXMEMCNT 0x04000204 around card reads) runs; a spec owns and hashes the register with
+  `global 04000204 4` (an undeclared write is a stray). Battle runs are unchanged; inputs that used to fault on such a write
+  were never recordable.
+* `svflow.py` `ALLOW`: the ARM9 library helpers `02082a48` MIi_CpuClear16, `02082a60` MIi_CpuCopy16, `02082a7c` MIi_CpuClear32,
+  `02082a90` MIi_CpuCopy32 and `0203efc8` memcmp run as real code (the ports inline them; they write / read only their arguments).
+
+Conventions of these specs (headers): the arena is the `work` image (records at fixed offsets, pointer results of stubs are
+`ptr:work:OFS:1`); every out-of-area stub carries `force` (overlay addresses collide with battle-overlay `PORTED` entries, e.g.
+`021bc550`, and ARM9 callees are ported in other black-field areas); a stub argument list is positional, so a register the
+callee does not read before one it does is `p`; closure stubs as in core4 (checked with every function of the area treated as
+ported: no fault, stray write or unstubbed callee; `svflow.py AREA --all --strict-callees` clean).
