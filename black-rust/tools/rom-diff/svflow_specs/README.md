@@ -661,3 +661,16 @@ steps read and write a real work block; work fields that index ROM tables or cou
 `near N 1` alternatives at the compared boundaries; closure stubs (checked with every function of the area treated as ported: no fault,
 stray write or unstubbed callee); every out-of-area stub is `force`; `--strict-callees` and `--order-check` clean; instruction coverage
 402/402, 709/709, 514/514, 1093/1093, 864/864 in both modes. `0209C0A4` (signed division) runs as real code under the existing `ALLOW`.
+
+## F4b-spec3 additions (black-field mvproc3a / mvproc3b / mvproc3c / mvproc3d)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-field/mvproc3{a,b,c,d}.spec` (headers), on top of the F4b-spec2 ones: arg0 = `arg buf 0x100` (the MMDL image; move work at
++0x94, sub work at +0xA4), the work getters `0216D684` / `0216D69C` / `0216D6A0` / `0216D6B8` answer `ptr:arg0:0x94:1` / `ptr:arg0:0xA4:1`;
+the state procs a move proc dispatches through ROM tables get arg1 = `arg u32 addrof arg0 0x94` (the move work pointer, as the
+dispatcher passes it) and are in-area `seq ret=pick:0/1` stubs of the dispatcher (the closure follows the table targets); a pointer
+into the caller's stack that an in-area callee reads and rewrites is `outv` (`0219C314`'s `&dir`); a stub one function polls with
+unchanged arguments is `seq` (`0219C314`, `02197EDC`, `0216DD1C`); the RNG `020056EC` answers `lt:0`; out-of-area and cross-area stubs
+are `force`. Closure stubs (checked with every function of the area treated as ported: no fault, stray write or unstubbed callee);
+`--strict-callees` and `--order-check` clean; instruction coverage (plain / closure) 820/820 / 820/820, 1240/1241 / 1234/1241 (one dead
+`b` in `0219B074`), 1013/1013 / 1013/1013, 718/718 / 718/718.
