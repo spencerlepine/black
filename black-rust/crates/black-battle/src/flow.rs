@@ -46,9 +46,13 @@ pub trait FlowHost: BppEnv {
     fn fun_021c82b8(&mut self, x: u32) -> bool;
     /// C: `FUN_overlay_d_93__021c83d4(wk)` (-> `021bc2b0`).
     fn fun_021c83d4(&mut self) -> bool;
-    /// C: `FUN_0689C944(ability)` via the ARM thunks at 0x021DA2D0 / 0x021DA2E0: the ability
-    /// cannot be copied (Trace).
-    fn ability_uncopyable(&mut self, ability: u32) -> bool;
+    /// C: `FUN_0689C944(ability)` via the ARM thunks at 0x021DA2D0 / 0x021DA2E0 and the tail-call
+    /// veneer `sub_0689c93c`: the ability cannot be copied (Trace). The ROM body is
+    /// `ability != 0x19 && 0689c91c(ability)` (read with rizin, V-0018), so it is provided on top
+    /// of [`Self::fun_0689c91c`] and a host cannot answer the two inconsistently.
+    fn ability_uncopyable(&mut self, ability: u32) -> bool {
+        ability != 0x19 && self.fun_0689c91c(ability)
+    }
     /// C: `FUN_overlay_d_93__021c815c(wk)`: the battle rule (2 = triple).
     fn rule(&mut self) -> u32;
     /// C: `FUN_overlay_d_93__021b9a6c(pos_a, pos_b)`: positions are adjacent (triples).
@@ -195,8 +199,6 @@ pub trait FlowHost: BppEnv {
     fn fun_0689c8bc(&mut self, mv: u32) -> bool;
     /// C: `sub_0689c91c(ability)`: tests an ability against an 8-entry list (or a flag).
     fn fun_0689c91c(&mut self, ability: u32) -> bool;
-    /// C: `sub_0689c93c(ability)` (tail call): ability test.
-    fn fun_0689c93c(&mut self, ability: u32) -> bool;
     /// C: `sub_0689ca1c(move)`: tests `move` against an 11-entry move list (or a flag).
     fn fun_0689ca1c(&mut self, mv: u32) -> bool;
     /// C: `sub_0689ca3c(move)`: tests `move` against a 20-entry move list (or a flag).

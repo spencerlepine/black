@@ -11,7 +11,7 @@ fn moves_match_rom() {
     };
     let addrs: Vec<u32> = super::PORTED.to_vec();
     let h = run_move_suite(&addrs, |a| super::handler::<TestHost>(a).unwrap(), &reg);
-    assert_eq!(h, "c0c95e82de734115");
+    assert_eq!(h, "a1b0803f119620cd");
 }
 
 /// The registry read by the harness: 258 moves, 337 distinct handlers, handler code in
@@ -114,7 +114,7 @@ fn move_stubs_match_python() {
                 24 => words.push(b(host.fun_0689c8ac(a[0]))),
                 25 => words.push(b(host.fun_0689c8bc(a[0]))),
                 26 => words.push(b(host.fun_0689c91c(a[0]))),
-                27 => words.push(b(host.fun_0689c93c(a[0]))),
+                27 => words.push(b(host.ability_uncopyable(a[0]))),
                 28 => words.push(b(host.fun_0689ca1c(a[0]))),
                 29 => words.push(b(host.fun_0689ca3c(a[0]))),
                 30 => words.push(b(host.fun_0689ca5c(a[0]))),
@@ -134,5 +134,5 @@ fn move_stubs_match_python() {
             host.log.drain(..).for_each(|v| h.w(v));
         }
     }
-    assert_eq!(h.hex(), "e12192f6830dd600");
+    assert_eq!(h.hex(), "e1a800a776dddb84");
 }

@@ -194,7 +194,9 @@ class Host:
         st(0x0201C314, lambda em, mv, *a, sp: (self.log.extend([0x113, mv]), mix(mv, 0xC314) & 1)[1])
         st(0x0201C1C8, lambda em, mv, *a, sp: (self.log.extend([0x114, mv]), wide(mv, 0xC1C8, mix(mv, 0xC1C8) % 18, 0xFF))[1])
         st(0x021C83D4, lambda em, *a, sp: (self.log.append(0x10C), mix(self.wseed, 0x83D4) & 1)[1])
-        st(0x0689C944, lambda em, ab, *a, sp: (self.log.extend([0x10D, ab]), int(mix(ab, 0xC944) % 4 == 0))[1])
+        # 0689c944 is `ab != 0x19 && 0689c91c(ab)` (V-0018; FlowHost::ability_uncopyable); not
+        # loaded outside effects mode, so modelled here on top of the 0689c91c stub
+        st(0x0689C944, self.ability_uncopyable)
         st(0x021C815C, lambda em, *a, sp: (self.log.append(0x10E), mix(self.wseed, 0x815C) % 4)[1])
         st(0x021B9A6C, lambda em, x, y, *a, sp: (self.log.extend([0x10F, x, y]), mix(x ^ (y << 8), 0x9A6C) & 1)[1])
         st(0x021C82B8, lambda em, wk, x, *a, sp: (self.log.extend([0x10B, x]), mix(self.wseed, 0x82B8 ^ x) & 1)[1])
@@ -273,7 +275,7 @@ class Host:
         st(0x0689C8AC, lambda em, mv, *a, sp: (lg([0x146, mv]), mix(mv, 0xC8AC) & 1)[1])
         st(0x0689C8BC, lambda em, mv, *a, sp: (lg([0x147, mv]), mix(mv, 0xC8BC) & 1)[1])
         st(0x0689C91C, lambda em, ab, *a, sp: (lg([0x148, ab]), mix(ab, 0xC91C) & 1)[1])
-        st(0x0689C93C, lambda em, ab, *a, sp: (lg([0x149, ab]), mix(ab, 0xC93C) & 1)[1])
+        st(0x0689C93C, self.ability_uncopyable)  # tail-call veneer to 0689c944
         st(0x0689CA1C, lambda em, mv, *a, sp: (lg([0x14A, mv]), mix(mv, 0xCA1C) & 1)[1])
         st(0x0689CA3C, lambda em, mv, *a, sp: (lg([0x14B, mv]), mix(mv, 0xCA3C) & 1)[1])
         st(0x0689CA5C, lambda em, mv, *a, sp: (lg([0x14C, mv]), mix(mv, 0xCA5C) & 1)[1])
@@ -371,6 +373,12 @@ class Host:
     def weather(self, e, wk, *_, sp):
         self.log.append(0x105)
         return mix(self.wseed, 0x2AB0) % 5
+
+    def ability_uncopyable(self, e, ab, *_, sp):
+        if ab == 0x19:
+            return 0
+        self.log += [0x148, ab]
+        return mix(ab, 0xC91C) & 1
 
     def category(self, e, mv, *_, sp):
         self.log += [0x106, mv]

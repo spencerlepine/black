@@ -4475,14 +4475,15 @@ pub fn h_021e7388<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Bat
 
 /// Verified with a hint capping var 5 to 1..3 (Z18c; the target IDs are vars 6..11).
 /// C: unlabeled routine at `0x021E7420`: when var 3 is the holder: `a` = its ability; if
-/// `fun_0689c93c(a)` fails, for each of the `var 5` targets whose ability is not 0x36 pushes
-/// HANDEX work 0x1F (+6 the target, +4 `a`, str 0x195 at +0xC with the target and `a`).
+/// `ability_uncopyable(a)` (called via `0689c93c`) fails, for each of the `var 5` targets whose
+/// ability is not 0x36 pushes HANDEX work 0x1F (+6 the target, +4 `a`, str 0x195 at +0xC with the
+/// target and `a`).
 pub fn h_021e7420<H: FlowHost>(_sys: &mut EventSystem, _f: FactorId, b: &mut Battle<H>, me: u8) {
     if !is_me(b, 3, me) {
         return;
     }
     let a = b.mon_get(me as u32, 0x10) as u16;
-    if b.host.fun_0689c93c(a as u32) {
+    if b.host.ability_uncopyable(a as u32) {
         return;
     }
     let n = b.var(5) as u32;

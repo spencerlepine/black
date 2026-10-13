@@ -183,10 +183,6 @@ impl FlowHost for TestHost {
         self.log.push(0x10C);
         mix(self.wseed, 0x83D4) & 1 != 0
     }
-    fn ability_uncopyable(&mut self, ability: u32) -> bool {
-        self.log.extend([0x10D, ability]);
-        mix(ability, 0xC944).is_multiple_of(4)
-    }
     fn rule(&mut self) -> u32 {
         self.log.push(0x10E);
         mix(self.wseed, 0x815C) % 4
@@ -483,10 +479,6 @@ impl FlowHost for TestHost {
     fn fun_0689c91c(&mut self, ability: u32) -> bool {
         self.log.extend([0x148, ability]);
         mix(ability, 0xC91C) & 1 != 0
-    }
-    fn fun_0689c93c(&mut self, ability: u32) -> bool {
-        self.log.extend([0x149, ability]);
-        mix(ability, 0xC93C) & 1 != 0
     }
     fn fun_0689ca1c(&mut self, mv: u32) -> bool {
         self.log.extend([0x14A, mv]);
