@@ -40,6 +40,9 @@ SRC=${FNDIFF_SRC:-crates/$CRATE/src/$AREA.rs}
 T=${FNDIFF_TESTS:-crates/$CRATE/src/$AREA/tests.rs}
 SPEC=${FNDIFF_SPEC:-tools/rom-diff/specs/$CRATE/$AREA.spec}
 TEST=${FNDIFF_FILTER:-$AREA::tests::fndiff_match_rom}
+# The default filter is the full test path: match it exactly (a substring filter for `encount` also runs
+# `effect_encount`, and both suites write the same FNDIFF_JSON).
+EXACT=; [ -n "$FNDIFF_FILTER" ] || EXACT="-- --exact"
 [ -f "$SRC" ] || { echo "no $SRC: nothing is ported in $CRATE/$AREA yet"; exit 2; }
 [ -f "$T" ] || { echo "no $T (the test module with the RECORDED table)"; exit 2; }
 [ -f "$SPEC" ] || { echo "no $SPEC: request a spec (genspec.py draft + hand review)"; exit 2; }
@@ -51,10 +54,10 @@ PJ=$D/fndiff-$TAG.rom.json
 rm -f "$RJ" "$PJ"
 if [ -n "$FN" ]; then
   $PY -I tools/rom-diff/svflow.py "$AREA" --spec "$SPEC" $PSRC --json --fn "$FN" >"$PJ"
-  FNDIFF_ONLY=$FN FNDIFF_JSON=$RJ cargo test -q -p "$CRATE" "$TEST" >"$D/fndiff-test-$TAG.log" 2>&1 || true
+  FNDIFF_ONLY=$FN FNDIFF_JSON=$RJ cargo test -q -p "$CRATE" "$TEST" $EXACT >"$D/fndiff-test-$TAG.log" 2>&1 || true
 else
   $PY -I tools/rom-diff/svflow.py "$AREA" --spec "$SPEC" $PSRC --json --jobs "${JOBS:-8}" >"$PJ"
-  FNDIFF_JSON=$RJ cargo test -q -p "$CRATE" "$TEST" >"$D/fndiff-test-$TAG.log" 2>&1 || true
+  FNDIFF_JSON=$RJ cargo test -q -p "$CRATE" "$TEST" $EXACT >"$D/fndiff-test-$TAG.log" 2>&1 || true
 fi
 if [ ! -s "$RJ" ]; then
   echo "Rust run wrote no JSON (compile error or panic); see $D/fndiff-test-$TAG.log"
@@ -81,7 +84,7 @@ else
       echo "function 0x$A: first failing input = seed $S"
       $PY -I tools/rom-diff/svflow.py "$AREA" --spec "$SPEC" $PSRC --detail "$A:$S" >"$D/fndiff-detail-rom.json"
       FNDIFF_DETAIL="$A:$S" FNDIFF_DETAIL_OUT="$D/fndiff-detail-rust.json" \
-        cargo test -q -p "$CRATE" "$TEST" >/dev/null 2>&1 || true
+        cargo test -q -p "$CRATE" "$TEST" $EXACT >/dev/null 2>&1 || true
       python3 -I tools/rom-diff/diffmaps.py stream "$D/fndiff-detail-rom.json" "$D/fndiff-detail-rust.json" || true
     done
   fi
