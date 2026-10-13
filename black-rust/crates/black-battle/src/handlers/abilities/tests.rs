@@ -31,12 +31,14 @@ fn skip_checks_match_rom() {
             let mut b = Battle::new(TestHost::default());
             b.mons = (0..MONS).map(|_| random_bpp(&mut r)).collect();
             let mut sys = EventSystem::new();
-            sys.factor_mut(0).poke_id = (r.next() % 10) as u8;
+            // IDs up to 23 so both sides occur (poke_side is id >= 12; V-0017)
+            sys.factor_mut(0).poke_id = (r.next() % 24) as u8;
             let ftype = r.next() % 8;
             let event = r.next() % 0x90;
-            let sub = match r.next() % 3 {
+            let sub = match r.next() % 4 {
                 0 => 106,
                 1 => r.next() % 600,
+                3 => r.next() % 6, // 021dc820 tests sub_id <= 3
                 _ => {
                     let o = 0x0B78 - 0x041C + 2 * (r.next() % 13) as usize;
                     u16::from_le_bytes([
@@ -45,7 +47,11 @@ fn skip_checks_match_rom() {
                     ]) as u32
                 }
             };
-            let owner = (r.next() % 10) as u8;
+            let owner = if r.next().is_multiple_of(4) {
+                sys.factor_mut(0).poke_id // 021db650 needs owner == the factor's Pokemon
+            } else {
+                (r.next() % 24) as u8
+            };
             h.w(cb(&sys, 0, &mut b, ftype, event, sub as u16, owner) as u32);
             for x in b.host.log.drain(..) {
                 h.w(x);
@@ -55,5 +61,5 @@ fn skip_checks_match_rom() {
             }
         }
     }
-    assert_eq!(h.hex(), "060b3edecd0a0c7a");
+    assert_eq!(h.hex(), "a7b0938a0e615b02");
 }

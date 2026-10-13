@@ -1061,18 +1061,20 @@ def skips():
             for i in range(NMONS):
                 e.wbytes(MONS_ADDR + 0x200 * i, random_bpp(r))
             fac = bytearray(0x3C)
-            fac[0x3B] = r.next() % 10
+            fac[0x3B] = r.next() % 24  # both sides occur (poke_side is id >= 12; V-0017)
             e.wbytes(POOL, fac)
             ftype, ev = r.next() % 8, r.next() % 0x90
-            k = r.next() % 3
+            k = r.next() % 4
             if k == 0:
                 sub = 106
             elif k == 1:
                 sub = r.next() % 600
+            elif k == 3:
+                sub = r.next() % 6  # 021dc820 tests sub_id <= 3
             else:
                 o = 0x021F0B78 - 0x021B6100 + 2 * (r.next() % 13)
                 sub = ovy[o] | ovy[o + 1] << 8
-            owner = r.next() % 10
+            owner = fac[0x3B] if r.next() % 4 == 0 else r.next() % 24  # 021db650 needs owner == the factor's Pokemon
             h.w(e.call(addr, POOL, FLOW, ftype, ev, stack_args=(sub, owner))[0])
             for v in host.log:
                 h.w(v)
