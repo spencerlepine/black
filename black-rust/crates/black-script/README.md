@@ -38,6 +38,13 @@ Undecompiled callees go in `hooks` as traits (§4 porting pattern); pointers sta
 | `scrcmd_c03center` | `scrcmd_c03center.c`: overlay 21 0x021B5A18-0x021B66B7 (row 21.50; 28 fns, 22 ids; no X1 networking) | `tools/rom-diff/specs/black-script/scrcmd_c03center.spec` | `tools/check-fn.sh black-script scrcmd_c03center` | **28/28 verified, area hash 8157cfade5f75a06 (F8e-spec2)** (F8e; F8-spec4 spec, 1328/1328) |
 | `scrcmd_pokemon_fld` | `scrcmd_pokemon_fld.c`: overlay 21 0x021B66B8-0x021B73FF (row 21.51; 48 fns, 14 ids; cmd 494 Dream World, X2) | `tools/rom-diff/specs/black-script/scrcmd_pokemon_fld.spec` | `tools/check-fn.sh black-script scrcmd_pokemon_fld` | **47/48 verified, area hash 8c205c16ea477657 (F8e-spec2)** (F8e; F8-spec4 spec, 1370/1370); the cmd 494 handler (Dream World, X2) specced only |
 | `scrcmd_misc21` | overlay 21 rows 21.91 (0x021CF7DC-0x021D013F) and 21.97 (0x021D1670-0x021D30B7), no `__FILE__`; 92 fns, 36 ids | `tools/rom-diff/specs/black-script/scrcmd_misc21.spec` | `tools/check-fn.sh black-script scrcmd_misc21` | **81/81 logic fns verified, area hash 6b64908e0fc06b7a (F8e-spec2)** (F8e; F8-spec4 spec, 3054/3054; cmd 414 + 10 render / UI-flow fns behind `Misc21Hooks`) |
+| `scrcmd_c03center` | `scrcmd_c03center.c`: overlay 21 0x021B5A18-0x021B66B7 (row 21.50; 28 fns, 22 ids; no X1 networking) | `tools/rom-diff/specs/black-script/scrcmd_c03center.spec` | `tools/check-fn.sh black-script scrcmd_c03center` | **28/28 verified, area hash 646fc2fc83d971a1** (F8e; F8-spec4 spec, 1328/1328) |
+| `scrcmd_pokemon_fld` | `scrcmd_pokemon_fld.c`: overlay 21 0x021B66B8-0x021B73FF (row 21.51; 48 fns, 14 ids; cmd 494 Dream World, X2) | `tools/rom-diff/specs/black-script/scrcmd_pokemon_fld.spec` | `tools/check-fn.sh black-script scrcmd_pokemon_fld` | **47/48 verified, area hash 1cea69f763249193** (F8e; F8-spec4 spec, 1370/1370); the cmd 494 handler (Dream World, X2) specced only |
+| `scrcmd_misc21` | overlay 21 rows 21.91 (0x021CF7DC-0x021D013F) and 21.97 (0x021D1670-0x021D30B7), no `__FILE__`; 92 fns, 36 ids | `tools/rom-diff/specs/black-script/scrcmd_misc21.spec` | `tools/check-fn.sh black-script scrcmd_misc21` | **81/81 logic fns verified, area hash e256694ae70bcfb3** (F8e; F8-spec4 spec, 3054/3054; cmd 414 + 10 render / UI-flow fns behind `Misc21Hooks`) |
+| `scrcmd_misc10b` | overlay 10 rows 10.27 (the command handlers in "symbol_map.c" 0x021664CC-0x02166F9B) and 10.34 (0x0216AC40-0x0216B503, unanchored); 35 fns, 13 ids | `tools/rom-diff/specs/black-script/scrcmd_misc10b.spec` | `tools/check-fn.sh black-script scrcmd_misc10b` | 35 specced (F8-spec5, 1552/1552 plain and closure), **6 smoke ports verified, area hash e416675c4b51e71b** (whole spec c73e4ed35d2690a6) |
+| `scrcmd_misc10c` | overlay 10: `calender.c` handlers (0x02164778-0x02164A2B), cmd 505 (0x0216A3F8), row 10.36 (0x0216B86C-0x0216BF9B, unanchored), 0x0216CC30-0x0216CC57 (`namein_setup.c` tail), 0x0216F8B8-0x0216F917 (`trcard_sys.c` tail); 37 fns, 17 ids | `tools/rom-diff/specs/black-script/scrcmd_misc10c.spec` | `tools/check-fn.sh black-script scrcmd_misc10c` | 37 specced (F8-spec5, 924/925: 1 dead), **6 smoke ports verified, area hash d872d9c00c90273f** (whole spec b9828dcf49f4c887) |
+| `scrcmd_bsubway` | `bsubway_scr.c`: overlay 21 0x021C9934-0x021CBFAF (row 21.84); 58 fns, 4 ids (cmd 346 = ~170 sub-commands) | `tools/rom-diff/specs/black-script/scrcmd_bsubway.spec` | `tools/check-fn.sh black-script scrcmd_bsubway` | 58 specced (F8-spec5, 3848/3884 plain, 3844/3884 closure: 28 dead, 8 + 4 bounded, see F8-spec5), **7 smoke ports verified, area hash 7d931d651053ddc8** (whole spec bffcc6ae01fb8cc9) |
+| `scrcmd_misc21b` | handlers in non-scrcmd files: overlay 20 WFBC 0x021867A8-0x021871F7, overlay 21 0x021C457C-0x021C46F7 (field skills), `fld_wipe_3dobj.c` 0x021C812C-0x021C825F, `pleasure_boat.c` 0x021C8608-0x021C8981, `fld_trade.c` 0x021CC544; 39 fns, 23 ids | `tools/rom-diff/specs/black-script/scrcmd_misc21b.spec` | `tools/check-fn.sh black-script scrcmd_misc21b` | 39 specced (F8-spec5, 1177/1177 plain and closure; the WFBC talk dialog 0x021871F8 + 4 UI helpers left out), **7 smoke ports verified, area hash ad5dc705d9421258** (whole spec 92d2de81e8878c0f) |
 | `scrcmd` | F8 index (doc only: which area holds which commands) | | | |
 
 | `scrcmd_core` | scrcmd core: overlay 10 0x02159204-0x0215995E, commands 0..48 + 4 helpers (53 fns) | `tools/rom-diff/specs/black-script/scrcmd_core.spec` | `tools/check-fn.sh black-script scrcmd_core` | **53/53 verified, area hash 3467bfc999c8890b** (F8a; F8-spec1 spec, 747/747 insns covered) |
@@ -341,6 +348,64 @@ init procs of mask bits 10 / 12 / 13 to `scrcmd_fld::init_proc`.
   is missing. Division by a 0 operand (turn tween frames, shake frames, shop price) panics where `_s32_div_f` / `_u32_div_f`
   return an unknown value (UNVERIFIED, §8).
 * Mutation spot check: see the F8e report (5 per area).
+
+## F8 areas (F8-spec5: the last script-command handlers)
+
+* **What was left** (F8-spec4's count): 94 of the 609 command ids were in no F8 area (+ the 10 null table slots 137, 143..145,
+  153, 154, 156, 157, 435; cmd 414 is `scrcmd_misc21`'s render-only handler and 494 `scrcmd_pokemon_fld`'s Dream World one).
+  F8-spec5 specs **57** of them in four areas and excludes **37** (below); with this every non-null command handler is specced
+  or excluded with a reason.
+* **Areas** (bounds from the `__FILE__` strings the handlers' neighbours pass to `Heap_AllocDebug` and from the callers of
+  each function; F1's rows are off by a few functions around these files):
+  * `scrcmd_misc10b` (overlay 10): F1 row 10.27 ("symbol_map.c") holds the boat-time commands 425 / 427 (they read the
+    pleasure-boat work `*02012ED0(GD)` that `scrcmd_misc21b`'s 421 allocates), the 20-record save block commands 477 / 478 /
+    480, 493 and the weather command 310, with their ov10 helpers; the rest of symbol_map.c is F5b's (force stubs). Row 10.34
+    (0x0216AC40..0x0216B504) is a whole unanchored scrcmd file: the Entree Forest symbol commands 554..558 / 560, their warp
+    and battle events.
+  * `scrcmd_misc10c` (overlay 10): the `calender.c` handlers 458 / 467..469 (calls into overlays 0x2F / 0x52 at 0x021F3800 /
+    0x021F5xxx), cmd 505 (first function of F8-spec3's row-10.33 file), row 10.36 (0x0216B86C..0x0216BF9C: the 47 challenge
+    records of 0x021723BC, 534 / 544..548 / 552 / 445), the `namein_setup.c` tail 572 and the `trcard_sys.c` tail 590..592.
+  * `scrcmd_bsubway` (overlay 21): all of `bsubway_scr.c` (58 functions): the subway work W (0x7EC bytes), 343..346. Command
+    346 is one 0x1118-byte function with ~170 sub-commands; its spec block lists the callees of each sub-command.
+  * `scrcmd_misc21b` (overlays 20 + 21): handlers that live in other files: the WFBC commands 450..457 (overlay-20
+    `field_wfbc_data_local.c`), the field skills 197..200 (after `sodateya.c`), `fld_wipe_3dobj.c` 415..417 / 576,
+    `pleasure_boat.c` 421..424 / 426 / 428 and `fld_trade.c` 443. WFBC is F1's "X1, deferred" (Black City / White Forest
+    are filled by Entralink but exist offline): specced so the scope decision can go either way.
+* **Excluded (37 ids)**: X2 Musicals `scrcmd_musical.c` (0x0215D34C..0x0215E2B8): 93, 360..366, 495; X1 `scrcmd_network.c`
+  (0x0215F168..; __FILE__ at 0x0217294C, comm / Wi-Fi / Union calls 02012138 / 02026400 / 02026454): 313, 315..318, 499..504,
+  604..606; X1 overlay 18 `intrude_field.c` / `intrude_subdisp.c` (Entralink): 367..369, 371..375; X1 `scrcmd_palpark.c`
+  (overlay 21 0x021CC570..0x021CC720: Poke Transfer = DS download play app 0x6B, the beacon calls 0x0216530C.. of
+  game_beacon_*.c, net_save.c 0x02010F18..): 448, 449, 496..498; 382 (handler at 0x021F4650 in overlay 48, a field gimmick
+  overlay outside the `field` set: needs a `tools/re/sets.txt` set `main 10 11 18 20 21 48`, F10 ov48 job).
+* **UI / proc / animation behind hooks (D3)**: app procs and app events (02012444, 02014808 / 02014840, the overlay entry
+  points 0x021F3xxx / 0x021F5xxx and 0x021B6100 / 0x021B95A0), fades (02029BCC / 02029C00, 021BE8D4 / 021BE92C, 0204E720),
+  message / window / yes-no steps (the WFBC dialog 0x021871F8 and its 4 helpers are left out of the spec; 0x021CB934's window
+  event 02190BE4 / 02190C78), MMDL / OBJ drawing (0216CE6C / 0216D5B4 / 0216D620 / 0216D63C), the wipe 3D objects (fld3d_ci.c
+  021C1CB0 / 021C1D68 / 021C30B8) and the field-skill effects (021C1024 / 021C1228 / 021C9550): all force stubs, hooks in the port.
+* **Harness notes** (requests in the F8-spec5 report): MWCC uses `bl` as a long branch inside cmd 346 (and 0x021C9B78,
+  0x021CB9E4); svflow's unstubbed-callee check counts those as calls, so `--strict-callees` needs
+  `SVFLOW_ALLOW=<the 53 long-branch targets>` (list: the Fragments line of `scrcmd_bsubway.spec`) and the plain check-fn run
+  prints the warnings (hash-neutral). Two jump tables are bounded by `subs; bpl` (0x021CAB40: 17 entries, 0x0216BDAC: 9).
+* **Porter notes / traps**:
+  * Unset registers / stack words (0 under Z19, the test state): 534 (0x0216B86C) stores its caller's r5 for a challenge kind
+    >= 2; 0x021C9B78 stores the unset stack byte as the mode for modes other than 2 / 7. Pass 0 (as F8c / F8d did).
+  * `scrcmd_bsubway` 346: the W-null early return (no W and a sub-command >= 0x12C, 8 instructions) is not reached by the
+    inputs (a null W with a smaller sub-command dereferences W; the two stubs cannot be tied) — port it from the listing.
+    26 `bl 0x021CB6CA` defaults of the compare tree and 021C9DB0's mode-4 jump-table entry are dead. `021CBD90` answers
+    trainer id 0 for single modes with level n >= 3, so 021C9E8C's repeat-skipping loop would never end; the spec bounds the
+    streak (n < 3) for the closure run (closure coverage misses 346's streak > 9999 paths, 4 instructions, plain run covers them).
+  * `scrcmd_misc21b` 452 (0x02186D48): the spec always finds the OBJ and its record; without them the original reads unset
+    stack words and dereferences them (address 0 / 2 / 0x18) — a port should treat that as "no record" explicitly.
+  * Varargs: 0x0216AF74 starts with `push {r0-r3}` (6 argument words; the spec declares them all).
+  * ROM tables a port must embed: 0x021723BC (47 x 7 B, `scrcmd_misc10c::CHALLENGES`), 0x02172508 (8 u32 keys), 0x021DAAE0
+    (17 pairs), 0x021DAD36 / 0x021DAD24 (u16), the bsubway tables listed in the spec header; ids past them panic where the
+    original reads the following bytes.
+* Smoke ports (pure functions, no hooks except `Misc10cHooks`): `scrcmd_misc10b::{boat_slot_word, boat_time, boat_time_set,
+  rec20_byte, rec20_field, symbol_warp_pos}`, `scrcmd_misc10c::{record_sum, chal_kind, chal_count, chal_ids, chal_a, chal_b}`,
+  `scrcmd_bsubway::{streak, set_streak, inc_streak, zero_streak, streak_from, party_size, trainer_iv}`,
+  `scrcmd_misc21b::{wfbc_rec_hi4, wfbc_rec_near, wfbc_count_a_inc, wfbc_count_b_add10, boat_query, boat_set, boat_flag}`.
+  Mutation spot check: 12/12 killed (one survivor, `trainer_iv` 119 -> 120, killed after biasing the id input to the
+  thresholds).
 
 ## Notes for porters
 

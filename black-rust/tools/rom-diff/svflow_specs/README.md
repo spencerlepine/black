@@ -710,3 +710,23 @@ New syntax: stub result kind **`pick+W:V1/V2/..`**, `W` = `u8` | `u16` | `u32` |
 * V-0024 class (a callee that answers 0 on a real path, stubbed with a list without 0, so the caller's 0 branch never runs):
   scrcmd_obj 021b1e80's 021627c8 is `pick:0/1/2/3`; client3 021e8b80 / 021e8afc / 021d62d8 and core3 021e8b80 (sick-condition field
   extractors that return 0 for the other condition kinds) list 0 too.
+
+## F8-spec5 additions (black-script scrcmd_misc10b / scrcmd_misc10c / scrcmd_bsubway / scrcmd_misc21b)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-script/scrcmd_{misc10b,misc10c,bsubway,misc21b}.spec` (headers), on top of the F8-spec1..4 ones: closure stubs (checked
+with every function of the area treated as ported: no fault, stray write or unstubbed callee); every out-of-area stub is `force`;
+`--order-check` clean; GMEVENT create `020122C0` is `nullable`; Heap_AllocDebug is `seqptr` into the block's arena.
+
+* **Long-branch `bl` (harness limitation):** MWCC reaches far case bodies of big functions with `bl` (bsubway cmd 346 at 0x021CA5C4,
+  0x1118 bytes; also 0x021C9B78 / 0x021CB9E4). The unstubbed-callee check treats every `bl` whose `lr` is the next instruction as a
+  call, so it reports the 53 targets inside 346's own body; `svflow.py scrcmd_bsubway --all --strict-callees` is clean with
+  `SVFLOW_ALLOW=<those targets>` (the Fragments line of the spec header) and exits 4 without it. Hash-neutral. Fix request: treat a
+  call target inside `[fn, next function)` of the spec function as a branch.
+* Jump tables bounded by `subs rN, rM, #K; bpl` (no `cmp #N`) are sized from the code (0x021CAB40: 17, 0x0216BDAC: 9).
+* A pointer argument that may be null is a scalar `alt const 0 || const 0x02E30000` (the fixed address of a later buffer argument,
+  0x02E10000 + K * 0x10000; 0x02166658, 0x021C9B24).
+* Coverage (own body, plain / closure): misc10b 1552/1552 both; misc10c 924/925 both (dead `bl` in 544's compare tree); misc21b
+  1177/1177 both; bsubway 3848/3884 / 3844/3884 (26 dead compare-tree defaults + 2 dead jump-table instructions; 346's W-null
+  early return, 8 instructions, needs two stubs tied together; closure: the streak bound that keeps 021C9E8C's loop finite hides 4
+  instructions the plain run covers).

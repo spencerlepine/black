@@ -5,13 +5,17 @@
 pub mod hooks;
 pub mod host;
 pub mod scrcmd;
+pub mod scrcmd_bsubway;
 pub mod scrcmd_c03center;
 pub mod scrcmd_core;
 pub mod scrcmd_encount;
 pub mod scrcmd_fld;
 pub mod scrcmd_fld_battle;
 pub mod scrcmd_misc10;
+pub mod scrcmd_misc10b;
+pub mod scrcmd_misc10c;
 pub mod scrcmd_misc21;
+pub mod scrcmd_misc21b;
 pub mod scrcmd_obj;
 pub mod scrcmd_pokemon_fld;
 pub mod scrcmd_proc;
