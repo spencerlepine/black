@@ -218,3 +218,102 @@ fn npc_records_are_mmdl_headers() {
     }
     assert_eq!((grid, rail, whole), (2217, 40, 2131));
 }
+
+/// The BG / warp / trigger records as `eventdata_system.c` reads them (overlay 10, F6a; layouts in `black-field`'s
+/// README), checked over all 428 ARC 125 members (`load` checks the byte round trip): background kind 2 = hidden
+/// item with script `8000 + i` (i < 0xB1, the hidden-item table) and facing rules 0..6; warp exit codes 0..4, rail
+/// warps (`pos_kind` 1) and grid warps whose door is at a tile centre; trigger `unused` is 0 and grid heights are in
+/// `fx32 >> 12` units.
+#[test]
+fn bg_warp_trigger_records_match_eventdata_system() {
+    let Some(d) = load() else {
+        nds_rom::testenv::rom_missing("ROM files not found");
+        return;
+    };
+    use std::collections::BTreeMap;
+    let mut bg_kind: BTreeMap<_, usize> = BTreeMap::new();
+    let mut facing: BTreeMap<_, usize> = BTreeMap::new();
+    let (mut bg_rail, mut hidden, mut bg_y16) = (0, Vec::new(), 0);
+    let mut exit: BTreeMap<_, usize> = BTreeMap::new();
+    let mut door: BTreeMap<_, usize> = BTreeMap::new();
+    let mut size: BTreeMap<_, usize> = BTreeMap::new();
+    let (mut w_rail, mut w_centre, mut w_grid, mut w_0x100, mut w_off) = (0, 0, 0, 0, 0);
+    let mut t_kind: BTreeMap<_, usize> = BTreeMap::new();
+    let (mut t_rail, mut t_var, mut t_unused, mut t_y16, mut t_grid) = (0, 0, 0, 0, 0);
+    for e in &d.events {
+        for b in &e.bg {
+            *bg_kind.entry(b.kind).or_insert(0) += 1;
+            *facing.entry(b.facing).or_insert(0) += 1;
+            if b.pos_kind != 0 {
+                bg_rail += 1;
+            } else if b.y % 16 == 0 {
+                bg_y16 += 1;
+            }
+            if b.kind == 2 {
+                hidden.push(b.script);
+            }
+        }
+        for w in &e.warps {
+            *exit.entry(w.exit_dir).or_insert(0) += 1;
+            *door.entry(w.door).or_insert(0) += 1;
+            w_0x100 += (w.dest_warp == 0x100) as usize;
+            w_off += (w.dest_zone == 0xFFFF || w.dest_warp == 0xFFFF) as usize;
+            if w.pos_kind == 1 {
+                w_rail += 1;
+            } else {
+                w_grid += 1;
+                *size.entry((w.width, w.depth)).or_insert(0) += 1;
+                w_centre += (w.x & 15 == 8 && w.z & 15 == 8) as usize;
+            }
+        }
+        for t in &e.triggers {
+            *t_kind.entry(t.kind).or_insert(0) += 1;
+            t_var += (t.var != 0) as usize;
+            t_unused += (t.unused != 0) as usize;
+            if t.pos_kind != 0 {
+                t_rail += 1;
+            } else {
+                t_grid += 1;
+                t_y16 += (t.y % 16 == 0) as usize;
+            }
+        }
+    }
+    fn c<K: Ord>(m: &BTreeMap<K, usize>, k: K) -> usize {
+        m.get(&k).copied().unwrap_or(0)
+    }
+    // background events: 184 hidden items, scripts 8000..=8176 (all 0xB1 items of the table, 7 placed twice)
+    assert_eq!(
+        (c(&bg_kind, 0), c(&bg_kind, 1), c(&bg_kind, 2)),
+        (351, 127, 184)
+    );
+    assert!(facing.keys().all(|&f| f <= 6), "facing rules {facing:?}");
+    assert_eq!(
+        (c(&facing, 4), c(&facing, 0), c(&facing, 6)),
+        (325, 235, 71)
+    );
+    assert_eq!((bg_rail, bg_y16), (25, 611));
+    hidden.sort();
+    hidden.dedup();
+    assert_eq!(hidden, (8000..=8176).collect::<Vec<u16>>());
+    // warps: exit codes 0..4, 77 rail warps, every grid door at a tile centre, 6 disabled
+    assert!(exit.keys().all(|&x| x <= 4), "exit codes {exit:?}");
+    assert_eq!(c(&door, 0), 1);
+    assert_eq!(
+        (w_rail, w_grid, w_centre, w_0x100, w_off),
+        (77, 809, 809, 0, 6)
+    );
+    assert_eq!(
+        (c(&size, (1, 1)), c(&size, (3, 1)), c(&size, (1, 3))),
+        (476, 195, 70)
+    );
+    // triggers: kinds 0..4 and 6, `unused` always 0
+    assert!(
+        t_kind.keys().all(|&k| k <= 4 || k == 6),
+        "trigger kinds {t_kind:?}"
+    );
+    assert_eq!((c(&t_kind, 0), c(&t_kind, 6)), (232, 110));
+    assert_eq!(
+        (t_rail, t_grid, t_var, t_unused, t_y16),
+        (10, 363, 350, 0, 348)
+    );
+}

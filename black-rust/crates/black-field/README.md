@@ -376,7 +376,8 @@ callees, all stubs).
 * WFBC LIST (0x1E8) of two `REC[10]` lists (`+8`, `+0xF8`; REC 0x18: kind nibble, id < 30, byte <= 100, `u16 name[8]`) and the COMM record
   (0x48: id, flags, 3 + 1 + 1 + 3 eight-byte slots).
 
-Cross-check with `nds_rom::map::events` (A6; checked against all 428 ARC 125 members with a scratch script, nds-rom unchanged):
+Cross-check with `nds_rom::map::events` (A6; checked against all 428 ARC 125 members with a scratch script; the fields were renamed in
+F6a, below):
 * `BgEvent`: `script` matches; `unk_02` = kind (0: 351, 1: 127, 2 = hidden item: 184 records, scripts 8000..8176 = items 0..0xB0); `unk_04`
   = `u16` facing rule (4: 325, 0: 235, 6: 71, ...) + `u16` position kind (25 rail records); `unk_08` / `unk_0c` = tile x / z (`u32`; rail:
   line + front / side halfwords); `unk_10` = y in `fx32 >> 12` units (multiples of 16, e.g. 48 = 3 tiles up), not a tile count.
@@ -401,3 +402,60 @@ Cross-check with `nds_rom::map::events` (A6; checked against all 428 ARC 125 mem
   `i` 0..9 / 0..5, the slot index 0..2) because larger values read other ROM words as code.
 * `02161F90` writes through the `02161DC4` result without a null check: its block plants a valid list-B record for each id 0..3.
 * `svflow.py` `ALLOW` += `02082C60` (memset, used by `021631C0`).
+
+
+## F6a: `wfbc_data` (40/40), `eventdata` (56/56), `mmdl_move` (70/70), `eventdata_tail` (18/19) ported
+
+| area | ported | verified (in `PORTED`) | area hash | unverified ports |
+|---|---|---|---|---|
+| `wfbc_data` | 40 | 40 | `721154b28c4c24fa` | |
+| `eventdata` | 56 | 56 | `e2fedff5ec7feede` | |
+| `mmdl_move` | 70 | 70 | `854080fe99c7c86c` | |
+| `eventdata_tail` | 19 | 18 | `366498360545b869` | `02164708` `hidden_item_flag` (below) |
+
+`--order-check` and `--strict-callees` are clean for all four. Every callee outside an area is reached through
+`hooks::FieldEnv::call` by address (heap, archives, zonedata, field_encount_st, the LOCATION constructors, event-work
+vars / flags, `FX_Mul`, the fldmmdl getters (F4a ports, `force` stubs in these specs), the map queries, the overlay-21
+attribute predicates and field effects, `fldmmdl_acmd`, the rail system, GMEVENT, overlay-20 WFBC people data);
+callees inside an area are Rust calls, including the in-area entries of the ROM function tables (`02162120`'s
+`SLOT_HANDLERS`, `021644C4`'s `MENU_CHECKS`, `021644F4`'s `MENU_EVENTS`; out-of-area entries go through the seam).
+The only call between the four areas (`02162970` -> `02164708`) stays behind the seam. Stack structs of the original
+(ATTR INFO, positions, rectangles, LOCATION parts, the COMM request record, the slot records) are `Mem::push_local`
+windows. ROM data embedded: `eventdata_tail::HIDDEN_ITEMS` (0x02171534, 0xB1 records; only `+0` and `+3` are read
+here), `MENU_CHECKS` (0x021714DC), `MENU_EVENTS` (0x02171504), `wfbc_data::REQUEST_KINDS` (0x0217144C, plus the next ROM
+word that the spec's index 3 reads), `SLOT_HANDLERS` (0x02172990), `mmdl_move::DIR_ROM` (0x02171458..0x021714F0: the
+direction tables, read by address so that indices past a table read the next one, as the original does).
+
+Unverified port (doc `UNVERIFIED port of`; not in `PORTED`): `02164708` (`hidden_item_flag`): `021646E8` accepts
+script ids up to 8799 but the hidden-item table has 0xB1 records, so ids 8177..8799 make the original read past the
+table (overlay 10 data, then overlay 11 code at 0x02172BC0..) and the spec's inputs (`range 7990 8200 || range
+0x2250 0x2270`) reach them; the port panics there. Spec fix needed: draw `id` from `alt range 7990 8176 || range
+0x2260 0x2270 || range 0 7999` (or bound the in-area answer of `021646E8` to `0..0xB0`). Its caller `02162970` is
+verified through its `force` stub.
+
+UNVERIFIED (behaviour the differential tests cannot reach): `attr_blocked` (`02163D04`) with an empty footprint reads
+an uninitialised stack word as the first cell's attribute (0 under Z19 in every harness path; the port uses 0);
+`apply_slots` with a handler index >= 3, `menu_check` with `i >= 10`, `menu_event` with `i >= 6` and `DIR_ROM` reads
+outside 0x02171458..0x021714F0 panic (the original reads the following ROM); `rec_store` (`02161F90`) writes through
+a null record when list B has no record of the id (the original does too; the port panics at the window).
+
+Mutation spot check (`tools/check-fn.sh black-field AREA --fn`, each reverted): caught 5 of 10: `02162AA4` (`o > half`
+-> `>=`), `021620B0` (no `break`), `02162B68` (`/ 16` -> `>> 4`), `02162278` (flag bit `i + 5` -> `i + 4`),
+`02164508` (`b == 1` -> `b == 2`). Survivors: `021638CC` height threshold 0x14000 -> 0x13000 (the spec's heights are
+multiples of 0x8000: no input between), `021645E0` wait bound 30 -> 31 and `02162970` facing rule 5 `<= 1` -> `<= 2`
+(input gaps: `work[1]` is random 32-bit; the rule-5 records rarely hit with real containment checks), `02163A40`
+`>` -> `>=` (equivalent: equal-width spans give the same answer), `021640B0` swapped attribute values (harness: the
+`in:` words of the `0218DAEC` stub are logged but not mixed into its answer, so both map queries return the same
+attribute; a `seq` on that stub would separate them).
+
+Deliberate deviations: none in behaviour.
+
+`nds_rom::map::events` now names what the code reads: `BgEvent { script, kind (2 = hidden item), facing (rule 0..6),
+pos_kind, x, z (u32 tiles; rail: line / front, side), y (i32, fx32 >> 12 units) }`; `Warp { dest_zone, dest_warp
+(0x100 = LOCATION kind 3, 0xFFFF disabled), exit_dir (1..4 -> 0..3), door, pos_kind, x, y, z (i16 units, 16 per
+tile), width, depth (tiles), flip (rail) }`; `Trigger { script, value, var, kind, pos_kind, x, z (was `y`), width,
+depth, y (i16 units), unused }`. Byte round trip unchanged (`nds-rom/tests/map_rom.rs`); the new
+`bg_warp_trigger_records_match_eventdata_system` checks all 428 members: bg kinds 0 / 1 / 2 = 351 / 127 / 184, the
+hidden items' scripts are exactly 8000..=8176, facing rules <= 6, 25 rail bg records; warp exit codes <= 4, 77 rail
+warps, all 809 grid warps centred on a tile (`x & 15 == 8`, `z & 15 == 8`), 6 disabled, sizes 1x1 476 / 3x1 195 / 1x3
+70; trigger kinds 0..4 and 6, `unused` 0 everywhere, 10 rail triggers.
