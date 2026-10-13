@@ -108,3 +108,73 @@ pub(crate) fn rd32(b: &[u8], ofs: usize) -> u32 {
 pub(crate) fn wr32(b: &mut [u8], ofs: usize, v: u32) {
     b[ofs..ofs + 4].copy_from_slice(&v.to_le_bytes());
 }
+
+/// A view of the original address space for the `battle_server.s` ports (B11a): a list of windows `(base address, bytes)`.
+///
+/// The main module M and the objects it points at (BATTLE_SETUP, party containers, sub-proc slots, received blocks) are
+/// reached through raw pointers stored in each other, so the ports keep pointers as `u32` addresses and read or write
+/// through a `Mem`, which keeps every pointer value the original hands to its callees identical. An access outside every
+/// window panics (the original would touch whatever memory is there; UNVERIFIED for such addresses).
+#[derive(Default)]
+pub struct Mem<'a> {
+    wins: Vec<(u32, &'a mut [u8])>,
+}
+
+impl<'a> Mem<'a> {
+    /// An empty view.
+    pub fn new() -> Self {
+        Mem { wins: Vec::new() }
+    }
+
+    /// Adds the window `bytes` at address `base`.
+    pub fn add(&mut self, base: u32, bytes: &'a mut [u8]) {
+        self.wins.push((base, bytes));
+    }
+
+    /// Window index and offset of `addr..addr + len`.
+    fn at(&self, addr: u32, len: usize) -> (usize, usize) {
+        for (i, (b, v)) in self.wins.iter().enumerate() {
+            let o = addr.wrapping_sub(*b) as usize;
+            if o.checked_add(len).is_some_and(|e| e <= v.len()) {
+                return (i, o);
+            }
+        }
+        panic!("address {addr:#010x}+{len} is outside every memory window");
+    }
+
+    /// The `len` bytes at `addr`.
+    pub fn bytes(&self, addr: u32, len: usize) -> &[u8] {
+        let (w, o) = self.at(addr, len);
+        &self.wins[w].1[o..o + len]
+    }
+
+    /// The `len` bytes at `addr`, writable.
+    pub fn bytes_mut(&mut self, addr: u32, len: usize) -> &mut [u8] {
+        let (w, o) = self.at(addr, len);
+        &mut self.wins[w].1[o..o + len]
+    }
+
+    pub fn r8(&self, addr: u32) -> u8 {
+        self.bytes(addr, 1)[0]
+    }
+
+    pub fn r16(&self, addr: u32) -> u16 {
+        u16::from_le_bytes(self.bytes(addr, 2).try_into().unwrap())
+    }
+
+    pub fn r32(&self, addr: u32) -> u32 {
+        u32::from_le_bytes(self.bytes(addr, 4).try_into().unwrap())
+    }
+
+    pub fn w8(&mut self, addr: u32, v: u8) {
+        self.bytes_mut(addr, 1)[0] = v;
+    }
+
+    pub fn w16(&mut self, addr: u32, v: u16) {
+        self.bytes_mut(addr, 2).copy_from_slice(&v.to_le_bytes());
+    }
+
+    pub fn w32(&mut self, addr: u32, v: u32) {
+        self.bytes_mut(addr, 4).copy_from_slice(&v.to_le_bytes());
+    }
+}

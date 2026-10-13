@@ -18,8 +18,8 @@ fn 021cdecc ret=none
   arg buf 0x1C0
   stub 021cdf1c ret=nullable:3:u32 args=p
   stub 021d59b4 ret=u16 args=v,v
-  stub 021b8588 ret=pick:0/0/0/3 args=v
-  stub 021b86c0 ret=pick:0/0/0/1 args=v
+  stub 021b8588 force ret=pick:0/0/0/3 args=v
+  stub 021b86c0 force ret=pick:0/0/0/1 args=v
   stub 021b9064 ret=u32 args=v,v,v
   stub 021b9920 ret=u32 args=v,v,v
 
@@ -29,8 +29,8 @@ fn 021cdee8 ret=u32
   arg buf 0x1C0
   stub 021cdf1c ret=nullable:3:u32 args=p
   stub 021d59b4 ret=u16 args=v,v
-  stub 021b8588 ret=pick:0/0/0/3 args=v
-  stub 021b86c0 ret=pick:0/0/0/1 args=v
+  stub 021b8588 force ret=pick:0/0/0/3 args=v
+  stub 021b86c0 force ret=pick:0/0/0/1 args=v
   stub 021b9064 ret=u32 args=v,v,v
   stub 021b9920 ret=u32 args=v,v,v
 
@@ -39,8 +39,8 @@ fn 021cdee8 ret=u32
 fn 021cdf1c ret=u32
   nowork
   arg buf 0x1C0
-  stub 021b8588 ret=pick:0/0/0/3 args=v
-  stub 021b86c0 ret=pick:0/0/0/1 args=v
+  stub 021b8588 force ret=pick:0/0/0/3 args=v
+  stub 021b86c0 force ret=pick:0/0/0/1 args=v
   stub 021b9064 ret=u32 args=v,v,v
   stub 021b9920 ret=u32 args=v,v,v
 
@@ -91,7 +91,7 @@ fn 021ce0f8 ret=none
   arg buf 0x1C0
   arg u32 any
   arg u32 any
-  stub 021b8588 ret=pick:0/3 args=v
+  stub 021b8588 force ret=pick:0/3 args=v
   stub 021eaf18 ret=none args=v,v,v
   stub 021d5440 ret=u32 args=v
   stub 021eaf50 ret=none args=v,v
@@ -129,7 +129,7 @@ fn 021cf3b8 ret=none
   fix arg0 0x1AA u8 alt const 0 || any
   fix arg0 0x1A6 u8 range 0 3
   fix arg0 0x1A0 u16 alt const 0 || any rep=3,2
-  stub 021b8ff4 ret=pick:0/1/2/3 args=v
+  stub 021b8ff4 force ret=pick:0/1/2/3 args=v
   stub 021b90bc ret=none args=v,v
 
 # if c[0x1AA] == 0: 021cf3b8(c, i) for i in 0..3
@@ -140,7 +140,7 @@ fn 021cf3f8 ret=none
   fix arg0 0x1A6 u8 range 0 3
   fix arg0 0x1A0 u16 alt const 0 || any rep=3,2
   stub 021cf3b8 ret=none args=p,v
-  stub 021b8ff4 ret=pick:0/1/2/3 args=v
+  stub 021b8ff4 force ret=pick:0/1/2/3 args=v
   stub 021b90bc ret=none args=v,v
 
 # MI_CpuFill8(c + 0x130, 0, 3) (tail call through a literal; the helper runs as real code on both sides)

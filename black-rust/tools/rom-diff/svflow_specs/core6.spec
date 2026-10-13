@@ -793,5 +793,5 @@ fn 021c7c24 ret=none inputs=400
   arg s32 alt range 0 6 || any
   fix arg0 0 u16 alt near 9999 3 || any rep=6,2
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
-  stub 021b8d08 ret=pick:0/1/2/3 args=v
+  stub 021b8d08 force ret=pick:0/1/2/3 args=v
   stub 021b9a24 ret=pick:0/1 args=v,v

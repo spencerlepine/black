@@ -71,8 +71,8 @@ fn 021bf3d8 ret=none
   stub 021c6e3c force ret=pick:0/1/2 args=p,v,v,p,v
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
   stub 021c7c24 force ret=none args=p,p,v,v,v
-  stub 021b8d08 ret=pick:0/1/2/3 args=v
-  stub 021b8ff4 ret=pick:0/1/2/3 args=v
+  stub 021b8d08 force ret=pick:0/1/2/3 args=v
+  stub 021b8ff4 force ret=pick:0/1/2/3 args=v
   stub 021ba1b4 ret=none args=v,v
 
 # # four passes over the list (events 0x2b / 0x2c / the ability pass with message 0x5b,0x20b / 0x2d): run 021bf6e8 for every mon
@@ -255,10 +255,10 @@ fn 021bfa00 ret=bool
   arg u32 any
   arg u32 any
   arg u32 any
-  stub 021b8588 ret=pick:0/1/2/2/3 args=v
+  stub 021b8588 force ret=pick:0/1/2/2/3 args=v
   stub 0201beb8 ret=pick:0/1 args=v,v
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
-  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
   stub 021b9a6c ret=pick:0/1 args=v,v
 
 # # can the attack hit mon B: early 1s from 021bf324 / 021c69b8 / flag 0x20, else the accuracy builder 0x33 (keys 0x27 / 0x28 signed
@@ -316,7 +316,7 @@ fn 021bfc08 ret=u32 inputs=400
   fix region:P 5 u8 any
   stub 021d62c4 ret=pick:0/1 args=v,v
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
-  stub 021b8d8c ret=u32 args=v,v,v
+  stub 021b8d8c force ret=u32 args=v,v,v
   stub 021c66ac force ret=pick:0/1 args=p,v,v
   stub 021c5718 force ret=none args=p
   stub 021c6720 force ret=pick:0/1 args=p,v,v
@@ -469,9 +469,9 @@ fn 021c001c ret=u32 inputs=1500
   stub 021d61a8 ret=pick:0/1 args=v
   stub 021c5620 force ret=none args=p,v,v,outn:4:0xFF/0xFF/0xFF/0xFF
   stub 021c54c8 force ret=none args=p,v
-  stub 021b8b9c ret=pick:0/1 args=v,v
+  stub 021b8b9c force ret=pick:0/1 args=v,v
   stub 021b9aec ret=u32 args=v,v
-  stub 021b8bc4 ret=pick:0/1 args=v,v
+  stub 021b8bc4 force ret=pick:0/1 args=v,v
   stub 021b9b98 ret=pick:0/1 args=v
   stub 021c63d0 force ret=u16 args=p,v
   stub 021c4f64 force ret=pick:0/1 args=p,v
@@ -491,9 +491,9 @@ fn 021c024c ret=bool
   fix region:Q 0 u32 range 0 2900
   global 021f3b44 0x40
   stub 02034714 noreturn ret=none args=v,v,v
-  stub 021b8b9c ret=pick:0/1 args=v,v
+  stub 021b8b9c force ret=pick:0/1 args=v,v
   stub 021b9aec ret=u32 args=v,v
-  stub 021b8bc4 ret=pick:0/1 args=v,v
+  stub 021b8bc4 force ret=pick:0/1 args=v,v
   stub 021b9b98 ret=pick:0/1 args=v
   stub 021c63d0 force ret=u16 args=p,v
   stub 021c4f64 force ret=pick:0/1 args=p,v
@@ -594,9 +594,9 @@ fn 021c0450 ret=none inputs=400
   fix region:Q 0 u32 range 0 2900
   global 021f3b44 0x40
   stub 02034714 noreturn ret=none args=v,v,v
-  stub 021b8b9c ret=pick:0/1 args=v,v
+  stub 021b8b9c force ret=pick:0/1 args=v,v
   stub 021b9aec ret=u32 args=v,v
-  stub 021b8bc4 ret=pick:0/1 args=v,v
+  stub 021b8bc4 force ret=pick:0/1 args=v,v
   stub 021b9b98 ret=pick:0/1 args=v
   stub 021c63d0 force ret=u16 args=p,v
   stub 021c4f64 force ret=pick:0/1 args=p,v
@@ -765,8 +765,8 @@ fn 021c091c ret=none inputs=400
   stub 021c11a4 force ret=u32 args=p,p,v,v,v,v,v,v
   stub 021ba1b4 ret=none args=v,v
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
-  stub 021b8d08 ret=pick:0/1/2/3 args=v
-  stub 021b8ff4 ret=pick:0/1/2/3 args=v
+  stub 021b8d08 force ret=pick:0/1/2/3 args=v
+  stub 021b8ff4 force ret=pick:0/1/2/3 args=v
   stub 021c0c04 ret=none args=v
   stub 021c0c14 seq ret=nullable:3:u32 args=v
   stub 021c0c24 seq ret=nullable:3:u32 args=v
@@ -867,8 +867,8 @@ fn 021c0d90 ret=u32 inputs=400
   stub 021c11a4 force ret=u32 args=p,p,v,v,v,v,v,v
   stub 021ba1b4 ret=none args=v,v
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
-  stub 021b8d08 ret=pick:0/1/2/3 args=v
-  stub 021b8ff4 ret=pick:0/1/2/3 args=v
+  stub 021b8d08 force ret=pick:0/1/2/3 args=v
+  stub 021b8ff4 force ret=pick:0/1/2/3 args=v
   stub 021c0c04 ret=none args=v
   stub 021c0c14 seq ret=nullable:3:u32 args=v
   stub 021c0c24 seq ret=nullable:3:u32 args=v

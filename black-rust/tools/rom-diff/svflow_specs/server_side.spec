@@ -276,7 +276,7 @@ fn 021bab9c ret=u32 inputs=1500
   stub 021bb718 ret=none args=v,v
   stub 021bb798 ret=bool args=v
   stub 021bb7d0 ret=none args=v
-  stub 021b86b8 ret=mod:5 args=v
+  stub 021b86b8 force ret=mod:5 args=v
   stub 021bbb60 force ret=u32 args=v
   stub 021babec ret=none args=v,v
   stub 021eeae8 force ret=none
@@ -296,27 +296,27 @@ fn 021bab9c ret=u32 inputs=1500
   stub 021bbc44 force ret=u32 args=v,v
   stub 021bbd20 force ret=none args=v
   stub 021bbd2c force ret=u32 args=v,v
-  stub 021b86c0 ret=u8 args=v
-  stub 021b8588 ret=mod:2 args=v
+  stub 021b86c0 force ret=u8 args=v
+  stub 021b8588 force ret=mod:2 args=v
   stub 021bc55c force ret=u8 args=v
   stub 021b9120 ret=none args=v,v
   stub 021cc668 force ret=u32 args=v
   stub 021b916c ret=none args=v,v
   stub 021bb830 ret=bool args=v
   stub 021eeb64 force ret=ptr:arg0:0xD00:64 args=v,outn:4:0xC/0/0/0
-  stub 021b8ff4 ret=u8 args=v
+  stub 021b8ff4 force ret=u8 args=v
   stub 021bc360 force ret=bool args=v
   stub 021bbd80 force ret=none args=v
   stub 021bbd8c force ret=u32 args=v,v
-  stub 021b85a8 ret=bool args=v
-  stub 021b8cfc ret=bool args=v,v
+  stub 021b85a8 force ret=bool args=v
+  stub 021b8cfc force ret=bool args=v,v
   stub 021b9aec ret=u32 args=v,v
   stub 021b9b98 ret=mod:4 args=v
   stub 021d8454 ret=mod:4 args=v
   stub 021b9920 ret=u32 args=v,v,v
   stub 021d5440 ret=u8 args=v
   stub 021ba54c ret=mod:4 args=v
-  stub 021b86dc ret=u16 args=v
+  stub 021b86dc force ret=u16 args=v
   stub 02005d90 ret=none args=v,v
   stub 021b9114 ret=mod:2 args=v
   stub 020362dc ret=u32
@@ -331,7 +331,7 @@ fn 021bac04 ret=u32 inputs=400
   stub 021bb718 ret=none args=v,v
   stub 021bb798 ret=bool args=v
   stub 021bb7d0 ret=none args=v
-  stub 021b86b8 ret=mod:5 args=v
+  stub 021b86b8 force ret=mod:5 args=v
   stub 021bbb60 force ret=u32 args=v
   stub 021bb5fc ret=u32 args=v,v
   stub 021babec ret=none args=v,v
@@ -366,11 +366,11 @@ fn 021bacac ret=u32 inputs=600
   stub 021bb628 ret=bool args=v,v,v
   stub 021bbc34 force ret=none args=v
   stub 021bbc44 force ret=u32 args=v,v
-  stub 021b86c0 ret=u8 args=v
+  stub 021b86c0 force ret=u8 args=v
   stub 021bb56c ret=none args=v
   stub 021babf4 ret=none args=v
-  stub 021b86b8 ret=mod:3 args=v
-  stub 021b8588 ret=mod:2 args=v
+  stub 021b86b8 force ret=mod:3 args=v
+  stub 021b8588 force ret=mod:2 args=v
   stub 021bc55c force ret=u8 args=v
   stub 021b9120 ret=none args=v,v
   stub 021cc668 force ret=u32 args=v
@@ -398,7 +398,7 @@ fn 021bae60 ret=u32 inputs=400
   fix arg0 0xD00 u8 any rep=64,4
   stub 021bb718 ret=none args=v,v
   stub 021bb798 ret=bool args=v
-  stub 021b8ff4 ret=u8 args=v
+  stub 021b8ff4 force ret=u8 args=v
   stub 021bb7d0 ret=none args=v
   stub 021eeb64 force ret=ptr:arg0:0xD00:64 args=v,v
   stub 021bc360 force ret=bool args=v
@@ -446,9 +446,9 @@ fn 021baef8 ret=u32 inputs=600
   stub 021ee8b4 ret=none args=v,v
   stub 021ee8f4 ret=none args=v,v,v,v
   stub 021ee96c ret=nullable:2:u32 args=v,v,out:4
-  stub 021b85a8 ret=bool args=v
-  stub 021b8cfc ret=bool args=v,v
-  stub 021b8ff4 ret=u8 args=v
+  stub 021b85a8 force ret=bool args=v
+  stub 021b8cfc force ret=bool args=v,v
+  stub 021b8ff4 force ret=u8 args=v
   stub 021b9aec ret=u32 args=v,v
   stub 021b9b98 ret=mod:4 args=v
   stub 021d8454 ret=mod:4 args=v
@@ -590,7 +590,7 @@ fn 021bb484 ret=u32
   stub 021bb724 ret=none args=v,v,v,v
   stub 021bb798 ret=bool args=v
   stub 021bb7d0 ret=none args=v
-  stub 021b86c0 ret=u8 args=v
+  stub 021b86c0 force ret=u8 args=v
   stub 021babec ret=none args=v,v
   fix arg0 0x1f u8 alt const 255 || any rep=4,12
   stub 021eeae8 force ret=none
@@ -606,9 +606,9 @@ fn 021bb280 ret=u32 inputs=300
   nowork
   arg buf 0x1000
   stub 021ba54c ret=mod:4 args=v
-  stub 021b8ff4 ret=u8 args=v
-  stub 021b86b8 ret=mod:5 args=v
-  stub 021b86dc ret=u16 args=v
+  stub 021b8ff4 force ret=u8 args=v
+  stub 021b86b8 force ret=mod:5 args=v
+  stub 021b86dc force ret=u16 args=v
   stub 02005d90 ret=none args=v,v
   stub 021babec ret=none args=v,v
 
@@ -617,9 +617,9 @@ fn 021bb040 ret=u32
   nowork
   arg buf 0x1000
   fix arg0 0xCBA u8 alt range 0 6 || range 0 3
-  stub 021b85a8 ret=bool args=v
-  stub 021b8cfc ret=bool args=v,v
-  stub 021b8ff4 ret=u8 args=v
+  stub 021b85a8 force ret=bool args=v
+  stub 021b8cfc force ret=bool args=v,v
+  stub 021b8ff4 force ret=u8 args=v
   stub 021b9aec ret=u32 args=v,v
   stub 021b9b98 ret=mod:4 args=v
 

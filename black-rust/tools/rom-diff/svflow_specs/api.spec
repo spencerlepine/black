@@ -66,7 +66,7 @@ fn 021c7cf4 ret=u32
 fn 021c7d00 ret=u32
   arg work
   arg u32 alt range 0 5 || any
-  stub 021b86a0 ret=pick:0/1 args=v,v
+  stub 021b86a0 force ret=pick:0/1 args=v,v
   stub 021c7d24 ret=pick:0/1/2/3/4/5/6 args=p,v
 
 # lists the pokeIDs of the mons (bd2b4 / bd34c iterator over the work) not on the side of r1 into the byte list r2;
@@ -120,22 +120,22 @@ fn 021c7ec4 ret=bool
 fn 021c7ed8 ret=u32
   arg work
   arg u32 alt range 0 5 || any
-  stub 021b8d08 ret=pick:0/1/2/3 args=v
+  stub 021b8d08 force ret=pick:0/1/2/3 args=v
   stub 021b997c ret=u32 args=v,v
 
 # byte +9 of server_side 021bb85c(work[0], client)
 fn 021c7eec ret=u8
   arg work
   arg u32 alt range 0 5 || any
-  stub 021b8d08 ret=pick:0/1/2/3 args=v
+  stub 021b8d08 force ret=pick:0/1/2/3 args=v
   stub 021bb85c force ret=ptr:work:0x400:8 args=p,v
 
 # 3 when the battle rule 021b8588(work[4]) is 3, else 7eec
 fn 021c7f04 ret=u32
   arg work
   arg u32 alt range 0 5 || any
-  stub 021b8588 ret=pick:0/1/2/3 args=v
-  stub 021b8d08 ret=pick:0/1/2/3 args=v
+  stub 021b8588 force ret=pick:0/1/2/3 args=v
+  stub 021b8d08 force ret=pick:0/1/2/3 args=v
   stub 021bb85c force ret=ptr:work:0x400:8 args=p,v
   stub 021c7eec ret=u32 args=p,v
 
@@ -143,8 +143,8 @@ fn 021c7f04 ret=u32
 fn 021c7f24 ret=bool
   arg work
   arg u32 alt range 0 5 || any
-  stub 021b8588 ret=pick:0/1/2/3 args=v
-  stub 021b8d08 ret=pick:0/1/2/3 args=v
+  stub 021b8588 force ret=pick:0/1/2/3 args=v
+  stub 021b8d08 force ret=pick:0/1/2/3 args=v
   stub 021b9af8 ret=u32 args=v,v
   stub 021b9bc4 ret=pick:0/1 args=v,v
   stub 021bb85c force ret=ptr:work:0x400:8 args=p,v
@@ -161,7 +161,7 @@ fn 021c7f68 ret=u32
   arg work
   arg u32 any
   arg buf 8
-  stub 021b8778 ret=pick:0/1/2/3/4/5/6 args=v,v,outm:8:7
+  stub 021b8778 force ret=pick:0/1/2/3/4/5/6 args=v,v,outm:8:7
   stub 021b98ac ret=u32 args=v,v
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
   stub 021d5b68 ret=pick:0/1 args=v
@@ -170,23 +170,23 @@ fn 021c7f68 ret=u32
 fn 021c7fcc ret=u32
   arg work
   arg u32 alt range 0 5 || any
-  stub 021b8d08 ret=pick:0/1/2/3 args=v
+  stub 021b8d08 force ret=pick:0/1/2/3 args=v
   stub 021b9af8 ret=u32 args=v,v
 
 # the partner client's party (021b9010 / 021b8b9c on work[4]), 0 when there is none
 fn 021c7fe0 ret=u32
   arg work
   arg u32 alt range 0 5 || any
-  stub 021b8b9c ret=pick:0/1 args=v,v
-  stub 021b8d08 ret=pick:0/1/2/3 args=v
-  stub 021b9010 ret=pick:0/1/2/3/4 args=v,v
+  stub 021b8b9c force ret=pick:0/1 args=v,v
+  stub 021b8d08 force ret=pick:0/1/2/3 args=v
+  stub 021b9010 force ret=pick:0/1/2/3/4 args=v,v
   stub 021b9af8 ret=u32 args=v,v
 
 # tail call 021b8d8c(work[4], work[8], r1)
 fn 021c8010 ret=u32
   arg work
   arg u32 any
-  stub 021b8d8c ret=pick:0/1/2/3/4/5/6 args=v,v,v
+  stub 021b8d8c force ret=pick:0/1/2/3/4/5/6 args=v,v,v
 
 # pokeID of the mon at position r1: 5440(021b98ac(work[8], r1))
 fn 021c8020 ret=u32
@@ -249,17 +249,17 @@ fn 021c8140 ret=u8
 # tail call 021b8588(work[4]) (battle rule)
 fn 021c815c ret=u32
   arg work
-  stub 021b8588 ret=pick:0/1/2/3 args=v
+  stub 021b8588 force ret=pick:0/1/2/3 args=v
 
 # tail call 021b86b8(work[4])
 fn 021c8168 ret=u32
   arg work
-  stub 021b86b8 ret=pick:0/1/2/3 args=v
+  stub 021b86b8 force ret=pick:0/1/2/3 args=v
 
 # word +4 of 021b8714(work[4])
 fn 021c8174 ret=u32
   arg work
-  stub 021b8714 ret=ptr:work:0x200:4 args=v
+  stub 021b8714 force ret=ptr:work:0x200:4 args=v
 
 # tail call 021b8670(work[4])
 fn 021c8180 ret=u32
@@ -340,7 +340,7 @@ fn 021c82d0 ret=u32
 fn 021c8300 ret=u32
   arg work
   arg u32 any
-  stub 021b9010 ret=pick:0/1/2/3/4 args=v,v
+  stub 021b9010 force ret=pick:0/1/2/3/4 args=v,v
 
 # work[0x78A] bit 0
 fn 021c830c ret=u32
@@ -405,16 +405,16 @@ fn 021c83dc ret=none
 fn 021c83e8 ret=bool
   arg work
   arg u32 any
-  stub 021b86b8 ret=pick:0/1/2/3 args=v
+  stub 021b86b8 force ret=pick:0/1/2/3 args=v
   stub 021bb908 force ret=none args=p,v
 
 # server_side bb914(work[0]) when 021b86b8(work[4]) <= 1 and the pokeID's client is 021b8ff4(work[4])
 fn 021c8408 ret=none
   arg work
   arg u32 alt range 0 5 || any
-  stub 021b86b8 ret=pick:0/1/2/3 args=v
-  stub 021b8d08 ret=pick:0/1/2/3 args=v
-  stub 021b8ff4 ret=pick:0/1/2/3 args=v
+  stub 021b86b8 force ret=pick:0/1/2/3 args=v
+  stub 021b8d08 force ret=pick:0/1/2/3 args=v
+  stub 021b8ff4 force ret=pick:0/1/2/3 args=v
   stub 021bb914 force ret=none args=p
 
 # core2 be52c(work[0x4B0], r1, r2, veneer 845c(work + 0x1AB8, r2))
@@ -483,7 +483,7 @@ fn 021c84f4 ret=none
 fn 021c8534 ret=bool
   arg work
   fix work 0x785 u8 alt range 0 8 || any
-  stub 021b8d08 ret=pick:0/1/2/3 args=v
+  stub 021b8d08 force ret=pick:0/1/2/3 args=v
   stub 021c8578 ret=pick:0/0/1 args=p,v,p
 
 # work[0x1A64] := 0; tail call 85d4(work, 0, 1)

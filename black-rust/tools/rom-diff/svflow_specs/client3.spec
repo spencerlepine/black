@@ -71,7 +71,7 @@ fn 021d0980 ret=u32
   arg buf 0x1C0
   arg u32 alt const 0 || addrof region:out
   stub 021b9b94 ret=pick:0/1/2/3/6 args=v
-  stub 021b8588 ret=pick:0/1/2/3 args=v
+  stub 021b8588 force ret=pick:0/1/2/3 args=v
   stub 021d7f2c ret=pick:0/1/2 args=v,v
   stub 021b9c00 ret=u32 args=v,v
   stub 021d5b7c ret=pick:0/1 args=v
@@ -88,7 +88,7 @@ fn 021d0b6c ret=none
 fn 021d102c ret=bool
   nowork
   arg buf 0x1C0
-  stub 021b8588 ret=pick:0/3 args=v
+  stub 021b8588 force ret=pick:0/3 args=v
   stub 021b9c00 ret=u32 args=v,v
   stub 021d5b68 ret=pick:0/1 args=v
 
