@@ -23,7 +23,7 @@ mod run;
 mod spec;
 mod stub;
 
-pub use run::{run_suite, Case, Ext, Suite};
+pub use run::{run_suite, Case, Ext, Suite, STACK_TOP, STACK_ZERO, UNSET_WORD};
 pub use stub::{Arg, Halt, StubEnv};
 
 pub(crate) const FNV_OFFSET: u64 = 14695981039346656037;

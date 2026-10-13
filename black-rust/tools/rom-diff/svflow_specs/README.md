@@ -46,6 +46,16 @@ fn 021ccaa8 ret=none [mode=arm] [inputs=200]
   `push {r0-r3}` prologue makes the register and stack arguments one list (`021cd4b0`, `021cd568`,
   `021cd64c`): declare one `arg` per word. The words after the last declared one are 0 in the
   emulator, so the port must be given zeros there too (see `cmd_queue/tests.rs`, `021cd64c`).
+  **Entry state (Z19):** every input starts from the same CPU state: `Emu.call` zeroes r0-r12 and
+  the flags (N Z C V Q, GE), zero-fills the stack window `0x02EF0000..0x02F01000` (64 KiB below
+  sp = `0x02F00000`, 4 KiB from sp up), then writes the declared arguments (r0-r3, stack words
+  from sp up). An undeclared register or stack word (a caller's saved r3 pushed in a prologue and
+  read back through a short stack buffer, as `021b6848` does; an uninitialised local) therefore
+  reads 0 on every input, never the previous input's value; ports' test wiring reads it as
+  `c.word(i)` (`black_fndiff::Case::word` / the server_flow testkit `Case::word`, 0 past
+  `vals`). `svflow.py AREA --order-check [--all]` proves an area order-independent (reverse order
+  after junk in every register / the flags / the stack window); `svflow.py --selftest` tests the
+  reset itself.
   A pointer into a `buf` argument can be a plain scalar `range`/`oneof` of the fixed address
   (`0x02E10000 + i * 0x10000 + ofs`); the port then subtracts the base.
 * `fix TARGET OFS TYPE GEN [bits=LO:W] [rep=N,STEP]`: TARGET is `work`, `argK` (K = index among all

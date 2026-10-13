@@ -15,7 +15,8 @@ python3 -m venv /tmp/blk/venv && /tmp/blk/venv/bin/pip install unicorn
 ```
 
 - `emu.py` maps main RAM, loads ARM9 at `0x02004000` and overlay 93 at `0x021B6100`, and calls a
-  Thumb function with r0-r3. `Emu.stub(addr, fn)` replaces an undecompiled callee with a Python
+  Thumb function with r0-r3 (Z19: from a fixed entry state, r0-r12 = 0, flags clear, stack window
+  0x02EF0000..0x02F01000 zero-filled; see `Emu.reset_cpu`). `Emu.stub(addr, fn)` replaces an undecompiled callee with a Python
   function. The return honours interworking: Unicorn picks Thumb from bit 0 of the value
   written to PC.
 - `gen.py` has one function per Rust fuzz test. Each one copies its Rust test's generator

@@ -10,6 +10,19 @@ const WORK_SIZE: usize = 0x212C;
 use crate::spec::{BUF_BASE, BUF_STRIDE};
 const REGION_BASE: u32 = 0x02F1_0000;
 
+/// Z19: the emulator's entry state of every call (`Emu.call` / `reset_cpu` in
+/// tools/rom-diff/emu.py). r0-r12 start at [`UNSET_WORD`] (then r0-r3 get the declared arguments),
+/// the flags are clear, `sp` = [`STACK_TOP`], and the window [`STACK_ZERO`] (64 KiB below `sp`
+/// plus 4 KiB from `sp` up) is zero-filled before the stack arguments are written. So a register
+/// or stack word the spec does not pass (a caller's saved register in a prologue push, an
+/// uninitialised local, the word after the last stack argument) reads 0 on every input, never a
+/// value left by the previous input. A port's test wiring reads such a word with [`Case::word`].
+pub const UNSET_WORD: u32 = 0;
+/// `sp` at entry; stack argument `k` (argument `4 + k`) is the word at `STACK_TOP + 4 * k`.
+pub const STACK_TOP: u32 = 0x02F0_0000;
+/// Zero-filled before every call (Z19).
+pub const STACK_ZERO: std::ops::Range<u32> = 0x02EF_0000..0x02F0_1000;
+
 /// Hooks for argument and environment kinds owned by one crate (e.g. black-battle's `bpp`
 /// BattleMon image and `env bpp` API stubs). A crate without any uses `()`.
 pub trait Ext: Default {
@@ -44,6 +57,12 @@ pub struct Case<X: Ext = ()> {
 }
 
 impl<X: Ext> Case<X> {
+    /// Argument word `i` as the original sees it at entry: `vals[i]` for a declared argument,
+    /// [`UNSET_WORD`] (0) for r0-r3 or a stack word past the declared ones (Z19 entry state).
+    pub fn word(&self, i: usize) -> u32 {
+        self.vals.get(i).copied().unwrap_or(UNSET_WORD)
+    }
+
     fn region_index(&self, name: &str) -> usize {
         self.region_names
             .iter()
@@ -421,6 +440,63 @@ pub fn run_suite<X: Ext>(suite: &Suite<'_>, call: &dyn Fn(u32, &mut Case<X>) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn entry_state_matches_emu_reset() {
+        // the constants mirror emu.py (STACK_TOP / STACK_ZERO_LO / STACK_ZERO_HI)
+        let py = include_str!("../../../tools/rom-diff/emu.py");
+        for (name, v) in [
+            ("STACK_TOP", STACK_TOP),
+            ("STACK_ZERO_LO", STACK_ZERO.start),
+            ("STACK_ZERO_HI", STACK_ZERO.end),
+        ] {
+            let line = format!("{name} = 0x{v:08X}");
+            assert!(py.contains(&line), "emu.py lacks `{line}`");
+        }
+        assert!(
+            py.contains("self.reset_cpu()"),
+            "Emu.call must reset the CPU"
+        );
+        assert_eq!(UNSET_WORD, 0);
+        // one declared register argument: r1-r3 and every stack word read 0, on every input
+        let fs = &parse_spec("fn 02000000 ret=u32\n  nowork\n  arg u32 any\n")[0];
+        for seed in 0..16 {
+            run_input::<()>(
+                fs,
+                seed,
+                &|_, c| {
+                    assert_eq!(c.word(0), c.vals[0]);
+                    assert!((1..8).all(|i| c.word(i) == UNSET_WORD));
+                    0
+                },
+                false,
+            );
+        }
+    }
+
+    #[test]
+    fn inputs_do_not_depend_on_run_order() {
+        // a port reading an undeclared word (021b6848 reads the caller's saved r3) hashes the same
+        // per input whether the inputs run forward, backward or alone
+        let spec = "fn 02000000 ret=u32\n  region r 8\n  nowork\n  arg u32 any\n  arg region r\n  stub 02000100 ret=u32 args=v\n";
+        let fs = &parse_spec(spec)[0];
+        let port = |_: u32, c: &mut Case| -> u64 {
+            let r3 = c.word(3);
+            let x = c
+                .env
+                .call(0x0200_0100, &mut [crate::Arg::V(c.word(0) ^ r3)]);
+            c.region_mut("r")[0] ^= x as u8;
+            (x ^ c.word(5)) as u64
+        };
+        let fwd: Vec<String> = (0..32).map(|s| run_input(fs, s, &port, false).0).collect();
+        let mut rev: Vec<String> = (0..32)
+            .rev()
+            .map(|s| run_input(fs, s, &port, false).0)
+            .collect();
+        rev.reverse();
+        assert_eq!(fwd, rev);
+        assert_eq!(fwd[7], run_input(fs, 7, &port, false).0);
+    }
 
     #[test]
     fn region_arg_and_fix_round_trip() {

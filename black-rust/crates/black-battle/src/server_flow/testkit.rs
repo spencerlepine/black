@@ -49,6 +49,16 @@ pub struct Case {
     pub env: TestEnv,
 }
 
+impl Case {
+    /// Argument word `i` as the original sees it at entry: `vals[i]` for a declared argument, 0
+    /// for r0-r3 or a stack word past the declared ones (Z19: the emulator zeroes r0-r12 and the
+    /// stack window before every call, see [`fnd::UNSET_WORD`]). E.g. a caller's saved r3 that
+    /// the original reads back through a stack buffer (021b6848) is `c.word(3)`.
+    pub fn word(&self, i: usize) -> u32 {
+        self.vals.get(i).copied().unwrap_or(fnd::UNSET_WORD)
+    }
+}
+
 /// The crate-specific half of the spec: `arg bpp` and `env bpp`.
 #[derive(Default)]
 struct Bpp {
@@ -160,6 +170,25 @@ mod tests {
             0x021D5448 => c.bufs[0][0x140] as u64,
             _ => unreachable!(),
         }
+    }
+
+    /// Z19: undeclared argument words (r1-r3, stack) are the emulator's reset value 0.
+    #[test]
+    fn word_past_declared_args_is_zero() {
+        let c = Case {
+            work: SvFlowWork::new(),
+            vals: vec![0x02E0_0000, 5],
+            bufs: Vec::new(),
+            globals: Vec::new(),
+            regions: Vec::new(),
+            env: TestEnv {
+                stub: fnd::StubEnv::default(),
+                bpp: MockEnv::default(),
+            },
+        };
+        assert_eq!(c.word(0), 0x02E0_0000);
+        assert_eq!(c.word(1), 5);
+        assert!((2..10).all(|i| c.word(i) == 0));
     }
 
     #[test]

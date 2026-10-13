@@ -7,6 +7,9 @@ tools/rom-diff/svflow_specs/README.md.
   svflow.py AREA --detail ADDR:SEED  one input's section-labelled word stream (JSON)
   svflow.py AREA --all            run every function in the spec, not only the PORTED ones
   svflow.py AREA --fn ADDR        restrict to one function (hex)
+  svflow.py AREA --order-check    (Z19) exit 1 if an input's hash changes when the inputs run in reverse order
+                                  after junk in r0-r12 / flags / the stack window (combine with --all / --fn)
+  svflow.py --selftest            (Z19) reset probes (r3, r4, r12, stack, flags) + order check of server1 021b6848
 
 Generic mode (any crate; tools/check-fn.sh passes these):
   --spec FILE         spec file (default svflow_specs/AREA.spec)
@@ -19,6 +22,11 @@ Generic mode (any crate; tools/check-fn.sh passes these):
 
 Input generation, the stub model and the hash are specified once (below) and re-implemented in
 Rust; any change here must be mirrored in crates/black-fndiff.
+
+Entry state (Z19): every input starts from the same CPU state (Emu.call in emu.py): r0-r12 = 0, then
+the declared arguments in r0-r3 and on the stack from sp = 0x02F00000; flags clear; the stack window
+0x02EF0000..0x02F01000 zero-filled first. Undeclared registers / stack words read 0 (black_fndiff
+`Case::word`). Memory outside the input's regions is restored byte-for-byte after each input.
 """
 import json
 import os
@@ -28,7 +36,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from emu import B, RET, Emu, Rng  # noqa: E402
+from emu import B, RET, STACK_ZERO_HI, STACK_ZERO_LO, Emu, Rng  # noqa: E402
 from bpp import Env, mix, random_bpp, SIZE as BPP_SIZE  # noqa: E402
 
 M = 0xFFFFFFFF
@@ -43,8 +51,10 @@ MAX_PTR_ARGS = 13
 REGION_BASE = 0x02F10000  # `region` k lives at REGION_BASE + k * BUF_STRIDE
 MAX_REGIONS = 14
 SETS_TXT = os.path.join(os.path.dirname(os.path.dirname(HERE)), "tools", "re", "sets.txt")
-STACK_LO = 0x02EF0000
-STACK_HI = 0x02F01000
+# Z19: Emu.call zero-fills this stack window and zeroes r0-r12 / the flags before every call (see emu.py),
+# so an argument register or stack word the spec does not pass reads 0 on every input, whatever ran before
+STACK_LO = STACK_ZERO_LO
+STACK_HI = STACK_ZERO_HI
 ROOT = os.path.dirname(os.path.dirname(HERE))
 SPECS = os.path.join(HERE, "svflow_specs")
 FLOW_SRC = os.path.join(ROOT, "crates", "black-battle", "src", "server_flow")
@@ -660,8 +670,7 @@ class Runner:
             e.wbytes(self.buf_addr(i), b)
         for (ga, _), b in zip(fs.globals, gl):
             e.wbytes(ga, b)
-        e.wbytes(STACK_LO, bytes(STACK_HI - STACK_LO))
-        self.dirty.clear()
+        self.dirty.clear()  # the stack window and the registers are reset by Emu.call (Z19)
         fault = None
         ret = None
         try:
@@ -778,8 +787,87 @@ def allstubs(fs, allported):
     return {s.addr for s in fs.stubs if s.force or s.addr not in allported}
 
 
+def poison(e, r):
+    """Z19 order check: leave junk in every register, the flags and the stack window, as an
+    arbitrary earlier call would. Emu.call must make it invisible."""
+    from emu import RESET_REGS
+    from unicorn.arm_const import UC_ARM_REG_CPSR
+    for reg in RESET_REGS:
+        e.uc.reg_write(reg, r.next())
+    e.uc.reg_write(UC_ARM_REG_CPSR, e.uc.reg_read(UC_ARM_REG_CPSR) | 0xF80F0000)
+    e.wbytes(STACK_LO, fill(r, STACK_HI - STACK_LO))
+
+
+def order_check(fs, active_stubs):
+    """Z19: per-input hashes of one function are the same in seed order on a fresh Runner and in
+    reverse seed order on one Runner whose registers / flags / stack window are poisoned before
+    every input. Returns the list of seeds that differ."""
+    fwd = run_fn(fs, active_stubs)[0]["seeds"]
+    rn = Runner(fs, active_stubs)
+    r = Rng(0x2019)
+    bad = []
+    for seed in reversed(range(fs.inputs)):
+        poison(rn.e, r)
+        if rn.one(seed, False)[0] != fwd[seed]:
+            bad.append(seed)
+    return sorted(bad)
+
+
+def selftest():
+    """Z19 reset probes on hand-written code, then the order check on the function that found
+    the leak (server1 021b6848 reads the caller's saved r3 through a stack buffer) and on the
+    selftest area. Prints `selftest ok` or exits 1."""
+    from unicorn.arm_const import UC_ARM_REG_CPSR
+    e = Emu()
+    base = 0x02FE0000  # free RAM below RET, outside every image and harness region
+    probes = [  # (name, thumb?, code words): each returns the probed value in r0
+        ("r3", True, [0x4618, 0x4770]),  # mov r0, r3; bx lr
+        ("r4", True, [0x1C20, 0x4770]),  # adds r0, r4, #0; bx lr (reads r4 before any flag-setting matters)
+        ("r12", True, [0x4660, 0x4770]),  # mov r0, r12; bx lr
+        ("stack below sp", True, [0xB081, 0x9800, 0xB001, 0x4770]),  # sub sp,#4; ldr r0,[sp]; add sp,#4; bx lr
+        ("stack word after the arguments", True, [0x9801, 0x4770]),  # ldr r0, [sp, #4]; bx lr (1 stack arg passed)
+        ("cpsr flags", False, [0xE10F0000, 0xE12FFF1E]),  # mrs r0, cpsr; bx lr (ARM)
+    ]
+    r = Rng(19)
+    fails = []
+    for k, (name, thumb, code) in enumerate(probes):
+        a = base + 0x40 * k
+        e.wbytes(a, struct.pack("<%d%s" % (len(code), "H" if thumb else "I"), *code))
+        for trial in range(3):
+            poison(e, r)
+            e.call(a, 0x11, 0x22, 0x33, 0x44, stack_args=(0x55, 0x66), thumb=thumb)  # dirty r0-r3 / stack args
+            poison(e, r)
+            got = e.call(a, 0x11, stack_args=(0x55,), thumb=thumb)[0]
+            if name == "cpsr flags":
+                got &= 0xF80F0000
+            if got != 0:
+                fails.append("%s reads %#x (trial %d)" % (name, got, trial))
+    if e.uc.reg_read(UC_ARM_REG_CPSR) & 0x1F == 0:
+        fails.append("cpsr mode bits changed")
+    # the arguments themselves still arrive
+    a = base + 0x40 * len(probes)
+    e.wbytes(a, struct.pack("<HHHH", 0x18C0, 0x9900, 0x1840, 0x4770))  # adds r0,r0,r3; ldr r1,[sp]; adds r0,r0,r1; bx lr
+    if e.call(a, 5, 0, 0, 7, stack_args=(9,))[0] != 21:
+        fails.append("arguments r0/r3/stack word 0 not passed")
+    checks = [("server1", 0x021B6848)] + [("selftest", f.addr) for f in load_spec("selftest")]
+    for area, addr in checks:
+        spec = {f.addr: f for f in load_spec(area)}
+        fs = spec[addr]
+        fs.inputs = min(fs.inputs, 64)
+        bad = order_check(fs, allstubs(fs, set(ported())))
+        if bad:
+            fails.append("%s %08x: input hash depends on run order / leftover CPU state at seeds %s" % (area, addr, bad[:8]))
+    if fails:
+        print("selftest FAILED:\n  " + "\n  ".join(fails))
+        return 1
+    print("selftest ok (%d reset probes, %d order checks)" % (len(probes) + 1, len(checks)))
+    return 0
+
+
 def main(argv):
     args = argv[1:]
+    if args[:1] == ["--selftest"]:
+        return selftest()
     if not args or args[0].startswith("-"):
         print(__doc__)
         return 2
@@ -810,6 +898,15 @@ def main(argv):
         if a not in spec:
             print("svflow: %08x is not in svflow_specs/%s.spec" % (a, area), file=sys.stderr)
             return 3
+    if "--order-check" in opt:  # Z19: every input hashes the same in any order / after leftover CPU state
+        bad = 0
+        for a in addrs:
+            seeds = order_check(spec[a], allstubs(spec[a], allported))
+            if seeds:
+                bad += 1
+                print("%s %08x order-dependent at seeds %s" % (area, a, seeds[:16]))
+        print("%s order-check: %d/%d functions order-dependent" % (area, bad, len(addrs)))
+        return 1 if bad else 0
     if val("--detail"):
         a, sd = val("--detail").split(":")
         a = int(a, 16)

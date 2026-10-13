@@ -11,6 +11,22 @@ from unicorn.arm_const import *
 B = os.environ.get("BLACK_ROM_BUILD", os.path.join(os.path.dirname(__file__), "../../../black-rom/build/black.us"))
 RET = 0x02FFF000
 REGS = [UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R2, UC_ARM_REG_R3]
+# Z19: every call starts from the same CPU state, so a result cannot depend on the previous call
+# (021b6848 reads the caller's saved r3 back through a 4-byte stack buffer; with r3 left over from
+# the previous input the ROM hash depended on run order). Before each `Emu.call`:
+#  * r0-r12 = 0, then r0-r3 = the given arguments (an argument the caller does not pass is 0);
+#    sp = STACK_TOP, lr = RET; CPSR flags N Z C V Q and GE[3:0] cleared (mode bits kept; the T bit
+#    comes from the entry address);
+#  * the stack window [STACK_ZERO_LO, STACK_ZERO_HI) = 64 KiB below sp + 4 KiB from sp up (the
+#    stack-argument words) is zero-filled, then the stack arguments are written from sp up.
+# So an uninitialised register or stack read, a saved callee-saved register in a prologue push,
+# and the stack word after the last declared stack argument all read 0 on every input.
+STACK_TOP = 0x02F00000
+STACK_ZERO_LO = 0x02EF0000
+STACK_ZERO_HI = 0x02F01000
+RESET_REGS = REGS + [UC_ARM_REG_R4, UC_ARM_REG_R5, UC_ARM_REG_R6, UC_ARM_REG_R7, UC_ARM_REG_R8, UC_ARM_REG_R9,
+                     UC_ARM_REG_R10, UC_ARM_REG_R11, UC_ARM_REG_R12]
+CPSR_FLAGS = 0xF80F0000  # N Z C V Q, GE[3:0]
 
 
 def overlay_base(n):
@@ -96,9 +112,21 @@ class Emu:
     def stub(self, addr, fn):
         self.stubs[addr & ~1] = fn
 
+    def reset_cpu(self):
+        """Z19: the fixed entry state of every call (see STACK_TOP above): r0-r12 = 0, flags
+        cleared, the stack window zero-filled; sp/lr are set by `call`."""
+        uc = self.uc
+        for r in RESET_REGS:
+            uc.reg_write(r, 0)
+        uc.reg_write(UC_ARM_REG_CPSR, uc.reg_read(UC_ARM_REG_CPSR) & ~CPSR_FLAGS & 0xFFFFFFFF)
+        uc.mem_write(STACK_ZERO_LO, bytes(STACK_ZERO_HI - STACK_ZERO_LO))
+
     def call(self, addr, *args, stack_args=(), thumb=True):
         uc = self.uc
-        sp = 0x02F00000
+        sp = STACK_TOP
+        if len(args) > len(REGS) or 4 * len(stack_args) > STACK_ZERO_HI - sp:
+            raise ValueError("Emu.call: at most 4 register arguments and 0x%x bytes of stack arguments" % (STACK_ZERO_HI - sp))
+        self.reset_cpu()
         for i, a in enumerate(stack_args):
             uc.mem_write(sp + 4 * i, struct.pack("<I", a & 0xFFFFFFFF))
         for r, a in zip(REGS, args):
