@@ -212,14 +212,14 @@ fn 021bbc2c ret=ofs:arg0 inputs=200
 
 # 021BBC58(ring, id, key): for i = count (+0x43C) down while i > count - 30: i < 0: 1; e = 021BBC2C(ring, i);
 # e && memcmp(e+0x1A, id, 6) == 0: return e+0x18 (u16) != key; afterwards 1
-fn 021bbc58 ret=bool inputs=300
+fn 021bbc58 ret=bool inputs=3000
   region id 0x8
   arg buf 0x480
   arg u32 addrof region:id
-  arg u32 alt range 0 3 || range 0 3 || any
+  arg u32 alt range 0 3 || range 0 3 || const 0 || any
   fix arg0 0x438 u8 range 0 29
   fix arg0 0x439 u8 range 0 29
-  fix arg0 0x43C s32 alt range 0 40 || oneof 0 1 29 30 31 || any
+  fix arg0 0x43C s32 alt range 0 40 || oneof 0 1 29 30 31 || const 29 || any
   fix arg0 0x1A u16 alt const 0xFFFF || any rep=30,0x24
   fix arg0 0x1C u16 alt const 0xFFFF || any rep=30,0x24
   fix arg0 0x1E u16 alt const 0xFFFF || any rep=30,0x24
@@ -227,7 +227,12 @@ fn 021bbc58 ret=bool inputs=300
   fix region:id 0 u16 alt const 0x1234 || const 0x1234 || const 0xFFFF
   fix region:id 2 u16 alt const 0x1234 || const 0x1234 || const 0xFFFF
   fix region:id 4 u16 alt const 0x1234 || const 0x1234 || const 0xFFFF
-  fix arg0 0x1A u16 alt const 0x1234 || const 0xFFFF rep=30,0x24
+  fix arg0 0x1A u16 alt const 0x1234 || const 0xFFFF || const 0x5678 || const 0x5678 || const 0x5678 || const 0x5678 rep=30,0x24
   fix arg0 0x1C u16 alt const 0x1234 || const 0xFFFF rep=30,0x24
   fix arg0 0x1E u16 alt const 0x1234 || const 0xFFFF rep=30,0x24
+  # Z22: entry 0 (the 30th entry examined for count 29: the loop-bound edge) matches the id more often, with key 0
+  fix arg0 0x18 u16 alt const 0 || range 0 3
+  fix arg0 0x1A u16 alt const 0x1234 || const 0x1234 || const 0xFFFF
+  fix arg0 0x1C u16 alt const 0x1234 || const 0x1234 || const 0xFFFF
+  fix arg0 0x1E u16 alt const 0x1234 || const 0x1234 || const 0xFFFF
   stub 021bbc2c ret=nullable:4:ptr:arg0:0:1 args=v,v

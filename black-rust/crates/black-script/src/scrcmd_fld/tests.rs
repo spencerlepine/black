@@ -94,14 +94,14 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021AFC28, "1cdff890160b32e7"),
     (0x021AFC38, "1c892137d17f431d"),
     (0x021AFC88, "cd3cf951faf8f457"),
-    (0x021AFCD8, "3b6a2f66773a7efa"),
-    (0x021AFD44, "61fe3561bccaa586"),
-    (0x021AFDAC, "0b9f52a0bdd25f33"),
-    (0x021AFE64, "7b40cf5b70d57dfe"),
+    (0x021AFCD8, "147eff471d16da53"),
+    (0x021AFD44, "017f91fa4b308338"),
+    (0x021AFDAC, "91f5bc65395ad237"),
+    (0x021AFE64, "bbf9f117a99f2a71"),
     (0x021AFECC, "28b318f82040a5b4"),
-    (0x021AFEFC, "0fed16388a234539"),
-    (0x021AFF7C, "2108f0d05b6b3b97"),
-    (0x021B0000, "347f0f53c1beb30f"),
+    (0x021AFEFC, "90b936315c05d09a"),
+    (0x021AFF7C, "0bffae204189c4e6"),
+    (0x021B0000, "1d96eea1a7fa3002"),
 ];
 // fndiff-recorded-end
 

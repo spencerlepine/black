@@ -504,6 +504,8 @@ def make_stub(st, ctx):
             acc = mix(acc, n)
         for x in vals:
             acc = mix(acc, x)
+        for x in extra:  # Z22: the words an `in:N` callee reads feed its answer (after the scalars, in argument order)
+            acc = mix(acc, x)
         for ptr, n, m, salt in outs:
             if salt:  # `outm`: also mixes in its argument position and is mixed twice (one mix() keeps outputs of
                 # different calls XOR-correlated), then takes bits 8-15

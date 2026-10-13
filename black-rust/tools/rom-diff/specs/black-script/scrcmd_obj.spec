@@ -711,7 +711,7 @@ fn 021b229c ret=u32 inputs=200
   stub 02188d38 force ret=u32 args=v
   stub 0216e084 force ret=none args=v,v,v,v,v
   stub 021c7684 force ret=u32 args=v,v,v,v
-  stub 02163e58 force ret=none args=v,in:12,out:4
+  stub 02163e58 force ret=none args=v,in:12,outm:4:0xFF/0xFF/0xFF/0xFF  # Z22: outm (plain out: bytes tie bit 31 to bit 15)
   stub 0215a5ec force ret=u32 args=v
   stub 02159b10 force ret=u16 args=v,v seq
   stub 0216de94 force ret=nullable:4:u32 args=v,v

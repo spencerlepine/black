@@ -332,8 +332,11 @@ init procs of mask bits 10 / 12 / 13 to `scrcmd_fld::init_proc`.
   `WAIT_311_STALE_R4` = 0, the value the differential test enters with.
 * `scrcmd_talk::balloon_project` (0x021B0808): the column index divides by 12 through `0x0209C2B0` (inlined; the svflow
   `ALLOW` list runs it as real code); the jump-table fragments of 0x021B0084 / 0x021B015C / 0x021B03E4 / 0x021B0960 /
-  0x021B09EC are `match`es. Command 58's `y + h > 0x18` edge is untested (the shared u16 operand stub rarely draws a y near
-  0x18; mutation survivor).
+  0x021B09EC are `match`es. Command 58's `y + h > 0x18` edge was untested (the shared u16 operand stub rarely drew a y near
+  0x18; mutation survivor); Z22: the 021B1100 block's `02159b10` answers values near the window bounds, the `>=` mutant is caught.
+* Z22 mutation follow-up: `scrcmd_obj::cmd_583` (0x021B229C) height rounding is now compared (`02163e58` height `outm`; plain
+  `out:` bytes tied the sign bit to bit 15). `scrcmd_fld` 0x021AF23C `FUN_02006224(i) == 1` -> `!= 0` stays a survivor on
+  purpose: `FUN_02006224` returns `FUN_02072EC8(i + 1) != 0`, only 0 or 1, so the two are equivalent (the stub keeps 0/1).
 * `scrcmd_obj::object_of` (0x021B1668): for id 0xF1 the original returns its caller's r6 (never set; command 100: the movement
   offset); the port takes it as `stale_r6`, and the test never generates 0xF1. The same kind of uninitialised-register path:
   0x021AE948 (r5 for a value other than 0 / 1) and 0x021B1E80 (r7 when no direction passes): not exercised (specs bound them).

@@ -4,7 +4,7 @@ use crate::server_flow::testkit::{run_area_suite, Case};
 // Written by tools/check-svflow.sh only, after the Rust hashes matched the ROM run.
 // svflow-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
-    (0x021B75A8, "54ccffb5e7f915f8"),
+    (0x021B75A8, "6e0f609caf7384db"),
     (0x021B7758, "accce1e6887f970a"),
     (0x021B7968, "0f01d16662853ddb"),
     (0x021B7BB0, "4584869ce2ab2c0b"),

@@ -1411,7 +1411,7 @@ fn 021638c8 ret=none inputs=100
 # 021638CC(m, pos, x, y, z, dir) -> hit bits (z: stack s16, dir: stack u16): v = (x << 16 + 0x8000, pos +4, z << 16 + 0x8000);
 # 1: 02163C9C(m, x, z) (outside the move limit); 2: 02163D04(m, dir, v) (attribute blocks); height h = 02163E58(m, &v, &h):
 # none or |pos.y - h| >= 0x14000: 8, else y = h >> 16; 4: 02163BAC(m, x, y, z) (another MMDL); 0x10: 0218DC04(+0x34 of MMDLSYS, &v)
-fn 021638cc ret=u32 inputs=100
+fn 021638cc ret=u32 inputs=400
   arg work 0x100
   arg work 0xA00
   arg s32 alt range 0 4 || any
@@ -1426,7 +1426,7 @@ fn 021638cc ret=u32 inputs=100
   fix work 0x905 u8 alt const 2 || any
   fix work 0x906 u8 alt const 0 || any
   fix work 0xA00 u32 alt range 0 0x4FFFF || any
-  fix work 0xA04 u32 alt range 0 0x4FFFF || any
+  fix work 0xA04 u32 alt range 0 0x4FFFF || any || range 0x13000 0x14FFF
   fix work 0xA08 u32 alt range 0 0x4FFFF || any
   fix work 0xA40 u16 alt range 0 6 || any rep=8,2
   stub 02163a08 ret=none args=v,v,v,outm:8:3/0/3/0/7/0/7/0  # in-area
@@ -1456,7 +1456,7 @@ fn 021638cc ret=u32 inputs=100
   stub 0216d924 force ret=pick:0/1/2/3 args=v  # MMDL size z (u8)
   stub 0216dcb4 force ret=pick:0/1 args=v  # MMDL +0 & 0x400
   stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,p  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
-  stub 0218daec force ret=pick:0/1 args=v,in:12,out:16  # map height / attribute query (fsys, &pos, &out)
+  stub 0218daec force ret=pick:0/1 args=v,in:12,outm:16:0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0x1F/0/0x80  # map height / attribute query (fsys, &pos, &out); Z22: height +0xC = 0..0x1FFF or 0x80000000.. (|pos.y - h| meets the 0x14000 threshold)
   stub 0218dc04 force ret=pick:0/1 args=v,in:12  # map bound / hit test (fsys, &pos)
   stub 021ab0f0 force ret=u32 args=v  # attribute value of an attribute
   stub 021ab11c force ret=pick:0/1 args=v  # map attribute predicate (attribute value)

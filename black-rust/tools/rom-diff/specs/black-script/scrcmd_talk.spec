@@ -1269,7 +1269,7 @@ fn 021b10f4 ret=u32 inputs=200
 # cmd 58 (sized info window): msg = u16 operand, x, y = values, a = u16 operand; s = 020457B0(0x40, heap); 02045CAC(msgdata,
 # msg, STRBUF2); 0201F250(WORDSET, s, STRBUF2); 02191830(msgbg, s, &h, &w) (text size, w preset 2); x + h > 0x1F -> x =
 # 0x1F - h; y + w > 0x18 -> y = 4, w = 4; 021918DC(msgbg, s, a, x, y, h, w) (stack y, h, w); free s; init-proc bit 5 on; 0.
-fn 021b1100 ret=u32 inputs=200
+fn 021b1100 ret=u32 inputs=1000
   nowork
   arg buf 0x800
   arg buf 0x800
@@ -1282,7 +1282,7 @@ fn 021b1100 ret=u32 inputs=200
   stub 0215a5cc force ret=u16 args=v
   stub 0215a60c force ret=u32 args=v
   stub 02045cac force ret=none args=v,v,v
-  stub 02159b10 force ret=u16 args=v,v seq
+  stub 02159b10 force ret=pick:0/1/4/7/0x10/0x10/0x14/0x14/0x17/0x18/0x18/0x19/0x1F/0x20/0xFF/0x7FFF/0x8000/0xFFFF args=v,v seq  # Z22: x / y near the window bounds (+ large u16)
   stub 02011330 force ret=u16 args=v seq
   stub 020457b0 force ret=nullable:4:u32 args=v,v
   stub 0201f250 force ret=none args=v,v,v

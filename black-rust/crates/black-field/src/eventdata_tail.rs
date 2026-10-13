@@ -13,7 +13,6 @@
 use crate::hooks::{CArg, FieldEnv};
 
 /// Functions of this area that are ported and verified (read by `tools/rom-diff/svflow.py --ported-src`).
-/// `0x02164708` ([`hidden_item_flag`]) is ported but not listed: see its doc.
 pub const PORTED: &[u32] = &[
     0x0216_43AC,
     0x0216_43E8,
@@ -32,6 +31,7 @@ pub const PORTED: &[u32] = &[
     0x0216_46A0,
     0x0216_46C4,
     0x0216_46E8,
+    0x0216_4708,
     0x0216_4728,
 ];
 
@@ -1792,10 +1792,11 @@ pub fn hidden_item_index(id: u32) -> u16 {
     (id - HIDDEN_ITEM_SCRIPT_BASE) as u16
 }
 
-/// UNVERIFIED port of `FUN_02164708` (unlabeled routine at `0x02164708`): the event flag of the hidden item of a
-/// script id, `HIDDEN_ITEMS[hidden_item_index(id)].flag + 900` (halfword). Not in [`PORTED`]: [`hidden_item_index`]
-/// accepts ids up to 8799 but the table has 0xB1 records, so for ids 8177..8799 the original reads the ROM past the
-/// table (overlay 10 data and overlay 11 code) and the spec's inputs reach those ids; the port panics there.
+/// C: `FUN_02164708` (unlabeled routine at `0x02164708`): the event flag of the hidden item of a script id,
+/// `HIDDEN_ITEMS[hidden_item_index(id)].flag + 900` (halfword). [`hidden_item_index`] accepts ids up to 8799 but the
+/// table has 0xB1 records (scripts 8000..=8176, the only hidden-item scripts in the ROM): for ids 8177..8799 the
+/// original reads the ROM past the table (overlay 10 data and overlay 11 code) and the port panics; the spec (Z22)
+/// draws no such id.
 pub fn hidden_item_flag(id: u32) -> u16 {
     let i = hidden_item_index(id) as usize;
     HIDDEN_ITEMS[i].flag.wrapping_add(HIDDEN_ITEM_FLAG_BASE)

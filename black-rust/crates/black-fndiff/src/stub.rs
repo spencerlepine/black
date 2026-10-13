@@ -170,6 +170,11 @@ impl StubEnv {
         for v in &vals {
             acc = mix(acc, *v);
         }
+        // Z22: the words an `in:N` callee reads feed its answer too (after the scalars, in argument order), so two
+        // queries of one stub at different positions answer differently
+        for v in &extra {
+            acc = mix(acc, *v);
+        }
         for (i, (a, k)) in args.iter_mut().zip(st.args.iter()).enumerate() {
             if let Arg::Out(b) = a {
                 if let Some(p) = k.strip_prefix("outp:") {
@@ -370,6 +375,36 @@ mod tests {
         let mut e = StubEnv::new(vec![spec("none", &["in:3"], false)], 7);
         e.call(0x021B_B798, &mut [Arg::In(&[1, 2, 3])]);
         assert_eq!(e.log, [0x021B_B798, 0x0003_0201]);
+    }
+
+    /// Z22: the words an `in:N` stub reads feed its answer and outs (after the scalars, in argument order); the log is
+    /// unchanged. Vectors computed with tools/rom-diff/svflow.py (`tools/rom-diff/test_svflow.py`, salt 0x1234, no `seq`).
+    #[test]
+    fn in_words_feed_the_answer() {
+        let mut e = StubEnv::new(vec![spec("u32", &["v", "in:8"], false)], 0x1234);
+        let r1 = e.call(
+            0x021B_B798,
+            &mut [Arg::V(0xABCD), Arg::In(&[1, 2, 3, 4, 5, 6, 7, 8])],
+        );
+        let r2 = e.call(
+            0x021B_B798,
+            &mut [Arg::V(0xABCD), Arg::In(&[1, 2, 3, 4, 5, 6, 7, 9])],
+        );
+        assert_eq!((r1, r2), (0xF747_FDDA, 0xCE42_B9D0));
+        assert_eq!(e.log[..4], [0x021B_B798, 0xABCD, 0x0403_0201, 0x0807_0605]);
+        // without an `in:` argument the answer is the old one (the `u64_stub_returns_two_words` low word)
+        let mut v = StubEnv::new(vec![spec("u32", &["v"], false)], 0x1234);
+        assert_eq!(v.call(0x021B_B798, &mut [Arg::V(0xABCD)]), 0x731C_9F54);
+        // the outs depend on the read words as well
+        let mut e = StubEnv::new(vec![spec("u32", &["in:3", "v", "out:4"], false)], 0x1234);
+        let mut out = [0u8; 4];
+        let r = e.call(
+            0x021B_B798,
+            &mut [Arg::In(&[0xAA; 3]), Arg::V(7), Arg::Out(&mut out)],
+        );
+        assert_eq!(r, 0x2DC1_3597);
+        assert_eq!(out, [36, 203, 171, 8]);
+        assert_eq!(e.log, [0x021B_B798, 7, 0x00AA_AAAA]);
     }
 
     /// `outn:N:M` (B10-spec2): `outm` for a pointer, a plain value argument for null.

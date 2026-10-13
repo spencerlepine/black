@@ -51,6 +51,10 @@ pub const PORTED: &[u32] = &[
     0x0218_AE04,
     0x0218_AE48,
     0x0218_AEAC,
+    0x0218_AED4,
+    0x0218_AF90,
+    0x0218_B0CC,
+    0x0218_B13C,
     0x0218_B208,
     0x0218_B24C,
     0x0218_B2A8,
@@ -59,6 +63,8 @@ pub const PORTED: &[u32] = &[
     0x0218_B32C,
     0x0218_B3DC,
     0x0218_B408,
+    0x0218_B4B0,
+    0x0218_B53C,
     0x0218_B56C,
     0x0218_B630,
     0x0218_B6AC,
@@ -290,8 +296,7 @@ fn grid_check_at<E: FieldEnv>(
             0x0216_4208,
             &mut [CArg::V(d), CArg::In(pos, 12), CArg::V(0x10000)],
         );
-        // `FUN_0218B4B0` through its stub (UNVERIFIED port, see `talk_target`)
-        let m = env.call(0x0218_B4B0, &mut [CArg::P(req), CArg::V(fm)]);
+        let m = talk_target(env, req, fm);
         if m != 0 {
             let s = env.callv(0x0216_D5B8, &[m]);
             if env.callv(0x0215_8D90, &[s & 0xFFFF]) == 1 {
@@ -367,12 +372,11 @@ fn grid_check_at<E: FieldEnv>(
         }
     }
     if flags(env, req) & 0x20 != 0 {
-        // `FUN_0218AED4` / `FUN_0218AF90` through their stubs (UNVERIFIED ports, see `bump_warp`)
-        let e = env.call(0x0218_AED4, &mut [CArg::P(req), CArg::P(gs), CArg::V(fm)]);
+        let e = bump_warp(env, req, gs, fm);
         if e != 0 {
             return e;
         }
-        let e = env.call(0x0218_AF90, &mut [CArg::P(req), CArg::V(gs), CArg::V(fm)]);
+        let e = bump_checks(env, req, gs, fm);
         if e != 0 {
             return e;
         }
@@ -524,8 +528,7 @@ fn comm_check_at<E: FieldEnv>(env: &mut E, gs: u32, fm: u32, req: u32) -> u32 {
         }
     }
     if flags(env, req) & 1 != 0 && env.callv(0x0217_394C, &[gs]) == 1 {
-        // `FUN_0218B4B0` through its stub (UNVERIFIED port, see `talk_target`)
-        let m = env.call(0x0218_B4B0, &mut [CArg::P(req), CArg::V(fm)]);
+        let m = talk_target(env, req, fm);
         if m != 0 {
             let s = env.callv(0x0216_D5B8, &[m]);
             if env.callv(0x0215_8D90, &[s & 0xFFFF]) == 1 {
@@ -625,8 +628,7 @@ fn rail_check_at<E: FieldEnv>(env: &mut E, gs: u32, fm: u32, req: u32, rp: u32, 
         if s != 0xFFFF {
             return script_event(env, req, s);
         }
-        // `FUN_0218B0CC` through its stub (UNVERIFIED port, see `rail_warp_check`)
-        let e = env.call(0x0218_B0CC, &mut [CArg::P(req), CArg::P(gs), CArg::V(fm)]);
+        let e = rail_warp_check(env, req, gs, fm);
         if e != 0 {
             return e;
         }
@@ -640,8 +642,7 @@ fn rail_check_at<E: FieldEnv>(env: &mut E, gs: u32, fm: u32, req: u32, rp: u32, 
         return e;
     }
     if flags(env, req) & 1 != 0 {
-        // `FUN_0218B53C` through its stub (UNVERIFIED port, see `rail_talk_target`)
-        let m = env.call(0x0218_B53C, &mut [CArg::P(req), CArg::V(fm)]);
+        let m = rail_talk_target(env, req, fm);
         if m != 0 {
             let s = env.callv(0x0216_D5B8, &[m]);
             if env.callv(0x0215_8D90, &[s & 0xFFFF]) == 1 {
@@ -682,11 +683,7 @@ fn rail_check_at<E: FieldEnv>(env: &mut E, gs: u32, fm: u32, req: u32, rp: u32, 
     if flags(env, req) & 0x20 != 0 {
         let pl = env.callv(0x0218_8CB4, &[fm]);
         if !facing_free(env, pl, req) {
-            // `FUN_0218B13C` through its stub (UNVERIFIED port, see `rail_bump_warp`)
-            let e = env.call(
-                0x0218_B13C,
-                &mut [CArg::P(req), CArg::P(gs), CArg::V(fm), CArg::P(rp2)],
-            );
+            let e = rail_bump_warp(env, req, gs, fm, rp2);
             if e != 0 {
                 return e;
             }
@@ -1248,7 +1245,7 @@ pub fn warp_event<E: FieldEnv>(env: &mut E, req: u32, fm: u32, id: u32, pos: u32
     let zev = env.r32(req + 0xC);
     let o = env.callv(0x0216_25CC, &[zev, id & 0xFFFF]);
     let w = if pos != 0 {
-        env.callv(0x0216_26A8, &[o, pos])
+        env.call(0x0216_26A8, &mut [CArg::V(o), CArg::In(pos, 12)])
     } else {
         0
     };
@@ -1287,7 +1284,7 @@ pub fn set_return<E: FieldEnv>(env: &mut E, req: u32, id: u32, pos: u32) {
 /// `FUN_0218AECC`); else 0xFFFF.
 pub fn warp_at<E: FieldEnv>(env: &mut E, req: u32, pos: u32) -> u32 {
     let zev = env.r32(req + 0xC);
-    let id = env.callv(0x0216_2564, &[zev, pos]);
+    let id = env.call(0x0216_2564, &mut [CArg::V(zev), CArg::In(pos, 12)]);
     if id == 0xFFFF {
         return 0xFFFF;
     }
@@ -1312,10 +1309,6 @@ pub fn is_warp_kind<E: FieldEnv>(env: &mut E, o: u32) -> bool {
 
 /// C: `FUN_0218AED4` (unlabeled routine at `0x0218AED4`): the bump warps: on a front tile with attribute bit 0,
 /// the kind-1 warp under the player, else the warp in front.
-///
-/// UNVERIFIED port of `FUN_0218AED4`: not in [`PORTED`]. The second check hands the address of a stack local
-/// (the front tile) to `FUN_02162564` / `FUN_021626A8`, whose spec stubs log that pointer as a value (`v`), so the
-/// hash holds the emulator's stack address; the port's local lives elsewhere. Callers reach it through its stub.
 pub fn bump_warp<E: FieldEnv>(env: &mut E, req: u32, _gs: u32, fm: u32) -> u32 {
     let front = env.mem().push_local(12);
     let r = bump_warp_at(env, req, fm, front);
@@ -1361,9 +1354,6 @@ fn bump_warp_at<E: FieldEnv>(env: &mut E, req: u32, fm: u32, front: u32) -> u32 
 /// facing)`; on a front tile with attribute bit 0: the waterfall script 0x271F (surfing, a party member knows field
 /// move 0x7F ([`party_move_slot`]), attribute `FUN_021AB310` and the tile behind it is lower); with no warp in front,
 /// gimmick 2 -> `FUN_021F404C(gs)`, gimmick 5 -> `FUN_021F37E0(gs)`.
-///
-/// UNVERIFIED port of `FUN_0218AF90`: not in [`PORTED`] (the warp check hands the address of the stack local front
-/// tile to stubs that log it as a value; see [`bump_warp`]).
 pub fn bump_checks<E: FieldEnv>(env: &mut E, req: u32, gs: u32, fm: u32) -> u32 {
     let front = env.mem().push_local(12);
     let p = env.mem().push_local(12);
@@ -1442,9 +1432,6 @@ fn rail_position<E: FieldEnv>(env: &mut E, fm: u32, rp: u32) {
 
 /// C: `FUN_0218B0CC` (unlabeled routine at `0x0218B0CC`): the rail-map warp under the player (`FUN_02162598(evdata,
 /// &rp)`), enabled and of a warp kind: [`rail_set_return`] and [`rail_warp_event`].
-///
-/// UNVERIFIED port of `FUN_0218B0CC`: not in [`PORTED`]. It hands the address of the stack local rail position to
-/// `FUN_0218B2E8`, whose callee `FUN_02162BCC` (spec stub `args=v,v`) logs that pointer as a value.
 pub fn rail_warp_check<E: FieldEnv>(env: &mut E, req: u32, _gs: u32, fm: u32) -> u32 {
     let rp = env.mem().push_local(8);
     let r = (|| {
@@ -1468,9 +1455,6 @@ pub fn rail_warp_check<E: FieldEnv>(env: &mut E, req: u32, _gs: u32, fm: u32) ->
 
 /// C: `FUN_0218B13C` (unlabeled routine at `0x0218B13C`): the rail-map bump warps: the kind-1 warp under the player
 /// that can be entered facing this way, else the warp at `rp2`; both use the player's rail position.
-///
-/// UNVERIFIED port of `FUN_0218B13C`: not in [`PORTED`] (the stack local rail position reaches a stub that logs the
-/// pointer; see [`rail_warp_check`]).
 pub fn rail_bump_warp<E: FieldEnv>(env: &mut E, req: u32, _gs: u32, fm: u32, rp2: u32) -> u32 {
     let rp = env.mem().push_local(8);
     let r = (|| {
@@ -1584,7 +1568,7 @@ pub fn rail_set_return<E: FieldEnv>(env: &mut E, req: u32, id: u32, rp: u32) {
 pub fn rail_warp_event<E: FieldEnv>(env: &mut E, req: u32, fm: u32, id: u32, rp: u32) -> u32 {
     let zev = env.r32(req + 0xC);
     let o = env.callv(0x0216_25CC, &[zev, id & 0xFFFF]);
-    let w = env.callv(0x0216_26B0, &[o, rp]);
+    let w = env.call(0x0216_26B0, &mut [CArg::V(o), CArg::In(rp, 8)]);
     let gs = env.r32(req + 4);
     env.call(
         0x0218_5360,
@@ -1719,9 +1703,6 @@ fn ledge_check_at<E: FieldEnv>(env: &mut E, req: u32, gs: u32, fm: u32, t: u32) 
 /// C: `FUN_0218B4B0` (unlabeled routine at `0x0218B4B0`): the MMDL to talk to: the tile in front of the player
 /// (`FUN_021A3460` tile x/y/z; on a counter attribute `FUN_021AB194 == 1` one tile further, `FUN_02164240`), then
 /// `FUN_0216DDDC(mmdl system, x, z, height, 0x10000, 0)`.
-///
-/// UNVERIFIED port of `FUN_0218B4B0`: not in [`PORTED`]. It hands the addresses of two stack locals to
-/// `FUN_02164240`, whose spec stub logs them as values (`v`), so the hash holds the emulator's stack addresses.
 pub fn talk_target<E: FieldEnv>(env: &mut E, req: u32, fm: u32) -> u32 {
     let xyz = env.mem().push_local(8);
     let pos = env.mem().push_local(12);
@@ -1760,7 +1741,11 @@ fn talk_target_at<E: FieldEnv>(env: &mut E, req: u32, fm: u32, xyz: u32, pos: u3
     let c = env.callv(0x021A_B0F0, &[b]);
     if env.callv(0x021A_B194, &[c]) == 1 {
         let f = env.callv(0x0216_D5F8, &[mm]);
-        env.callv(0x0216_4240, &[f, x, z, 1]);
+        // C: `FUN_02164240(dir, &x, &z, 1)`: moves the tile x / z one step in direction `dir`
+        env.call(
+            0x0216_4240,
+            &mut [CArg::V(f), CArg::Out(x, 2), CArg::Out(z, 2), CArg::V(1)],
+        );
     }
     let sys = env.callv(0x0218_8C7C, &[fm]);
     let h = env.callv(0x0216_D8AC, &[mm]);
@@ -1773,16 +1758,16 @@ fn talk_target_at<E: FieldEnv>(env: &mut E, req: u32, fm: u32, xyz: u32, pos: u3
 
 /// C: `FUN_0218B53C` (unlabeled routine at `0x0218B53C`): the rail-map MMDL to talk to:
 /// `FUN_0219E634(mmdl, &rp)` ? `FUN_0219E570(mmdl system, &rp, 0)` : 0.
-///
-/// UNVERIFIED port of `FUN_0218B53C`: not in [`PORTED`]. The address of the stack local `rp` goes to `FUN_0219E570`,
-/// whose spec stub logs it as a value (`v`).
 pub fn rail_talk_target<E: FieldEnv>(env: &mut E, req: u32, fm: u32) -> u32 {
     let rp = env.mem().push_local(8);
     let pl = env.r32(req + 0x18);
     let mm = env.callv(0x021A_3074, &[pl]);
     let r = if env.call(0x0219_E634, &mut [CArg::V(mm), CArg::Out(rp, 8)]) != 0 {
         let sys = env.callv(0x0218_8C7C, &[fm]);
-        env.callv(0x0219_E570, &[sys, rp, 0])
+        env.call(
+            0x0219_E570,
+            &mut [CArg::V(sys), CArg::In(rp, 8), CArg::V(0)],
+        )
     } else {
         0
     };

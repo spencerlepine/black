@@ -70,6 +70,7 @@ fn 021ccaa8 ret=none [mode=arm] [inputs=200]
   bytes. `noreturn` = fatal routine: the run ends there (`halt` section); on the Rust side the call
   unwinds to the testkit (B10a-spec), so a port that reaches it from a nested callee stops exactly
   where the original does (ports still `return` after the call, which is dead in the test). Stub result: `acc = salt; for v in v-args: acc = mix(acc, v)`;
+  then (Z22) `for w in in-words: acc = mix(acc, w)` (the words of every `in:N` argument, in argument order);
   return `ret(mix(acc, addr & 0xFFFF))`; out byte j = `mix(acc, (addr & 0xFFFF) + 0x1000 + j) & 0xFF`;
   log entry `[addr, v-args..., in-words...]`. `salt` is drawn per input.
 * A stub is **active** only while its address is not in any server_flow module's `PORTED`; once the
@@ -613,3 +614,24 @@ No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec te
 * The RNG (`020056EC` next / `02005728` next_scaled, ported in black-core rng) is a `force` stub `ret=lt:0` (an answer below the
   argument); the percent roll `021A9DC8` / `021AA6E0` as an in-area stub picks the threshold values of its callers.
 * The slot-pick table call of `021A9C58` (ROM 0x021D8DD8 [mode], mode bounded 0..3) lands on the in-area entries.
+
+## Z22 additions (harness: `in:` words feed the stub answer, field/script mutation-survivor inputs)
+
+* **Stub model change (mirrored in `svflow.py` `make_stub` and `black-fndiff` `stub.rs`):** after the `v` scalars, the words an
+  `in:N` argument reads are mixed into `acc` (`for w in in-words: acc = mix(acc, w)`, argument order), so the result, `out*`
+  bytes and `outp` addresses of a callee depend on the memory it reads. Before, two queries of one stub at different positions
+  (the map attribute query `0218DAEC` from `021640B0`) returned the same answer, which hid swapped results (F6a survivor). The
+  log is unchanged. Vectors: `stub.rs` `in_words_feed_the_answer` = `test_svflow.py` `InFeedsTheAnswer`. Hash effect: exactly the
+  functions whose spec block has an `in:` stub with a consumed answer (`ret` not `none`, or an out argument): 90 functions in 13
+  areas (black-field eventdata_tail 2, fieldmap_event 8, mmdl_move 24; black-script scrcmd_fld 7, scrcmd_obj 6, scrcmd_screen 6,
+  scrcmd_talk 12, scrcmd_work 1, script_sys 10; svflow api 2, core5 6, handex 5, server2 1); the other 50 areas are byte-identical.
+* Plain `out:N` bytes of one call are correlated (byte j = `mix(acc, key + 0x1000 + j) & 0xFF`; a negative height word always had
+  bit 15 set, so `021B229C`'s round-towards-zero bias never mattered): use `outm:N:0xFF/..` for a value whose bits are compared.
+* Spec inputs (mutation survivors; each mutation re-applied, caught, reverted): mmdl_move `021638CC` (heights within 0x2000 of
+  `pos.y`, 400 inputs), eventdata_tail `021645E0` (wait counter at the bound), eventdata `02162970` (dir 4 with facing rule 5, 2000
+  inputs), fieldmap_func `021BBC58` (entry 0 = the 30th examined for count 29, 3000 inputs), scrcmd_talk `021B1100` (operand stub
+  `02159b10` answers values near the 0x1F / 0x18 window bounds plus large u16, 1000 inputs), scrcmd_obj `021B229C` (`02163e58`
+  height `outm`). eventdata_tail `02164708`: ids 8177..0x225F are not drawn (the table has the 0xB1 records of the hidden-item
+  scripts 8000..=8176; the original reads past it for those ids). fieldmap_event: the stack locals that `0218AED4`, `0218AF90`,
+  `0218B0CC`, `0218B13C`, `0218B53C` pass reach `02162564` / `02162B68` (via `021626A8`) as `in:12`, `02162BCC` (via `021626B0`) /
+  `0219E570` as `in:8`; `02164240(dir, &x, &z, n)` (from `0218B4B0`) writes the two s16 tiles: `outm:2:0xFF/0xFF` each.

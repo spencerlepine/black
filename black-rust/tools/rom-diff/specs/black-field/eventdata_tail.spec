@@ -193,13 +193,13 @@ fn 021645c0 ret=u32 inputs=100
 # 021645E0(ev, seq, work) -> done (GMEVENT proc 0x021645E1): f = 0201210C(work[0]); 02188C7C(f); seq 0: 02012138(work[0]);
 # work[1] += 1; 0215870C(..) == 1 and work[1] < 30: 0; else 02188BF8(f), seq 1 (falls through); seq 1: 021A2F54(02188CB4(f)) == 1:
 # seq 2; 0; seq 2: 021A34F8(02188CB4(f)) == 1; else 0
-fn 021645e0 ret=u32 inputs=100
+fn 021645e0 ret=u32 inputs=300
   nowork
   arg u32 any
   arg buf 0x10
   arg buf 0x10
-  fix arg1 0 u32 alt range 0 3 || any
-  fix arg2 4 u32 alt range 25 31 || any
+  fix arg1 0 u32 alt const 0 || range 0 3 || any
+  fix arg2 4 u32 alt range 28 30 || range 25 31 || any  # Z22: work[1] + 1 == 30 (the wait bound) more often
   stub 0201210c force ret=u32 args=v  # GAMESYS -> FIELDMAP
   stub 02012138 force ret=u32 args=v  # GAMESYS getter
   stub 0215870c force ret=pick:0/1 args=v  # script_sys predicate
@@ -254,7 +254,9 @@ fn 021646e8 ret=u32 inputs=100
 # 02164708(id) -> (u16) (ROM 0x02171534[021646E8(id)] (10-byte records, u16 +0) + 900) (the hidden-item flag)
 fn 02164708 ret=u32 inputs=100
   nowork
-  arg u32 alt range 7990 8200 || range 0x2250 0x2270 || any
+  # Z22: ids 8177..0x225F are excluded: 021646E8 accepts them but the table has 0xB1 records (scripts 8000..=8176, the only
+  # hidden-item scripts in the ROM: nds-rom map_rom.rs), so for them the original reads past the table (overlay data / code)
+  arg u32 alt range 7990 8176 || range 0x2260 0x2270 || range 0 7999 || range 0x2260 0xFFFFFFFF
   stub 021646e8 ret=pick:0/1/2/0xB0 args=v  # in-area
 
 # 02164728(ew): 0201440C(ew) != 0 (once per day marker): for each of the 0xB1 hidden items (ROM 0x02171534, 10 bytes):

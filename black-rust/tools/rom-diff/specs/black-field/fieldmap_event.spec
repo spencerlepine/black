@@ -181,7 +181,7 @@ fn 02189bd0 ret=u32 inputs=1500
   stub 021a3460 force ret=none args=v,outm:2:0x7/0,outm:2:0x7/0,outm:2:0x7/0
   stub 02164294 force ret=none args=v,v,v,out:12  # tile -> fx32 position (x, y, z, &out)
   stub 021ab194 force ret=pick:0/1 args=v
-  stub 02164240 force ret=none args=v,v,v,v  # ov10
+  stub 02164240 force ret=none args=v,outm:2:0xFF/0xFF,outm:2:0xFF/0xFF,v  # ov10 (dir, &x, &z, n): moves the s16 tile x / z
   stub 02188c7c force ret=u32 args=v  # fieldmap (other F2a area)
   stub 0216d8ac force ret=u32 args=v  # ov10
   stub 0216dddc force ret=u32 args=v,v,v,v,v,v  # ov10
@@ -207,11 +207,11 @@ fn 02189bd0 ret=u32 inputs=1500
   stub 0216282c force ret=nullable:4:ptr:work:0x640:1 args=v,v,in:12,v
   stub 0216d7c4 force ret=pick:0/0x58/0x5B/0xA3/0xA6/0xA7 args=v
   stub 02162928 force ret=pick:0xFFFF/0xFFFF/0xFFFF/1 args=v,v,in:12,v
-  stub 02162564 force ret=pick:0/1/0xFFFF args=v,v
+  stub 02162564 force ret=pick:0/1/0xFFFF args=v,in:12
   stub 021626b8 force ret=pick:0/1 args=v,v
   stub 02014110 force ret=none args=out:0x1C,v,v,v,v,v,v,v  # LOCATION init (loc, zone, ..)
   stub 02012878 force ret=none args=v,in:0x1C  # store a LOCATION in the game data (gd, &loc)
-  stub 02162b68 force ret=u32 args=v,v  # ov10
+  stub 02162b68 force ret=u32 args=v,in:12  # ov10
   stub 02185410 force ret=u32 args=v,p,v,v  # ov20
   stub 02185360 force ret=u32 args=v,p,v,v  # ov20
   stub 021aa944 force ret=pick:0/1/2 args=v
@@ -410,7 +410,7 @@ fn 0218a074 ret=u32 inputs=300
   stub 021a3460 force ret=none args=v,outm:2:0x7/0,outm:2:0x7/0,outm:2:0x7/0
   stub 02164294 force ret=none args=v,v,v,out:12  # tile -> fx32 position (x, y, z, &out)
   stub 021ab194 force ret=pick:0/1 args=v
-  stub 02164240 force ret=none args=v,v,v,v  # ov10
+  stub 02164240 force ret=none args=v,outm:2:0xFF/0xFF,outm:2:0xFF/0xFF,v  # ov10 (dir, &x, &z, n): moves the s16 tile x / z
   stub 02188c7c force ret=u32 args=v  # fieldmap (other F2a area)
   stub 0216d8ac force ret=u32 args=v  # ov10
   stub 0216dddc force ret=u32 args=v,v,v,v,v,v  # ov10
@@ -435,11 +435,11 @@ fn 0218a074 ret=u32 inputs=300
   stub 0216282c force ret=nullable:4:ptr:work:0x640:1 args=v,v,in:12,v
   stub 0216d7c4 force ret=pick:0/0x58/0x5B/0xA3/0xA6/0xA7 args=v
   stub 02162928 force ret=pick:0xFFFF/0xFFFF/0xFFFF/1 args=v,v,in:12,v
-  stub 02162564 force ret=pick:0/1/0xFFFF args=v,v
+  stub 02162564 force ret=pick:0/1/0xFFFF args=v,in:12
   stub 021626b8 force ret=pick:0/1 args=v,v
   stub 02014110 force ret=none args=out:0x1C,v,v,v,v,v,v,v  # LOCATION init (loc, zone, ..)
   stub 02012878 force ret=none args=v,in:0x1C  # store a LOCATION in the game data (gd, &loc)
-  stub 02162b68 force ret=u32 args=v,v  # ov10
+  stub 02162b68 force ret=u32 args=v,in:12  # ov10
   stub 02185410 force ret=u32 args=v,p,v,v  # ov20
   stub 02185360 force ret=u32 args=v,p,v,v  # ov20
   stub 021aa944 force ret=pick:0/1/2 args=v
@@ -539,7 +539,7 @@ fn 0218a0e4 ret=u32 inputs=1500
   stub 021a3460 force ret=none args=v,outm:2:0x7/0,outm:2:0x7/0,outm:2:0x7/0
   stub 02164294 force ret=none args=v,v,v,out:12  # tile -> fx32 position (x, y, z, &out)
   stub 021ab194 force ret=pick:0/1 args=v
-  stub 02164240 force ret=none args=v,v,v,v  # ov10
+  stub 02164240 force ret=none args=v,outm:2:0xFF/0xFF,outm:2:0xFF/0xFF,v  # ov10 (dir, &x, &z, n): moves the s16 tile x / z
   stub 02188c7c force ret=u32 args=v  # fieldmap (other F2a area)
   stub 0216d8ac force ret=u32 args=v  # ov10
   stub 0216dddc force ret=u32 args=v,v,v,v,v,v  # ov10
@@ -638,7 +638,7 @@ fn 0218a240 ret=u32 inputs=200
   stub 021aa248 force ret=u32 args=v,v  # ov21
   stub 021a9f40 force ret=u32 args=v,v  # ov21
   stub 02188c7c force ret=u32 args=v  # fieldmap (other F2a area)
-  stub 0219e570 force ret=u32 args=v,v,v  # ov21
+  stub 0219e570 force ret=u32 args=v,in:8,v  # ov21 (sys, &rail position, flag)
   stub 0219e424 force ret=u32 args=v,v,v  # ov21
   stub 021626b8 force ret=pick:0/1 args=v,v
   stub 021626e8 force ret=pick:0/1/5/6/7 args=v
@@ -650,7 +650,7 @@ fn 0218a240 ret=u32 inputs=200
   stub 020124ac force ret=u32 args=v,v,v,v  # main
   stub 02014134 force ret=none args=out:0x1C,v,v,v,v,v,v,v  # LOCATION init, rail form (loc, id, b, c, d, e, f, g)
   stub 02012878 force ret=none args=v,in:0x1C  # store a LOCATION in the game data (gd, &loc)
-  stub 02162bcc force ret=u32 args=v,v  # ov10
+  stub 02162bcc force ret=u32 args=v,in:8  # ov10
   stub 02185360 force ret=u32 args=v,p,v,v  # ov20
   stub 02012ebc force ret=u32 args=v  # main
   stub 021aa944 force ret=pick:0/1/2 args=v
@@ -763,7 +763,7 @@ fn 0218a278 ret=u32 inputs=500
   stub 021aa248 force ret=u32 args=v,v  # ov21
   stub 021a9f40 force ret=u32 args=v,v  # ov21
   stub 02188c7c force ret=u32 args=v  # fieldmap (other F2a area)
-  stub 0219e570 force ret=u32 args=v,v,v  # ov21
+  stub 0219e570 force ret=u32 args=v,in:8,v  # ov21 (sys, &rail position, flag)
   stub 0219e424 force ret=u32 args=v,v,v  # ov21
   stub 021626b8 force ret=pick:0/1 args=v,v
   stub 021626e8 force ret=pick:0/1/5/6/7 args=v
@@ -775,7 +775,7 @@ fn 0218a278 ret=u32 inputs=500
   stub 020124ac force ret=u32 args=v,v,v,v  # main
   stub 02014134 force ret=none args=out:0x1C,v,v,v,v,v,v,v  # LOCATION init, rail form (loc, id, b, c, d, e, f, g)
   stub 02012878 force ret=none args=v,in:0x1C  # store a LOCATION in the game data (gd, &loc)
-  stub 02162bcc force ret=u32 args=v,v  # ov10
+  stub 02162bcc force ret=u32 args=v,in:8  # ov10
   stub 02185360 force ret=u32 args=v,p,v,v  # ov20
   stub 02012ebc force ret=u32 args=v  # main
   stub 021aa944 force ret=pick:0/1/2 args=v
@@ -980,7 +980,7 @@ fn 0218a4bc ret=u32 inputs=200
   stub 021a3460 force ret=none args=v,outm:2:0x7/0,outm:2:0x7/0,outm:2:0x7/0
   stub 02164294 force ret=none args=v,v,v,out:12  # tile -> fx32 position (x, y, z, &out)
   stub 021ab194 force ret=pick:0/1 args=v
-  stub 02164240 force ret=none args=v,v,v,v  # ov10
+  stub 02164240 force ret=none args=v,outm:2:0xFF/0xFF,outm:2:0xFF/0xFF,v  # ov10 (dir, &x, &z, n): moves the s16 tile x / z
   stub 02188c7c force ret=u32 args=v  # fieldmap (other F2a area)
   stub 0216d8ac force ret=u32 args=v  # ov10
   stub 0216dddc force ret=u32 args=v,v,v,v,v,v  # ov10
@@ -1004,7 +1004,7 @@ fn 0218a4bc ret=u32 inputs=200
   stub 02162598 force ret=pick:0/1/0xFFFF args=v,in:8
   stub 0218b2a8 ret=none args=v,v,p  # in-area
   stub 0218b2e8 ret=pick:0/0/0/0/0/0/1 args=v,v,v,p  # in-area
-  stub 0219e570 force ret=u32 args=v,v,v  # ov21
+  stub 0219e570 force ret=u32 args=v,in:8,v  # ov21 (sys, &rail position, flag)
   stub 0219e424 force ret=u32 args=v,v,v  # ov21
   stub 021626b8 force ret=pick:0/1 args=v,v
   stub 021bb188 force ret=pick:0/1 args=v
@@ -1013,10 +1013,10 @@ fn 0218a4bc ret=u32 inputs=200
   stub 0216282c force ret=nullable:4:ptr:work:0x640:1 args=v,v,in:12,v
   stub 0216d7c4 force ret=pick:0/0x58/0x5B/0xA3/0xA6/0xA7 args=v
   stub 02162928 force ret=pick:0xFFFF/0xFFFF/0xFFFF/1 args=v,v,in:12,v
-  stub 02162564 force ret=pick:0/1/0xFFFF args=v,v
+  stub 02162564 force ret=pick:0/1/0xFFFF args=v,in:12
   stub 02014110 force ret=none args=out:0x1C,v,v,v,v,v,v,v  # LOCATION init (loc, zone, ..)
   stub 02012878 force ret=none args=v,in:0x1C  # store a LOCATION in the game data (gd, &loc)
-  stub 02162b68 force ret=u32 args=v,v  # ov10
+  stub 02162b68 force ret=u32 args=v,in:12  # ov10
   stub 02185410 force ret=u32 args=v,p,v,v  # ov20
   stub 02185360 force ret=u32 args=v,p,v,v  # ov20
   stub 021aa944 force ret=pick:0/1/2 args=v
@@ -1044,7 +1044,7 @@ fn 0218a4bc ret=u32 inputs=200
   stub 020124e8 force ret=ptr:work:0x700:1 args=v
   stub 02017e1c force ret=pick:0/1/0x39/0x7F args=v,v,v
   stub 02014134 force ret=none args=out:0x1C,v,v,v,v,v,v,v  # LOCATION init, rail form (loc, id, b, c, d, e, f, g)
-  stub 02162bcc force ret=u32 args=v,v  # ov10
+  stub 02162bcc force ret=u32 args=v,in:8  # ov10
   stub 02008970 force ret=none args=v,outm:4:0xFF/0xFF/1/0
   stub 02010ff4 force ret=u32 args=v,p,v,v  # main
   stub 0218aa74 ret=none args=v  # in-area
@@ -1520,13 +1520,13 @@ fn 0218acd0 ret=u32 inputs=200
   stub 0218aeac ret=pick:0/1 args=v  # in-area
   stub 0218adc8 ret=none args=v,v,v  # in-area
   stub 0218ad80 ret=pick:0/0/0/0/0/0/1 args=v,v,v,v  # in-area
-  stub 02162564 force ret=pick:0/1/0xFFFF args=v,v
+  stub 02162564 force ret=pick:0/1/0xFFFF args=v,in:12
   stub 021626b8 force ret=pick:0/1 args=v,v
   stub 021626e8 force ret=pick:0/1/5/6/7 args=v
   stub 02188c9c force ret=u16 args=v  # fieldmap (other F2a area)
   stub 02014110 force ret=none args=out:0x1C,v,v,v,v,v,v,v  # LOCATION init (loc, zone, ..)
   stub 02012878 force ret=none args=v,in:0x1C  # store a LOCATION in the game data (gd, &loc)
-  stub 02162b68 force ret=u32 args=v,v  # ov10
+  stub 02162b68 force ret=u32 args=v,in:12  # ov10
   stub 02185410 force ret=u32 args=v,p,v,v  # ov20
   stub 02185360 force ret=u32 args=v,p,v,v  # ov20
 
@@ -1574,7 +1574,7 @@ fn 0218ad80 ret=u32 inputs=200
   fix work 0x600 u32 alt range 0 0x40000 || any
   fix work 0x608 u32 alt range 0 0x40000 || any
   stub 021625cc force ret=u32 args=v,v  # ov10
-  stub 02162b68 force ret=u32 args=v,v  # ov10
+  stub 02162b68 force ret=u32 args=v,in:12  # ov10
   stub 021626e8 force ret=pick:0/5/6 args=v
   stub 02185410 force ret=u32 args=v,p,v,v  # ov20
   stub 02185360 force ret=u32 args=v,p,v,v  # ov20
@@ -1614,7 +1614,7 @@ fn 0218ae04 ret=u32 inputs=200
   fix work 0x534 u32 addrof work 0x600
   fix work 0x600 u32 alt range 0 0x40000 || any
   fix work 0x608 u32 alt range 0 0x40000 || any
-  stub 02162564 force ret=pick:0/1/0xFFFF args=v,v
+  stub 02162564 force ret=pick:0/1/0xFFFF args=v,in:12
   stub 021625cc force ret=u32 args=v,v  # ov10
   stub 0218aeac ret=pick:0/1 args=v  # in-area
   stub 021626b8 force ret=pick:0/1 args=v,v
@@ -1675,13 +1675,13 @@ fn 0218aed4 ret=u32 inputs=300
   stub 021626e8 force ret=pick:0/1/5/6/7 args=v
   stub 0218adc8 ret=none args=v,v,v  # in-area
   stub 0218ad80 ret=pick:0/0/0/0/0/0/1 args=v,v,v,v  # in-area
-  stub 02162564 force ret=pick:0/1/0xFFFF args=v,v
+  stub 02162564 force ret=pick:0/1/0xFFFF args=v,in:12
   stub 0218aeac ret=pick:0/1 args=v  # in-area
   stub 021626b8 force ret=pick:0/1 args=v,v
   stub 02188c9c force ret=u16 args=v  # fieldmap (other F2a area)
   stub 02014110 force ret=none args=out:0x1C,v,v,v,v,v,v,v  # LOCATION init (loc, zone, ..)
   stub 02012878 force ret=none args=v,in:0x1C  # store a LOCATION in the game data (gd, &loc)
-  stub 02162b68 force ret=u32 args=v,v  # ov10
+  stub 02162b68 force ret=u32 args=v,in:12  # ov10
   stub 02185410 force ret=u32 args=v,p,v,v  # ov20
   stub 02185360 force ret=u32 args=v,p,v,v  # ov20
 
@@ -1732,7 +1732,7 @@ fn 0218af90 ret=u32 inputs=400
   stub 0201aa18 force ret=pick:0/1/2 args=v
   stub 0201ab28 force ret=u32 args=v,v  # main
   stub 02017e1c force ret=pick:0/1/0x39/0x7F args=v,v,v
-  stub 02162564 force ret=pick:0/1/0xFFFF args=v,v
+  stub 02162564 force ret=pick:0/1/0xFFFF args=v,in:12
   stub 021625cc force ret=u32 args=v,v  # ov10
   stub 0218aeac ret=pick:0/1 args=v  # in-area
   stub 021626b8 force ret=pick:0/1 args=v,v
@@ -1767,7 +1767,7 @@ fn 0218b0cc ret=u32 inputs=200
   stub 02188c9c force ret=u16 args=v  # fieldmap (other F2a area)
   stub 02014134 force ret=none args=out:0x1C,v,v,v,v,v,v,v  # LOCATION init, rail form (loc, id, b, c, d, e, f, g)
   stub 02012878 force ret=none args=v,in:0x1C  # store a LOCATION in the game data (gd, &loc)
-  stub 02162bcc force ret=u32 args=v,v  # ov10
+  stub 02162bcc force ret=u32 args=v,in:8  # ov10
   stub 02185360 force ret=u32 args=v,p,v,v  # ov20
 
 # 0218B13C(req, gs, fm, rp2): rail position rp of the player (0219E2F4); id = 02162598(evdata, &rp) != 0xFFFF && 021626EC(o) == 0
@@ -1801,7 +1801,7 @@ fn 0218b13c ret=u32 inputs=300
   stub 02188c9c force ret=u16 args=v  # fieldmap (other F2a area)
   stub 02014134 force ret=none args=out:0x1C,v,v,v,v,v,v,v  # LOCATION init, rail form (loc, id, b, c, d, e, f, g)
   stub 02012878 force ret=none args=v,in:0x1C  # store a LOCATION in the game data (gd, &loc)
-  stub 02162bcc force ret=u32 args=v,v  # ov10
+  stub 02162bcc force ret=u32 args=v,in:8  # ov10
   stub 02185360 force ret=u32 args=v,p,v,v  # ov20
 
 # 0218B208(req, gs, fm): e = 02188CE8(fm); !FLAGS bit 3: 0; 02013DD0(zone) ? 021AA248(e, 0218DC70(02188C98(fm))) : 021A9F40(e, 0)
@@ -1888,7 +1888,7 @@ fn 0218b2e8 ret=u32 inputs=100
   fix work 0x600 u32 alt range 0 0x40000 || any
   fix work 0x608 u32 alt range 0 0x40000 || any
   stub 021625cc force ret=u32 args=v,v  # ov10
-  stub 02162bcc force ret=u32 args=v,v  # ov10
+  stub 02162bcc force ret=u32 args=v,in:8  # ov10
   stub 02185360 force ret=u32 args=v,p,v,v  # ov20
 
 # 0218B310(player, req): (0219E418(021A3074(player), facing) & 3) == 0
@@ -2011,7 +2011,7 @@ fn 0218b4b0 ret=u32 inputs=200
   stub 021ab0f0 force ret=u32 args=v  # ov21
   stub 021ab194 force ret=pick:0/1 args=v
   stub 0216d5f8 force ret=u32 args=v  # ov10
-  stub 02164240 force ret=none args=v,v,v,v  # ov10
+  stub 02164240 force ret=none args=v,outm:2:0xFF/0xFF,outm:2:0xFF/0xFF,v  # ov10 (dir, &x, &z, n): moves the s16 tile x / z
   stub 02188c7c force ret=u32 args=v  # fieldmap (other F2a area)
   stub 0216d8ac force ret=u32 args=v  # ov10
   stub 0216dddc force ret=u32 args=v,v,v,v,v,v  # ov10
@@ -2033,7 +2033,7 @@ fn 0218b53c ret=u32 inputs=100
   stub 021a3074 force ret=u32 args=v  # ov21
   stub 0219e634 force ret=pick:0/1 args=v,out:8
   stub 02188c7c force ret=u32 args=v  # fieldmap (other F2a area)
-  stub 0219e570 force ret=u32 args=v,v,v  # ov21
+  stub 0219e570 force ret=u32 args=v,in:8,v  # ov21 (sys, &rail position, flag)
 
 # 0218B56C(req): 02012B70(gd) == 1: 0xFFFF; a = 021A30C8(player); b = 021A3128(player, facing); t = 021AB0F0(..);
 # for the 13 ROM entries {fn, u16 dir, u16 script} at 0x021D3CE8: (dir == facing or dir == 9) && fn(t): script;

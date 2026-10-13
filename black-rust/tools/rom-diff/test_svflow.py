@@ -115,6 +115,30 @@ class OutW(unittest.TestCase):
         call(["outw:8:1/2/3", "v"], [0x1000, 7], em, seq=False)
         self.assertEqual(list(struct.unpack("<2I", em.rbytes(0x1000, 8))), [2, 2])
 
+class InFeedsTheAnswer(unittest.TestCase):
+    """Z22: the words an `in:N` stub reads are mixed into its answer (after the scalars), so two queries at different
+    positions answer differently. Same vectors as `in_words_feed_the_answer` in crates/black-fndiff/src/stub.rs."""
+
+    def test_in_words_change_the_result(self):
+        em = FakeEm()
+        em.wbytes(0x1000, bytes([1, 2, 3, 4, 5, 6, 7, 8]))
+        em.wbytes(0x2000, bytes([1, 2, 3, 4, 5, 6, 7, 9]))
+        r1, c1 = call(["v", "in:8"], [0xABCD, 0x1000], em, seq=False)
+        r2, _ = call(["v", "in:8"], [0xABCD, 0x2000], em, seq=False)
+        self.assertEqual((r1, r2), (0xF747FDDA, 0xCE42B9D0))
+        self.assertEqual(c1.log, [0x021BB798, 0xABCD, 0x04030201, 0x08070605])  # logging is unchanged
+        # no `in:` argument: the answer is the old one (the `u64_stub_returns_two_words` low word)
+        r3, _ = call(["v"], [0xABCD], em, seq=False)
+        self.assertEqual(r3, 0x731C9F54)
+
+    def test_in_words_feed_the_outs_too(self):
+        em = FakeEm()
+        em.wbytes(0x3000, bytes([0xAA] * 3))
+        r, ctx = call(["in:3", "v", "out:4"], [0x3000, 7, 0x4000], em, seq=False)
+        self.assertEqual(r, 0x2DC13597)
+        self.assertEqual(list(em.rbytes(0x4000, 4)), [36, 203, 171, 8])
+        self.assertEqual(ctx.log, [0x021BB798, 7, 0xAAAAAA])
+
 
 class PortedPerSet(unittest.TestCase):
     """Z20: the black-battle modules' PORTED lists deactivate stubs only in battle-set areas."""

@@ -1820,11 +1820,11 @@ fn 02162958 ret=u32 inputs=600
 # 02162970(sys, ew, pos, dir) -> script: for each bg b (+0x1C, count +0x12): b +6 == 0 ? 02162E48(b, pos) : 02162E9C(b, pos);
 # hit: b +2 == 2 (hidden item): flag 02164708(b +0) not set (check_flag(ew, ..) == 0): b +0; else by b +4: 0: dir == 0, 1: dir == 3,
 # 2: dir == 2, 3: dir == 1, 4: any, 5: dir - 2 (u16) < 2, 6: dir < 2 -> b +0; else 0xFFFF
-fn 02162970 ret=u32 inputs=600
+fn 02162970 ret=u32 inputs=2000
   arg work 0
   arg u32 const 0x02E0C000
   arg work 0xB00
-  arg u32 alt range 0 4 || any
+  arg u32 alt range 0 4 || const 4 || const 4 || any  # Z22: dir 4 (rule 5's (dir - 2) & 0xFFFF < 2 edge)
   fix work 0x10 u16 any
   fix work 0x12 u16 alt range 1 4 || const 0
   fix work 0x14 u16 alt range 1 4 || const 0
@@ -1835,7 +1835,7 @@ fn 02162970 ret=u32 inputs=600
   fix work 0x24 u32 addrof work 0x340
   fix work 0x28 u32 addrof work 0x400
   fix work 0x142 u16 oneof 0 1 2 3 rep=4,0x14
-  fix work 0x144 u16 alt range 0 6 || range 0 6 || any rep=4,0x14
+  fix work 0x144 u16 alt range 0 6 || range 0 6 || const 5 || const 5 || any rep=4,0x14
   fix work 0x146 u16 alt const 0 || const 0 || oneof 0 1 || any rep=4,0x14
   fix work 0x148 u32 alt const 0 || const 0 || range 0 1 || any rep=4,0x14
   fix work 0x14C u32 alt const 0 || const 0 || range 0 1 || any rep=4,0x14

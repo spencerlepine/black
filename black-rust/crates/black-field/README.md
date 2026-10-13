@@ -182,8 +182,8 @@ Cross-check with `nds_rom::map` (A6):
 |---|---|---|---|---|
 | `map_matrix` | 33 | 33 | `49c1368306aaed86` | |
 | `fieldmap` | 101 | 95 | `776501833139141f` | `021880C8`, `021885E8`, `021888C8`, `02188990`, `02188AD4`, `021895E8` (a) |
-| `fieldmap_event` | 52 | 45 | `98b331e9367a69db` | `0218AAD0` (a); `0218AED4`, `0218AF90`, `0218B0CC`, `0218B13C`, `0218B4B0`, `0218B53C` (b) |
-| `fieldmap_func` | 13 | 13 | `27f7097f727fa8d4` | |
+| `fieldmap_event` | 52 | 51 (Z22: +6) | `8a3e9c84cd0ed77c` (Z22; F2a `98b331e9367a69db`) | `0218AAD0` (a) |
+| `fieldmap_func` | 13 | 13 | `e8889bfebba46d72` (Z22; F2a `27f7097f727fa8d4`) | |
 | `land_data_patch` | 6 | 6 | `adfc5aaf9bee54a4` | |
 
 Every callee outside an area is reached through `hooks::FieldEnv::call(addr, args)` (`hooks::CArg`: values, pointers into
@@ -204,7 +204,9 @@ are verified):
 * (b) the function hands the address of one of its stack locals to a callee whose stub logs that pointer as a value (`v`), so
   the hash holds the emulator's stack address: `02162564` / `021626A8` (via `02162B68`) from `0218AED4` / `0218AF90`,
   `02162BCC` (via `021626B0`) from `0218B2E8` called by `0218B0CC` / `0218B13C`, `02164240` from `0218B4B0`, `0219E570` from
-  `0218B53C`. With `in:12` / `in:8` for those arguments the ports would only need `CArg::In` there.
+  `0218B53C`. With `in:12` / `in:8` for those arguments the ports would only need `CArg::In` there. **Z22: registered** (spec
+  `in:12` / `in:8`, and `outm:2` for the two s16 tiles `02164240` moves; the ports pass `CArg::In` / `CArg::Out`, and their
+  callers `02189BD0` / `0218A0E4` / `0218A278` call them as Rust functions).
 
 Where a stub logs an unread register whose value the function itself sets, the port passes that value with a comment (e.g.
 `0218AA74`: r3 = the party pointer `0218AA2C`'s epilogue leaves; `0218AB9C`: r3 = the thunk target 0x020071CD; `021881D8`:
@@ -404,14 +406,14 @@ F6a, below):
 * `svflow.py` `ALLOW` += `02082C60` (memset, used by `021631C0`).
 
 
-## F6a: `wfbc_data` (40/40), `eventdata` (56/56), `mmdl_move` (70/70), `eventdata_tail` (18/19) ported
+## F6a: `wfbc_data` (40/40), `eventdata` (56/56), `mmdl_move` (70/70), `eventdata_tail` (18/19; 19/19 after Z22) ported
 
 | area | ported | verified (in `PORTED`) | area hash | unverified ports |
 |---|---|---|---|---|
 | `wfbc_data` | 40 | 40 | `721154b28c4c24fa` | |
-| `eventdata` | 56 | 56 | `e2fedff5ec7feede` | |
-| `mmdl_move` | 70 | 70 | `854080fe99c7c86c` | |
-| `eventdata_tail` | 19 | 18 | `366498360545b869` | `02164708` `hidden_item_flag` (below) |
+| `eventdata` | 56 | 56 | `2690176c4070cea5` (Z22; F6a `e2fedff5ec7feede`) | |
+| `mmdl_move` | 70 | 70 | `21f1f6ebcf39f7b0` (Z22; F6a `854080fe99c7c86c`) | |
+| `eventdata_tail` | 19 | 19 (Z22: +`02164708`) | `1278de1cfc023004` (Z22; F6a `366498360545b869`) | |
 
 `--order-check` and `--strict-callees` are clean for all four. Every callee outside an area is reached through
 `hooks::FieldEnv::call` by address (heap, archives, zonedata, field_encount_st, the LOCATION constructors, event-work
@@ -431,7 +433,8 @@ script ids up to 8799 but the hidden-item table has 0xB1 records, so ids 8177..8
 table (overlay 10 data, then overlay 11 code at 0x02172BC0..) and the spec's inputs (`range 7990 8200 || range
 0x2250 0x2270`) reach them; the port panics there. Spec fix needed: draw `id` from `alt range 7990 8176 || range
 0x2260 0x2270 || range 0 7999` (or bound the in-area answer of `021646E8` to `0..0xB0`). Its caller `02162970` is
-verified through its `force` stub.
+verified through its `force` stub. **Z22: registered**; the spec draws `alt range 7990 8176 || range 0x2260 0x2270 || range 0
+7999 || range 0x2260 0xFFFFFFFF` (the hidden-item scripts in the ROM are exactly 8000..=8176, `map_rom.rs`).
 
 UNVERIFIED (behaviour the differential tests cannot reach): `attr_blocked` (`02163D04`) with an empty footprint reads
 an uninitialised stack word as the first cell's attribute (0 under Z19 in every harness path; the port uses 0);
@@ -446,7 +449,9 @@ multiples of 0x8000: no input between), `021645E0` wait bound 30 -> 31 and `0216
 (input gaps: `work[1]` is random 32-bit; the rule-5 records rarely hit with real containment checks), `02163A40`
 `>` -> `>=` (equivalent: equal-width spans give the same answer), `021640B0` swapped attribute values (harness: the
 `in:` words of the `0218DAEC` stub are logged but not mixed into its answer, so both map queries return the same
-attribute; a `seq` on that stub would separate them).
+attribute; a `seq` on that stub would separate them). **Z22:** all of these but the equivalent `02163A40` are caught now
+(`in:` words feed the stub answer; input biases for `021638CC`, `021645E0`, `02162970`; see `tools/rom-diff/svflow_specs/README.md`
+"Z22 additions").
 
 Deliberate deviations: none in behaviour.
 
