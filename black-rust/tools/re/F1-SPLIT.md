@@ -37,6 +37,10 @@ G2 or F12 glue 136, G8 420/379, U2 919/832, U6/U10/U17/U18/U20 226, H2 6, X1 1,2
    command 397 points into overlay 48 (0x021F4650, a gimmick child). Handlers clustered by address (<= 14 fns apart, >= 8 handlers, extended over
    helpers called only from the cluster) are cut out of any non-`scrcmd_*` run as `scrcmd (unanchored)`.
    Command ids interleave across files (ids are assigned in order of addition, not by file), so id ranges do not give file boundaries.
+   **Correction (F7-spec):** the VM's table pointer is **0x0217062C** with 609 entries (count word 0x021705D8; `0x02158BFC`), so command
+   id = slot - 15 ("command 397" above is command 382). Slots 0..14 (0x021705F0..0x02170628, null-terminated) are a separate
+   14-entry init-proc table (`0x021591B4`); the byte table 0x02170374 (609 bytes, the "0x021705A0" one below is its tail) is the
+   per-command permission mask of the dispatch hook `0x02158DE8`. See `tools/rom-diff/specs/black-script/script_sys.spec`.
 4. **Render score.** Per function: share of callees in main that sit in a render band of `T1-TRIAGE.tsv` (gflib graphics, NNS, MCSS, sound, UI toolkit, SDK, ICA, input),
    MMIO constants (0x04/0x06xxxxxx) in the pseudo-C, then propagated through callees (>= 50% render callees). Only a hint; the class column comes from the label.
 5. **ARC loads.** Literal ARC ids / message banks passed to the ROM loaders (`FUN_020490F4`, `02048F4C`, `0204A1BC`, `02048F60`, `02048F74`, `020490A8`, `MsgData_Create 02045B38`) are shown as `arcN` / `msgN`.
@@ -336,8 +340,8 @@ Several are called from in-scope code (hub 02158344 has 70 callers): stub them a
 
 - F1: area boundaries are min-cut estimates (+-few fns). Files without alloc/assert strings (accessor files, `scrcmd.c` bodies) have no anchor; the `scrcmd (unanchored)` rows and the `scrcmd_work.c` run (156 fns) therefore mix several source files. Command ids interleave across files, so id ranges do not split them.
 - F1: `fldmmdl_acmd.c` (452 fns) is certainly several files (movement types, acmd, hit check); table ranges give the split but the real file names are unknown.
-- F1: 45 non-null script-table slots do not match an indexed function (stubs, veneers or mid-function Ghidra splits); command 397 is in overlay 48. The table has no main-resident targets (all non-null slots point into overlays 10/18/20/21/48), so the low command ids implemented by the VM itself must be dispatched elsewhere (vm.c in main): F7 must find how.
-- F1: byte table at 0x021705A0 (format bytes before the command table) is not decoded; likely per-command argument encoding like B10a's command table.
+- F1: 45 non-null script-table slots do not match an indexed function (stubs, veneers or mid-function Ghidra splits); command 397 is in overlay 48. The table has no main-resident targets (all non-null slots point into overlays 10/18/20/21/48), so the low command ids implemented by the VM itself must be dispatched elsewhere (vm.c in main): F7 must find how. **Answered (F7-spec):** nothing is dispatched elsewhere; the table starts 15 slots later (0x0217062C), see the correction in Method 3.
+- F1: byte table at 0x021705A0 (format bytes before the command table) is not decoded; likely per-command argument encoding like B10a's command table. **Answered (F7-spec):** it is the tail of the 609-byte permission table 0x02170374 (bit k = allowed in ctx mode k).
 - F1: `symbol_map.c`, `event_research_radar.c`, `el_scoreboard.c`, `fld_btl_inst_tool.c`, `event_poke_status.c` roles are name-based guesses (low confidence).
 - F1: `fieldmap.c` (168) mixes map loading, attributes and 3D draw; render share is small (12 fns by call score) but the draw calls are inside logic functions: F2a porters must stub the draw calls behind a trait (like `FlowHost`).
 - F1: WFBC (`field_wfbc*`, `field_wfbc_data_local`) is deferred rather than deleted: it is local data driven by Entralink visitors; decide in G/U planning whether the town exists at all.

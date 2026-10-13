@@ -5,3 +5,4 @@
 pub mod hooks;
 pub mod scrcmd;
 pub mod script_sys;
+pub mod vm;

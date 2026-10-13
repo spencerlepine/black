@@ -7,3 +7,6 @@ description = "Event script VM and script commands"
 
 [dependencies]
 black-core = { version = "0.1.0", path = "../black-core" }
+
+[dev-dependencies]
+black-fndiff = { version = "0.1.0", path = "../black-fndiff" }

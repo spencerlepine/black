@@ -313,6 +313,16 @@ No new syntax; no existing spec text or hash changes. Harness change (small, bac
 * A pointer that a stub returns into a block the function never receives as an argument (021b9a6c reads the record 021b99e0 returns) is
   modelled with an extra `arg buf` the function ignores, as the `ptr:argK` target; the port treats that argument as test-only data.
 
+## F7-spec additions (black-script vm / script_sys)
+
+No new syntax; no existing spec text or hash changes. Harness change (warning check only): `svflow.py` `ALLOW` gained `02082a60`
+(MIi_CpuCopy16) and `02082a7c` (MIi_CpuFill32), pure ARM helpers like `MI_CpuFill8` / `MI_CpuCopy8`: real code on the ROM side,
+inlined by the ports. Conventions of `specs/black-script/{vm,script_sys}.spec` (headers): closure stubs as in core4 (checked with
+every area function treated as ported: no fault, stray write or unstubbed callee); objects are `arg buf` arenas with the pointed-to
+objects in zones; a function that only allocates gets a trailing `arg buf` arena it never reads as the `ptr:argK` target (stack word
+or unused register); one `02030734` stub serves every allocation of a block (`ptr:argK:OFS:N`, blocks may overlap; deterministic);
+fake callbacks at 0x02EE0011 / 0x02EE0021 / 0x02EE0031; a vm.c function ported in `vm` keeps its stubs in `script_sys` active.
+
 ## What is compared (per input, in this order)
 
 `halt` (0, or 1 + stub address) , `ret`, `work` (all 0x212C bytes), `argN` for each buf/bpp,

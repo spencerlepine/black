@@ -467,7 +467,10 @@ ALLOW = {0x0209C2B0, 0x0209C054, 0x0209C074, 0x02082BCC, 0x02082D44, 0x02082AC0,
          0x020173EC, 0x02017ED8, 0x02017F08, 0x0201808C, 0x020181FC, 0x02018430,
          # black-text `wordset`: message-tag helpers of another file (0201d5c4 / d5cc / d60c / d670 / d688), real code on the ROM side by
          # design (wordset.spec header); private Rust helpers in wordset.rs, covered by the wordset hash
-         0x0201D5C4, 0x0201D5CC, 0x0201D60C, 0x0201D670, 0x0201D688} | {int(x, 16) for x in os.environ.get("SVFLOW_ALLOW", "").replace(",", " ").split()}
+         0x0201D5C4, 0x0201D5CC, 0x0201D60C, 0x0201D670, 0x0201D688,
+         # F7-spec: MIi_CpuCopy16 02082a60 (src, dst, size) and MIi_CpuFill32 02082a7c (value, dst, size), pure ARM helpers like
+         # MI_CpuFill8 / MI_CpuCopy8 above; the black-script ports inline them
+         0x02082A60, 0x02082A7C} | {int(x, 16) for x in os.environ.get("SVFLOW_ALLOW", "").replace(",", " ").split()}
 
 # B10-spec3: callees that run as real ROM code by design in a spec with `env bpp` (events; see the header of events.spec).
 # The Rust ports reproduce them (inlined or ported elsewhere), so an equal area hash verifies their effect:
