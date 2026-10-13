@@ -401,3 +401,20 @@ Conventions of these specs (headers): the arena is the `work` image (records at 
 `021bc550`, and ARM9 callees are ported in other black-field areas); a stub argument list is positional, so a register the
 callee does not read before one it does is `p`; closure stubs as in core4 (checked with every function of the area treated as
 ported: no fault, stray write or unstubbed callee; `svflow.py AREA --all --strict-callees` clean).
+
+## F8-spec1 additions (black-script scrcmd_core / scrcmd_work)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-script/{scrcmd_core,scrcmd_work}.spec` (headers):
+
+* A command handler `fn(vm, ctx)` gets two arenas: the VM (`arg buf 0x800`: regs at 0x40, script bytes at 0x500, the compare
+  byte +0xE in 0..2) and the scrcmd ctx (`arg buf 0x800`: CTX at 0, SCRCMD WORK at 0x100, zones at 0x300 / 0x400, vars at
+  0x600..0x7FF where the var-address stub `02159ae8` points, `ptr:arg1:0x600:0x80`). Helpers that take the ctx in r0 get the ctx
+  arena as arg0.
+* Script-operand readers (vm.c `02011330` / `0201134c` / `02011398`, script_sys `02159ae8` / `02159b10`) are `seq` stubs, so the
+  operands of one command differ; operands that index a ROM table or pick a switch case are bounded with `pick:`.
+* Closure stubs as in core4 (every function of the area treated as ported: no fault, stray write or unstubbed callee). The two areas
+  call each other only through plain stubs (each is verified on its own; check-fn deactivates only the area's own `PORTED`).
+* Function list: command-table targets + `bl` targets from the whole field set + odd code pointers + labels, walked as Thumb from
+  every entry (only padding and literal pools stay uncovered). Mid-function labels that Ghidra / mkelf turned into functions are
+  listed as fragments in the headers, not specced.

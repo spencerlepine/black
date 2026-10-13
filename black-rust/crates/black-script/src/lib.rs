@@ -5,5 +5,7 @@
 pub mod hooks;
 pub mod host;
 pub mod scrcmd;
+pub mod scrcmd_core;
+pub mod scrcmd_work;
 pub mod script_sys;
 pub mod vm;

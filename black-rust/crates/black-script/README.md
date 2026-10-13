@@ -11,7 +11,9 @@ Undecompiled callees go in `hooks` as traits (§4 porting pattern); pointers sta
 |---|---|---|---|---|
 | `vm` | `vm.c`, main ARM9 0x020111EC-0x020113D8 (16 fns) | `tools/rom-diff/specs/black-script/vm.spec` | `tools/check-fn.sh black-script vm` | **16/16 verified, area hash f1bf3db7d540c749** (F7) |
 | `script_sys` | `script_sys.c` + `script_work.c`, overlay 10 0x02158804-0x021591FE, 0x02159960-0x02159B48, scrcmd ctx getters 0x0215A5CC-0x0215A5FA (90 fns) | `tools/rom-diff/specs/black-script/script_sys.spec` | `tools/check-fn.sh black-script script_sys` | **90/90 verified, area hash f4bb4f39ea9115b6** (F7) |
-| `scrcmd` | F8 (command handlers), empty | | | |
+| `scrcmd_core` | scrcmd core: overlay 10 0x02159204-0x0215995E, commands 0..48 + 4 helpers (53 fns) | `tools/rom-diff/specs/black-script/scrcmd_core.spec` | `tools/check-fn.sh black-script scrcmd_core` | 53 specced (F8-spec1, 747/747 insns covered), **5 smoke ports verified, area hash 8571c7a4a83df68b** |
+| `scrcmd_work` | `scrcmd_work.c`: overlay 10 0x0215A514-0x0215C63A minus the ctx getters and the Heap_Free veneer (130 fns, 86 command ids) | `tools/rom-diff/specs/black-script/scrcmd_work.spec` | `tools/check-fn.sh black-script scrcmd_work` | 130 specced (F8-spec1, 3451/3451 insns covered), **5 smoke ports verified, area hash 935b80ee13c13582** |
+| `scrcmd` | F8 index (doc only: which area holds which commands) | | | |
 
 Every function of both areas is specced with closure stubs (porting order needs no spec edit). The spec headers are the
 reference for the layouts; summary:
@@ -65,7 +67,8 @@ Data flow per frame: the field's event loop calls the script event function (`sc
 | `ScriptSysHooks::fun_*` (the rest) | named by address | game data / event work (most ported in `black_field::game_data` / `event_work` / `zonedata`), text (`black_text::wordset` / `strbuf`), ARC loading, field map (ov21), scrcmd_work.c (F8) |
 | `ScriptHost::pad_held` | `FUN_020362DC()` | via `ScriptSysHooks::fun_020362dc`; read by commands 49 / 50 (verified) |
 | `ScriptHost::message_bank_open` | `FUN_0215A760(ctx, type, msg)` | via `ScriptSysHooks::fun_0215a760`; called by `vm_new` for ctx mode 0 (verified call site) |
-| `ScriptHost::message_*`, `yes_no_*`, `menu_*`, `fade_*` | F8 command handlers (not located yet) | planned interface (request + poll, see `host.rs`); F8 fixes the request fields |
+| `ScriptHost::menu_start` / `menu_result` | `0x0215A77C` begin / `0x0215A7F0` add item / `0x0215A864` open / `0x0215A954`, `0x0215A990` poll (scrcmd_work.c) | `MenuRequest` follows the builder (F8-spec1); called by overlay-21 menu commands (F8 job 21.42) |
+| `ScriptHost::message_*`, `yes_no_*`, `fade_*` | not in scrcmd core / scrcmd_work.c (overlay-21 scrcmd files; the talk window object is SCRCMD WORK +0xFC) | planned interface (request + poll, see `host.rs`); those F8 jobs fix the request fields |
 
 ## Symbols
 
@@ -81,6 +84,20 @@ helpers 0x02159AE8 / 0x02159B10), `ctx_*` (scrcmd ctx getters 0x0215A5CC .. 0x02
 ROM tables embedded in `script_sys/tables.rs` (copied from overlay 10 data): `CMD_PERMISSIONS` (0x02170374, 609 B),
 `SCRIPT_RANGES` (0x021701A8, 46 × 10 B), `INIT_PROCS` (0x021705F0, 15 words). Constants: `CMD_TABLE` 0x0217062C,
 `CMD_COUNT` 609 (the word at 0x021705D8).
+
+## F8 areas (F8-spec1)
+
+* **scrcmd_core** (commands 0..48): VM control (0/1 no-op, 2/29 end, 3 wait N frames, 4/30 call/jump relative, 5 return,
+  27 start a parallel script, 28 call a script and wait, 31/32 conditional jump/call), an expression stack on the vm.c call stack
+  (8/9 push, 10/11 pop, 12..15 + - * /, 16 push flag, 17 compare op), VM regs (20..22 set, 23/24 compare), var compares (25/26),
+  event flags (35 set, 36 clear, 37 get), var arithmetic (18 &=, 19 |=, 38 +=, 39 -=, 40..42 =, 43 *=, 44 /=, 45 %=), 46..48 misc.
+* **scrcmd_work** (86 ids): SCRCMD WORK (0x110) / CTX (0x24) constructors and accessors, 8 movement-object slots, the choice-menu
+  builder, system / Pokedex / time / party / box queries and setters, give Pokemon / egg. Layouts in the spec header.
+* Both specs list every command id with its handler in the header. Roles are read from the code; names of the main / overlay-21
+  callees (PokeParam ids, Pokedex, party) are inferred (UNVERIFIED unless the spec says otherwise).
+* The smoke ports call their callees through per-area traits (`scrcmd_core::CoreHooks`, `scrcmd_work::WorkHooks`); the F8 port
+  job extends them (one method per callee address, as `ScriptSysHooks`). ROM tables the commands index are embedded
+  (`scrcmd_core::COND` 0x021705DC, `scrcmd_work::TABLE_562` 0x02171160; tests compare them with the ROM build).
 
 ## Notes for porters
 
