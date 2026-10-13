@@ -196,3 +196,19 @@ pub fn ofs_arg(p: u32, k: u32) -> u64 {
         p.wrapping_sub(buf(k)) as u64
     }
 }
+
+/// Overlay 21 of the ROM build (`$BLACK_ROM_BUILD/OVY_21.sbin`, loaded at `0x02187F00`) as a word reader, or `None` (skip)
+/// when it is missing and `REQUIRE_ROM` is not set (F4b-port1: the acmd ROM tables are compared with it).
+pub fn overlay21() -> Option<impl Fn(u32) -> u32> {
+    let got = std::env::var("BLACK_ROM_BUILD")
+        .ok()
+        .and_then(|b| std::fs::read(format!("{b}/OVY_21.sbin")).ok());
+    if got.is_none() && std::env::var("REQUIRE_ROM").is_ok_and(|v| !v.is_empty() && v != "0") {
+        panic!("REQUIRE_ROM is set but $BLACK_ROM_BUILD/OVY_21.sbin is missing");
+    }
+    let ovy = got?;
+    Some(move |a: u32| {
+        let o = (a - 0x0218_7F00) as usize;
+        u32::from_le_bytes(ovy[o..o + 4].try_into().unwrap())
+    })
+}

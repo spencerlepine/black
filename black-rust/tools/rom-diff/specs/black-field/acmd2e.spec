@@ -33,7 +33,7 @@ set field
 
 # 02199888(m, dist, disp dir, move dir, frames, anim, axis, arc axis, neg) (frames..neg on the stack, read as bytes): start an arc move:
 # work = 0216D6BC(m, 0x10): +0 u8 frames, +1 u8 arc axis, +2 u8 axis, +3 u8 neg, +4 s32 dist (fx32 per frame), +0xE u16 = 0x1000 / frames
-# (0209C0A4 = signed division, real code; frames 0 is not tested: bounded to 1..0xFF); display dir = (u16)disp (0216D5E0), move dir =
+# (0209C0A4 = _s32_div_f, real code; a zero divisor returns the dividend, so frames 0 gives 0x1000: drawn too, F4b-port1 / V-0026); display dir = (u16)disp (0216D5E0), move dir =
 # (u16)move (0216D600), draw animation code = (u8)anim, move bit 0x20 (0216DA70), old grid = grid; dist != 0: axis 0 -> grid x +=
 # sign(dist) (0216D848), 1 -> grid y += 2 * sign (0216D860), 2 -> grid z += sign (0216D87C); acmd seq + 1. Returns nothing. (+8 distance
 # and +0xC phase are left to the clear.)
@@ -43,7 +43,7 @@ fn 02199888 ret=none inputs=200
   arg u32 alt const 0 || oneof 0x2000 0xFFFFE000 || any
   arg u32 alt range 0 3 || any
   arg u32 alt range 0 3 || any
-  arg u32 alt oneof 8 || range 1 0xFF
+  arg u32 alt oneof 0 8 || range 0 0xFF
   arg u32 alt const 3 || any
   arg u32 alt range 0 3 || any
   arg u32 alt range 0 3 || any

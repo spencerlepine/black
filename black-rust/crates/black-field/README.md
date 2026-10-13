@@ -1193,3 +1193,49 @@ all others `0219B4FC` / `0219B500` / `0219B504` (nothing / 0 / 0). `0219B41C` (b
 Mutation spot check (`check-fn.sh --fn`, reverted; `/tmp/blk/f4bs3/mut.sh`): 10 of 10 caught (`next_dir` wrap index 1 -> 0, `spin_wait`
 `<` -> `<=`, `face_move` dir mask 0xFFFF -> 0xFF, `walks_fast_near` `<= 4` -> `< 4`, `spin_order` 0x11 -> 0x12, `spins_while_walking`
 `<= 1` -> `<= 2`, `follower_base` `0..=3` -> `0..=2`, `moved` old z -> old x, `mirror_init` 9 -> 8, `effect_delete` `!= 0` -> `!= 1`).
+## F4b-port1: `acmd1` (14/14), `mmdl_draw` (4/4), `acmd2a` (40/40), `acmd2b` (49/49), `acmd2c` (53/53), `acmd2d` (50/50), `acmd2e` (32/32) ported
+
+| area | ported | verified (in `PORTED`) | area hash | unverified ports |
+|---|---|---|---|---|
+| `acmd1` | 14 | 14 | `b105f403f231166f` | |
+| `mmdl_draw` | 4 | 4 | `472ce4ccbd163df4` | |
+| `acmd2a` | 40 | 40 | `526ca06a7621f2fd` | |
+| `acmd2b` | 49 | 49 | `2c4451c968bb7bb2` | |
+| `acmd2c` | 53 | 53 | `f98a3c099b849c06` | |
+| `acmd2d` | 50 | 50 | `c5c4966eb57de8f0` | |
+| `acmd2e` | 32 | 32 | `19f1a1b8a31de2c6` | |
+
+`--order-check` is clean for all seven. Ported from the raw `OVY_21.sbin` disassembly (rizin `-a arm -b 16`, per function: a linear
+`pD` over the range desyncs after literal pools). Logic only (D3): the draw procs, the blact / g3dobj systems, the balloon marks, field
+effects and sound effects stay behind [`hooks::FieldEnv::call`] by address, as do the fldmmdl.c / mmdl_move.c accessors, the heap /
+task system and the F4b job 3 move-proc work accessors (`0219BF3C` / `48` / `54`). In-area callees are Rust calls (the acmd list seqs,
+`02197EB4` -> `02197F20`, the init helpers of every wrapper). The step functions the driver `02197F20` dispatches to live in the
+acmd2 areas and in the rail file (row 21.11), so it calls them through `FieldEnv::call` (the specs stub them `force`).
+
+ROM data embedded and compared with the build (`testenv::overlay21`, skipped without `$BLACK_ROM_BUILD/OVY_21.sbin` unless
+`REQUIRE_ROM`): `acmd1::GRID_STEPS` / `RAIL_STEPS` (`0x021D5F58` / `0x021D624C`, 189 codes; per code the list address and its steps,
+grid lists up to the end step `02197F5C`, rail-only lists up to the next list; in `acmd1/steps.rs`), `acmd1::DIR_CODES` (`0x021D5D6C`),
+`acmd1::LIST_SEQS` (`0x021D4A50`), `acmd2b::JUMP_HEIGHTS` (via `0x021DDBD4`), `acmd2c::SPEED_TABLES`, `acmd2d::BOUNCE`,
+`acmd2d::VEC_MOVES` (the 32 VecFx32 constants of the vector-move inits, by address), `acmd2e::MODEL_OFFSET` (`0x021D4ACC`).
+
+The 153 constant-argument init steps (walks, walks in place, jumps, waits, balloon marks, speed-table walks, vector and arc moves)
+were generated from the disassembly (the call's register and stack arguments), named `<kind>_<code>`; their docs name the codes.
+The vector-move inits copy the ROM VecFx32 to a `Mem::push_local` window (the original's stack copy) and pass its address to
+`vec_move_start`.
+
+**V-0026 resolved:** `_s32_div_f` (`0209C0A4`, ARM, checked in the disassembly) branches straight to its sign fix-up when the divisor is
+0, so it returns the dividend: `02199888` stores a step of 0x1000 for frames 0. `acmd2e::s32_div` does the same (the port no longer
+panics) and the `acmd2e` spec now draws frames 0 too (`arg u32 alt oneof 0 8 || range 0 0xFF`; was `oneof 8 || range 1 0xFF`). `02199970`
+(`arc_update`) has no division (its frames byte wraps from 0 to 0xFF, as the spec already draws).
+
+UNVERIFIED (unreachable for the differential tests): `02197DCC` with a seq above 5, `02197F20` with a code above 0xBC or a seq past its
+list, `02198FB0` with an index above 15, `02198C4C` with another table address or an index past the table, `021990D4` with a negative
+frame, the vector-move helper with an address not in `VEC_MOVES` (all panic where the original reads past its ROM table).
+
+Deliberate deviations: none in behaviour.
+
+Mutation spot check (`check-fn.sh --fn`, reverted; `/tmp/blk/out-F4bp/mut.py`): 35 of 35 caught, 5 per area (`mmdl_draw`: blact test,
+draw side flag, flag-4 test, `&&` -> `||`, add -> sub; `acmd1`: priority - 1, seq 3 table entry, rail / grid swap, `run` stops on 1,
+seq 4 -> 3; `acmd2a`: `>` -> `>=`, a wrapper's speed, face anim, end bit, dir mask; `acmd2b`: frame test, moving test, in-place test, SE,
+a wrapper's frames; `acmd2c`: wait test, rise bound, balloon handle, anim / frames swap, fall SE; `acmd2d`: hop bound, `>=` -> `>`, vector
+`>` -> `>=`, a ROM vector, actor not truncated; `acmd2e`: `s32_div(x, 0)` -> 0 (V-0026), an SE frame, `>` -> `>=`, face dir, anim code).
