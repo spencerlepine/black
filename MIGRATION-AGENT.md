@@ -898,6 +898,8 @@ Unknown roles (structure only): 006 (733, ` APS`), 108 (282 × 28 B, pairs with 
 
 - **2026-10-13** — Validator R-20261013-0451 (913d534..82df00c): clean except V-0020 (low, SYMBOLS.md not regenerated after B10bc-spec; fixed in the checkpoint). It audited B7b: not weakened (layer values 0–3 reached). It pruned COMMITS.csv to a new baseline at 913d534 and restarted finding IDs at V-0001 (history stays in git); renumbered to V-0020.
 
+- **2026-10-13** — Validator R-20261013-0541 (71719c8..2d827c3): clean (force-only spec edits confirmed, side-effect adder/remover matches disassembly, script_sys/vm widened to 1000 inputs). B13-spec2 verified on main. **Pushes blocked by expired GitHub credentials** (§10); commits stay local until fixed.
+
 ---
 
 ## 10. Human queue (the coordinator appends; the human answers inline and the coordinator acts on it)
@@ -906,6 +908,7 @@ Format: `- [ ] YYYY-MM-DD — <item> — <what's needed> — default if unanswer
 an entry: if it has a default, proceed with the default and note that in §9; if not, work around it.
 
 - [x] 2026-10-11 — HOST (resolved: Ghidra 12.1.4 in ~/tools, brew openjdk@21 symlinked at the mise JDK path; doctor.sh green on macOS) — this session runs on macOS (`$HOME/...`), not the Linux host §3 documents (`$HOME/...`). `doctor.sh`: JDK 21 + Ghidra 12.1.4 missing, so `decompile.sh` fails and no pseudo-C/packets exist; cargo, wasm, ROM build, rizin, Unicorn venv are ok and the gate is green. — needed: install JDK 21 (`mise install java@temurin-21.0.12+8.0.LTS`) and Ghidra 12.1.4 to `~/tools`, or resume on the Linux host — default: run only Ghidra-free items (Z18 harness audit, rizin-based work) and skip decompile-dependent ones.
+- [ ] 2026-10-13 — GIT PUSH — pushes to github.com/spencerlepine/black stopped working ~05:50Z: `git push` asks for a username via the VS Code askpass helper (`.vscode-server/.../askpass.sh`) and hangs; the `gh-push` tmux loop appears stuck the same way (origin/main stays at 8d08338 while local main is ahead). `ls-remote` still works. — needed: refresh GitHub credentials for this host (e.g. `gh auth login` / credential helper), then the loop pushes the backlog — default: keep committing locally (fast-forward only), the coordinator retries `git push` each checkpoint.
 - [ ] 2026-10-11 — G8 — overworld as 3D (glTF from NSBMD, closest to the original) vs 2D re-render — default if unanswered: **3D**, A5 goes in scope.
 - [ ] 2026-10-11 — R4 — where to host the wasm build privately — default: **localhost only**.
 - [x] 2026-10-12 — A9 — (SIGNED OFF by the human 2026-10-12: "sounds are working great"; OGG default = external tool stands) listen to /tmp/blk/a9/seq1000,1050,1100,1150,1178 (BGM), seq1300/1310/1331 (ME), seq1400/1500/1800 (SE): tempo, pitch, envelopes, pan, loop seams (regenerate with `black sdat render`). Also: OK to encode OGG with external `oggenc`/`ffmpeg` at extract time? — default: yes, external tool.
