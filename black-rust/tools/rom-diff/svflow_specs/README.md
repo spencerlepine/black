@@ -643,3 +643,11 @@ ported: no fault, stray write or unstubbed callee; `--strict-callees` and `--ord
 MMDLs are values only (the iterator `0216DD1C` and the player-MMDL getter `021A3074` answer from the same four work addresses, so
 identity tests hit); calls through in-area ROM tables (`0x021D9338` line tests, `0x021D9348` task states) get bounded indices; a state
 loop over in-area stubs (`021AE72C`) uses `seq` stubs.
+## F4b-spec1 additions (black-field acmd1 / mmdl_draw)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-field/{acmd1,mmdl_draw}.spec` (headers), on top of the F3a / F5a ones: closure stubs (checked with every function of the
+area treated as ported: no fault, stray write or unstubbed callee); every out-of-area stub is `force`; `--strict-callees` and
+`--order-check` clean; instruction coverage 222/222 and 101/101 in both modes. Indirect calls through the acmd step tables
+(ROM 0x021D5F58 / 0x021D624C [code][seq]) land on `force seq` stubs at the step functions that the drawn codes (8 kinds, seq 0..1)
+reach; the acmd-list seq table 0x021D4A50 lands on in-area `seq` stubs (seq 0..5).

@@ -829,3 +829,112 @@ wait `< 8` -> `<= 8`).
 
 Deliberate deviations: none. UNVERIFIED: `line_test` panics for `dir > 3` and `run_state` for `state > 17` (the original
 calls through the ROM words after the tables); the game only passes display directions 0..3 and states it set itself.
+
+## F4b-spec1: fldmmdl_acmd.c part 1 (acmd list task, acmd driver) and the MMDL draw glue before it (specs + smoke ports)
+
+Two spec areas under `tools/rom-diff/specs/black-field/` (set `field`), with closure stubs (every function of the area treated as
+ported runs without a fault, stray write or unstubbed callee); `svflow.py AREA --all --strict-callees` and `--order-check` are clean.
+
+| area | original | range | specced | coverage (plain / closure) | smoke ports (hash) | smoke area hash |
+|---|---|---|---|---|---|---|
+| `acmd1` | `fldmmdl_acmd.c` head (ov21, F1 row 21.09, F4b job 1) | `0x02197D3C..0x02197F5C` | 14 | 222/222 / 222/222 | `02197DE8` `list_start` (444601f6d35221ae), `02197E44` `list_next` (0affd666e073898a), `02197E7C` `code_for_dir` (8374968a8a72d04f), `02197EDC` `action` (653e1c5505c96161) | 3361e06226a8ce4d |
+| `mmdl_draw` | MMDL draw glue (ov21; F1 counted it in row 21.08 "ircbattlemenu.c"; no `__FILE__`) | `0x02197C4C..0x02197D3C` | 4 | 101/101 / 101/101 | `02197C9C` `anim_held` (f07f62817440e8e9), `02197CCC` `draw_pos` (e5e4d12e291b6fa4) | 6b6e3923f8e3dcbc |
+
+Area hashes of the whole specs (`svflow.py AREA --all`): acmd1 80622af7be2ef983, mmdl_draw 472ce4ccbd163df4. No render-only functions in
+either range; nothing skipped (no veneers or fragments: the Thumb walk from every entry covers both ranges up to 2-byte padding and
+literal pools).
+
+### File bounds (for F4b jobs 2 / 3)
+
+* F1 row 21.08 (`ircbattlemenu.c`) really ends at `0x02197C4A`; `0x02197C4C..0x02197D3A` is MMDL code (`mmdl_draw`; its callers are
+  fldmmdl.c `0216CD54` / `0216D3C6`, fldmmdl_blact / g3dobj, field_player, fldeff_namipoke).
+* The only `__FILE__` literal in row 21.09 is "fldmmdl_acmd.c" (0x021DDBE0, `Heap_AllocDebug` in `02197D3C`, line 277). Its .data is
+  0x021DDBD4..0x021DDBEF (a 3-pointer table read by `02198624` / `02199030` / `02199AE8`, then the string); the next `__FILE__` is
+  "fldmmdl_blact.c" (0x021DDD70, first used at `0219C5C8`). No other file name can be placed inside the row, so the job split follows
+  the code structure:
+  * job 2: `0x02197F5C..0x0219A098`, 225 functions = the acmd steps (all 212 distinct targets of the grid step lists, `02197F5C`
+    .. `0219A07C`) plus their helpers (e.g. `02197F6C` face-direction helper, `02197FC0` acmd-work set-up helper);
+  * job 3: `0x0219A098..0x0219C4AC`, 187 functions = movement-type (move code) procs: the targets of the move-proc records
+    0x021D56E0..0x021D5D64 (via the 47-entry table 0x021D5E04 that fldmmdl.c reads) and of the sub-tables 0x021D4D04..0x021D53B4, with
+    their helpers; they call `02197EDC` / `02197E7C` of `acmd1`;
+  * `0x0219C4AC` / `0x0219C52C` (called only from fldmmdl_blact `0219CBC2` / fldmmdl_g3dobj `0219D402`; table 0x021D75C4, shared with
+    `0219D444`) are blact draw glue (render, U2), most likely the head of fldmmdl_blact.c: leave them to U2.
+* The rail step lists (0x021D8104.., steps `0219DC18..0219E2A0`) are in F1 row 21.11 ("fldmmdl_g3dobj.c"), which therefore also holds
+  the MMDL rail acmd code (logic, F3b/F4b follow-up).
+
+### ACMD (animation command) layout
+
+* MMDL `+0x26` u16 acmd code (0xFF = none), `+0x28` u16 seq (index into the code's step list), move bits `+4`: 0x200 set / 0x400 done,
+  acmd work `+0xB4` (0x10). `fldmmdl::acmd_set` (`0216D410`) starts a code from outside (bit 0x200); a movement-type proc changes it
+  with `fldmmdl::acmd_change` (`0216D438`) and calls `02197EDC` every frame until it returns 1.
+* Step tables: ROM 0x021D5F58[code] (grid) and 0x021D624C[code] (rail, when MMDL status bit 0x2000 is set), 189 codes each (0..0xBC;
+  neither index is checked by `02197F20`). Each entry points to a list of Thumb step functions; grid lists (0x021D4160..0x021D4A50) are
+  `[step]` or `[init, update]` followed by `02197F5C` (sets move bit 0x400 and returns 0). Rail lists (0x021D8104..) have two entries (seq 0 / 1; the second is one of a few shared steps, e.g. `0219DC18`; not decoded further), except codes 0x3C..0x42, 0x45..0x4B, 0x9A, 0xA2, whose rail entry is the grid list.
+* Step contract: `step(m) -> 0 | 1`: 0 = done for this frame, 1 = run the next step now (`02197EB4` loops while a step returns
+  nonzero, reading code / seq afresh each time); a step moves on by `fldmmdl::inc_acmd_seq` (`0216D7CC`) itself and keeps its state in
+  the acmd work (init steps clear it with `0216D6BC(m, size)`). r1 / r2 hold table words at the call; no step reads them.
+* Kinds of 4 (per direction up / down / left / right): ROM 0x021D5D6C, a null-terminated list of 37 pointers to 4-word tables
+  (`acmd1::DIR_CODES`); `02197E7C(dir, code)` maps a code to the same kind's code for `dir` (unknown codes unchanged).
+* Grid step lists by code (from the ROM; `init` / `update` = list entries 0 / 1, `step` = a one-step list):
+  `0x00..0x03`: step 2197F90/2197F9C/2197FA8/2197FB4
+  `0x04..0x17`: init 2198060/2198074/2198088/219809C/21980B0/21980C4/21980DC/21980F0/2198104/219811C/2198134/2198148/219815C/2198170/2198184/2198198/21981AC/21981C4/21981DC/21981F0, update 219800C
+  `0x18..0x2B`: init 2198380/2198390/21983A0/21983B0/21983C0/21983D0/21983E0/21983F0/2198400/2198410/2198420/2198430/2198440/2198450/2198460/2198470/2198480/2198490/21984A0/21984B0, update 219834C
+  `0x2C..0x3B`: init 219862C/2198650/2198674/2198694/21986B8/21986D8/21986F8/2198718/2198738/2198758/219877C/21987A0/21987C0/21987E0/2198804/2198824, update 2198550
+  `0x3C..0x42`: init 2198998/21989A4/21989B0/21989BC/21989C8/21989D4/21989E0, update 2198978
+  `0x43..0x43`: init 21989EC, update 2198A10
+  `0x44..0x44`: init 2198A58, update 2198A8C
+  `0x45..0x4A`: step 2198AD4/2198AE8/2198AFC/2198B10/2198B24/2198B38
+  `0x4B..0x4B`: init 2198BA8, update 2198B80
+  `0x4C..0x4F`: init 2198CA4/2198CB4/2198CC4/2198CD4, update 2198D24
+  `0x50..0x53`: init 2198D3C/2198D4C/2198D5C/2198D6C, update 2198D7C
+  `0x54..0x5B`: init 2198208/219821C/2198234/2198248/2198260/2198278/2198290/21982A4, update 219800C
+  `0x5C..0x5F`: init 2198848/2198868/2198888/21988AC, update 2198550
+  `0x60..0x63`: init 2198D94/2198DA4/2198DB4/2198DC4, update 2198DD4
+  `0x64..0x64`: init 2198E44, update 2198EC8
+  `0x65..0x65`: init 2198F68, update 2198FB0
+  `0x66..0x66`: init 2199070, update 2199050
+  `0x67..0x67`: init 2198BB8, update 2198B80
+  `0x68..0x68`: init 2199088, update 2199050
+  `0x69..0x74`: init 2199234/2199268/2199298/21992CC/21992FC/219932C/2199360/2199394/21993C8/21993FC/2199430/2199460, update 21991F0
+  `0x75..0x78`: init 21988D0/21988F4/2198918/219893C, update 2198550
+  `0x79..0x84`: init 2199618/219964C/2199680/21996B4/21996E8/219971C/2199750/2199784/21997B8/21997EC/2199820/2199854, update 21991F0
+  `0x85..0x90`: init 2199AEC/2199B10/2199B38/2199B60/2199B88/2199BAC/2199BD8/2199C00/2199C28/2199C50/2199C7C/2199CA4, update 2199970
+  `0x91..0x98`: init 2199490/21994C0/21994F0/2199520/2199550/2199584/21995B8/21995E8, update 21991F0
+  `0x99..0x99`: init 2198BC8, update 2198B80
+  `0x9A..0x9A`: init 21990B8, update 21990D4
+  `0x9B..0x9E`: init 21982BC/21982D4/21982EC/2198300, update 219800C
+  `0x9F..0xA1`: init 2198BD8/2198BE8/2198BF8, update 2198B80
+  `0xA2..0xA2`: init 21990A0, update 2199050
+  `0xA3..0xA6`: init 2198CE4/2198CF4/2198D04/2198D14, update 2198D24
+  `0xA7..0xAA`: init 2198DEC/2198DFC/2198E0C/2198E1C, update 2198E2C
+  `0xAB..0xAB`: init 2199CC8, update 2199CE4
+  `0xAC..0xAC`: step 2199D00
+  `0xAD..0xAD`: init 2199D14, update 2199D4C
+  `0xAE..0xAE`: init 2199D8C, update 2199DB4
+  `0xAF..0xAF`: step 2199EAC
+  `0xB0..0xB0`: init 2199EC0, update 2199ED4
+  `0xB1..0xB1`: init 219A014, update 219A058
+  `0xB2..0xB3`: init 219A028/219A03C, update 219A07C
+  `0xB4..0xB4`: step 2199F30
+  `0xB5..0xB5`: init 2198E44, update 2198F20
+  `0xB6..0xB6`: init 2198E60, update 2198EC8
+  `0xB7..0xB7`: init 2198E60, update 2198F20
+  `0xB8..0xBA`: init 2198E98/2198EB0/2198E7C, update 2198EC8
+  `0xBB..0xBB`: init 2198E7C, update 2198F20
+  `0xBC..0xBC`: init 2199F50, update 2199F94
+
+### ACMD LIST task (`02197D3C` start / `02197DA0` end flag / `02197DAC` delete; callers: scrcmd `021B16CA`, ov10 `02161878` / `02161B5C`)
+
+Work (0x14, `Heap_AllocDebug(0x8000 | heap, 0x14, 1, "fldmmdl_acmd.c", 277)`, task priority = MMDLSYS priority - 2): `+0` seq (0..5,
+ROM 0x021D4A50: `02197DE8` start entry, `02197DF4` wait until the MMDL can take an acmd, `02197E10` set it, `02197E28` wait until done,
+`02197E44` repeat / next entry / end, `02197E78` ended), `+4` end flag, `+8` repeat counter, `+0xC` MMDL, `+0x10` -> current entry
+`{u16 code, u16 repeat count}` (list ends with code 0xFE). The task proc `02197DCC` runs seqs while they return 1.
+
+### Spec conventions (these two areas)
+
+* Every callee is outside the areas except the acmd-list seq procs and `02197EB4` / `02197F20`; out-of-area stubs are `force`.
+* The acmd code / seq getters (`0216D7C4` / `0216D7D4`) and the in-area dispatch stubs are `seq` (loops); codes are drawn from 8 kinds
+  (0, 1, 4, 8, 0x18, 0x3C, 0x60, 0xBC) with seq 0..1, and the 22 step functions those reach in both tables are `force seq` stubs.
+* The list-task work is an `arg buf 0x40` with a 6-entry list at +0x20; `02197D3C`'s allocation lands in a trailing `arg buf` (r2).
+
+Mutation spot check (`check-fn.sh --fn`, reverted): 2 of 2 caught (`list_next` `<` -> `<=`, `anim_held` acmd test inverted).

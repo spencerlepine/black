@@ -2,6 +2,7 @@
 //!
 //! Logic crate (D6): no Bevy dependency.
 
+pub mod acmd1;
 pub mod btl_setup;
 pub mod effect_encount;
 pub mod enc_pokeset;
@@ -23,6 +24,7 @@ pub mod hooks;
 pub mod land_data_patch;
 pub mod map_attr;
 pub mod map_matrix;
+pub mod mmdl_draw;
 pub mod mmdl_move;
 pub mod namipoke;
 pub mod player;
