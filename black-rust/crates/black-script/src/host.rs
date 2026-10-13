@@ -21,7 +21,7 @@
 //! |---|---|---|
 //! | `pad_held` | `FUN_020362DC()` (pad bits, NitroSDK `PAD_BUTTON_*` layout: A 1, B 2, .., X 0x400) | commands 49 / 50 (`script_sys::wait_pad_a` / `wait_pad_b`), the menu wait `0x0215A990` (X), command 75 (`scrcmd_talk::wait_button`, A or B) |
 //! | `message_bank_open` | `FUN_0215A760(ctx, type, msg)`: ctx +0x14 = `MsgData_Create` (`0x02045B38(0, type, msg, heap)`), +0x18 = msg | `script_sys::vm_new` for ctx mode 0 |
-//! | `message_start` | talk window: `0x021B03E4` (open or reuse: `FUN_02190FA0(msgbg, msgdata, style)`) + `FUN_02191084(window, 0, 0, text)` (streamed, command 52) or `FUN_02191164` + `FUN_02191184` (put at once, command 53); system window: `FUN_02191558` + `FUN_021916A8` (commands 56 / 74); balloon: `0x021B0BAC` (`FUN_0219129C`, or `FUN_02191348` for the next page; commands 60 / 61 / 72 / 73 / 135) | `scrcmd_talk` |
+//! | `message_start` | talk window: `0x021B03E4` (open or reuse: `FUN_02190FA0(msgbg, msgdata, style)`) + `FUN_02191084(window, 0, 0, text)` (streamed, command 52) or `FUN_02191164` + `FUN_02191184` (put at once, command 53); system window: `FUN_02191558` + `FUN_021916A8` (commands 56 / 74); balloon: `0x021B0BAC` (`FUN_0219129C(msgbg, tail, &position, text, ..)`, or `FUN_02191348` for the next page; commands 60 / 61 / 72 / 73 / 135) | `scrcmd_talk::cmd_52` / `cmd_53` (through `talk_open` + `message_text`), `system_message` (56 / 74), `balloon_print` (60 / 61 / 72 / 73), `cmd_135` (its text is `FUN_0202A310(a, b, STRBUF1, heap)`, not a message id: a [`MessageRequest`] cannot express it yet; UNVERIFIED: a trainer text) |
 //! | `message_done` | `FUN_021910C0(window) == 1` (talk), `FUN_021916E0` (system), `FUN_02191388` (balloon, which also follows its object every frame: `0x021B0B08`) | the wait callbacks `0x021B04C0` / `0x021B0FF0` / `0x021B0CEC` |
 //! | `message_close` | talk `0x021B0480` (`FUN_02191008`), system `0x021B10A4` (`FUN_021915B4`), balloon `0x021B0A88` (`FUN_021912D8`, then polls `FUN_021912F8` until 1) / `0x021B0AB0` (`FUN_0219131C`, at once); command 63 closes every open one | commands 54 / 57 / 62 / 63, the init procs of mask bits 1..3 |
 //! | `message_cursor` | `FUN_02191134` (talk) / `FUN_02191794` (system) / `FUN_021914CC` (balloon), called every frame while command 75 waits | `scrcmd_talk::wait_button` |
@@ -30,12 +30,15 @@
 //! | `menu_start` | `0x0215A77C` (begin: x, y, cursor, 2 flag bytes, result var, WORDSET, message data) + `0x0215A7F0` per item (text msg, help msg or 0xFFFF, param) + `0x0215A864` (open the overlay-21 list menu `0x02190988`) | commands 173 / 174 / 178 (begin; 173 without, 174 / 178 with the script's message data, 178 right-aligned), 175 (item), 176 / 177 (open + wait: GMEVENT `0x021B015C`, 8 frames of delay first) |
 //! | `menu_result` | `0x0215A954` (poll `0x021909E4`; result = the chosen item's param (UNVERIFIED: what the overlay-21 list returns), 0xFFFE cancel) / `0x0215A990` (same, X -> 0xFFFD) | the GMEVENT `0x021B015C` (176 and 177 both pass "no X") |
 //! | `fade_start` | `FUN_0204E720(mode, start, end, wait)` (fade.c) | command 179 (four u16 operands; `scrcmd_screen::cmd_fade`), the field fade task `0x021B2F18` (commands 429..440: `scrcmd_screen::field_fade_task`) |
-//! | `fade_done` | `FUN_0204E804() != 1` (fade.c "running" is 1) | command 180 (`scrcmd_screen::wait_fade`), the field fade task (then command 433 waits for its field-map flag `FUN_02189A24`) |
+//! | `fade_done` | `FUN_0204E804() != 1` (fade.c "running" is 1) | command 180 (`scrcmd_screen::wait_fade`); the field fade task (`scrcmd_screen::field_fade_task`) tests `FUN_0204E804() == 0` instead (the same for a 0 / 1 answer), then clears its field-map flag, which command 433 waits for (`FUN_02189A24 != 1`) |
 //!
 //! Not host requests: command 3 (wait N frames) counts down in SCRCMD WORK +0x106 inside the VM (`0x0215A684` /
-//! `0x0215A690`); the movement wait `0x0215A6FC` polls overlay-21 movement objects (field side, F4b); the info board
-//! (commands 64..66), the sized info window (58 / 59), the windows of commands 67 / 579 and 69 and the window icon of command
-//! 55 are further overlay-21 window kinds the F8 port job adds to [`MessageWindow`] when it ports them.
+//! `0x0215A690`); the movement wait `0x0215A6FC` polls overlay-21 movement objects (field side, F4b). The further overlay-21
+//! window kinds of `scrcmd_talk` (F8b: the info board of commands 64..66, the sized info window of 58 / 59, the windows of
+//! commands 67 / 579 and 69) are [`MessageWindow`] variants with the parameters their call sites pass; the window icon of
+//! command 55 (`FUN_0202EE30` on the talk window, deleted by `FUN_0202F038` and by every talk-window close) is a decoration of
+//! [`MessageWindow::Talk`], not a window. Command 51 toggles a msgbg flag (`FUN_021904DC(msgbg, 0 / 1)`, init-proc bit 9;
+//! UNVERIFIED meaning).
 //!
 //! Text is passed as message ids (bank, index) plus the script's WORDSET (`SW + 0x2C`, `black_text::wordset`), not as
 //! rendered strings: the original expands the message into STRBUF 1 (`0x021B162C`: `FUN_02045CAC` + `FUN_0201F250`) right
@@ -52,6 +55,23 @@ pub enum MessageWindow {
     Balloon { object: u16, tail: u16 },
     /// The system window (`0x021B1008`, bit 3): `kind` 0 (command 56) / 1 (command 74); style 1 or 0x13 by a script byte.
     System { kind: u8, style: u8 },
+    /// The info board (commands 64 / 66 print message 1 of message file 0x9E (type 3) with WORDSET slot 2 = a 7-digit number;
+    /// 65 deletes it): `FUN_02190708(msgbg, msgdata, x, y, 9, 2)` with `x` = the first operand - 9 (u16) and `y` = the
+    /// second (UNVERIFIED: a tile position, the board 9 x 2 tiles). Kept by the field map (`FUN_02188D48` / `FUN_02188D4C`),
+    /// so it outlives the script (no init-proc bit).
+    InfoBoard { x: u16, y: u16 },
+    /// The sized info window (command 58, init-proc bit 5; 59 updates / closes it): `FUN_021918DC(msgbg, text, a, x, y, w, h)`
+    /// after `FUN_02191830` measured the text (`w`, `h`), x pulled left to `x + w <= 0x1F`, `y + h > 0x18` -> y = h = 4
+    /// (UNVERIFIED: tiles; `a` meaning unknown).
+    Sized { a: u16, x: u8, y: u8, w: u8, h: u8 },
+    /// The window of commands 67 (`FUN_02191A04(msgbg, a)`) / 579 (`FUN_02191A10(msgbg, a, obj)` with an extra object
+    /// `FUN_0201D7EC(0x17, 4, 0, 0, heap)` kept in SW +0x38), init-proc bit 4; printed by its wait callback
+    /// (`FUN_02191BE8(window, text) == 1` = done). `extra` = command 579 (UNVERIFIED meaning of `a` and of the object).
+    Window67 { a: u16, extra: bool },
+    /// The window of command 69 (`FUN_02192570(msgbg, a, x, y, w, h)`, init-proc bit 6): `x`, `y` script bytes, `w` / `h` the
+    /// text's size (`FUN_0219270C` / `FUN_0219272C(msgbg, text, 4)`), printed at (4, 4) (`FUN_0219269C`), done =
+    /// `FUN_021926D8 == 1` (UNVERIFIED meaning of `a`).
+    Window69 { a: u16, x: u8, y: u8 },
 }
 
 /// Where the message text comes from.

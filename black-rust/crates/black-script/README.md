@@ -14,14 +14,14 @@ Undecompiled callees go in `hooks` as traits (§4 porting pattern); pointers sta
 | `scrcmd_core` | scrcmd core: overlay 10 0x02159204-0x0215995E, commands 0..48 + 4 helpers (53 fns) | `tools/rom-diff/specs/black-script/scrcmd_core.spec` | `tools/check-fn.sh black-script scrcmd_core` | 53 specced (F8-spec1, 747/747 insns covered), **5 smoke ports verified, area hash 8571c7a4a83df68b** |
 | `scrcmd_work` | `scrcmd_work.c`: overlay 10 0x0215A514-0x0215C63A minus the ctx getters and the Heap_Free veneer (130 fns, 86 command ids) | `tools/rom-diff/specs/black-script/scrcmd_work.spec` | `tools/check-fn.sh black-script scrcmd_work` | 130 specced (F8-spec1, 3451/3451 insns covered), **5 smoke ports verified, area hash 935b80ee13c13582** |
 | `scrcmd_fld` | overlay-21 field commands 0x021AE948-0x021B0083 (F1 row 21.42, first part; 97 fns, 80 command ids) | `tools/rom-diff/specs/black-script/scrcmd_fld.spec` | `tools/check-fn.sh black-script scrcmd_fld` | 97 specced (F8-spec2, 2360/2360 insns covered), **6 smoke ports verified, area hash 3a3b6fd5c3a80131** |
-| `scrcmd_talk` | overlay-21 message / yes-no / menu commands 0x021B0084-0x021B1667 (rows 21.42 tail, 21.43, 21.44 head; 70 fns, 33 ids) | `tools/rom-diff/specs/black-script/scrcmd_talk.spec` | `tools/check-fn.sh black-script scrcmd_talk` | 70 specced (F8-spec2, 2246/2246), **6 smoke ports verified, area hash 03a53d82f880c36f** |
+| `scrcmd_talk` | overlay-21 message / yes-no / menu commands 0x021B0084-0x021B1667 (rows 21.42 tail, 21.43, 21.44 head; 70 fns, 33 ids) | `tools/rom-diff/specs/black-script/scrcmd_talk.spec` | `tools/check-fn.sh black-script scrcmd_talk` | **70/70 verified, area hash f52686b3e04f16d2** (F8b; F8-spec2 spec, 2246/2246 insns covered) |
 | `scrcmd_obj` | overlay-21 field-object / camera commands 0x021B1668-0x021B282F (row 21.44; 63 fns, 55 ids) | `tools/rom-diff/specs/black-script/scrcmd_obj.spec` | `tools/check-fn.sh black-script scrcmd_obj` | 63 specced (F8-spec2, 1809/1827: 021b1e80 18 behind an uninitialised-register path), **5 smoke ports verified, area hash 719910d5290037ee** |
-| `scrcmd_screen` | overlay-21 screen effects 0x021B2830-0x021B2FD7 (row 21.44 tail, 21.45 `scrcmd_screeneffects.c`, cmd 594; 36 fns, 29 ids) | `tools/rom-diff/specs/black-script/scrcmd_screen.spec` | `tools/check-fn.sh black-script scrcmd_screen` | 36 specced (F8-spec2, 773/773), **5 smoke ports verified, area hash 6e9a0a809f9d93e1** |
+| `scrcmd_screen` | overlay-21 screen effects 0x021B2830-0x021B2FD7 (row 21.44 tail, 21.45 `scrcmd_screeneffects.c`, cmd 594; 36 fns, 29 ids) | `tools/rom-diff/specs/black-script/scrcmd_screen.spec` | `tools/check-fn.sh black-script scrcmd_screen` | **36/36 verified, area hash a8af20a1036b361b** (F8b; F8-spec2 spec, 773/773 insns covered) |
 | `scrcmd` | F8 index (doc only: which area holds which commands) | | | |
 
 | `scrcmd_core` | scrcmd core: overlay 10 0x02159204-0x0215995E, commands 0..48 + 4 helpers (53 fns) | `tools/rom-diff/specs/black-script/scrcmd_core.spec` | `tools/check-fn.sh black-script scrcmd_core` | **53/53 verified, area hash 3467bfc999c8890b** (F8a; F8-spec1 spec, 747/747 insns covered) |
 | `scrcmd_work` | `scrcmd_work.c`: overlay 10 0x0215A514-0x0215C63A minus the ctx getters and the Heap_Free veneer (130 fns, 86 command ids) | `tools/rom-diff/specs/black-script/scrcmd_work.spec` | `tools/check-fn.sh black-script scrcmd_work` | **130/130 verified, area hash d7e9a9ae52796e75** (F8a; F8-spec1 spec, 3451/3451 insns covered) |
-| `scrcmd` | F8 index + the command-id -> handler table of the ported commands (`commands`, `handler`, `dispatch`, `call_wait`) | | `cargo test -p black-script scrcmd` (ids unique, every ported id dispatches) | 138 ids (49 core, 86 work, 3 script_sys) |
+| `scrcmd` | F8 index + the command-id -> handler table of the ported commands (`commands`, `handler`, `dispatch`, `call_wait`) | | `cargo test -p black-script scrcmd` (ids unique, every ported id dispatches) | 200 ids (49 core, 86 work, 33 talk, 29 screen, 3 script_sys) |
 
 Every function of both areas is specced with closure stubs (porting order needs no spec edit). The spec headers are the
 reference for the layouts; summary:
@@ -117,23 +117,28 @@ ROM tables embedded in `script_sys/tables.rs` (copied from overlay 10 data): `CM
 
 ### Command dispatch (F8a)
 
-`scrcmd::commands()` is the table of every ported command id -> handler address (138 ids: `scrcmd_core::COMMANDS` 0..48,
-`scrcmd_work::COMMANDS` (86 ids), `scrcmd::SCRIPT_SYS_COMMANDS` 49 / 50 / 311; each area test checks its words against the ROM
-table 0x0217062C). `scrcmd::handler(id)` looks one up. A game-side `CommandDispatch` implementation is:
+`scrcmd::commands()` is the table of every ported command id -> handler address (200 ids: `scrcmd_core::COMMANDS` 0..48,
+`scrcmd_work::COMMANDS` (86 ids), `scrcmd_talk::COMMANDS` (33), `scrcmd_screen::COMMANDS` (29), `scrcmd::SCRIPT_SYS_COMMANDS`
+49 / 50 / 311; each area test checks its words against the ROM table 0x0217062C). `scrcmd::handler(id)` looks one up. A
+game-side `CommandDispatch` implementation is:
 
 ```rust,ignore
 impl CommandDispatch for Game {
     fn command(&mut self, handler: u32, vm: u32, ctx: u32) -> u32 {
-        scrcmd::dispatch(self, handler, vm, ctx)                       // commands 0..48 + scrcmd_work ids
+        scrcmd::dispatch(self, handler, vm, ctx)                       // core, work, talk, screen ids
             .or_else(|| script_sys::call_known(self, handler, &[vm, ctx])) // 49 / 50 / 311
             .unwrap_or_else(|| todo!("command handler {handler:#x}: unported F8 job"))
     }
 }
 ```
 
-and `VmHooks::call_wait` likewise tries `scrcmd::call_wait` then `script_sys::call_known`. Commands of the remaining F8 jobs
-(overlay-21 message / yes-no / menu / fade files, `scrcmd_proc.c`, ...) are not in the table yet; `scrcmd_core` command 46
-forwards to the overlay-21 handler `0x021B1BB8` through `CoreHooks::fun_021b1bb8`.
+and `VmHooks::call_wait` likewise tries `scrcmd::call_wait` (commands 3 / 28 and the overlay-21 waits) then
+`script_sys::call_known`. The overlay-21 commands hand three more kinds of code address to other systems:
+`scrcmd::call_event` (the GMEVENT functions of the yes / no and menu events, `0x021B0085` / `0x021B015D`, for the event
+system), `scrcmd::call_init_proc` (init procs `0x021B0631` .. `0x021B1605` = `script_sys::INIT_PROCS` slots 1..6 and 9, for
+`ScriptSysHooks::call_init_proc`) and `scrcmd::call_task` (the field fade task `0x021B2F19`, added with `FUN_02030DA8`).
+Commands of the remaining F8 jobs (scrcmd_fld, scrcmd_obj, `scrcmd_proc.c`, ...) are not in the table yet; `scrcmd_core`
+command 46 forwards to the overlay-21 handler `0x021B1BB8` through `CoreHooks::fun_021b1bb8`.
 
 ## F8 areas (F8-spec2, overlay 21)
 
@@ -149,6 +154,27 @@ forwards to the overlay-21 handler `0x021B1BB8` through `CoreHooks::fun_021b1bb8
   addresses collide with battle `PORTED` entries). The smoke ports call their callees through `FldHooks` / `TalkHooks` /
   `ObjHooks` / `ScreenHooks` (one method per callee address); globals 0x021EE71C (talk-lock flags) and 0x021EE720 (command 298) are
   absolute addresses in the `Mem` window.
+
+## F8b: scrcmd_talk and scrcmd_screen ported
+
+* Both areas are ported completely (70 + 36 functions, 33 + 29 command ids) and dispatched by `scrcmd`. `TalkHooks: CoreHooks`
+  and `ScreenHooks: CoreHooks`: vm.c, the operand readers, the ctx getters, the countdown and the child-event call come from
+  `CoreHooks`; the methods of the overlay-10 routines ported in this crate (`script_sys::sw_*` / `proc_mask_*` / `ctx_*`,
+  the `scrcmd_work` accessors of SCRCMD WORK +0xD4..+0x105) default to those ports. Some main / overlay-21 callees
+  (`FUN_02045CAC`, `FUN_0201F250`, `FUN_0201210C`, `FUN_02158F58`, the menu builder `0x0215A77C` ..) are methods of
+  `WorkHooks` too: a type implementing both traits implements them twice (kept apart so the parallel F8 jobs do not edit each
+  other's traits).
+* In-area callees are called as Rust (the ROM side runs them as real code once they are `PORTED`); e.g. command 429's
+  `scrcmd_screen::field_fade_start` (`0x021B2EBC`) is no longer a hook.
+* Stack records passed to callees are byte arrays: camera vectors / matrices of the balloon placement (`&[u8; 12]`,
+  `&[u8; 0x30]`), the object positions (`FUN_0216D88C`), the 3D-object grid position of commands 294..302, the size bytes of
+  command 58. `scrcmd_talk::balloon_side` (`0x021B0A40`) takes the target position as `&[u8; 12]` (its callers pass a stack
+  record).
+* ROM data embedded and compared with the build by the tests: `scrcmd_talk::UP` (overlay-21 0x021D9390, fx32 (0, 1, 0)) and
+  `scrcmd_talk::OFFSETS` (0x021D939C, 2 x 4 balloon offsets).
+* ScriptHost: the window / fade hooks are where a game-side implementation issues the `ScriptHost` requests (mapping in
+  `host.rs`; `MessageWindow` gained the info board, sized info window and the windows of commands 67 / 579 and 69 from their
+  call sites).
 
 ## Notes for porters
 
@@ -173,6 +199,10 @@ forwards to the overlay-21 handler `0x021B1BB8` through `CoreHooks::fun_021b1bb8
 * `script_sys::wait_311` (0x021599A8): for a status `FUN_02012DD0` > 3 the original returns its caller's r4 (never set on
   that path; in the game the VM step's caller's r4, e.g. the SYS slot index). The port returns
   `WAIT_311_STALE_R4` = 0, the value the differential test enters with.
+* `scrcmd_talk::balloon_project` (0x021B0808): the column index divides by 12 through `0x0209C2B0` (inlined; the svflow
+  `ALLOW` list runs it as real code); the jump-table fragments of 0x021B0084 / 0x021B015C / 0x021B03E4 / 0x021B0960 /
+  0x021B09EC are `match`es. Command 58's `y + h > 0x18` edge is untested (the shared u16 operand stub rarely draws a y near
+  0x18; mutation survivor).
 * `scrcmd_obj::object_of` (0x021B1668): for id 0xF1 the original returns its caller's r6 (never set; command 100: the movement
   offset); the port takes it as `stale_r6`, and the test never generates 0xF1. The same kind of uninitialised-register path:
   0x021AE948 (r5 for a value other than 0 / 1) and 0x021B1E80 (r7 when no direction passes): not exercised (specs bound them).
