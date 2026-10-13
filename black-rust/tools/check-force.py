@@ -25,7 +25,15 @@ SPECS = glob.glob(os.path.join(ROOT, "tools/rom-diff/svflow_specs/*.spec"))
 # Unforced on purpose (the caller's Rust port calls the ported callee directly, so both sides run real code):
 # (spec, callee). Each entry is documented in MIGRATION-AGENT.md (§6 B13-spec2 / B10g / B13a merge note).
 EXPECTED = {("client5", 0x021CD9F4), ("core2", 0x021BCB14), ("core2", 0x021BD148), ("client4", 0x021CDF1C)}
-FLOW_DIRS = ["crates/black-battle/src/server_flow", "crates/black-battle/src/client", "crates/black-battle/src/server"]
+# The dirs whose PORTED lists svflow.py's `ported_flow` scans, read from svflow.py itself so the two can't drift
+# (B14: the ai dir was missing here).
+FLOW_DIRS = [
+    "crates/black-battle/src/" + d
+    for d in re.findall(
+        r'os\.path\.join\(ROOT, "crates", "black-battle", "src", "(\w+)"\)',
+        open(os.path.join(ROOT, "tools/rom-diff/svflow.py")).read(),
+    )
+]
 
 
 def ported_by_area():
