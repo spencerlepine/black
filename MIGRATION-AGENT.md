@@ -65,7 +65,8 @@ runtime.
 - **Blocked:** none.
 - **Usage guard:** RUN (GREEN 0% at 2026-10-13: watchdog reports Bedrock billing, no plan cap). USAGE-CHECK cron c5aeb1ad. Values: `RUN`, `DRAINING (ORANGE n%) since <Z>`, `PAUSED (<ORANGE|RED> n%) until <resume_at>Z — resume cron <job id>`; see §5 "Usage cap".
 - **RE tooling (2026-10-11):** Ghidra headless + rizin + rea (MCP) all work via `tools/re/` (§3b); `tools/doctor.sh` bootstraps a session. Battle set fully decompiled (12,000 fns incl. all 800 overlay-93 pool handlers).
-- **Next wave (on resume):** B13-spec2 (remaining ~120 btl_client fns) → B13 port; B11-spec (battle_server.s 209 fns + btl_setup) → B11 → B14 (AI, ov96) → B16 integration test; B7b (side-effect adder + layer array); B15 (battle_record 9 fns); F2a-spec/F4a/F6a/F7 (field, per F1 split); P4 remainder (0201BC40, learnset reader). Harness follow-ups in §8 (waza 02017fb0→02018438 stub; ALLOW/ALLOW_BPP per-helper checks). Disk ~20 GB free: keep ≤ 4 workers.
+- **Queued next (2026-10-13, when a slot frees):** F7 port (specs merged; prompt drafted in session 4), B11b (server3 port), B13 port after B13-spec2, B10-wire (handlers' FlowHost → server_flow::api), harness job for the B10b/B10c mutation survivors.
+- **Next wave (on resume, older):** B13-spec2 (remaining ~120 btl_client fns) → B13 port; B11-spec (battle_server.s 209 fns + btl_setup) → B11 → B14 (AI, ov96) → B16 integration test; B7b (side-effect adder + layer array); B15 (battle_record 9 fns); F2a-spec/F4a/F6a/F7 (field, per F1 split); P4 remainder (0201BC40, learnset reader). Harness follow-ups in §8 (waza 02017fb0→02018438 stub; ALLOW/ALLOW_BPP per-helper checks). Disk ~20 GB free: keep ≤ 4 workers.
 
 ### Effort estimate (re-baseline after every wave from measured throughput in §9)
 
