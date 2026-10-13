@@ -7,13 +7,17 @@ use black_fndiff::{run_suite, Case, Suite};
 const RECORDED: &[(u32, &str)] = &[
     (0x021A9ED8, "3f78c77aead01b66"),
     (0x021A9F28, "75c69f1048ac41b0"),
+    (0x021A9F40, "59f01756b65bc0ea"),
+    (0x021AA0A0, "03e76ad61646e256"),
+    (0x021AA180, "62561175bcd7d0ea"),
+    (0x021AA248, "24432c45bd3e0877"),
     (0x021AA304, "deb9d2aaeab47ab1"),
     (0x021AA35C, "fea6cfe9d2453a12"),
     (0x021AA3E0, "e58485b1e4fc408c"),
     (0x021AA3FC, "4a0ea365af4f3bc3"),
-    (0x021AA42C, "9f2bca83b0be40c0"),
-    (0x021AA490, "60dbce3a1c3b4535"),
-    (0x021AA548, "47bc4736926eea2c"),
+    (0x021AA42C, "017e518aa867be29"),
+    (0x021AA490, "ce058ebd026f8e01"),
+    (0x021AA548, "137a4e54265f626b"),
     (0x021AA5CC, "bec790c19761ef47"),
     (0x021AA69C, "be901561c94fb25f"),
     (0x021AA6E0, "6cf5cf1e9c1b7cf8"),
@@ -33,10 +37,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             0
         }
         0x021A_9F40 => step_check(e, v[0], v[1]) as u64,
-        0x021A_A0A0 => {
-            fixed_battle(e, v[0], v[1], v[2], v[3]);
-            0
-        }
+        0x021A_A0A0 => fixed_battle(e, v[0], v[1], v[2], v[3]) as u64,
         0x021A_A180 => ofs_arg(fishing(e, v[0], v[1]), 0),
         0x021A_A248 => wfbc_step(e, v[0], v[1]) as u64,
         0x021A_A304 => {

@@ -280,8 +280,8 @@ fn 021aabf4 ret=none inputs=100
   arg buf 0x18
   fix arg0 0xC u32 addrof arg0 0x20
   fix arg0 0x27 u8 alt oneof 0x82 0x80 0x81 || any
-  stub 0216d83c force ret=pick:0/1/3/4/0x1F/0x20/0x23/0x40/0xFFFF/0xFFE0 args=v  # MMDL gx
-  stub 0216d86c force ret=pick:0/1/3/4/0x1F/0x20/0x23/0x40/0xFFFF/0xFFE0 args=v  # MMDL gz
+  stub 0216d83c force ret=pick:0/1/3/4/0x1B/0x1F/0x20/0x23/0x3B/0x40/0xFFFF/0xFFE0 args=v  # MMDL gx (0x1B / 0x3B: tile 27, x1 = 32)
+  stub 0216d86c force ret=pick:0/1/3/4/0x1B/0x1F/0x20/0x23/0x3B/0x40/0xFFFF/0xFFE0 args=v  # MMDL gz (0x1B / 0x3B: tile 27, z1 = 32)
   stub 02005728 force ret=lt:0 args=v  # RNG: global 64-bit LCG next_scaled(max) (black-core rng 02005728): below max
   stub 02188cb4 force ret=u32 args=v  # fieldmap +0x8C (field player)
   stub 021a3074 force ret=u32 args=v  # field player -> MMDL

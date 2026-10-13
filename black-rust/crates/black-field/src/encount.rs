@@ -4,20 +4,21 @@
 //!
 //! F5a-spec specced all 19 functions (`tools/rom-diff/specs/black-field/encount.spec`, whose header documents the
 //! encounter roll step by step, the FIELD ENCOUNT object (0x14), the ENCOUNT WORK (0x20) and the FIELD
-//! SITUATION (0x10)); F5a ported all 19 (15 verified, see `PORTED`).
+//! SITUATION (0x10)); F5a ported all 19, F5a-spec2 fixed the spec so that all 19 are verified (`PORTED`).
 //!
 //! Encounter types (the index of the rate byte and of the slot group in an ENCOUNT TABLE): 0 grass, 1 dark
 //! grass (doubles), 2 shaking grass, 3 surf, 4 rippling water, 5 fishing, 6 fishing on a ripple.
 
 use crate::hooks::{CArg, FieldEnv, Mem, HEAP_ALLOC, HEAP_FREE};
 
-/// Functions of this area that are ported and verified (read by `tools/rom-diff/svflow.py --ported-src`). Ported but
-/// not listed (UNVERIFIED, see the crate README): `021A9F40` [`step_check`], `021AA0A0` [`fixed_battle`], `021AA180`
-/// [`fishing`], `021AA248` [`wfbc_step`] (they pass the address of their EFP local to `FUN_021A96B8` / `FUN_021A9780`,
-/// whose spec stubs log it as a value).
+/// Functions of this area that are ported and verified (read by `tools/rom-diff/svflow.py --ported-src`): all 19.
 pub const PORTED: &[u32] = &[
     0x021A_9ED8,
     0x021A_9F28,
+    0x021A_9F40,
+    0x021A_A0A0,
+    0x021A_A180,
+    0x021A_A248,
     0x021A_A304,
     0x021A_A35C,
     0x021A_A3E0,
@@ -221,12 +222,6 @@ fn wild_mons<E: FieldEnv>(env: &mut E, table: u32, efp: u32, zone: u32, mons: u3
 /// (`FUN_021A94B0`); kind 1 adds record 0x70, the other kinds look for a roamer (`FUN_021A957C`); a roamer battle is set
 /// up by [`setup_roamer`], else the wild Pokemon (`FUN_021A954C`; none: 0; a double with one accepted Pokemon becomes a
 /// single) by [`setup_wild`]; then [`reset_steps`] and the battle event `FUN_0216E7C8(gsys, fieldmap, setup, 0, kind)`.
-///
-/// UNVERIFIED port of `021A9F40`: the EFP is a local of this function, and the spec's stub of `FUN_021A96B8` (and of
-/// `FUN_021A9780`) logs its address as a value (`v`), so the hash holds the emulator's stack address. Spec fix: those
-/// stubs `args=v,in:0x2C,in:0x14` / `args=v,in:0x2C,v`, and `0201347c` `in:14` (the original never writes the two
-/// padding bytes `+0xE` of the FIELD SITUATION and hands stale stack bytes to it), with `CArg::In(efp, 0x2C)` /
-/// `CArg::In(sit, 14)` in [`setup_wild`] / [`setup_roamer`]: with that fix (tried, reverted) this port matches.
 pub fn step_check<E: FieldEnv>(env: &mut E, enc: u32, kind: u32) -> u32 {
     let fieldmap = env.r32(enc);
     let player = env.callv(FIELDMAP_PLAYER, &[fieldmap]);
@@ -329,12 +324,6 @@ fn step_encounter<E: FieldEnv>(
 /// else 0x10: 2, else 0; 8: `+7` = 1; 0x20: gender request 1, else 0x40: 2; battle setup `FUN_02013090(4)` by
 /// [`setup_wild`]; `flags` 1: setup flag 4, else 0x80: setup flag 0x80; 0x100: setup flag 0x200; returns the battle event
 /// `FUN_0216E7C8(gsys, fieldmap, setup, 1, 0)`.
-///
-/// UNVERIFIED port of `021AA0A0`: the EFP is a local of this function, and the spec's stub of `FUN_021A96B8` (and of
-/// `FUN_021A9780`) logs its address as a value (`v`), so the hash holds the emulator's stack address. Spec fix: those
-/// stubs `args=v,in:0x2C,in:0x14` / `args=v,in:0x2C,v`, and `0201347c` `in:14` (the original never writes the two
-/// padding bytes `+0xE` of the FIELD SITUATION and hands stale stack bytes to it), with `CArg::In(efp, 0x2C)` /
-/// `CArg::In(sit, 14)` in [`setup_wild`] / [`setup_roamer`]: with that fix (tried, reverted) this port matches.
 pub fn fixed_battle<E: FieldEnv>(
     env: &mut E,
     enc: u32,
@@ -393,12 +382,6 @@ pub fn fixed_battle<E: FieldEnv>(
 /// the EFP; kind != 1: none when [`rate_roll`] exceeds the modified rate (`FUN_021A94B0`); the wild Pokemon
 /// (`FUN_021A954C`) must reach the EFP's count `+0x15`; battle setup `FUN_02013090(4)` by [`setup_wild`], setup flag 1,
 /// `setup +0xC` = 6.
-///
-/// UNVERIFIED port of `021AA180`: the EFP is a local of this function, and the spec's stub of `FUN_021A96B8` (and of
-/// `FUN_021A9780`) logs its address as a value (`v`), so the hash holds the emulator's stack address. Spec fix: those
-/// stubs `args=v,in:0x2C,in:0x14` / `args=v,in:0x2C,v`, and `0201347c` `in:14` (the original never writes the two
-/// padding bytes `+0xE` of the FIELD SITUATION and hands stale stack bytes to it), with `CArg::In(efp, 0x2C)` /
-/// `CArg::In(sit, 14)` in [`setup_wild`] / [`setup_roamer`]: with that fix (tried, reverted) this port matches.
 pub fn fishing<E: FieldEnv>(env: &mut E, enc: u32, kind: u32) -> u32 {
     let tab = env.r32(enc.wrapping_add(0xC));
     if tab == 0 || env.r8(tab.wrapping_add(7)) & 0x80 == 0 {
@@ -452,12 +435,6 @@ fn fishing_tail<E: FieldEnv>(env: &mut E, enc: u32, kind: u32, efp: u32, rate: u
 /// event or 0: [`count_step`]; `FUN_02193920(wfbc) == 1` (encounters off): none; [`wfbc_check`] fails: none; type
 /// [`step_type`]`(enc, 3)`; EFP of kind 3; `FUN_021A9604(wfbc, efp, mon)` (none: 0); battle setup by [`setup_wild`],
 /// [`reset_steps`], `FUN_0216E7C8(gsys, fieldmap, setup, 0, 3)`.
-///
-/// UNVERIFIED port of `021AA248`: the EFP is a local of this function, and the spec's stub of `FUN_021A96B8` (and of
-/// `FUN_021A9780`) logs its address as a value (`v`), so the hash holds the emulator's stack address. Spec fix: those
-/// stubs `args=v,in:0x2C,in:0x14` / `args=v,in:0x2C,v`, and `0201347c` `in:14` (the original never writes the two
-/// padding bytes `+0xE` of the FIELD SITUATION and hands stale stack bytes to it), with `CArg::In(efp, 0x2C)` /
-/// `CArg::In(sit, 14)` in [`setup_wild`] / [`setup_roamer`]: with that fix (tried, reverted) this port matches.
 pub fn wfbc_step<E: FieldEnv>(env: &mut E, enc: u32, wfbc: u32) -> u32 {
     let fieldmap = env.r32(enc);
     let player = env.callv(FIELDMAP_PLAYER, &[fieldmap]);
@@ -630,7 +607,8 @@ pub fn wfbc_check<E: FieldEnv>(env: &mut E, ewk: u32, wfbc: u32) -> bool {
 /// `mons` (the fifth argument is a stack word): a party (`FUN_0201A920(heap)`), a 0xDC-byte POKEPARAM
 /// (`Heap_AllocDebug(heap, 0xDC, 1, "field_encount.c", 0x285)`), for each of the 1 + (EFP flag 0x20) Pokemon
 /// `FUN_021A96B8(pp, efp, mons + 0x14 i)` and `FUN_0201A98C(party, pp)`; the [`field_situation`] (a 0x10-byte local);
-/// `FUN_0201347C(setup, gamedata, party, &sit, double, heap)`; type 1: setup flag 0x20; both blocks freed.
+/// `FUN_0201347C(setup, gamedata, party, &sit, double, heap)`; type 1: setup flag 0x20; both blocks freed. The EFP
+/// reaches the stubs as its 0x2C bytes and the situation as its first 14 (`+0xE..0x10` is stale stack in the original).
 pub fn setup_wild<E: FieldEnv>(env: &mut E, enc: u32, efp: u32, setup: u32, heap: u32, mons: u32) {
     let party = env.callv(PARTY_NEW, &[heap]);
     let pp = env.callv(
@@ -642,7 +620,7 @@ pub fn setup_wild<E: FieldEnv>(env: &mut E, enc: u32, efp: u32, setup: u32, heap
         let m = mons.wrapping_add(0x14 * i);
         env.call(
             WILD_POKEPARAM,
-            &mut [CArg::V(pp), CArg::V(efp), CArg::In(m, 0x14)],
+            &mut [CArg::V(pp), CArg::In(efp, 0x2C), CArg::In(m, 0x14)],
         );
         env.callv(PARTY_ADD, &[party, pp]);
         i += 1;
@@ -659,7 +637,7 @@ pub fn setup_wild<E: FieldEnv>(env: &mut E, enc: u32, efp: u32, setup: u32, heap
             CArg::V(setup),
             CArg::V(gd),
             CArg::V(party),
-            CArg::In(sit, 16),
+            CArg::In(sit, 14),
             CArg::V(double),
             CArg::V(heap),
         ],
@@ -675,7 +653,7 @@ pub fn setup_wild<E: FieldEnv>(env: &mut E, enc: u32, efp: u32, setup: u32, heap
 /// C: `FUN_overlay_d_21__021aa548` (unlabeled routine at `0x021AA548`): set up the roamer battle `setup` with the roamer
 /// record `rec` (a stack word): a party, a POKEPARAM from heap `(heap & 0x7FFF) | 0x8000` (`"field_encount.c"`, 0x2A4),
 /// `FUN_021A9780(pp, efp, rec)`, added to the party; [`field_situation`]; `FUN_0201347C(setup, gamedata, party, &sit, 0,
-/// heap)`; setup flag 8; both blocks freed.
+/// heap)` (the situation's first 14 bytes, as in [`setup_wild`]); setup flag 8; both blocks freed.
 pub fn setup_roamer<E: FieldEnv>(env: &mut E, enc: u32, efp: u32, setup: u32, heap: u32, rec: u32) {
     let party = env.callv(PARTY_NEW, &[heap]);
     let h = ((heap & 0x7FFF) | 0x8000) & 0xFFFF;
@@ -683,7 +661,10 @@ pub fn setup_roamer<E: FieldEnv>(env: &mut E, enc: u32, efp: u32, setup: u32, he
         HEAP_ALLOC,
         &[h, POKEPARAM_SIZE, 1, FILE_FIELD_ENCOUNT, 0x2A4],
     );
-    env.callv(ROAMER_POKEPARAM, &[pp, efp, rec]);
+    env.call(
+        ROAMER_POKEPARAM,
+        &mut [CArg::V(pp), CArg::In(efp, 0x2C), CArg::V(rec)],
+    );
     env.callv(PARTY_ADD, &[party, pp]);
     let sit = env.mem().push_local(0x10);
     let gd = env.r32(enc.wrapping_add(8));
@@ -696,7 +677,7 @@ pub fn setup_roamer<E: FieldEnv>(env: &mut E, enc: u32, efp: u32, setup: u32, he
             CArg::V(setup),
             CArg::V(gd),
             CArg::V(party),
-            CArg::In(sit, 16),
+            CArg::In(sit, 14),
             CArg::V(0),
             CArg::V(heap),
         ],

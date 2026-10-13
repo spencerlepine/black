@@ -80,7 +80,7 @@ fn 021a9f40 ret=u32 inputs=300
   stub 02012f2c force ret=u32 args=v  # GAMEDATA -> record counters
   stub 02013090 force ret=u32 args=v  # btl_setup alloc (heap 4)
   stub 02013144 force ret=none args=v,v  # btl_setup or_flags (setup, mask)
-  stub 0201347c force ret=none args=v,v,v,in:16,v,v  # btl_setup setup_with_party (setup, gamedata, party, &field, double, heap)
+  stub 0201347c force ret=none args=v,v,v,in:14,v,v  # btl_setup setup_with_party (setup, gamedata, party, &field, double, heap); +0xE..0xF never written (stale stack)
   stub 02013ed8 force ret=u32 args=v  # zonedata: zone -> battle background
   stub 0201a920 force ret=u32 args=v  # POKEPARTY alloc (heap)
   stub 0201a98c force ret=none args=v,v  # POKEPARTY add (party, pp)
@@ -102,8 +102,8 @@ fn 021a9f40 ret=u32 inputs=300
   stub 021a94b0 force ret=pick:0/1/10/50/100 args=in:0x2C,v,v  # enc_pokeset
   stub 021a954c force ret=pick:0/1/2 args=v,in:0x2C,v,out:0x28  # enc_pokeset
   stub 021a957c force ret=nullable:2:u32 args=v,in:0x2C,v  # enc_pokeset
-  stub 021a96b8 force ret=none args=v,v,in:0x14  # enc_pokeset
-  stub 021a9780 force ret=none args=v,v,v  # enc_pokeset
+  stub 021a96b8 force ret=none args=v,in:0x2C,in:0x14  # enc_pokeset (pp, &efp, &mon)
+  stub 021a9780 force ret=none args=v,in:0x2C,v  # enc_pokeset (pp, &efp, rec)
   stub 021aa304 ret=none args=out:0x10,v,v  # in-area
   stub 021aa35c ret=pick:0/1/2/3/4/5/6/0xFF args=v,v,out:1  # in-area
   stub 021aa3e0 ret=pick:0/1/10/25/100 args=v,v,v  # in-area
@@ -122,10 +122,11 @@ fn 021a9f40 ret=u32 inputs=300
   stub 021ab29c force ret=pick:0/1 args=v  # map_attr
   stub 021ab580 force ret=pick:0/1/4/5/8 args=v  # map_attr
 
-# 021AA0A0(enc, species, level, flags): fixed wild battle: EFP(enc gsys, type 0xFF, kind 0); MON species, level; flags 4: item 0xFFFF
+# 021AA0A0(enc, species, level, flags) -> battle event: fixed wild battle: EFP(enc gsys, type 0xFF, kind 0); MON species, level; flags 4: item 0xFFFF
 # (none), 2: shiny mode 1, else 0x10: 2, 8: +7 = 1, 0x20: gender 1, else 0x40: 2; setup = 02013090(4); 021AA490(enc, efp, setup, 4,
-# &mon); flags 1: or_flags 4, else 0x80: or_flags 0x80; 0x100: or_flags 0x200; 0216E7C8(gsys, fieldmap, setup, 1, 0)
-fn 021aa0a0 ret=none inputs=100
+# &mon); flags 1: or_flags 4, else 0x80: or_flags 0x80; 0x100: or_flags 0x200; returns 0216E7C8(gsys, fieldmap, setup, 1, 0)
+# (the event; read by scrcmd_proc_fld 021B503C)
+fn 021aa0a0 ret=u32 inputs=100
   nowork
   arg buf 0x800
   arg u32 any
@@ -135,7 +136,7 @@ fn 021aa0a0 ret=none inputs=100
   stub 02012984 force ret=u8 args=v  # GAMEDATA byte getter (season)
   stub 02013090 force ret=u32 args=v  # btl_setup alloc (heap 4)
   stub 02013144 force ret=none args=v,v  # btl_setup or_flags (setup, mask)
-  stub 0201347c force ret=none args=v,v,v,in:16,v,v  # btl_setup setup_with_party (setup, gamedata, party, &field, double, heap)
+  stub 0201347c force ret=none args=v,v,v,in:14,v,v  # btl_setup setup_with_party (setup, gamedata, party, &field, double, heap); +0xE..0xF never written (stale stack)
   stub 02013ed8 force ret=u32 args=v  # zonedata: zone -> battle background
   stub 0201a920 force ret=u32 args=v  # POKEPARTY alloc (heap)
   stub 0201a98c force ret=none args=v,v  # POKEPARTY add (party, pp)
@@ -149,7 +150,7 @@ fn 021aa0a0 ret=none inputs=100
   stub 021a1bf4 force ret=pick:0/1/2/3/4/5/6/7/0xB/0xC/0xD args=v  # weather id (weather system)
   stub 021a30c8 force ret=u32 args=v  # field player -> attribute word
   stub 021a9350 force ret=none args=outm:0x2C:0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0x1/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF,v,v,v,v  # enc_pokeset
-  stub 021a96b8 force ret=none args=v,v,in:0x14  # enc_pokeset
+  stub 021a96b8 force ret=none args=v,in:0x2C,in:0x14  # enc_pokeset (pp, &efp, &mon)
   stub 021aa304 ret=none args=out:0x10,v,v  # in-area
   stub 021aa490 ret=none args=v,in:0x2C,v,v,in:0x28  # in-area
   stub 021aa69c ret=pick:0/2/3/4 args=v  # in-area
@@ -171,7 +172,7 @@ fn 021aa180 ret=ofs:arg0 inputs=100
   stub 020056ec force ret=lt:0 args=v  # RNG: global 64-bit LCG next(max) (black-core rng 020056EC): below max
   stub 02012984 force ret=u8 args=v  # GAMEDATA byte getter (season)
   stub 02013144 force ret=none args=v,v  # btl_setup or_flags (setup, mask)
-  stub 0201347c force ret=none args=v,v,v,in:16,v,v  # btl_setup setup_with_party (setup, gamedata, party, &field, double, heap)
+  stub 0201347c force ret=none args=v,v,v,in:14,v,v  # btl_setup setup_with_party (setup, gamedata, party, &field, double, heap); +0xE..0xF never written (stale stack)
   stub 02013ed8 force ret=u32 args=v  # zonedata: zone -> battle background
   stub 0201a920 force ret=u32 args=v  # POKEPARTY alloc (heap)
   stub 0201a98c force ret=none args=v,v  # POKEPARTY add (party, pp)
@@ -186,7 +187,7 @@ fn 021aa180 ret=ofs:arg0 inputs=100
   stub 021a9350 force ret=none args=outm:0x2C:0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0x1/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF,v,v,v,v  # enc_pokeset
   stub 021a94b0 force ret=pick:0/1/10/50/100 args=in:0x2C,v,v  # enc_pokeset
   stub 021a954c force ret=pick:0/1/2 args=v,in:0x2C,v,out:0x28  # enc_pokeset
-  stub 021a96b8 force ret=none args=v,v,in:0x14  # enc_pokeset
+  stub 021a96b8 force ret=none args=v,in:0x2C,in:0x14  # enc_pokeset (pp, &efp, &mon)
   stub 021aa304 ret=none args=out:0x10,v,v  # in-area
   stub 021aa3e0 ret=pick:0/1/10/25/100 args=v,v,v  # in-area
   stub 021aa490 ret=none args=v,in:0x2C,v,v,in:0x28  # in-area
@@ -204,11 +205,11 @@ fn 021aa248 ret=u32 inputs=100
   arg u32 any
   stub 02012a38 force ret=ptr:arg0:0x7C0:1 args=v  # GAMEDATA -> ENCOUNT WORK (0x20)
   stub 020056ec force ret=lt:0 args=v  # RNG: global 64-bit LCG next(max) (black-core rng 020056EC): below max
-  stub 02010fb0 force ret=u32 args=v  # encounter rate modifier of the pass powers (rate -> rate)
+  stub 02010fb0 force ret=pick:0/1/2/49/50/51/98/99/100/0x7FFFFFFF/0xFFFFFFFF args=v  # encounter rate modifier of the pass powers (rate -> rate; compared with a roll below 100)
   stub 02012984 force ret=u8 args=v  # GAMEDATA byte getter (season)
   stub 02013090 force ret=u32 args=v  # btl_setup alloc (heap 4)
   stub 02013144 force ret=none args=v,v  # btl_setup or_flags (setup, mask)
-  stub 0201347c force ret=none args=v,v,v,in:16,v,v  # btl_setup setup_with_party (setup, gamedata, party, &field, double, heap)
+  stub 0201347c force ret=none args=v,v,v,in:14,v,v  # btl_setup setup_with_party (setup, gamedata, party, &field, double, heap); +0xE..0xF never written (stale stack)
   stub 02013ed8 force ret=u32 args=v  # zonedata: zone -> battle background
   stub 0201a920 force ret=u32 args=v  # POKEPARTY alloc (heap)
   stub 0201a98c force ret=none args=v,v  # POKEPARTY add (party, pp)
@@ -231,7 +232,7 @@ fn 021aa248 ret=u32 inputs=100
   stub 021a30c8 force ret=u32 args=v  # field player -> attribute word
   stub 021a9350 force ret=none args=outm:0x2C:0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0x1/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF,v,v,v,v  # enc_pokeset
   stub 021a9604 force ret=pick:0/1 args=v,in:0x2C,out:0x14  # enc_pokeset
-  stub 021a96b8 force ret=none args=v,v,in:0x14  # enc_pokeset
+  stub 021a96b8 force ret=none args=v,in:0x2C,in:0x14  # enc_pokeset (pp, &efp, &mon)
   stub 021aa304 ret=none args=out:0x10,v,v  # in-area
   stub 021aa35c ret=pick:0/1/2/3/4/5/6/0xFF args=v,v,out:1  # in-area
   stub 021aa42c ret=pick:0/1 args=v,v  # in-area
@@ -310,8 +311,8 @@ fn 021aa42c ret=u32 inputs=100
   arg buf 0x10
   arg u32 any
   fix arg0 8 u32 alt range 0 40 || any
-  stub 020056ec force ret=lt:0 args=v  # RNG next(100): below 100
-  stub 02010fb0 force ret=u32 args=v  # encounter rate modifier of the pass powers (rate -> rate)
+  stub 020056ec force ret=pick:0/1/2/49/50/51/98/99 args=v  # RNG next(100): below 100 (around the 02010FB0 picks)
+  stub 02010fb0 force ret=pick:0/1/2/49/50/51/98/99/100/0x7FFFFFFF/0xFFFFFFFF args=v  # encounter rate modifier of the pass powers (rate -> rate; compared with a roll below 100)
   stub 0207c7b4 force ret=u32 args=v  # FX sqrt / root (fx32)
   stub 021938f4 force ret=u32 args=v  # field_wfbc: encounter level factor (wfbc)
   stub 021aa778 ret=pick:0/1/2/5/100 args=v  # in-area
@@ -329,7 +330,7 @@ fn 021aa490 ret=none inputs=100
   fix arg1 8 u32 alt range 0 2 || any
   stub 02012984 force ret=u8 args=v  # GAMEDATA byte getter (season)
   stub 02013144 force ret=none args=v,v  # btl_setup or_flags (setup, mask)
-  stub 0201347c force ret=none args=v,v,v,in:16,v,v  # btl_setup setup_with_party (setup, gamedata, party, &field, double, heap)
+  stub 0201347c force ret=none args=v,v,v,in:14,v,v  # btl_setup setup_with_party (setup, gamedata, party, &field, double, heap); +0xE..0xF never written (stale stack)
   stub 02013ed8 force ret=u32 args=v  # zonedata: zone -> battle background
   stub 0201a920 force ret=u32 args=v  # POKEPARTY alloc (heap)
   stub 0201a98c force ret=none args=v,v  # POKEPARTY add (party, pp)
@@ -341,7 +342,7 @@ fn 021aa490 ret=none inputs=100
   stub 02188cb4 force ret=u32 args=v  # fieldmap +0x8C (field player)
   stub 021a1bf4 force ret=pick:0/1/2/3/4/5/6/7/0xB/0xC/0xD args=v  # weather id (weather system)
   stub 021a30c8 force ret=u32 args=v  # field player -> attribute word
-  stub 021a96b8 force ret=none args=v,v,in:0x14  # enc_pokeset
+  stub 021a96b8 force ret=none args=v,in:0x2C,in:0x14  # enc_pokeset (pp, &efp, &mon)
   stub 021aa304 ret=none args=out:0x10,v,v  # in-area
   stub 021aa69c ret=pick:0/2/3/4 args=v  # in-area
   stub 021ab0f0 force ret=u16 args=v  # map_attr
@@ -359,7 +360,7 @@ fn 021aa548 ret=none inputs=100
   arg u32 any
   stub 02012984 force ret=u8 args=v  # GAMEDATA byte getter (season)
   stub 02013144 force ret=none args=v,v  # btl_setup or_flags (setup, mask)
-  stub 0201347c force ret=none args=v,v,v,in:16,v,v  # btl_setup setup_with_party (setup, gamedata, party, &field, double, heap)
+  stub 0201347c force ret=none args=v,v,v,in:14,v,v  # btl_setup setup_with_party (setup, gamedata, party, &field, double, heap); +0xE..0xF never written (stale stack)
   stub 02013ed8 force ret=u32 args=v  # zonedata: zone -> battle background
   stub 0201a920 force ret=u32 args=v  # POKEPARTY alloc (heap)
   stub 0201a98c force ret=none args=v,v  # POKEPARTY add (party, pp)
@@ -371,7 +372,7 @@ fn 021aa548 ret=none inputs=100
   stub 02188cb4 force ret=u32 args=v  # fieldmap +0x8C (field player)
   stub 021a1bf4 force ret=pick:0/1/2/3/4/5/6/7/0xB/0xC/0xD args=v  # weather id (weather system)
   stub 021a30c8 force ret=u32 args=v  # field player -> attribute word
-  stub 021a9780 force ret=none args=v,v,v  # enc_pokeset
+  stub 021a9780 force ret=none args=v,in:0x2C,v  # enc_pokeset (pp, &efp, rec)
   stub 021aa304 ret=none args=out:0x10,v,v  # in-area
   stub 021aa69c ret=pick:0/2/3/4 args=v  # in-area
   stub 021ab0f0 force ret=u16 args=v  # map_attr
