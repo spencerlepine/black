@@ -78,7 +78,10 @@ class Emu:
             args = [uc.reg_read(r) for r in REGS]
             sp = uc.reg_read(UC_ARM_REG_SP)
             r = fn(self, *args, sp=sp)
-            if r is not None:
+            if isinstance(r, tuple):  # B14-spec: a 64-bit stub result (`ret=u64`) sets r0 (low) and r1 (high)
+                uc.reg_write(UC_ARM_REG_R0, r[0] & 0xFFFFFFFF)
+                uc.reg_write(UC_ARM_REG_R1, r[1] & 0xFFFFFFFF)
+            elif r is not None:
                 uc.reg_write(UC_ARM_REG_R0, r & 0xFFFFFFFF)
             lr = uc.reg_read(UC_ARM_REG_LR)
             # Unicorn selects Thumb from bit 0 of the value written to PC (interworking return).

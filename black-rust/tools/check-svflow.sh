@@ -31,6 +31,7 @@ MOD=server_flow
 case "$AREA" in
   client[0-9]*) MOD=client ;;  # B13-spec1: btl_client.c areas live in crates/black-battle/src/client/
   server[0-9]*) MOD=server ;;  # B11-spec: btl_server.c areas live in crates/black-battle/src/server/
+  ai[0-9]*) MOD=ai ;;          # B14-spec: tr_ai.c (overlay 96) areas live in crates/black-battle/src/ai/
 esac
 T=crates/black-battle/src/$MOD/$AREA/tests.rs
 [ -f "$T" ] || { echo "no $T: nothing is ported in $AREA yet"; exit 2; }

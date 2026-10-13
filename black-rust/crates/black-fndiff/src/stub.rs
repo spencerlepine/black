@@ -50,6 +50,23 @@ impl StubEnv {
         self.halted
     }
 
+    /// `ret=u64` stub (B14-spec, e.g. OS_GetTick): r0 = the [`StubEnv::call`] result, r1 = `mix(r0, 0x6464)`
+    /// (as `make_stub` in svflow.py); returns `r1 << 32 | r0`.
+    pub fn call64(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u64 {
+        let ret = self
+            .stubs
+            .iter()
+            .find(|s| s.addr == addr)
+            .map(|s| s.ret.clone());
+        assert_eq!(
+            ret.as_deref(),
+            Some("u64"),
+            "stub {addr:#010x}: call64 needs ret=u64"
+        );
+        let lo = self.call(addr, args);
+        u64::from(lo) | (u64::from(mix(lo, 0x6464)) << 32)
+    }
+
     /// Calls the unported function at `addr`; returns its r0 (0 for a callee returning nothing).
     /// A `noreturn` stub does not return: it unwinds with [`Halt`].
     pub fn call(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u32 {
@@ -315,6 +332,18 @@ mod tests {
                 0xABCD
             ]
         );
+    }
+
+    /// `ret=u64` (B14-spec): r0 as a u32 stub, r1 = mix(r0, 0x6464); vector computed with svflow.py `make_stub`
+    /// (salt 0x1234, no `seq`, one `v` argument 0xABCD).
+    #[test]
+    fn u64_stub_returns_two_words() {
+        let mut e = StubEnv::new(vec![spec("u64", &["v"], false)], 0x1234);
+        let mut u = StubEnv::new(vec![spec("u32", &["v"], false)], 0x1234);
+        let lo = u.call(0x021B_B798, &mut [Arg::V(0xABCD)]);
+        let v = e.call64(0x021B_B798, &mut [Arg::V(0xABCD)]);
+        assert_eq!(v as u32, lo);
+        assert_eq!(v, 0x5a15_fb42_731c_9f54);
     }
 
     /// `lt:K` (B10-spec4): below argument K, 0 for a zero bound.

@@ -428,3 +428,21 @@ No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec te
 * Function list: command-table targets + `bl` targets from the whole field set + odd code pointers + labels, walked as Thumb from
   every entry (only padding and literal pools stay uncovered). Mid-function labels that Ghidra / mkelf turned into functions are
   listed as fragments in the headers, not specced.
+
+## B14-spec additions (ai1, tr_ai.c / overlay 96)
+
+New grammar (mirrored in `svflow.py` and `black-fndiff`, with a parity vector in `stub.rs`): stub result kind
+`ret=u64`. The callee returns a 64-bit value in `r0:r1`: `r0 = mix(acc, key)` (as a `u32` stub) and
+`r1 = mix(r0, 0x6464)`. The ROM side writes both registers (`emu.py` accepts a tuple stub result); the port
+calls [`black_fndiff::StubEnv::call64`] and gets `r1 << 32 | r0`. Used for `020870D0` (OS tick) in `ai1.spec`.
+
+Also new (no hash change to existing specs): the file-level `set battle+96` loads the historical battle image
+(ARM9 main + overlay 93) plus the listed overlays at their link addresses, so a spec can run code in a
+co-resident overlay such as 96 without a `tools/re/sets.txt` entry (`set_overlays` in `svflow.py`).
+
+`ai1` is `crates/black-battle/src/ai/ai1.rs` (`check-svflow.sh` / `svflow.py` pick the `ai/` directory from the
+`ai[0-9]` name, like `clientN` / `serverN`). All of overlay 96 is one `nowork` area (the three dispatchers are
+hubs, so any split only adds crossing calls). Closure stubs as in core4/B11 (every block lists the stubs of its
+callees and of all its in-area descendants); callees of ov96 all live in ARM9 main or other battle areas and
+are `force` stubs (several are already ported in black-battle, so the stub must stay active to keep the ROM
+side deterministic). `svflow.py ai1 --all --strict-callees` is clean.

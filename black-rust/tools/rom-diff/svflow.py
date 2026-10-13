@@ -60,6 +60,7 @@ SPECS = os.path.join(HERE, "svflow_specs")
 FLOW_SRC = os.path.join(ROOT, "crates", "black-battle", "src", "server_flow")
 CLIENT_SRC = os.path.join(ROOT, "crates", "black-battle", "src", "client")  # B13-spec1: areas client1.. (btl_client.c), `nowork` svflow areas
 SERVER_SRC = os.path.join(ROOT, "crates", "black-battle", "src", "server")  # B11-spec: areas server1/server2 (btl_server.c), `nowork` svflow areas
+AI_SRC = os.path.join(ROOT, "crates", "black-battle", "src", "ai")  # B14-spec: areas ai1 (tr_ai.c, overlay 96), `nowork` svflow areas
 DEFAULT_INPUTS = 200
 
 
@@ -323,7 +324,7 @@ def crate_ported():
 
 def ported_flow(area=None):
     out = []
-    for src in (FLOW_SRC, CLIENT_SRC, SERVER_SRC):
+    for src in (FLOW_SRC, CLIENT_SRC, SERVER_SRC, AI_SRC):
         if not os.path.isdir(src):
             continue
         for fn in sorted(os.listdir(src)):
@@ -439,6 +440,9 @@ def make_stub(st, ctx):
         if st.ret.startswith("lt:"):  # B10-spec4: `lt:K` = mix(...) % argK (0 when argK == 0): a rand_range(n) answer below n
             n = raw[int(st.ret[3:], 0)]
             return mix(acc, key) % n if n else 0
+        if st.ret == "u64":  # B14-spec: r0 = mix(acc, key), r1 = mix(r0, 0x6464) (a 64-bit result such as OS_GetTick)
+            lo = mix(acc, key)
+            return (lo, mix(lo, 0x6464))
         return ret_value(st.ret, mix(acc, key))
 
     return f
@@ -459,6 +463,8 @@ def set_overlays(name):
     """Overlay numbers of a tools/re/sets.txt set; None for battle (the historical image)."""
     if name in (None, "battle"):
         return None
+    if name.startswith("battle+"):  # B14-spec: `set battle+96` = the historical battle image (main + 93) plus these overlays
+        return [93] + [int(x) for x in name[7:].split("+")]
     for line in open(SETS_TXT):
         t = line.split()
         if t and t[0] == name:

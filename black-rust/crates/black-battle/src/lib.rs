@@ -4,6 +4,7 @@
 //! its doc comment. Routines outside the ported set are traits in [`hooks`] so the logic can run
 //! and be tested on a host. See `README.md` for the symbol mapping and deviations.
 
+pub mod ai;
 pub mod battle_mon;
 pub mod calc;
 pub mod client;

@@ -133,6 +133,8 @@ pub(crate) fn ret_value(kind: &str, val: u32) -> Option<u32> {
         "u8" => Some(val & 0xFF),
         "u16" => Some(val & 0xFFFF),
         "u32" | "i32" => Some(val),
+        // B14-spec: a stub's 64-bit result; this is the low word (r0), `StubEnv::call64` adds r1
+        "u64" => Some(val),
         k => {
             if let Some(n) = k.strip_prefix("mod:") {
                 Some(val % num(n))
