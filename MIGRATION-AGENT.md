@@ -55,7 +55,7 @@ runtime.
 ## 2. Current state (update at end of every session)
 
 - **Last updated:** 2026-10-13 (validation findings V-0006..V-0019 fixed by hand outside the loop, one commit each, ade7346..1cb3ed9; handler hashes re-recorded below; gate now runs with `REQUIRE_ROM=1`). Before that: 2026-10-12 ~20:45Z (session 3 closed out by the human after B13-spec1/B10k-fix; no workers running, all worktrees removed, `main` = origin/main, gate + all checks green).
-- **Overall:** ~17% (effort-weighted). Battle logic: all handlers done (abilities 242, items 229, moves 337, ov95 effects 30 + side-effect adder/remover), **btl_server_flow complete: 644 fns** (cmd_queue 27, server_side 53, events 53, core1–6 370, hem 10, handex 62, api 69), btl_adapter 45/45 + D7 stream types, battle_record 9/9; btl_server/btl_main (battle_server.s) specced 207 fns (6 ported, B11a porting server1/2); btl_client specced 102 (+124 in B13-spec2), 5 ported. Pokémon: poke_tool/create/personal/growth/waza/evolution verified. Storage: party/bag/box done. Field: F0 done, F1 split done, script VM specced (F7-spec). Text: strbuf/wordset/layout/speed done. Assets A0–A12 mostly done; Bevy shell G1/G2/G4/G5.
+- **Overall:** ~19% (effort-weighted). Battle logic: all handlers (abilities 242, items 229, moves 337, ov95 effects 30 + side-effect adder/remover), **btl_server_flow 644**, **battle_server.s 207/207** (btl_main + btl_server), **btl_client 228/231**, btl_adapter 45, battle_record 9; battle AI (ov96) specced 161 (porting: B14). Pokémon: poke_tool/create/personal/growth/waza 31/evolution/icon verified. Storage: party/bag/box. Field: F0, F1 split, **script VM ported (F7: vm 16 + script_sys 90)**, script commands specced 449 fns (F8-spec1/2; porting F8a), **field map ported 192/205 (F2a)**, NPC models specced 260 (F4a porting). Text: strbuf/wordset/layout/speed. Assets A0–A12 mostly; Bevy shell G1/G2/G4/G5. Harness: deterministic CPU state (Z19), check-force.py.
 - **Done** (all verified against the original machine code unless noted):
   - `black-core`: `src/battle_record.c`, `src/unk_02008574.c` (23 fns, differential vs host-compiled C).
   - `black-battle` (per-function ticks in `black-rust/checklists/`): `battle_calc.s` 93/169 (89 verified, 4 unit-tested only); `battle_pokeparam.s` 176/176; `battle_field.s` 34/34; `battle_view_core.s` 22/78 (logic helpers only, rest is UI); all 242 ability handlers + registration helpers (`handlers::abilities`, `handlers::registry`).
@@ -926,6 +926,8 @@ Unknown roles (structure only): 006 (733, ` APS`), 108 (282 × 28 B, pairs with 
 - **2026-10-13** — Validator R-20261013-0541 (71719c8..2d827c3): clean (force-only spec edits confirmed, side-effect adder/remover matches disassembly, script_sys/vm widened to 1000 inputs). B13-spec2 verified on main. **Pushes blocked by expired GitHub credentials** (§10); commits stay local until fixed.
 
 ---
+
+- **2026-10-13** — Merged since the last log entry: B15, B7b/B7b2, B10b/B10c (B10 done), B10bc/B11/B13/B14/F2a/F4a/F7/F8 specs, F7 port, B11a/b/c (battle_server.s 207/207), B13a/b (client 228/231), P4, F2a port, Z19. Main went red twice from merge interactions (dead helpers; in-area direct calls vs foreign force stubs) and was fixed forward the same hour; tools/check-force.py added. Pushes blocked by expired GitHub credentials since ~05:50Z (§10); worktrees now made by the coordinator from local main. Validator run launched on Opus against the local main tip. Estimate 17% → 19%.
 
 ## 10. Human queue (the coordinator appends; the human answers inline and the coordinator acts on it)
 
