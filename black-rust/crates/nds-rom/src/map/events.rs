@@ -24,19 +24,38 @@ pub struct BgEvent {
     pub unk_10: u32,
 }
 
-/// Overworld NPC, 36 bytes.
+/// Overworld NPC, 36 bytes: the MMDL HEADER that `fldmmdl.c` creates an object from (overlay 10 `FUN_0216CFC4` /
+/// `FUN_0216D040` / `FUN_0216D0F8`; F4a-spec, layout in `black-field`'s README).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Npc {
-    /// Local object id (0.. in file order).
+    /// OBJ id (local object id, 0.. in file order; 0xFF = the player).
     pub id: u16,
-    /// UNVERIFIED: sprite / model id.
-    pub unk_02: u16,
-    pub unk_04: [u8; 24],
-    /// Tile x (looks like; UNVERIFIED).
+    /// OBJ code (sprite; 0xA2..=0xB1 are read from event vars 0x4020.., 0xB9 takes its size from `params`).
+    pub obj_code: u16,
+    /// Move code (index of the move-proc table, ROM `0x021D5E04`).
+    pub move_code: u16,
+    /// Event type.
+    pub event_type: u16,
+    /// Event flag (the object is not created while it is set; for an alias: a zone id).
+    pub event_flag: u16,
+    /// Event id (script; 0xFFFF = alias).
+    pub script: u16,
+    /// Direction.
+    pub dir: u16,
+    /// Params 0..2 (OBJ code 0xB9: params 0 / 1 = size).
+    pub params: [u16; 3],
+    /// Move limit x.
+    pub limit_x: i16,
+    /// Move limit z.
+    pub limit_z: i16,
+    /// Position kind: 0 grid, 1 rail (`x` / `z` / `height` are then rail coordinates, not decoded).
+    pub kind: u32,
+    /// Grid x.
     pub x: u16,
-    /// Tile y (looks like; UNVERIFIED).
-    pub y: u16,
-    pub unk_20: u32,
+    /// Grid z (the horizontal row; the height is separate).
+    pub z: u16,
+    /// Height y, fx32 (`n << 16`: 0x30000 = 3 tiles up).
+    pub height: u32,
 }
 
 /// Warp, 20 bytes.
@@ -113,11 +132,19 @@ impl ZoneEvents {
         for _ in 0..nn {
             e.npcs.push(Npc {
                 id: r.u16()?,
-                unk_02: r.u16()?,
-                unk_04: r.arr()?,
+                obj_code: r.u16()?,
+                move_code: r.u16()?,
+                event_type: r.u16()?,
+                event_flag: r.u16()?,
+                script: r.u16()?,
+                dir: r.u16()?,
+                params: [r.u16()?, r.u16()?, r.u16()?],
+                limit_x: r.u16()? as i16,
+                limit_z: r.u16()? as i16,
+                kind: r.u32()?,
                 x: r.u16()?,
-                y: r.u16()?,
-                unk_20: r.u32()?,
+                z: r.u16()?,
+                height: r.u32()?,
             });
         }
         for _ in 0..nw {
@@ -171,12 +198,26 @@ impl ZoneEvents {
             }
         }
         for n in &self.npcs {
-            o.extend(n.id.to_le_bytes());
-            o.extend(n.unk_02.to_le_bytes());
-            o.extend(n.unk_04);
+            for v in [
+                n.id,
+                n.obj_code,
+                n.move_code,
+                n.event_type,
+                n.event_flag,
+                n.script,
+                n.dir,
+                n.params[0],
+                n.params[1],
+                n.params[2],
+                n.limit_x as u16,
+                n.limit_z as u16,
+            ] {
+                o.extend(v.to_le_bytes());
+            }
+            o.extend(n.kind.to_le_bytes());
             o.extend(n.x.to_le_bytes());
-            o.extend(n.y.to_le_bytes());
-            o.extend(n.unk_20.to_le_bytes());
+            o.extend(n.z.to_le_bytes());
+            o.extend(n.height.to_le_bytes());
         }
         for w in &self.warps {
             o.extend(w.dest_zone.to_le_bytes());

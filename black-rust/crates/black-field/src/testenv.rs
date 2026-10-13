@@ -17,6 +17,9 @@ pub fn buf(i: u32) -> u32 {
 pub struct Env<'a> {
     pub stubs: &'a mut StubEnv,
     pub mem: Mem,
+    /// Stub addresses of the function's spec block: a thunk that is stubbed itself (F4a: `02008DF0` in
+    /// `event_battle_head`) is not mapped to its target.
+    pub stubbed: Vec<u32>,
 }
 
 impl MemEnv for Env<'_> {
@@ -53,7 +56,10 @@ const THUNKS: &[(u32, u32, &[u32])] = &[
 
 impl FieldEnv for Env<'_> {
     fn call(&mut self, addr: u32, args: &mut [CArg<'_>]) -> u32 {
-        if let Some(&(_, target, extra)) = THUNKS.iter().find(|t| t.0 == addr) {
+        if let Some(&(_, target, extra)) = THUNKS
+            .iter()
+            .find(|t| t.0 == addr && !self.stubbed.contains(&addr))
+        {
             let mut v: Vec<CArg<'_>> = args
                 .iter_mut()
                 .map(|a| std::mem::replace(a, CArg::V(0)))
@@ -110,8 +116,9 @@ impl FieldEnv for Env<'_> {
     }
 }
 
-/// Addresses of the `global` lines of function `addr` in `spec`, in declaration order.
-fn globals_of(spec: &str, addr: u32) -> Vec<u32> {
+/// Addresses of the `global` lines (`key = "global "`) or `stub` lines (`"stub "`) of function `addr` in `spec`,
+/// in declaration order.
+fn lines_of(spec: &str, addr: u32, key: &str) -> Vec<u32> {
     let mut inside = false;
     let mut out = Vec::new();
     for l in spec.lines() {
@@ -122,7 +129,7 @@ fn globals_of(spec: &str, addr: u32) -> Vec<u32> {
             continue;
         }
         if inside {
-            if let Some(rest) = t.strip_prefix("global ") {
+            if let Some(rest) = t.strip_prefix(key) {
                 let a = rest.split_whitespace().next().unwrap();
                 out.push(u32::from_str_radix(a, 16).unwrap());
             }
@@ -134,7 +141,8 @@ fn globals_of(spec: &str, addr: u32) -> Vec<u32> {
 /// Runs `f` on the case's memory (`f` gets the env and the argument values); moves the memory back
 /// into the case afterwards, also when a `noreturn` stub unwinds (the payload is passed on).
 pub fn run(c: &mut Case, spec: &str, addr: u32, f: impl FnOnce(&mut Env, &[u32]) -> u64) -> u64 {
-    let globals = globals_of(spec, addr);
+    let globals = lines_of(spec, addr, "global ");
+    let stubbed = lines_of(spec, addr, "stub ");
     let vals = c.vals.clone();
     let mut mem = Mem::new(WORK, std::mem::take(&mut c.work));
     let mut keep = Vec::new();
@@ -155,6 +163,7 @@ pub fn run(c: &mut Case, spec: &str, addr: u32, f: impl FnOnce(&mut Env, &[u32])
     let mut env = Env {
         stubs: &mut c.env,
         mem,
+        stubbed,
     };
     let res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| f(&mut env, &vals)));
     let mem = std::mem::take(&mut env.mem);

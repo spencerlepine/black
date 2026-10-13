@@ -70,7 +70,15 @@ pub fn run(a: MapArgs) -> Result<()> {
         println!("  warp -> zone {:#06x}", w.dest_zone);
     }
     for n in &e.npcs {
-        println!("  npc {} at ({}, {})", n.id, n.x, n.y);
+        println!(
+            "  npc {} obj {:#x} at ({}, {}) height {:#x}{}",
+            n.id,
+            n.obj_code,
+            n.x,
+            n.z,
+            n.height,
+            if n.kind == 1 { " (rail)" } else { "" }
+        );
     }
     if m.width as usize * m.height as usize == 1 {
         let containers = open(&files, ARC_MAP_CONTAINER)?;

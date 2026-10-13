@@ -268,7 +268,7 @@ Cross-check with `nds_rom::map::events::Npc` (A6, 36-byte records): `id` = OBJ i
 `unk_04[24]` = move code, event type, event flag, event id (script), dir, params 0..2, move limits x / z, and the u32 kind at
 record +0x18; `x` = grid x (matches), `y` is the grid **z** (the horizontal row; the height is separate), `unk_20` = fx32 height
 y (`n << 16`; e.g. 0x30000 = 3 tiles up). For kind 1 (rail, 40 of 2257 records in ARC 125) `x`/`y`/`unk_20` are rail
-coordinates read by `021642F8` (not decoded). nds-rom is unchanged (reported to the coordinator).
+coordinates read by `021642F8` (not decoded). **Fixed in F4a** (below).
 
 ### Spec conventions (these two areas)
 
@@ -281,3 +281,41 @@ coordinates read by `021642F8` (not decoded). nds-rom is unchanged (reported to 
 * Create paths (`0216CDC4` and its callers) keep MMDL 0 free (`0216CEAC` / `0216CEE4`: all eight) so the first-free search
   never returns null.
 * `event_battle_head` blocks are `nowork` with `arg buf 0x100` arenas; every callee is a `force` stub.
+
+
+## F4a: `fldmmdl` (253/253) and `event_battle_head` (7/7) ported
+
+| area | ported | verified (in `PORTED`) | area hash |
+|---|---|---|---|
+| `fldmmdl` | 253 | 253 | `1aff530db0eefc54` |
+| `event_battle_head` | 7 | 7 | `7fec025df763bb42` |
+
+`fldmmdl.rs` holds every function of `fldmmdl.c` (MMDLSYS create / tasks / delete, MMDL create from a HEADER, the
+accessors and flag setters, the "every MMDL in use" searches, position / header / OBJ code changes, the OBJ code table
+and the save positions); `event_battle_head.rs` the battle-call GMEVENT proc, its constructors, the callback runner and
+the Burmy form update. Records are read and written through the `hooks::Mem` window of a `hooks::FieldEnv`; every
+callee outside the area (heap, task system, archives, the event-work var / flag accessors, the rail and grid movement
+functions of other overlay-10 files, the overlay-21 `fldmmdl_acmd` / `fldmmdl_blact` / `fldmmdl_g3dobj` draw side, the
+proc-table callbacks) is reached through `FieldEnv::call` by address (D3: no draw code is ported here). In-area callees
+are Rust calls, except the three the spec keeps behind the seam: `0216E400` (`move_proc_table`) / `0216E40C`
+(`draw_proc_table`) from `set_move_procs` / `set_draw_procs`, and `0216D8AC` (`pos_y`) from `find_at_height`. The
+callers' stack locals (the HEADER copy of `create`, the HEADER of `create_at`, the position vectors, the 0x44-byte MMDL
+list) are `Mem::push_local` windows; the `while (FUN_0216DD1C(sys, &m, &i))` loops iterate on Rust locals
+(`next_local`, the same steps as `next_in_use`). ROM tables embedded: `MOVE_PROC_TABLES` (0x021D5E04, 47),
+`DRAW_PROC_TABLES` (0x021D770C, 21), `SAVE_SLOTS` (0x02172A70), `event_battle_head::BURMY_FORMS` (0x02172554, 25).
+
+`testenv.rs`: a THUNKS entry is no longer mapped to its target when the function's spec block stubs the thunk itself
+(`event_battle_head` stubs `02008DF0`; no F2a spec stubs a THUNKS address, so their runs are unchanged).
+
+UNVERIFIED (behaviour the differential tests cannot reach): `create` with no free MMDL (the original goes on with a null
+pointer; the port panics at the window); `create_by_id` with no matching header returns 0 (the original returns an
+uninitialised stack word, which is 0 under the Z19 entry state); `move_proc_table` / `draw_proc_table` panic past the
+47 / 21 entries (the original reads what follows the ROM table).
+
+Deliberate deviations: none.
+
+`nds_rom::map::events::Npc` now names the HEADER fields: `obj_code` (was `unk_02`), `move_code`, `event_type`,
+`event_flag`, `script` (event id), `dir`, `params[3]`, `limit_x` / `limit_z` (s16), `kind` (u32 at +0x18; 0 grid, 1
+rail) (these were `unk_04`), `x`, `z` (grid z; was `y`), `height` (fx32 y; was `unk_20`). Byte round trip unchanged
+(`nds-rom/tests/map_rom.rs`; `npc_records_are_mmdl_headers`: 2217 grid / 40 rail records, 2131 grid heights are whole
+tiles, the others half / quarter tiles).

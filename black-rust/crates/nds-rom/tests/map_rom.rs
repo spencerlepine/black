@@ -193,3 +193,28 @@ fn matrix_planes_match_the_game() {
     }
     assert_eq!(d.matrices.iter().filter(|m| m.flags == 1).count(), 2);
 }
+
+/// The 36-byte NPC records are the MMDL HEADERs of `fldmmdl.c` (F4a-spec: `FUN_0216CFC4` / `FUN_0216D040` /
+/// `FUN_0216D0F8` in overlay 10): `kind` (+0x18) is 0 (grid) or 1 (rail), and a grid record's height (+0x20) is fx32,
+/// mostly whole tiles (`n << 16`; 86 records are half / quarter tiles). `load` checks the byte round trip.
+#[test]
+fn npc_records_are_mmdl_headers() {
+    let Some(d) = load() else {
+        nds_rom::testenv::rom_missing("ROM files not found");
+        return;
+    };
+    let (mut grid, mut rail, mut whole) = (0, 0, 0);
+    for (i, e) in d.events.iter().enumerate() {
+        for n in &e.npcs {
+            match n.kind {
+                0 => {
+                    grid += 1;
+                    whole += (n.height & 0xFFFF == 0) as usize;
+                }
+                1 => rail += 1,
+                k => panic!("zone {i} npc {}: kind {k}", n.id),
+            }
+        }
+    }
+    assert_eq!((grid, rail, whole), (2217, 40, 2131));
+}
