@@ -44,6 +44,21 @@ Deliberate deviations (C does unchecked pointer math): out-of-range reads give 0
 
 Tests include differential fuzz hashes produced by compiling the original C on the host with shims.
 
+`battle_record` overlay-93 image ports (B15; verified per function with
+`tools/check-fn.sh black-core battle_record`, area hash eeb8790696057445). One to one with the
+machine code on the raw little-endian images (reader 0x118: data address +0, size bits 0-30 /
+read-ended bit 31 at +4, `read_ptr[4]` +8, `read_buf[4][0x40]` +0x18), no clamps; the heap is the
+address-level `battle_record::RecordHeap`, the entry initialisers are `EntryHooks`:
+
+| C | Rust |
+|---|------|
+| `BattleRecord_New` (021ee5e4) / `BattleRecord_Free` (021ee600) | `record_new` / `record_free` |
+| `BattleRecord_GetData` (021ee63c) | `record_get_data` (returns the buffer offset 8) |
+| `BattleRecordReader_Init` / `_Reset` / `_IsAtEnd` (021ee644 / 674 / 894) | `reader_init` / `reader_reset` / `reader_is_at_end` |
+| `FUN_overlay_d_93__021ee6b8` | `reader_read_next` (unbounded copy of up to 31 entries into `read_buf[c]`, as in the ROM) |
+| `FUN_overlay_d_93__021ee830` | `reader_count_flagged_tags` |
+| `BattleRecordBuilder_Init` (021ee8b4) | `builder_init` |
+
 Shared types (Z6): `ids` (species/move/item/ability/message ID aliases; type, gender, stat and
 nature constants) and `rng::MathRandContext32` (SDK 64-bit LCG, moved from `black-battle::calc`,
 which re-exports it). Only the type IDs and the LCG are verified; the other orders are standard
