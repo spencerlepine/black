@@ -452,3 +452,5 @@ Other first lines: `BLOCKED: environment — <what>` (nothing reviewed; CSV unto
 - Stub `in:N` with an odd N (e.g. `in:7` for a 7-byte stack struct) lets an unwritten pad byte flow into hashed state when the callee copies a u16 across it; documented in `svflow_specs/README.md`, not a finding (R-20261012-2027, `021d3cc8` → `021d6848`).
 - Forced-stub caller/callee pairs verified separately are already listed for the end-to-end item (task-file §8 "B10k-fix" note / B16); don't re-file them.
 - First run (R-20261012-2027, 2026-10-12): 4 commits, 15 areas, 11 min, 152k tokens on Sonnet, 2 low findings. Use that as the cost yardstick.
+
+- Finding IDs are global and never reused, even after old findings are deleted from VALIDATION.md: take the next number after the highest V-NNNN in `git log --all -p -- validation/VALIDATION.md` (V-0020 was the last as of 2026-10-13). Don't prune COMMITS.csv rows.
