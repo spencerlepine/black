@@ -73,6 +73,54 @@ pub mod client3;
 pub mod client4;
 pub mod client5;
 
+use crate::server_flow::env::{Arg, FlowEnv};
+
+/// The D3 / D7 seam of the client: every call the client logic makes into the battle screen (view, view-side object,
+/// sound and effects). The logic half (this module) is a faithful port; the other side of this trait is rewritten in
+/// Bevy (U3 / U4) and is never ported. A call names the original entry point by its address (the UI rewrite matches
+/// on it) and passes the argument registers of the original call site.
+///
+/// The provided bodies forward to [`FlowEnv::call`] (the stubs of the differential test); a production environment
+/// overrides the three methods. The address ranges are checked in debug builds, so a call is never filed under the
+/// wrong surface.
+pub trait ClientUi: FlowEnv {
+    /// Battle view (`battle_view_core`, the handle at `c+0x54`): entry points 0x021E90A0-0x021EAF78.
+    fn view(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u32 {
+        debug_assert!(
+            (0x021E_9000..0x021E_B000).contains(&addr),
+            "{addr:#x} is not a view entry point"
+        );
+        self.call(addr, args)
+    }
+
+    /// The view-side object at `c+0x34`: 0x021EF9A8-0x021EFC78.
+    fn view_obj(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u32 {
+        debug_assert!(
+            (0x021E_F900..0x021E_FD00).contains(&addr),
+            "{addr:#x} is not a view-object call"
+        );
+        self.call(addr, args)
+    }
+
+    /// Sound and effects: overlay 94 (0x021F7998-0x021F88BC) and the main-module sound layer (0x02005CA4-0x02006740).
+    fn sound(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u32 {
+        debug_assert!(
+            (0x021F_7000..0x021F_9000).contains(&addr)
+                || (0x0200_5000..0x0200_7000).contains(&addr),
+            "{addr:#x} is not a sound call"
+        );
+        self.call(addr, args)
+    }
+}
+
+#[cfg(test)]
+impl ClientUi for crate::server_flow::testkit::TestEnv {}
+
+/// Stores a little-endian halfword at `ofs`.
+pub(crate) fn wr16(b: &mut [u8], ofs: usize, v: u16) {
+    b[ofs..ofs + 2].copy_from_slice(&v.to_le_bytes());
+}
+
 /// Little-endian word at `ofs`.
 pub(crate) fn rd32(b: &[u8], ofs: usize) -> u32 {
     u32::from_le_bytes(b[ofs..ofs + 4].try_into().unwrap())

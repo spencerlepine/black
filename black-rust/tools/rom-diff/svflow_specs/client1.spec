@@ -220,7 +220,7 @@ fn 021cda18 ret=u32
   stub 021d3fdc ret=none args=p,p
   stub 021eebe8 force ret=pick:0/0/9/1/2/3/7 args=v
   stub 021eec20 force ret=none args=v,outp:0:0x1B8:1
-  stub 021cdd50 ret=pick:0/0x021CDDDD/0x021CDF59 args=p,v,outm:4:1/0/0/0
+  stub 021cdd50 force ret=pick:0/0x021CDDDD/0x021CDF59 args=p,v,outm:4:1/0/0/0
   stub 021d3fac ret=pick:0/1 args=p
   stub 021d3fc4 ret=none args=p
   stub 021cdddc force ret=pick:0/1 args=p,p
@@ -249,7 +249,7 @@ fn 021cdc0c ret=u32 inputs=600
   stub 021d3fdc ret=none args=p,p
   stub 021d3f98 ret=pick:0/1 args=p
   stub 021eebe8 force ret=pick:0/0/1/2/3 args=v
-  stub 021cdd50 ret=pick:0/0x021CDDDD/0x021CDF59 args=p,v,v
+  stub 021cdd50 force ret=pick:0/0x021CDDDD/0x021CDF59 args=p,v,v
   stub 021cdddc force ret=pick:0/1 args=p,p
   stub 021cdf58 force ret=pick:0/1 args=p,p
   stub 02005ca4 ret=none args=v,v
