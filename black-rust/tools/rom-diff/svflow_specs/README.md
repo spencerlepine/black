@@ -523,3 +523,17 @@ in-area stubs or force stubs at the table targets, with the table index bounded 
   (`buf 0x10`, the adapter list `021eec20`'s `outp:3` points into; before it was undeclared zero memory).
 * events `021c84ac` stubs stay `ret=bool`: the function returns `021c2128`'s result, which is 0 or 1 (comment in events.spec).
 
+
+## F8-spec3 additions (black-script scrcmd_proc / scrcmd_sodateya / scrcmd_misc10)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-script/scrcmd_{proc,sodateya,misc10}.spec` (headers), on top of the F8-spec1 / F8-spec2 ones:
+
+* `Heap_AllocDebug` (`02030734`) is a `seqptr:argC:OFS:STEP` bump allocator into the ctx arena, so the blocks one command
+  allocates (its own and its in-area callee's) never alias; its 4th argument is the `__FILE__` string, which places the file
+  boundaries inside F1's rows (see the spec headers).
+* Every out-of-area stub is `force`; overlay 37 (`0x021F3xxx`, outside the field set) is stubbed at its entry points.
+* Paths that read an unset callee-saved register or stack word (0x0215CC4C r4 / r6, 0x0216B720 `[sp+8]`) are kept in the inputs:
+  under the Z19 entry state they read 0 on every input (`--order-check` clean), and the header says so.
+* Checked with every function of each area treated as ported (no fault, stray write or unstubbed callee); `--strict-callees` and
+  `--order-check` clean; instruction coverage 824/824, 463/463, 1305/1305.

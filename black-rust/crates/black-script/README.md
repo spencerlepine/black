@@ -22,6 +22,11 @@ Undecompiled callees go in `hooks` as traits (§4 porting pattern); pointers sta
 | `scrcmd_talk` | overlay-21 message / yes-no / menu commands 0x021B0084-0x021B1667 (rows 21.42 tail, 21.43, 21.44 head; 70 fns, 33 ids) | `tools/rom-diff/specs/black-script/scrcmd_talk.spec` | `tools/check-fn.sh black-script scrcmd_talk` | 70 specced (F8-spec2, 2246/2246), **6 smoke ports verified, area hash 03a53d82f880c36f** |
 | `scrcmd_obj` | overlay-21 field-object / camera commands 0x021B1668-0x021B282F (row 21.44; 63 fns, 55 ids) | `tools/rom-diff/specs/black-script/scrcmd_obj.spec` | `tools/check-fn.sh black-script scrcmd_obj` | **63/63 verified, area hash c450ae3e75c7410b** (F8c; F8-spec2 spec, 1809/1827: 021b1e80 18 behind an uninitialised-register path) |
 | `scrcmd_screen` | overlay-21 screen effects 0x021B2830-0x021B2FD7 (row 21.44 tail, 21.45 `scrcmd_screeneffects.c`, cmd 594; 36 fns, 29 ids) | `tools/rom-diff/specs/black-script/scrcmd_screen.spec` | `tools/check-fn.sh black-script scrcmd_screen` | 36 specced (F8-spec2, 773/773), **5 smoke ports verified, area hash 6e9a0a809f9d93e1** |
+
+| `scrcmd_screen` | overlay-21 screen effects 0x021B2830-0x021B2FD7 (row 21.44 tail, 21.45 `scrcmd_screeneffects.c`, cmd 594; 36 fns, 29 ids) | `tools/rom-diff/specs/black-script/scrcmd_screen.spec` | `tools/check-fn.sh black-script scrcmd_screen` | 36 specced (F8-spec2, 773/773), **5 smoke ports verified, area hash 6e9a0a809f9d93e1** |
+| `scrcmd_proc` | `scrcmd_proc.c`: overlay 10 0x0215C63C-0x0215CE97 (F1 row 10.15 minus its tail; 22 fns, 17 command ids) | `tools/rom-diff/specs/black-script/scrcmd_proc.spec` | `tools/check-fn.sh black-script scrcmd_proc` | 22 specced (F8-spec3, 824/824 insns covered), **6 smoke ports verified, area hash 8ace4d03c9fe46a6** |
+| `scrcmd_sodateya` | `scrcmd_sodateya.c`: overlay 10 0x0215CE98-0x0215D34B (row 10.16 + the tail of 10.15; 18 fns, 15 ids) | `tools/rom-diff/specs/black-script/scrcmd_sodateya.spec` | `tools/check-fn.sh black-script scrcmd_sodateya` | 18 specced (F8-spec3, 463/463), **5 smoke ports verified, area hash e3a1ae75de9be143** |
+| `scrcmd_misc10` | overlay 10 rows 10.33 (0x0216A420-0x0216AC3F) and 10.35 (0x0216B504-0x0216B86B) + cmd 359 (0x0215D34C, `scrcmd_musical.c`, X2); 33 fns, 30 ids | `tools/rom-diff/specs/black-script/scrcmd_misc10.spec` | `tools/check-fn.sh black-script scrcmd_misc10` | 33 specced (F8-spec3, 1305/1305), **5 smoke ports verified, area hash 2029557f4ba29478** |
 | `scrcmd` | F8 index (doc only: which area holds which commands) | | | |
 
 | `scrcmd_core` | scrcmd core: overlay 10 0x02159204-0x0215995E, commands 0..48 + 4 helpers (53 fns) | `tools/rom-diff/specs/black-script/scrcmd_core.spec` | `tools/check-fn.sh black-script scrcmd_core` | **53/53 verified, area hash 3467bfc999c8890b** (F8a; F8-spec1 spec, 747/747 insns covered) |
@@ -211,6 +216,30 @@ init procs of mask bits 10 / 12 / 13 to `scrcmd_fld::init_proc`.
   "found, id"). Command 603 (0x021B1DEC) is a byte-identical copy of command 118. Command 193 passes its second position record
   uninitialised when `FUN_0216282C` finds nothing (the port passes zeros, the Z19 test state).
 
+## F8 areas (F8-spec3, overlay 10)
+
+* **File boundaries** (from the `__FILE__` strings the commands pass to `Heap_AllocDebug`: 0x021728F0 "scrcmd_proc.c", 0x02172900
+  "scrcmd_sodateya.c", 0x02172914 "scrcmd_musical.c"): `scrcmd_proc.c` = 0x0215C63C-0x0215CE97, `scrcmd_sodateya.c` =
+  0x0215CE98-0x0215D34B (commands 235..237 sit in F1's row 10.15), `scrcmd_musical.c` starts at 0x0215D34C (cmd 359; F1 says
+  0x0215D3EE). Cmd 359 is specced in `scrcmd_misc10` for completeness (X2, not to be ported).
+* **scrcmd_proc**: the app-proc request `proc_call_wait` (0x0215C63C): proc work {param, cbwork, cb} in the SW + 0x3C slot,
+  `FUN_020120B4(GAMESYS, ovl, proc table, param)` starts the proc, the VM waits on 0x0215C69D until `FUN_020120F0(GAMESYS)` is 0,
+  then `cb(W)` copies the result into script vars (callbacks 0x0215C700 / 0x0215C7C4 / 0x0215C870). Commands 334 / 337 / 339 /
+  341 / 370 use it directly, 336 / 489 through the app-proc events `FUN_02014840` / `FUN_02014808`; 383..406 call overlay 37
+  with overlay 0x25 loaded around the call. Which app each overlay id is (0x46, 0x47, 0x88, 0xAD, 0xAE, 0xDD..0xE0) is not
+  identified (G2 / U).
+* **scrcmd_sodateya**: daycare object `FUN_02188D50(field map)` (overlay-21 `sodateya.c`, F13); slot -> PokeParam
+  `FUN_021C34F8`; 247 runs the party-select event 0x0215D2A4 / 0x0215D1E4; 593 = `gender_mark` (0x0215D198).
+* **scrcmd_misc10**: 506..520 call overlay 21 0x021D0Axx..0x021D1028 / overlay-10 events of `fld_btl_inst_tool.c` on
+  `*FUN_02012F50(GAMEDATA)`; 549 / 550 move a field object (GMEVENTs 0x0216A838 straight, 0x0216A8F0 a curved path from
+  FX_SinCosTable); 0x0216AAE4 = the seasonal forms of Deerling / Sawsbuck in the party; 528..543 save blocks 0x34 / 0x3F.
+  Roles of the overlay-21 / save-block callees are UNVERIFIED (named by address).
+* **ScriptHost**: no `host.rs` change. The app-proc start / poll (`FUN_020120B4` / `FUN_020120F0`) and the app-proc events
+  (`FUN_02014808` / `FUN_02014840`: gamesys, field map, ovl, proc table, param, result callback, callback work) are the
+  candidates for an app request (`ScriptHost::app_start(ovl, proc table, param)` / `app_running()`); the port job decides
+  once a caller needs it.
+* Smoke ports call their callees through `ProcHooks` / `SodateyaHooks` / `Misc10Hooks` (one method per callee address).
+
 ## Notes for porters
 
 * A `vm` function ported in `vm.rs` does not deactivate its stubs in `script_sys.spec` (stub deactivation is per area):
@@ -253,3 +282,6 @@ init procs of mask bits 10 / 12 / 13 to `scrcmd_fld::init_proc`.
 * `dispatch_hook` / `run_init_procs` index the embedded tables; ids past them (the original reads the following bytes)
   panic.
 * `fatal` (0x02158DBC) loops on `FUN_020053EC` forever, as the original.
+* `scrcmd_proc` 0x0215CC4C (cmd 356) stores its caller's r6 / r4 into the event record when an operand misses its cases
+  (unset registers; the Z19 entry state makes them 0 in the test). `scrcmd_misc10` 0x0216B720 (cmd 532) stores an unset stack
+  word when no row wins (0 in the test). Not ported yet; a port takes those words as inputs.
