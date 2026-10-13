@@ -82,6 +82,25 @@ class OutK(unittest.TestCase):
         self.assertEqual(em.r32(0x2000 + 0x4A8), 0x3000)  # the struct itself is untouched
 
 
+class OutW(unittest.TestCase):
+    """F8-spec4: `outw:N:W0/W1/..` fills N bytes with 32-bit words picked from the list (vectors shared with
+    crates/black-fndiff/src/stub.rs `outw_picks_words_from_the_list`)."""
+
+    def test_outw_picks_listed_words(self):
+        em = FakeEm()
+        r, ctx = call(["v", "outw:12:0/0x5A000/0xB4000/0x10E000"], [0xABCD, 0x1000], em)
+        self.assertEqual(list(struct.unpack("<3I", em.rbytes(0x1000, 12))), [0xB4000, 0x5A000, 0xB4000])
+        self.assertEqual(ctx.log, [0x021BB798, 0xABCD])  # the out argument is not logged
+        em2 = FakeEm()
+        r2, _ = call(["v", "outm:12:0xFF"], [0xABCD, 0x1000], em2)
+        self.assertEqual(r, r2)  # outs never feed the result
+
+    def test_outw_argument_position_and_no_seq(self):
+        em = FakeEm()
+        call(["outw:8:1/2/3", "v"], [0x1000, 7], em, seq=False)
+        self.assertEqual(list(struct.unpack("<2I", em.rbytes(0x1000, 8))), [2, 2])
+
+
 class PortedPerSet(unittest.TestCase):
     """Z20: the black-battle modules' PORTED lists deactivate stubs only in battle-set areas."""
 

@@ -453,7 +453,7 @@ def make_stub(st, ctx):
 
     def f(em, a0, a1, a2, a3, sp):
         raw = [a0, a1, a2, a3] + [em.r32(sp + 4 * (i - 4)) for i in range(4, len(st.args))]
-        vals, extra, outs, outps, keeps = [], [], [], [], []
+        vals, extra, outs, outps, keeps, outws = [], [], [], [], [], []
         for i, k in enumerate(st.args):
             if k == "v":
                 vals.append(raw[i])
@@ -477,6 +477,10 @@ def make_stub(st, ctx):
             elif k.startswith("outp:"):  # outp:K:OFS:N, B12-spec: the out word is an address inside pointer argument K
                 _, kk, ofs, n = k.split(":")  # F4a-spec: K = `work` -> the address is inside the work image
                 outps.append((raw[i], kk if kk == "work" else int(kk, 0), int(ofs, 0), int(n, 0), 0x100 * (i + 1)))
+            elif k.startswith("outw:"):  # F8-spec4: outw:N:W0/W1/.. = N bytes of 32-bit words, each one of the listed values
+                _, n, w = k.split(":")
+                assert int(n, 0) % 4 == 0, "outw: N must be a multiple of 4"
+                outws.append((raw[i], int(n, 0), [int(x, 0) & M for x in w.split("/")], 0x100 * (i + 1)))
             elif k.startswith("outk:") or k.startswith("outki:"):
                 # Z20: `outk:N:M0/M1/..` = `outm` that keeps the bits outside the masks (byte j = (old & ~M) | (new & M),
                 # a callee that sets only some fields / bits of a record); `outki:OFS:N:M..` = the same on the record
@@ -511,6 +515,9 @@ def make_stub(st, ctx):
             old = em.rbytes(ptr, n)
             em.wbytes(ptr, bytes((old[j] & ~m[j % len(m)] & 0xFF)
                                  | ((mix(mix(acc, key + 0x1000 + salt + j), 0x5EED) >> 8) & 0xFF & m[j % len(m)]) for j in range(n)))
+        for ptr, n, w, salt in outws:  # F8-spec4 `outw`: word j = W[mix(mix(acc, key + 0x1000 + salt + j), 0xC0DE) % len(W)]
+            em.wbytes(ptr, b"".join(struct.pack("<I", w[mix(mix(acc, key + 0x1000 + salt + j), 0xC0DE) % len(w)])
+                                    for j in range(n // 4)))
         if st.ret.startswith("seqptr:"):  # P4: `seqptr:argK:OFS:STEP` = base(K) + OFS + n * STEP, n = this stub's 0-based call
             # index in the run (a bump allocator: every call gets its own disjoint block; the value never depends on acc)
             _, kk, ofs, step = st.ret.split(":")

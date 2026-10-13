@@ -61,7 +61,7 @@
 - [x] `FUN_overlay_d_93__021d806c` → `black_battle::calc::pack_5bit_x6`
 - [x] `FUN_overlay_d_93__021d8090` → `black_battle::calc::unpack_5bit_x6`
 - [x] `FUN_overlay_d_93__021d80a8` → `black_battle::calc::fun_021d80a8`
-- [x] `FUN_overlay_d_93__021d80bc` → `black_battle::flow::fun_021c8030`
+- [x] `FUN_overlay_d_93__021d80bc` → `black_battle::calc_target::fun_021d80bc`
 - [x] `FUN_overlay_d_93__021d81f8` → `black_battle::calc_target::fun_021d81f8`
 - [x] `FUN_overlay_d_93__021d8230` → `black_battle::calc_target::IdSet::new`
 - [x] `FUN_overlay_d_93__021d8244` → `black_battle::calc_target::IdSet::add`

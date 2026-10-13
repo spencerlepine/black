@@ -27,6 +27,17 @@ Undecompiled callees go in `hooks` as traits (§4 porting pattern); pointers sta
 | `scrcmd_proc` | `scrcmd_proc.c`: overlay 10 0x0215C63C-0x0215CE97 (F1 row 10.15 minus its tail; 22 fns, 17 command ids) | `tools/rom-diff/specs/black-script/scrcmd_proc.spec` | `tools/check-fn.sh black-script scrcmd_proc` | **22/22 verified, area hash 3ec48c52d531838d** (F8d; F8-spec3 spec, 824/824 insns covered) |
 | `scrcmd_sodateya` | `scrcmd_sodateya.c`: overlay 10 0x0215CE98-0x0215D34B (row 10.16 + the tail of 10.15; 18 fns, 15 ids) | `tools/rom-diff/specs/black-script/scrcmd_sodateya.spec` | `tools/check-fn.sh black-script scrcmd_sodateya` | **18/18 verified, area hash 6f0e40c19a57626b** (F8d; F8-spec3 spec, 463/463) |
 | `scrcmd_misc10` | overlay 10 rows 10.33 (0x0216A420-0x0216AC3F) and 10.35 (0x0216B504-0x0216B86B) + cmd 359 (0x0215D34C, `scrcmd_musical.c`, X2); 33 fns, 30 ids | `tools/rom-diff/specs/black-script/scrcmd_misc10.spec` | `tools/check-fn.sh black-script scrcmd_misc10` | 33 specced (F8-spec3, 1305/1305); **32/32 in-scope fns verified, area hash 6b303e0a9940ca36** (F8d); cmd 359 (X2) specced only |
+
+| `scrcmd_proc` | `scrcmd_proc.c`: overlay 10 0x0215C63C-0x0215CE97 (F1 row 10.15 minus its tail; 22 fns, 17 command ids) | `tools/rom-diff/specs/black-script/scrcmd_proc.spec` | `tools/check-fn.sh black-script scrcmd_proc` | 22 specced (F8-spec3, 824/824 insns covered), **6 smoke ports verified, area hash 8ace4d03c9fe46a6** |
+| `scrcmd_sodateya` | `scrcmd_sodateya.c`: overlay 10 0x0215CE98-0x0215D34B (row 10.16 + the tail of 10.15; 18 fns, 15 ids) | `tools/rom-diff/specs/black-script/scrcmd_sodateya.spec` | `tools/check-fn.sh black-script scrcmd_sodateya` | 18 specced (F8-spec3, 463/463), **5 smoke ports verified, area hash e3a1ae75de9be143** |
+| `scrcmd_misc10` | overlay 10 rows 10.33 (0x0216A420-0x0216AC3F) and 10.35 (0x0216B504-0x0216B86B) + cmd 359 (0x0215D34C, `scrcmd_musical.c`, X2); 33 fns, 30 ids | `tools/rom-diff/specs/black-script/scrcmd_misc10.spec` | `tools/check-fn.sh black-script scrcmd_misc10` | 33 specced (F8-spec3, 1305/1305), **5 smoke ports verified, area hash 2029557f4ba29478** |
+| `scrcmd_shop` | `scrcmd_shop.c`: overlay 21 0x021B2FD8-0x021B4BEB (F1 row 21.46 minus its tail; 49 fns, cmd 329) | `tools/rom-diff/specs/black-script/scrcmd_shop.spec` | `tools/check-fn.sh black-script scrcmd_shop` | 13 logic fns specced (F8-spec4, 814/814 insns; 36 UI / render fns left out, D3), **3 smoke ports verified, area hash 531377484784ec06** |
+| `scrcmd_proc_fld` | `scrcmd_proc_fld.c`: overlay 21 0x021B4BEC-0x021B518F (row 21.47 + the tail of 21.46; 21 fns, 20 ids) | `tools/rom-diff/specs/black-script/scrcmd_proc_fld.spec` | `tools/check-fn.sh black-script scrcmd_proc_fld` | 21 specced (F8-spec4, 553/553), **3 smoke ports verified, area hash 40f9efcd9923a5bb** |
+| `scrcmd_encount` | `scrcmd_encount.c`: overlay 21 0x021B5190-0x021B56FF (row 21.48 + its helper; 19 fns, 14 ids) | `tools/rom-diff/specs/black-script/scrcmd_encount.spec` | `tools/check-fn.sh black-script scrcmd_encount` | 19 specced (F8-spec4, 542/542), **3 smoke ports verified, area hash b94356f18f7636d0** |
+| `scrcmd_fld_battle` | `scrcmd_fld_battle.c`: overlay 21 0x021B5700-0x021B5A17 (row 21.49; 6 fns, 2 ids) | `tools/rom-diff/specs/black-script/scrcmd_fld_battle.spec` | `tools/check-fn.sh black-script scrcmd_fld_battle` | 6 specced (F8-spec4, 340/340), **2 smoke ports verified, area hash 822365048a6adcee** |
+| `scrcmd_c03center` | `scrcmd_c03center.c`: overlay 21 0x021B5A18-0x021B66B7 (row 21.50; 28 fns, 22 ids; no X1 networking) | `tools/rom-diff/specs/black-script/scrcmd_c03center.spec` | `tools/check-fn.sh black-script scrcmd_c03center` | 28 specced (F8-spec4, 1328/1328), **5 smoke ports verified, area hash 5c7fc03852c923f6** |
+| `scrcmd_pokemon_fld` | `scrcmd_pokemon_fld.c`: overlay 21 0x021B66B8-0x021B73FF (row 21.51; 48 fns, 14 ids; cmd 494 Dream World, X2) | `tools/rom-diff/specs/black-script/scrcmd_pokemon_fld.spec` | `tools/check-fn.sh black-script scrcmd_pokemon_fld` | 48 specced (F8-spec4, 1370/1370), **5 smoke ports verified, area hash 81208076241e6687** |
+| `scrcmd_misc21` | overlay 21 rows 21.91 (0x021CF7DC-0x021D013F) and 21.97 (0x021D1670-0x021D30B7), no `__FILE__`; 92 fns, 36 ids | `tools/rom-diff/specs/black-script/scrcmd_misc21.spec` | `tools/check-fn.sh black-script scrcmd_misc21` | 81 specced (F8-spec4, 3054/3054; cmd 414 + 10 render / UI-flow fns left out), **5 smoke ports verified, area hash 0ad0a1dc30425804** |
 | `scrcmd` | F8 index (doc only: which area holds which commands) | | | |
 
 | `scrcmd_core` | scrcmd core: overlay 10 0x02159204-0x0215995E, commands 0..48 + 4 helpers (53 fns) | `tools/rom-diff/specs/black-script/scrcmd_core.spec` | `tools/check-fn.sh black-script scrcmd_core` | **53/53 verified, area hash 3467bfc999c8890b** (F8a; F8-spec1 spec, 747/747 insns covered) |
@@ -271,6 +282,30 @@ init procs of mask bits 10 / 12 / 13 to `scrcmd_fld::init_proc`.
   (UNVERIFIED; G2 / U), so `host.rs` gets no method until a caller (G2) needs it.
 * Mutation spot check: 5/6 killed; survivor `cmd_532` `best < s` -> `best <= s` (the `0200e4f8` / `0200e4b0` stubs answer
   mixed u32 values, so ties never happen: needs small `pick:` answers, harness queue).
+
+## F8 areas (F8-spec4, overlay 21)
+
+* **File boundaries** (`__FILE__` strings at 0x021DE210.. passed to `Heap_AllocDebug`): `scrcmd_shop.c` = 0x021B2FD8-0x021B4BEB
+  (0x021B2FD8 passes it), `scrcmd_proc_fld.c` = 0x021B4BEC-0x021B518F (0x021B4D60 passes it; F1 put its first 7 functions,
+  commands 314 / 351..354 / 358 and the result callback of 335, into the shop row: the boundary at 0x021B4BEC is inferred from the
+  command kinds, no `__FILE__` use there), `scrcmd_encount.c` = 0x021B5190-0x021B56FF (its static helper 0x021B5190 is called only
+  by cmd 561), `scrcmd_fld_battle.c` = 0x021B5700-0x021B5A17, `scrcmd_c03center.c` = 0x021B5A18-0x021B66B7, `scrcmd_pokemon_fld.c`
+  = 0x021B66B8-0x021B73FF (F1's rows 21.47..21.51 otherwise hold). Rows 21.91 / 21.97 allocate nothing and have no file name
+  (`scrcmd_misc21`).
+* **Logic only (D3)**: the shop UI (36 functions: windows, list menu, sprites, the main loop 0x021B35A4 that calls the specced
+  purchase check 0x021B3370 / payment 0x021B3568) and 11 render / UI-flow functions of row 21.97 (3D models of cmd 551 and of
+  the event 0x021D1C24, its 15-state UI event 0x021D1C8C, the text window of cmd 414) are left out; each spec header lists them.
+* **Scope**: `scrcmd_c03center.c` (C03 = Castelia City) has no comm / C-Gear code: move tutors, trades, record queries, a turn
+  tween. Cmd 494 (`scrcmd_pokemon_fld`) is the Dream World delivery (pdw_postman.c, X2 / D9): logic specced, port only if X2 is
+  re-decided. The 20-record save block 0x02009470 of row 21.91 (cmds 472..483, 479, 582) sits right before `wifilist.c` and may
+  be comm-fed (role UNVERIFIED).
+* **Command-id table**: the spec headers (and `scrcmd.rs`) list the 109 ids of these areas; 94 command ids of the 609 remain
+  outside every F8 area (list in `scrcmd.rs`).
+* Smoke ports call their callees through `ShopHooks` / `ProcFldHooks` / `EncountHooks` / `FldBattleHooks` / `C03Hooks` /
+  `PokemonFldHooks` / `Misc21Hooks` (one method per callee address); ROM tables they read are embedded (`TABLE_564`,
+  `SPECIAL_DAYS`, `TABLE_DD614_KEYS`).
+* `FUN_021D1988` (OBJ animation -> direction) needs the stub out kind `outw` (F8-spec4 grammar: words picked from a list) so the
+  rotation hits 0 / 90 / 180 / 270 degrees; the port passes `Arg::Out`.
 
 ## Notes for porters
 

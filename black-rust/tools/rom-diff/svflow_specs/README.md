@@ -561,3 +561,21 @@ slot `+0x01`, move `+0x02`, result `+0x38`, script kind `+0x45`, remembered move
 `pick:` sets around the compared constants (stat stages 5..7, traits 0x17 / 0x2A / 0x47, HP percentages around 1 / 50 / 100,
 tying scores, last moves 0xB6 / 0xC5 / 0xCB), and BattleMon getters log the mon (`021d59b4 args=v,v`, `021d57fc` /
 `021d5b7c` / `021d5b68 args=v`, `021c81c8 args=p,v,v`) so that self / target / party members answer differently.
+
+## F8-spec4 additions (black-script scrcmd_shop / scrcmd_proc_fld / scrcmd_encount / scrcmd_fld_battle / scrcmd_c03center / scrcmd_pokemon_fld / scrcmd_misc21)
+
+New syntax only; no existing spec text or hash changes. Mirrored in `svflow.py` (`make_stub`) and `black-fndiff` (`stub.rs`); vectors
+in `stub.rs` (`outw_picks_words_from_the_list`) and `tools/rom-diff/test_svflow.py` (`OutW`).
+
+* Stub argument kind **`outw:N:W0/W1/..`**: a pointer to N bytes (N a multiple of 4) that the callee fills with 32-bit words, each
+  one of the listed values: word j = `W[mix(mix(acc, key + 0x1000 + 0x100 * (argpos + 1) + j), 0xC0DE) % len(W)]` (`key`, `argpos`
+  as for `outm`). For a stack struct whose field the caller compares with exact values that masks cannot produce (an fx32 angle:
+  `021d1988` in `scrcmd_misc21.spec` reads `02011638`'s rotation `r.y` and compares it with 0 / 0x5A000 / 0xB4000 / 0x10E000).
+  The port passes `Arg::Out`; the out bytes are not logged (like `out` / `outm`).
+
+Conventions of the seven specs (headers), on top of the F8-spec1..3 ones: closure stubs (checked with every function of the area
+treated as ported: no fault, stray write or unstubbed callee; `--strict-callees` and `--order-check` clean); every out-of-area stub
+is `force`; render / UI functions (D3) are left out and listed in the header (the shop UI, the 3D-model / window parts of row
+21.97); helpers whose stubs hand out pointers get a trailing `arg buf` arena they never read (`Arena: arg K` in the block
+comment); ROM tables a function indexes are bounded by `pick:` / `oneof` / `range` to their real size. Instruction coverage
+(own body, per-function inputs): 814/814, 553/553, 542/542, 340/340, 1328/1328, 1370/1370, 3054/3054.

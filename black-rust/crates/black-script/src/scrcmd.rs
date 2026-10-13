@@ -20,9 +20,20 @@
 //! | [`crate::scrcmd_proc`] | `scrcmd_proc.c` overlay 10 0x0215C63C-0x0215CE97 (row 10.15 minus its tail) | 17 ids (332, 334, 336, 337, 339..341, 355..357, 370, 383, 386, 390, 399, 406, 489) | 22/22 fns ported and verified (F8d) |
 //! | [`crate::scrcmd_sodateya`] | `scrcmd_sodateya.c` overlay 10 0x0215CE98-0x0215D34B (row 10.16 + the tail of 10.15) | 15 ids (235..248, 593) | 18/18 fns ported and verified (F8d) |
 //! | [`crate::scrcmd_misc10`] | overlay 10 0x0216A420-0x0216AC3F (row 10.33), 0x0216B504-0x0216B86B (row 10.35), cmd 359 at 0x0215D34C (`scrcmd_musical.c`, X2) | 30 ids (359, 506..520, 528..533, 535, 540..543, 549, 550, 559) | 32/32 in-scope fns ported and verified (F8d; cmd 359 musical, X2, specced only) |
+//! | [`crate::scrcmd_shop`] | `scrcmd_shop.c` overlay 21 0x021B2FD8-0x021B4BEB (row 21.46 minus its tail) | 1 id (329) | 13 logic fns specced (F8-spec4; 36 UI / render fns left out), smoke ports |
+//! | [`crate::scrcmd_proc_fld`] | `scrcmd_proc_fld.c` overlay 21 0x021B4BEC-0x021B518F (row 21.47 + the tail of 21.46) | 20 ids (188, 314, 333, 335, 338, 342, 351..354, 358, 376, 377, 380, 381, 411, 444, 536, 537, 580) | 21 fns specced (F8-spec4), smoke ports |
+//! | [`crate::scrcmd_encount`] | `scrcmd_encount.c` overlay 21 0x021B5190-0x021B56FF (row 21.48 + its helper) | 14 ids (319..328, 418..420, 561) | 19 fns specced (F8-spec4), smoke ports |
+//! | [`crate::scrcmd_fld_battle`] | `scrcmd_fld_battle.c` overlay 21 0x021B5700-0x021B5A17 (row 21.49) | 2 ids (441, 442) | 6 fns specced (F8-spec4), smoke ports |
+//! | [`crate::scrcmd_c03center`] | `scrcmd_c03center.c` overlay 21 0x021B5A18-0x021B66B7 (row 21.50; no X1 networking) | 22 ids (256, 261..263, 265, 285..288, 307, 446, 447, 462, 463, 484..487, 566..568, 578) | 28 fns specced (F8-spec4), smoke ports |
+//! | [`crate::scrcmd_pokemon_fld`] | `scrcmd_pokemon_fld.c` overlay 21 0x021B66B8-0x021B73FF (row 21.51; cmd 494 = Dream World, X2) | 14 ids (308, 459..461, 470, 471, 494, 526, 527, 564, 565, 581, 585, 586) | 48 fns specced (F8-spec4), smoke ports |
+//! | [`crate::scrcmd_misc21`] | overlay 21 0x021CF7DC-0x021D013F (row 21.91), 0x021D1670-0x021D30B7 (row 21.97), no `__FILE__` | 36 ids (233, 309, 347..350, 412..414, 472..476, 479, 481..483, 521..525, 551, 553, 569..571, 573..575, 582, 597..600) | 81 fns specced (F8-spec4; cmd 414 and 10 other render / UI fns left out), smoke ports |
 //!
-//! Remaining F8 jobs (F1-SPLIT list): the overlay-21 files / clusters 0x021B2FD8-0x021B73F6 (shop, proc_fld, encount, fld_battle, c03center,
-//! pokemon_fld), 0x021CF7DC, 0x021D1670.
+//! Command ids outside these areas (94, F8-spec4 count): 93, 310, 313, 315..318, 360..366, 425, 427, 445, 458, 467..469, 477,
+//! 478, 480, 493, 495, 499..505, 534, 544..548, 552, 554..558, 560, 572, 590..592, 604..606 (other overlay-10 files, incl.
+//! `scrcmd_musical.c` 360..366 and `scrcmd_network.c`), 367..369, 371..375 (overlay 18, intrude / comm, X1), 450..457 (overlay
+//! 20), 382 (0x021F4650, outside the field set), 197..200, 343..346, 415..417, 421..424, 426, 428, 443, 448, 449, 496..498,
+//! 576 (overlay-21 `sodateya.c`, `bsubway_scr.c`, 0x021C8xxx, `fld_trade.c` / `scrcmd_palpark.c`): F10 / X jobs or later F8
+//! rows.
 //!
 //! # Dispatch
 //!

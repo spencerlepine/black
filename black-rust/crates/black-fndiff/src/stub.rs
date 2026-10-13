@@ -127,6 +127,7 @@ impl StubEnv {
                     let size = if k.starts_with("out:")
                         || k.starts_with("outm:")
                         || k.starts_with("outn:")
+                        || k.starts_with("outw:")
                     {
                         k.split(':').nth(1).map(|n| num(n) as usize)
                     } else if k.starts_with("outp:") {
@@ -185,6 +186,19 @@ impl StubEnv {
                     let h = mix(mix(acc, key + 0x1000 + 0x100 * (i as u32 + 1)), 0xC0DE);
                     let v = base.wrapping_add(ofs).wrapping_add(4 * (h % n));
                     b.copy_from_slice(&v.to_le_bytes());
+                    continue;
+                }
+                if let Some(p) = k.strip_prefix("outw:") {
+                    // `outw:N:W0/W1/..` (F8-spec4): N bytes of 32-bit words, word j =
+                    // W[mix(mix(acc, key + 0x1000 + 0x100 * (i + 1) + j), 0xC0DE) % len] (a stack struct whose
+                    // field must hit one of a few exact values, e.g. an angle)
+                    let w: Vec<u32> = p.split(':').nth(1).unwrap().split('/').map(num).collect();
+                    assert!(b.len() % 4 == 0, "stub {addr:#010x}: outw size");
+                    let salt = 0x100 * (i as u32 + 1);
+                    for (j, c) in b.chunks_mut(4).enumerate() {
+                        let h = mix(mix(acc, key + 0x1000 + salt + j as u32), 0xC0DE);
+                        c.copy_from_slice(&w[(h % w.len() as u32) as usize].to_le_bytes());
+                    }
                     continue;
                 }
                 if k.starts_with("outk:") || k.starts_with("outki:") {
@@ -499,6 +513,33 @@ mod tests {
         let mut out = [0xAAu8; 6];
         e.call(0x021B_B798, &mut [Arg::V(0xABCD), Arg::Out(&mut out)]);
         assert_eq!(out, [113, 135, 79, 211, 223, 219]);
+    }
+
+    /// `outw:N:W0/W1/..` (F8-spec4): N bytes of words picked from the list; vectors from tools/rom-diff/test_svflow.py
+    /// (`OutW`), salt 0x1234.
+    #[test]
+    fn outw_picks_words_from_the_list() {
+        let mut e = StubEnv::new(
+            vec![spec(
+                "u32",
+                &["v", "outw:12:0/0x5A000/0xB4000/0x10E000"],
+                true,
+            )],
+            0x1234,
+        );
+        let mut out = [0u8; 12];
+        let r = e.call(0x021B_B798, &mut [Arg::V(0xABCD), Arg::Out(&mut out)]);
+        let w: Vec<u32> = out
+            .chunks(4)
+            .map(|c| u32::from_le_bytes(c.try_into().unwrap()))
+            .collect();
+        assert_eq!(w, [0xB4000, 0x5A000, 0xB4000]);
+        assert_eq!(r, 0xb0a0_097a);
+        assert_eq!(e.log, [0x021B_B798, 0xABCD]);
+        let mut e = StubEnv::new(vec![spec("u32", &["outw:8:1/2/3", "v"], false)], 0x1234);
+        let mut out = [0u8; 8];
+        e.call(0x021B_B798, &mut [Arg::Out(&mut out), Arg::V(7)]);
+        assert_eq!(out, [2, 0, 0, 0, 2, 0, 0, 0]);
     }
 
     /// `outki:OFS:N:M..` (Z20): the port passes the record the original reaches through the u32 at arg + OFS; the bytes
