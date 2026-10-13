@@ -159,10 +159,14 @@ class PortedPerSet(unittest.TestCase):
     def test_crate_ported_drops_other_sets_overlay_addresses(self):
         lo, hi = S.main_range()
         flow_ovl = {a for a in S.ported_flow() if not lo <= a < hi}
+        # every field-set crate's PORTED (black-field and black-script; field overlay addresses may equal battle ones,
+        # e.g. 0x021B6AAC is battle server1 6aac and ov21 scrcmd_pokemon_fld)
         field = set()
-        for fn in os.listdir(os.path.join(S.ROOT, "crates", "black-field", "src")):
-            if fn.endswith(".rs"):
-                field.update(S.ported_in(os.path.join(S.ROOT, "crates", "black-field", "src", fn)))
+        for root, _, files in os.walk(os.path.join(S.ROOT, "crates")):
+            for fn in files:
+                path = os.path.join(root, fn)
+                if fn.endswith(".rs") and S.src_set(path) == "field":
+                    field.update(S.ported_in(path))
         S.SET[0] = "field"
         S.CRATE_PORTED.clear()
         cp = set(S.crate_ported())
