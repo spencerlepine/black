@@ -6,13 +6,14 @@
     /tmp/blk/venv/bin/python -I tools/ui-diff/compare.py --all --regress  # gate: fail if a previously passing case
                                                                          # (per docs/migration/PROGRESS.json) now
                                                                          # fails or dropped by > 0.05
-    /tmp/blk/venv/bin/python -I tools/ui-diff/compare.py --hash <png>     # perceptual hash of one image (capture_ref.sh)
+    /tmp/blk/venv/bin/python -I tools/ui-diff/compare.py --hash <png>     # perceptual hash of one image
 
 Inputs (all under black-rust/ui-ref/, gitignored except manifest.json):
-  manifest.json            cases: id, screen, port {script, frames, fade_frames}, ref {savestate, inputs, frames},
+  manifest.json            cases: id, screen, port {script, frames, fade_frames}, ref {savestate, script, frames},
                            regions (optional per-screen rect + weights), timing (optional), phash (recorded by
-                           capture_ref.sh)
-  <case>/ref_<frame>.png   golden, 256x384 (top screen above bottom), captured by the human (capture_ref.sh)
+                           capture_ref.py)
+  <case>/ref_<frame>.png   reference, 256x384 (top screen above bottom), captured headless by capture_ref.py
+                           (the original game in the DeSmuME core, scripted; no human)
   <case>/port_<frame>.png  port frame, 256x384, written by capture_port.py
 Outputs:
   ui-ref/report/<case>.json                scores per screen per frame, timing, pass/fail
