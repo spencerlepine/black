@@ -7,6 +7,7 @@ pub mod egg;
 pub mod evolution;
 pub mod exp;
 pub mod growth;
+pub mod hatch;
 pub mod hooks;
 pub mod icon;
 pub mod personal;
