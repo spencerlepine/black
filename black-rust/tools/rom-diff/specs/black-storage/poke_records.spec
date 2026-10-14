@@ -69,4 +69,4 @@ fn 0200e7bc ret=none inputs=400
   global 020a7370 4
   stub 02017e1c ret=pick+u32:0/1/5/200 args=v,v,p
   stub 02045f5c ret=none args=v,v,out:22,v
-  stub 0201f41c ret=none args=in:22,p,v
+  stub 0201f41c ret=none args=in:22,ptr,v

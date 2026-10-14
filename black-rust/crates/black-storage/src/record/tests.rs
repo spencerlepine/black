@@ -5,22 +5,22 @@ use black_fndiff::{run_suite, Arg, Case, StubEnv, Suite};
 // fndiff-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
     (0x02008C20, "7f5ba36c7a705825"),
-    (0x02008C28, "ecd65bd1abb9cf3f"),
-    (0x02008C64, "82e8609b85f72c85"),
+    (0x02008C28, "fb3e0b6900a280f3"),
+    (0x02008C64, "fb223df900645477"),
     (0x02008C94, "cc343ae56bcf92a1"),
     (0x02008CB4, "5d704cd2059bfa12"),
     (0x02008CD4, "25765b62cec19ff2"),
     (0x02008CF8, "3a2db66ac6af05b9"),
-    (0x02008D1C, "a98f657ef4daccc3"),
-    (0x02008D58, "079e740a49f605b3"),
-    (0x02008DAC, "fa2d2e3965e3e667"),
-    (0x02008DF0, "19939997a0f12d82"),
-    (0x02008DFC, "189f4a75d66353cb"),
-    (0x02008E30, "8c27103e6a35148e"),
-    (0x02008E68, "59b116a68b9a298a"),
-    (0x02008E78, "34682015ce1170aa"),
-    (0x02008E88, "841cf96df2d2a870"),
-    (0x02008EA0, "3471c10e340ed450"),
+    (0x02008D1C, "027dd66eaa9c99cd"),
+    (0x02008D58, "7a81513c052880ff"),
+    (0x02008DAC, "9bd7e3044b93f548"),
+    (0x02008DF0, "28437860c64c1f88"),
+    (0x02008DFC, "dc8b98ed1092d9e0"),
+    (0x02008E30, "e36bb90ab225270b"),
+    (0x02008E68, "b75cacf4a47b14a5"),
+    (0x02008E78, "e7802726aa4f709d"),
+    (0x02008E88, "dc6063c14aaa01f5"),
+    (0x02008EA0, "10c0260327b0328f"),
 ];
 // fndiff-recorded-end
 
@@ -28,6 +28,8 @@ const RECORDED: &[(u32, &str)] = &[
 struct Rom<'a> {
     env: &'a mut StubEnv,
     vcount: u32,
+    /// B18b: the enciphered bytes the original hands the cipher (`ptr`): block (`arg0`) + CRYPT_OFS.
+    data: u32,
 }
 
 impl RecordCrypt for Rom<'_> {
@@ -38,13 +40,13 @@ impl RecordCrypt for Rom<'_> {
     fn encrypt(&mut self, seed: u32) {
         self.env.call(
             0x0203_F328,
-            &mut [Arg::P, Arg::V(CRYPT_LEN as u32), Arg::V(seed)],
+            &mut [Arg::Ptr(self.data), Arg::V(CRYPT_LEN as u32), Arg::V(seed)],
         );
     }
     fn decrypt(&mut self, seed: u32) {
         self.env.call(
             0x0203_F37C,
-            &mut [Arg::P, Arg::V(CRYPT_LEN as u32), Arg::V(seed)],
+            &mut [Arg::Ptr(self.data), Arg::V(CRYPT_LEN as u32), Arg::V(seed)],
         );
     }
     fn vcount(&mut self) -> u32 {
@@ -67,6 +69,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
     let h = &mut Rom {
         env: &mut c.env,
         vcount,
+        data: black_fndiff::buf_addr(0) + CRYPT_OFS as u32,
     };
     let ret: u64 = match addr {
         0x0200_8C28 => {

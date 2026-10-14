@@ -25,7 +25,7 @@ fn 0200ea3c ret=none inputs=400
   stub 0201ab28 ret=u32 args=v,v
   stub 02017d30 ret=u32 args=v
   stub 02017e1c ret=pick+u32:0/1/5/300 args=v,v,v
-  stub 02045a38 ret=none args=v,p,v
+  stub 02045a38 ret=none args=v,ptr,v
   stub 02017d70 ret=none args=v,v
   stub 02045808 ret=none args=v
 

@@ -7,7 +7,7 @@ use black_fndiff::{run_suite, Arg, Case, StubEnv, Suite};
 const RECORDED: &[(u32, &str)] = &[
     (0x0200EA14, "25ca311b27a3fe19"),
     (0x0200EA2C, "fc4a5ce386faadc1"),
-    (0x0200EA3C, "13b5451cbbedef8f"),
+    (0x0200EA3C, "22fcd5fa070606ca"),
     (0x0200EC14, "8c59a798414b731e"),
     (0x0200EC2C, "9f85b071c7561973"),
     (0x0200EC98, "0e07f20606f73ede"),
@@ -15,7 +15,22 @@ const RECORDED: &[(u32, &str)] = &[
 // fndiff-recorded-end
 
 /// The callees routed to the spec's stub lines (string copies write nothing).
-struct Rom<'a>(&'a mut StubEnv);
+/// B18b: `.1` = (host address, emulator address) of the name arrays of the port's record copy, so
+/// `FUN_02045A38`'s `dst` (a `ptr` stub argument) is the address in the block (`arg0`) the original
+/// passes; any other array is a local of the port.
+struct Rom<'a>(&'a mut StubEnv, Vec<(usize, u32)>);
+
+/// B18b: the names of entry `k` at block + `MON_SIZE * k` + 0x0C (nickname) / + 0x22 (OT name).
+fn name_addrs(r: &HofRecord) -> Vec<(usize, u32)> {
+    let base = black_fndiff::buf_addr(0);
+    let mut v = Vec::new();
+    for (k, m) in r.mons.iter().enumerate() {
+        let e = base + (MON_SIZE * k) as u32;
+        v.push((m.nickname.as_ptr() as usize, e + 0x0C));
+        v.push((m.ot_name.as_ptr() as usize, e + 0x22));
+    }
+    v
+}
 
 impl HofHooks for Rom<'_> {
     fn party_count(&mut self, party: u32) -> u32 {
@@ -40,7 +55,16 @@ impl HofHooks for Rom<'_> {
     fn str_read(&mut self, s: u32, dst: &mut [u16]) {
         self.0.call(
             0x0204_5A38,
-            &mut [Arg::V(s), Arg::P, Arg::V(dst.len() as u32)],
+            &mut [
+                Arg::V(s),
+                Arg::Ptr(
+                    self.1
+                        .iter()
+                        .find(|&&(h, _)| h == dst.as_ptr() as usize)
+                        .map_or(black_fndiff::STACK_ZERO.start, |&(_, e)| e),
+                ),
+                Arg::V(dst.len() as u32),
+            ],
         );
     }
     fn str_write(&mut self, s: u32, src: &[u16]) {
@@ -67,7 +91,8 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x0200_EA3C => {
             let d = &c.bufs[2];
             let date = [r32(d, 0), r32(d, 4), r32(d, 8)];
-            r.fill(v[1], date, v[3], &mut Rom(&mut c.env));
+            let names = name_addrs(&r);
+            r.fill(v[1], date, v[3], &mut Rom(&mut c.env, names));
         }
         0x0200_EC14 => return r.count() as u64,
         0x0200_EC2C => {
@@ -78,7 +103,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 &mut view,
                 r32(&o, 0),
                 r32(&o, 4),
-                &mut Rom(&mut c.env),
+                &mut Rom(&mut c.env, Vec::new()),
             );
             let o = &mut c.bufs[2];
             w32(o, 8, view.pid);

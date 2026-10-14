@@ -19,7 +19,7 @@ fn 02008c28 ret=none inputs=50
   arg buf 0x1e0
   global 02fffc3c 4
   stub 0203f2fc ret=u16 args=in:472,v
-  stub 0203f328 ret=none args=p,v,v
+  stub 0203f328 ret=none args=ptr,v,v
 
 # FUN_02008C64(block, flag): seal when flag != 0
 fn 02008c64 ret=none inputs=100
@@ -27,7 +27,7 @@ fn 02008c64 ret=none inputs=100
   arg buf 0x1e0
   arg u32 alt const 0 || any
   stub 0203f2fc ret=u16 args=in:472,v
-  stub 0203f328 ret=none args=p,v,v
+  stub 0203f328 ret=none args=ptr,v,v
 
 # FUN_02008C94(block, flag): open when flag != 0
 fn 02008c94 ret=none inputs=100
@@ -61,7 +61,7 @@ fn 02008d1c ret=u32 inputs=800
   arg u32 alt const 0 || range 0 166
   arg u32 alt range 0 1000 || near 9999 3 || near 0xffff 3 || near 999999 3 || any
   stub 0203f2fc ret=u16 args=in:472,v
-  stub 0203f328 ret=none args=p,v,v
+  stub 0203f328 ret=none args=ptr,v,v
   stub 0203f37c ret=none args=p,v,v
 
 # FUN_02008d58(block, id, v): keep the maximum
@@ -73,7 +73,7 @@ fn 02008d58 ret=u32 inputs=1200
   fix arg0 0 u32 alt range 0 1000 || any rep=71,4
   fix arg0 0x11c u16 alt range 0 1000 || near 9999 3 || any rep=96,2
   stub 0203f2fc ret=u16 args=in:472,v
-  stub 0203f328 ret=none args=p,v,v
+  stub 0203f328 ret=none args=ptr,v,v
   stub 0203f37c ret=none args=p,v,v
 
 # sub_02008DAC(block, id, n): add and cap
@@ -85,7 +85,7 @@ fn 02008dac ret=u32 inputs=1200
   fix arg0 0 u32 alt range 0 1000 || near 999999999 3 || any rep=71,4
   fix arg0 0x11c u16 alt range 0 1000 || near 9999 3 || any rep=96,2
   stub 0203f2fc ret=u16 args=in:472,v
-  stub 0203f328 ret=none args=p,v,v
+  stub 0203f328 ret=none args=ptr,v,v
   stub 0203f37c ret=none args=p,v,v
 
 # FUN_02008DF0(block, id): add 1
@@ -96,7 +96,7 @@ fn 02008df0 ret=u32 inputs=600
   fix arg0 0 u32 alt range 0 1000 || near 999999999 3 || near 999999 3 || any rep=71,4
   fix arg0 0x11c u16 alt range 0 1000 || near 9999 3 || near 999 3 || any rep=96,2
   stub 0203f2fc ret=u16 args=in:472,v
-  stub 0203f328 ret=none args=p,v,v
+  stub 0203f328 ret=none args=ptr,v,v
   stub 0203f37c ret=none args=p,v,v
 
 # sub_02008DFC(block, id): capped record
@@ -107,7 +107,7 @@ fn 02008dfc ret=u32 inputs=600
   fix arg0 0 u32 alt range 0 1000 || near 999999999 3 || any rep=71,4
   fix arg0 0x11c u16 alt range 0 1000 || near 9999 3 || any rep=96,2
   stub 0203f2fc ret=u16 args=in:472,v
-  stub 0203f328 ret=none args=p,v,v
+  stub 0203f328 ret=none args=ptr,v,v
   stub 0203f37c ret=none args=p,v,v
 
 # FUN_02008E30(block): fold the five current records into their maxima
@@ -117,7 +117,7 @@ fn 02008e30 ret=none inputs=300
   fix arg0 0 u32 alt range 0 1000 || near 999999999 3 || any rep=71,4
   fix arg0 0x11c u16 alt range 0 1000 || near 9999 3 || any rep=96,2
   stub 0203f2fc ret=u16 args=in:472,v
-  stub 0203f328 ret=none args=p,v,v
+  stub 0203f328 ret=none args=ptr,v,v
   stub 0203f37c ret=none args=p,v,v
 
 # FUN_02008e68(block, v): max of record 123 for v < 7
@@ -127,7 +127,7 @@ fn 02008e68 ret=none inputs=300
   arg u32 alt range 0 10 || any
   fix arg0 0x184 u16 alt range 0 10 || any
   stub 0203f2fc ret=u16 args=in:472,v
-  stub 0203f328 ret=none args=p,v,v
+  stub 0203f328 ret=none args=ptr,v,v
   stub 0203f37c ret=none args=p,v,v
 
 # FUN_02008E78(block): record 123 (u8)
@@ -136,7 +136,7 @@ fn 02008e78 ret=u8 inputs=200
   arg buf 0x1e0
   fix arg0 0x184 u16 alt range 0 10 || any
   stub 0203f2fc ret=u16 args=in:472,v
-  stub 0203f328 ret=none args=p,v,v
+  stub 0203f328 ret=none args=ptr,v,v
   stub 0203f37c ret=none args=p,v,v
 
 # FUN_02008e88(block, v): max of record 124 for v < 9999
@@ -146,7 +146,7 @@ fn 02008e88 ret=none inputs=300
   arg u32 alt near 9999 3 || range 0 1000 || any
   fix arg0 0x186 u16 alt range 0 1000 || near 9999 3 || any
   stub 0203f2fc ret=u16 args=in:472,v
-  stub 0203f328 ret=none args=p,v,v
+  stub 0203f328 ret=none args=ptr,v,v
   stub 0203f37c ret=none args=p,v,v
 
 # 0x02008EA0(block): record 124 (tail call)
@@ -155,5 +155,5 @@ fn 02008ea0 ret=u32 inputs=200
   arg buf 0x1e0
   fix arg0 0x186 u16 alt range 0 1000 || near 9999 3 || any
   stub 0203f2fc ret=u16 args=in:472,v
-  stub 0203f328 ret=none args=p,v,v
+  stub 0203f328 ret=none args=ptr,v,v
   stub 0203f37c ret=none args=p,v,v

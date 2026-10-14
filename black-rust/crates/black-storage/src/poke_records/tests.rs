@@ -14,7 +14,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x0200E7A4, "35c933781b9f2a37"),
     (0x0200E7AC, "bc21700c442e734a"),
     (0x0200E7B4, "cb9d1b5dc120aa2c"),
-    (0x0200E7BC, "65efffb71c4541df"),
+    (0x0200E7BC, "5b7d29fab1b5c710"),
 ];
 // fndiff-recorded-end
 
@@ -22,6 +22,9 @@ const RECORDED: &[(u32, &str)] = &[
 struct Rom<'a> {
     env: &'a mut StubEnv,
     msg: u32,
+    /// B18b: emulator address of the record's name (`dst`, a `ptr` stub argument): the port fills
+    /// its own copy of the record, which stands for record `i` of the block (`arg0`) at +4.
+    dst: u32,
 }
 
 impl PokeRecordHooks for Rom<'_> {
@@ -44,8 +47,10 @@ impl PokeRecordHooks for Rom<'_> {
                 Arg::V(11),
             ],
         );
-        self.env
-            .call(0x0201_F41C, &mut [Arg::In(&buf), Arg::P, Arg::V(11)]);
+        self.env.call(
+            0x0201_F41C,
+            &mut [Arg::In(&buf), Arg::Ptr(self.dst), Arg::V(11)],
+        );
     }
 }
 
@@ -81,6 +86,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 &mut Rom {
                     env: &mut c.env,
                     msg,
+                    dst: black_fndiff::buf_addr(0) + (RECORD_SIZE * i + 4) as u32,
                 },
             );
             0
