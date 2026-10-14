@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-14T01:24:32Z",
- "commit": "f21c1a9",
+ "generated": "2026-10-14T07:16:17Z",
+ "commit": "4ea6a37",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -8,8 +8,8 @@
   "U": 0.19,
   "HR": 0.125
  },
- "overall": 0.3656,
- "overall_percent": 37,
+ "overall": 0.3633,
+ "overall_percent": 36,
  "logic": {
   "ported": 4971,
   "in_scope": 10087.4,
@@ -1286,9 +1286,9 @@
  "phases": {
   "A": {
    "done": 13,
-   "half": 1,
+   "half": 0,
    "total": 16,
-   "score": 0.84375
+   "score": 0.8125
   },
   "G": {
    "done": 4,
@@ -1407,8 +1407,8 @@
    },
    {
     "id": "A10",
-    "mark": "~",
-    "score": 0.5
+    "mark": " ",
+    "score": 0.0
    }
   ],
   "G": [

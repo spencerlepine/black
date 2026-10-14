@@ -91,3 +91,16 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [-] X1 — X — networking / C-Gear / Wi-Fi / IR (52 files, ≈10,189 fns), `overlay_116/121/177/186/208`-net parts; T1 adds DWC/GameSpy in main (`unk_020583C…
 - [-] X2 — X — Musicals (`overlay_112` mus\_\*), Dream World, PWT/Battle Subway online, mystery gift; + `overlay_184/185` (musical helpers)
 - [-] X3 — X — SDK/OS, ARM9 autoload (ITCM/DTCM), runtime library — replaced by Rust std/Bevy; port individual helpers only when ported logic calls them (e…
+- [-] Z11 — Z — PAR — Generators: (a) getter/registry/pool tables → generated Rust tables from bytes (no LLM); (b) cluster templates: from `clusters.txt`, p…
+- [x] Z19 — B — (3b3c72e; Opus, ~1h45, 160k tokens) **deterministic CPU state per `Emu.call`** (emu.py, so svflow/check-fn/handlers.py/gen/bpp/evf all cover… — (3b3c72e)
+- [x] Z22 — B — (116faf4, f46c90c; Opus, ~4.5 h, 330k tokens) **stub `in:` words now feed the answer** (2-line change in svflow.py make_stub + black-fndiff … — (116faf4)
+- [x] B10-wire2 — B — (cc939e8; Opus, ~1.3 h, 160k tokens) black-battle → black-pokemon dependency; `FlowWorkHost<E, U, W: WazaHooks>` answers move_param/move_fla… — (cc939e8)
+- [x] B11 — B — SEQ — `battle_server.s` (209 fns, btl_server.c): turn loop, command queue, server state machine; wire B10 together. — (4b84fa2)
+- [x] B14-spec — B — (0d859e1) ov96 = tr_ai.c only: **bytecode AI interpreter on the vm.c engine** (AI object 0xD8 = VM ctx; handlers `(vm, ai)`; 120-entry cmd t… — (0d859e1)
+- [x] B14 — B — PAR — Battle AI `overlay_096` (tr_ai.c) — (b796072)
+- [x] B16 — B — SEQ — End-to-end battle integration test — (fe93b63)
+- [x] F4a-spec — F — (1e70399; Opus, ~2.5 h, 400k tokens) black-field areas **fldmmdl** (0216CC58–0216E62C: 253 fns incl. 18 Ghidra missed, 2754/2754; cf1b5fcbd5… — (1e70399)
+- [x] F8-spec2 — F — (ae7ebb3; Opus, ~2 h, 600k tokens) black-script areas **scrcmd_fld** (021AE948–021B0083: 97 fns, 80 cmds; 3a3b6fd5c3a80131), **scrcmd_talk**… — (ae7ebb3)
+- [x] F8a — F — (95db562; Opus, ~1.5 h, 450k tokens) **scrcmd_core 53/53 (3467bfc999c8890b), scrcmd_work 130/130 (d7e9a9ae52796e75)**; `scrcmd::{commands, h… — (95db562)
+- [x] F8b — F — (cf78da5; Opus, ~1.5 h, 450k tokens) **scrcmd_talk 70/70 (f52686b3e04f16d2), scrcmd_screen 36/36 (a8af20a1036b361b)**; dispatch 200 ids + ca… — (cf78da5)
+- [x] F9 — F — PAR — Text engine (black-text): string buffers, control codes, variable/word insertion, word wrap, text speed.
