@@ -178,3 +178,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14** — Merged F6b (F6 done) and B19b (V-0033 closed). Spawned F11 (Opus).
 
 - **2026-10-14** — Merged F14 (field_task + proclink, 104/104; README union conflicts). Proclink event proc in row 10.21 → F14b. Spawned F3b.
+
+- **2026-10-14 ~20:15Z** — Usage ORANGE 78% → DRAIN (3 Opus workers burned ~16%/20 min at the end). F12, F11, F3b finish; pause until 22:25Z.

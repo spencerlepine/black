@@ -23,6 +23,6 @@ _2026-10-14T19:54:11Z, commit aaa171b, `python3 -I tools/progress.py`._
 - **Running (cap 3):** F3b (Opus, worktree-agent-a858739933e9b77b9: no-grid + rail movement), F12 (Opus, worktree-agent-ab3c43b94fcb82115: headless field integration test), F11 (Opus, worktree-agent-a640408956dec2159: calender/weather/field_light).
 - **Next:** F14b, F2b, U0b, G-phase (G3, G6, G7, G8, G9).
 - **Blocked:** none. B16 flake: B17 fixed `ro_snap` keying; 3/3 full black-battle suites green on main after merge (root cause not proven, OPEN.md).
-- **Usage guard:** RUN (GREEN 2% session / 38% weekly at 17:25Z; USAGE-CHECK cron ba633253).
+- **Usage guard:** DRAINING (ORANGE 78%) since ~20:15Z — no new spawns; F12, F11, F3b finish and merge; then pause until resume_at 22:25Z (resume_cron "25 15 14 10 *").
 - **Disk:** 39 GB free (the human cleared space 2026-10-14); worker cap 3 (human, 2026-10-14: CPU).
 - **RE tooling:** Ghidra headless + rizin + rea (MCP) via `tools/re/` (`ENV.md` "RE workflow"); `tools/doctor.sh` green on macOS. Sets battle, field, bag (ov70), party-summary (ov90/91/131/134) decompiled under /tmp/blk/re/.
