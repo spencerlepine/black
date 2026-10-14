@@ -16,12 +16,12 @@
 Ported by crate: black-battle 2125, black-field 1712, black-script 1011, black-pokemon 148, black-storage 98, black-text 61, black-core 26.
 UI cases: U1-title 0.07, U1-title-anim 0.12.
 
-_2026-10-14T09:36:53Z, commit 3b9875b, `python3 -I tools/progress.py`._
+_2026-10-14T09:42:23Z, commit 5b16ace, `python3 -I tools/progress.py`._
 <!-- progress-table:end -->
 
 - **Milestones so far:** battle handlers complete; btl_server_flow 644; battle_server.s 207/207; btl_client 228/231; battle AI ai1 161/161; B16 first full headless battle through the ports. Pokémon: poke_tool/create/personal/growth/waza/evolution/icon. Storage: party/bag/box. Field: map matrix/fieldmap, player 304/306, fldmmdl 253/253 + acmd 242/242, trainer_eye 38/38, encounter 151/151, eventdata 184/185; script VM + ~700 scrcmd handlers. Text: strbuf/wordset/layout/speed. Assets A0–A12 mostly; Bevy shell G1/G2/G4/G5. Harness: Z19/Z20/Z22/Z23, check-force/symbols/docsize, progress.py, ui-diff with scripted DeSmuME references.
-- **Running:** B17 (Opus, worktree-agent-a8aa8754c8d18669b: ai1 pointer rewire + B16 flake), S5 (Opus, worktree-agent-a751b0a2f86c66984: save data model + persistence), F8f-spec (Opus, worktree-agent-a875fe2f03ea7dd7d: bsubway spec fixes), S4b (Sonnet, worktree-agent-a0c23aeb9862338b4: item-use checks/effects), F4b-port2 (Opus, worktree-agent-a38a4b0743d99519d: mvproc3a-d 181 fns). Worktrees under `.claude/worktrees/`.
-- **Next:** merge as workers report; B18 (after B17), S5, F5b, F2b, F3b, F6b, A10d, U0b. Usage will reach DRAIN (ORANGE) around 10:05Z at the current burn.
+- **Running:** B17 (Opus, worktree-agent-a8aa8754c8d18669b: ai1 pointer rewire + B16 flake), S5 (Opus, worktree-agent-a751b0a2f86c66984: save data model + persistence), S4b (Sonnet, worktree-agent-a0c23aeb9862338b4: item-use checks/effects), F4b-port2 (Opus, worktree-agent-a38a4b0743d99519d: mvproc3a-d 181 fns). Worktrees under `.claude/worktrees/`.
+- **Next:** merge as workers report; F8f-spec2 (misc21b spec), P7b (hatching), B18 (after B17), S5, F5b, F2b, F3b, F6b, A10d, U0b. Usage will reach DRAIN (ORANGE) around 10:05Z at the current burn.
 - **Blocked:** none. Known flake: `b16_single_battle` under the full parallel black-battle suite (OPEN.md; with B17).
 - **Usage guard:** RUN (GREEN 66% at ~09:32Z; DRAIN expected at the next reading; USAGE-CHECK cron 8360cac0).
 - **Disk:** 39 GB free (the human cleared space 2026-10-14); 5 slots usable.

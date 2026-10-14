@@ -121,3 +121,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14** — Merged F8f (169/169 scrcmd fns of the F8-spec5 areas, 57 cmd ids; Opus ~760k tokens); spec defects it found → F8f-spec. Spawned S5 (Opus, SEQ save model).
 
 - **2026-10-14** — Merged P7 (egg area 39/39, ov21 daycare egg generator; hatching not located → P7b). Spawned F8f-spec (Opus, small harness job).
+
+- **2026-10-14** — Merged F8f-spec (5b16ace; bsubway spec arenas, 021CBF98 stubs; README hash note fixed by the coordinator); misc21b half → F8f-spec2. REUSE=1 decompile of field/bag/party-summary with the P7 prototypes.
