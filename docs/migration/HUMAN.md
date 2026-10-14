@@ -12,7 +12,7 @@ Moved out of `MIGRATION-AGENT.md` (its old section 10) on 2026-10-13. Format: `-
 - [x] 2026-10-13 — F8-spec5 scope — closed 2026-10-13 with the default (human): port WFBC commands 450..457 (offline-visible), park cmd 382 (overlay 48) under F10.
 - [x] 2026-10-13 — U0 goldens — (resolved the same evening: no human capture needed. The human asked for a scalable solution; melonDS 1.1 has no scripting, so `capture_ref.py` now drives the DeSmuME core headless via py-desmume with frame-exact input scripts and savestates; the title cases are captured and scored automatically. Remaining human role for UI: sign-off decisions on `pending sign-off` items only.)
 
-- [ ] 2026-10-14 — WEEKLY BUDGET — each 5-hour window with 3 Opus workers uses ~10–12% of the weekly limit (54% at 22:55Z, resets 2026-10-20 13:00Z); at full pace the weekly limit hits 75% (DRAIN) in ~1 day and work then stops until the reset. Options: keep full pace, or cap each 5-hour window at ~50% usage so the weekly budget lasts to the reset — default if unanswered: keep full pace (USAGE-CAP rules unchanged).
+- [x] 2026-10-14 — WEEKLY BUDGET — **DECIDED by the human 2026-10-14: keep full pace**; the USAGE-CAP guard (weekly ORANGE/RED → drain/pause) stops the work near the limit. each 5-hour window with 3 Opus workers uses ~10–12% of the weekly limit (54% at 22:55Z, resets 2026-10-20 13:00Z); at full pace the weekly limit hits 75% (DRAIN) in ~1 day and work then stops until the reset. Options: keep full pace, or cap each 5-hour window at ~50% usage so the weekly budget lasts to the reset — default if unanswered: keep full pace (USAGE-CAP rules unchanged).
 
 ## Resolved (recent)
 
