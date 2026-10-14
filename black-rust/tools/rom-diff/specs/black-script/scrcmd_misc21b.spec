@@ -525,7 +525,7 @@ fn 021c8608 ret=u32 inputs=200
   arg buf 0x400
   stub 021f36c0 force ret=none args=v
   stub 02034ac4 force ret=none args=v
-  stub 02030734 force ret=seqptr:arg0:0x300:0x40 args=v,v,v,v,v
+  stub 02030734 force ret=seqptr:arg0:0x100:0x1C0 args=v,v,v,v,v
   stub 02034a5c force ret=none args=v
 
 # boat_time_add(W, n, f): t = s16 W+4; r = t mod 0x546 (_s32_div); r + 30 * n >= 0x546 -> f != 0: W+4 = (W[8] + 1) * 0x546 - 1
@@ -533,9 +533,9 @@ fn 021c8608 ret=u32 inputs=200
 fn 021c86e8 ret=none inputs=400
   nowork
   arg buf 0x40
-  arg u32 alt range 0 50 || any
+  arg u32 alt oneof 1 2 3 || range 0 50 || any
   arg u32 range 0 1
-  fix arg0 4 u16 alt range 0 0x546 || range 0x500 0x2000 || any
+  fix arg0 4 u16 alt oneof 0x528 0x50A 0x4EC || range 0 0x546 || range 0x500 0x2000 || any
   fix arg0 8 u32 alt range 0 8 || any
 
 # boat_query(W, k): 0: byte W+0x1B0; 1..3: bytes W+0x1B1..0x1B3; 4: u16 W+6; 5: count of the 15 records

@@ -287,7 +287,7 @@ fn 0219b75c ret=u32 inputs=400
   stub 0203630c force ret=pick:0/2/3/1 args=  # ARM9: pad trigger bits (the procs test bit 2)
   stub 02164168 force ret=pick:0/1 args=v  # mmdl_move: is the player within 0x12 tiles of m (m)
   stub 0216d438 force ret=none args=v,v  # fldmmdl: acmd change (m, code)
-  stub 0216d5a8 force ret=pick:0xF/0x10/5/0 args=v  # fldmmdl: event type (m)
+  stub 0216d5a8 force ret=pick:0xF/0x10/5/0/0x11/0xE/0x12 args=v  # fldmmdl: event type (m)
   stub 0216d5e0 force ret=none args=v,v  # fldmmdl: display dir = v unless dir-locked (m, dir)
   stub 0216d5f8 force ret=pick:0/1/2/3 args=v  # fldmmdl: display dir (m)
   stub 0216d6b8 force ret=ptr:arg0:0xA4:1 args=v  # fldmmdl: sub work m + 0xA4 (m)

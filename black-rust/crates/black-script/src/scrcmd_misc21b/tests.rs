@@ -32,8 +32,8 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C8170, "94373c329b8007a2"),
     (0x021C81B4, "1e3103862f3537a4"),
     (0x021C81F8, "eeb98c4c1e1640b0"),
-    (0x021C8608, "fd1b9da464bbfc81"),
-    (0x021C86E8, "b9513f0f453593ed"),
+    (0x021C8608, "b29f30303eb5a6cf"),
+    (0x021C86E8, "82aa7a3122569eaf"),
     (0x021C8738, "39f392f34e6188bc"),
     (0x021C87D4, "67fdd23606d48447"),
     (0x021C8810, "9f9cf44875ac4af1"),
@@ -639,13 +639,6 @@ fn with_rom(addr: u32, c: &mut Case, f: impl FnOnce(&mut Rom, &[u32]) -> u64) ->
             keep.push(i);
         }
     }
-    // FUN_021C8608's spec hands its 0x1B8-byte block out at arg 0 + 0x300 of a 0x400-byte buffer: the tail lands in the
-    // emulator's zeroed RAM behind it (only zeros are stored there, so no stray write remains).
-    let tail = addr == 0x021C_8608;
-    if tail {
-        mem.bytes = vec![0; 0x1000];
-        mem.base = 0x02E1_0400;
-    }
     let mut rom = Rom {
         stubs: &mut c.env,
         mem,
@@ -653,12 +646,6 @@ fn with_rom(addr: u32, c: &mut Case, f: impl FnOnce(&mut Rom, &[u32]) -> u64) ->
         rets: Vec::new(),
     };
     let r = f(&mut rom, &vals);
-    if tail {
-        assert!(
-            rom.mem.bytes.iter().all(|&b| b == 0),
-            "a stray write the emulator would record"
-        );
-    }
     let wins = std::mem::take(&mut rom.mem.extra);
     for (i, (_, bytes)) in keep.into_iter().zip(wins) {
         c.bufs[i] = bytes;

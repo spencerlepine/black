@@ -430,9 +430,8 @@ init procs of mask bits 10 / 12 / 13 to `scrcmd_fld::init_proc`.
   arguments; their hooks get the value the original leaves in `r0` because one spec logs it.
 * Stack locals logged by address: the test wiring maps them to the original's frame (entry sp 0x02F00000):
   `scrcmd_misc10b` cmd 555 / 557 (`FUN_0217C274` / `FUN_0217C2A0`), `scrcmd_bsubway` cmd 346 (`FUN_0200B5CC`) and
-  `FUN_021CA05C`'s two u16 arrays (`FUN_02168878`, the port passes them as `Buf::Local`). Two specs hand a block out past
-  their buffers (`FUN_021C8608`'s 0x1B8 bytes at +0x300 of a 0x400 buffer in scrcmd_misc21b, command 346's sub-command 0x134
-  reading W + 0x120 * 47): the tests add zeroed windows there (the emulator's RAM; any non-zero write would be a stray the
+  `FUN_021CA05C`'s two u16 arrays (`FUN_02168878`, the port passes them as `Buf::Local`). One spec hands a block out past
+  its buffer (command 346's sub-command 0x134 reading W + 0x120 * 47): the test adds a zeroed window there (the emulator's RAM; any non-zero write would be a stray the
   hash catches). `FUN_021CA2DC` / `FUN_021C9FFC` / `FUN_021C9D70` got spec-only arenas in F8f-spec (bsubway 0109e0e0656ad492).
 * Harness note: the macOS `JOBS>1` `--spec` loss (spawn start method) was fixed by V-0031 (fork start method).
 
