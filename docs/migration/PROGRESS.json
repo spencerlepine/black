@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-14T08:58:36Z",
- "commit": "19e0fd0",
+ "generated": "2026-10-14T09:15:23Z",
+ "commit": "5e8abc2",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -8,18 +8,18 @@
   "U": 0.19,
   "HR": 0.125
  },
- "overall": 0.3646,
- "overall_percent": 36,
+ "overall": 0.3726,
+ "overall_percent": 37,
  "logic": {
-  "ported": 4996,
+  "ported": 5139,
   "in_scope": 10087.4,
-  "ratio": 0.4953,
+  "ratio": 0.5094,
   "ported_by_crate": {
    "black-battle": 2125,
    "black-core": 26,
    "black-field": 1712,
    "black-pokemon": 109,
-   "black-script": 868,
+   "black-script": 1011,
    "black-storage": 98,
    "black-text": 61
   },
@@ -1175,7 +1175,7 @@
    },
    "crates/black-script/src/scrcmd_bsubway.rs": {
     "set": "field",
-    "fns": 7
+    "fns": 58
    },
    "crates/black-script/src/scrcmd_c03center.rs": {
     "set": "field",
@@ -1203,11 +1203,11 @@
    },
    "crates/black-script/src/scrcmd_misc10b.rs": {
     "set": "field",
-    "fns": 6
+    "fns": 35
    },
    "crates/black-script/src/scrcmd_misc10c.rs": {
     "set": "field",
-    "fns": 6
+    "fns": 37
    },
    "crates/black-script/src/scrcmd_misc21.rs": {
     "set": "field",
@@ -1215,7 +1215,7 @@
    },
    "crates/black-script/src/scrcmd_misc21b.rs": {
     "set": "field",
-    "fns": 7
+    "fns": 39
    },
    "crates/black-script/src/scrcmd_obj.rs": {
     "set": "field",
