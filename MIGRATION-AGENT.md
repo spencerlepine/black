@@ -29,7 +29,7 @@ Then paste this as the first message (`/loop` with no interval = self-paced, sur
 | Every iteration | `docs/migration/STATE.md` — current state, running/blocked/queued, progress table | coordinator, overwritten at every checkpoint (≤ 8 KB) |
 | Every iteration | `docs/migration/HUMAN.md` — the human queue (answers appear inline) | coordinator appends, human answers (≤ 8 KB) |
 | Every iteration | `docs/migration/OPEN.md` — open questions / unverified; **append at the end only** | coordinator (workers report, coordinator appends) |
-| Iteration step 3 (dispatch) | `docs/migration/checklist/<P>.md` for the phases you dispatch from (Z T A B P S F G U H R; X = out of scope) | coordinator only (rules 1–3) |
+| Iteration step 3 (dispatch) | `docs/migration/checklist/<P>.md` for the phases you dispatch from (Z T A B P S F G U H R; X = out of scope); `checklist/DONE.md` only to resolve a dep | coordinator only (rules 1–3) |
 | On resume / session start | `tail -n 30 docs/migration/LOG.md` (the last ~10 entries), never the whole file | coordinator appends one entry per session/checkpoint |
 | Session start | `docs/migration/ENV.md` — paths, tools, hosts; `tools/doctor.sh` checks most of it. Workers read only its "RE workflow" section | coordinator |
 | When spawning a worker | `docs/migration/WORKER-PROMPT.md` — prompt template + model routing table and the rules that make cheap models safe | coordinator |
@@ -118,30 +118,30 @@ drives events and asks `black-game` for dialog/menus through a trait.
 
 **Parallel labels:**
 
-- **PAR** — independent; can run at the same time as any other PAR item whose deps are met. Owns its own files (its own module/folder); does not edit shared types, `Cargo.toml`, or files owned by another item.
-- **SEQ** — run alone in its area, by the coordinator or a single agent. Usually: defines shared types/traits other items build on, scaffolds crates, integrates many pieces, or makes an architecture decision.
+- **PAR** — independent; runs alongside any other PAR item whose deps are met. Owns its own files; never edits shared types, `Cargo.toml`, or another item's files.
+- **SEQ** — run alone in its area, by the coordinator or a single agent: shared types/traits, crate scaffolding, integration, architecture decisions.
 - **PAR×N** — the item is a batch template; split into N parallel jobs (each job is its own sub-line under it when started).
 
 **Rules:**
 
 1. **Only the coordinator edits the plan files** (this file and everything under `docs/migration/`). Workers report back; the coordinator ticks items. (Avoids merge conflicts on the checklist.)
-2. Mark `[~]` **before** starting, so a crash/shutdown is recoverable.
-3. On resume, every `[~]` item is reconciled first: branch merged → `[x]`; branch has partial work → hand back to a worker; nothing there → `[ ]`.
-4. Workers run in their own git worktree created **from `origin/main`** (Agent tool, `subagent_type: "general-purpose"`, `isolation: "worktree"`; use the branch name the tool picks); push verified `main` before spawning dependent workers. A worktree with no changes is auto-removed when its worker stops: before resuming such a worker with `SendMessage`, create the worktree yourself (`git worktree add /tmp/blk/wt-<ID> -b <id> main`) and tell it the path; check `git status` on `main` after every worker report. The worker's files are under `<worktree>/black-rust/`; workers edit and **stage** there only, never commit. (Why: `docs/migration/NOTES.md` "Lessons".)
+2. Mark `[~]` **before** starting (crash-recoverable).
+3. On resume, every `[~]` item is reconciled first: branch merged → `[x]`; branch has partial work → hand back to a worker; nothing there → `[ ]`. Finished items are archived at the checkpoint (`tools/archive-checklist.py` → stub in `checklist/DONE.md`, full line in `checklist/archive/`); a dep absent from `<P>.md` is looked up in `DONE.md`.
+4. Workers run in their own git worktree created **from `origin/main`** (Agent tool, `subagent_type: "general-purpose"`, `isolation: "worktree"`; use the branch name the tool picks); push verified `main` before spawning dependent workers. A worktree with no changes is auto-removed when its worker stops: before resuming such a worker with `SendMessage`, create the worktree yourself (`git worktree add /tmp/blk/wt-<ID> -b <id> main`) and tell it the path; check `git status` on `main` after every worker report. Workers edit and **stage** under `<worktree>/black-rust/` only, never commit. (Why: `docs/migration/NOTES.md` "Lessons".)
 5. Worker done = changes staged, `tools/gate.sh` green in the worktree; report in the format of `docs/migration/WORKER-PROMPT.md`.
 6. Merge (coordinator): review `git -C <worktree> diff --cached --stat`, reject per "Model routing" rule 2, commit in the worktree (`git -C <worktree> commit -m "<ID>: <one line> (XX% complete)"`, see "Commits"), `git -C <worktree> rebase main`, then from `$HOME/workplace/black`: `git merge --ff-only <branch>` and `git push origin main`. Rebase conflicts outside the plan files go back to the worker (SendMessage) or the item is redone. After every merge batch, on merged `main`: re-run the gate **and the item's `tools/rom-diff` / `check-*.sh` check** (the gate's `sync-docs.py` rewrites SYMBOLS.md/checklists: commit what it changes), and after merging any port run `python3 tools/check-force.py` (exit 1 = another area's spec still stubs a now-PORTED fn without `force`; `--fix` adds it). A hash that doesn't reproduce = revert the merge commit range (`git revert`, push) and re-queue the item. After the push, launch the validator on the batch (§5b) if none is running.
-7. **Concurrency cap: 5 workers** (human, 2026-10-12; not hook-enforced, you enforce it). Run them in the background and keep doing SEQ work while they run. The validator (§5b) occupies one of the 5 slots while it runs; at most one validator at a time.
-8. New crates are created only by SEQ item Z2 (scaffolding), never by PAR workers, to avoid `Cargo.lock` / shared-type races.
+7. **Concurrency cap: 5 workers** (human, 2026-10-12; you enforce it). Run them in the background and do SEQ work meanwhile. The validator (§5b) takes one of the 5 slots; at most one at a time.
+8. New crates are created only by a SEQ scaffolding item (Z2), never by PAR workers (`Cargo.lock` / shared-type races).
 9. Never edit `black-rom/`. Never commit `assets/`, `ui-ref/` images, ROM bytes, or extracted dumps (`/tmp/blk/re/**` included).
 10. **Disk.** A Bevy-including target dir is ~10–14 GB and target dirs must never be shared between worktrees (cargo artifacts collide and a check can run another worktree's code). Each worker uses its own `CARGO_TARGET_DIR=/tmp/blk/target-<ID>` + `BLK_OUT=/tmp/blk/out-<ID>` (check-script outputs) + `GATE_NO_GAME=1 tools/gate.sh` (skips Bevy, ~1–2 GB per worker); the coordinator runs the full gate + all checks on merged `main` in `/tmp/blk/target-coord`. Check `df -h /tmp /` each iteration; below ~10 GB free, delete finished workers' targets and don't spawn. Delete a worker's target dir after its merge. (History: `docs/migration/NOTES.md` "Lessons".)
 11. **Shared tool files are coordinator-owned:** `tools/re/signatures.tsv`, `tools/re/sets.txt`, `tools/ui-diff/*`, the plan files. Workers put new prototypes/sets in their report; the coordinator appends them, commits, and re-runs `REUSE=1 decompile.sh`.
-12. `decompile.sh` writes to `/tmp/blk/re/<set>/`; only the coordinator runs it (no concurrent runs of the same set). Workers only read `pc/`, and may run rizin/rea read-only.
+12. `decompile.sh` writes to `/tmp/blk/re/<set>/`; only the coordinator runs it. Workers only read `pc/` and may run rizin/rea read-only.
 
 **Failure policy (never stall):**
 
 - Worker fails or returns without a green gate: retry with the failure output in the prompt, escalating the model per "Model routing" rule 1. Final failure: mark the item `[!] <reason>` (or split it into smaller jobs and retry those), add the question to `docs/migration/OPEN.md`, move on.
 - Unverifiable behaviour inside an item: port what verifies, stub the rest behind a trait with `// UNVERIFIED:`, add to `docs/migration/OPEN.md`, and finish the item. Don't block on it.
-- `main` gate red: fixing it comes before any new work.
+- `main` gate red: fix it before any new work.
 - Anything that needs a human (by-ear audio check, visual sign-off, play-test, a decision without a default): add a line to `docs/migration/HUMAN.md`, finish everything else around it, and keep going. Mark the item `[x]` with "pending sign-off" if its code is done.
 - Never disable tests/lints, never weaken a differential test to make it pass.
 
@@ -153,7 +153,7 @@ drives events and asks `black-game` for dialog/menus through a trait.
 1. `sh black-rust/tools/doctor.sh` (repairs `/tmp` venv + decompile cache). If it exits 1 with a human-only fix, write it to `docs/migration/HUMAN.md` and do work that doesn't need it.
 2. Reconcile `[~]` items (rule 3). Remove merged worktrees (`git worktree remove`, `git branch -d`). Check notifications from background workers; merge finished ones. **Import validator findings:** if `validation/VALIDATION.md` has `[TODO]` lines and no validator is running, triage each per §5b "Import", flip it to `[IMPORTED]`/`[REJECTED]`, and (if commits have landed since the last run) launch the next validator run.
 3. Fill free worker slots with `[ ]` items whose deps are all `[x]`, highest priority first: Z-items that speed up porting > B > P > S > A > F > G > U > H > R. Read only the checklist files of the phases you dispatch from. Mark `[~] (branch, date)` before spawning. Do one SEQ item yourself while they run.
-4. **Checkpoint** after each merge and at least once per iteration: tick checklist/SYMBOLS (`tools/sync-docs.py`), run `python3 -I tools/progress.py` from `black-rust/` (rewrites `docs/migration/PROGRESS.json`), append `docs/migration/LOG.md`, overwrite `docs/migration/STATE.md`, commit the plan files and any coordinator-owned tool files (`git add MIGRATION-AGENT.md docs/migration` plus explicit paths, one-line message; include `validation/*.md` and `validation/COMMITS.csv` when they changed), `git push origin main`.
+4. **Checkpoint** after each merge and at least once per iteration: tick checklist/SYMBOLS (`tools/sync-docs.py`), run `python3 -I tools/archive-checklist.py`, then `python3 -I tools/progress.py` from `black-rust/` (rewrites `docs/migration/PROGRESS.json`), append `docs/migration/LOG.md`, overwrite `docs/migration/STATE.md`, commit the plan files and any coordinator-owned tool files (`git add MIGRATION-AGENT.md docs/migration` plus explicit paths, one-line message; include `validation/*.md` and `validation/COMMITS.csv` when they changed), `git push origin main`.
 5. Schedule the next wakeup: ~1200 s while workers run (you are notified when they finish), 60–270 s if about to merge. In DRAIN with no workers left, or in WRAP UP NOW, **pause** instead (`USAGE-CAP.md`).
 6. **Stop condition:** every item is `[x]`, `[-]`, or `[!]`/waiting on `docs/migration/HUMAN.md`. Then write a final summary in `docs/migration/STATE.md` and stop the loop.
 

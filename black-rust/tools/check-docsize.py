@@ -6,7 +6,8 @@ failures twice). This keeps it from regrowing:
 
   MIGRATION-AGENT.md                       <= 25 KB
   docs/migration/STATE.md, HUMAN.md        <=  8 KB
-  every other docs/migration/**/*.md       <= 40 KB, except LOG.md and log/*.md (append-only, uncapped)
+  every other docs/migration/**/*.md       <= 40 KB, except LOG.md, log/*.md, checklist/DONE.md and
+                                           checklist/archive/*.md (append-only, uncapped)
 
 Section references: `§N` is only meaningful inside MIGRATION-AGENT.md (sections 0, 1, 4, 5, 5b). In any
 other plan file a bare `§N` must be a markdown link (`[§5](../MIGRATION-AGENT.md)`) or sit on a line that names
@@ -32,6 +33,8 @@ def cap_for(rel):
         return 8 * KB
     if rel == "docs/migration/LOG.md" or rel.startswith("docs/migration/log/"):
         return None
+    if rel == "docs/migration/checklist/DONE.md" or rel.startswith("docs/migration/checklist/archive/"):
+        return None  # append-only archives of finished items (tools/archive-checklist.py)
     return 40 * KB
 
 

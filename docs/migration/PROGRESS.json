@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-14T01:06:53Z",
- "commit": "18ae32d",
+ "generated": "2026-10-14T01:24:32Z",
+ "commit": "f21c1a9",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -1320,57 +1320,85 @@
    {
     "id": "A0",
     "mark": "x",
-    "score": 1.0
+    "score": 1.0,
+    "archived": true
    },
    {
     "id": "A1",
     "mark": "x",
-    "score": 1.0
+    "score": 1.0,
+    "archived": true
    },
    {
     "id": "A2",
     "mark": "x",
-    "score": 1.0
+    "score": 1.0,
+    "archived": true
    },
    {
     "id": "A3",
     "mark": "x",
-    "score": 1.0
+    "score": 1.0,
+    "archived": true
    },
    {
     "id": "A4",
     "mark": "x",
-    "score": 1.0
+    "score": 1.0,
+    "archived": true
    },
    {
     "id": "A4b",
     "mark": "x",
-    "score": 1.0
+    "score": 1.0,
+    "archived": true
    },
    {
     "id": "A5",
     "mark": "x",
-    "score": 1.0
+    "score": 1.0,
+    "archived": true
    },
    {
     "id": "A6",
     "mark": "x",
-    "score": 1.0
+    "score": 1.0,
+    "archived": true
+   },
+   {
+    "id": "A8",
+    "mark": "x",
+    "score": 1.0,
+    "archived": true
+   },
+   {
+    "id": "A9",
+    "mark": "x",
+    "score": 1.0,
+    "archived": true
+   },
+   {
+    "id": "A11b",
+    "mark": "x",
+    "score": 1.0,
+    "archived": true
+   },
+   {
+    "id": "A11",
+    "mark": "x",
+    "score": 1.0,
+    "archived": true
+   },
+   {
+    "id": "A12",
+    "mark": "x",
+    "score": 1.0,
+    "archived": true
    },
    {
     "id": "A7",
     "mark": " ",
     "score": 0.0
-   },
-   {
-    "id": "A8",
-    "mark": "x",
-    "score": 1.0
-   },
-   {
-    "id": "A9",
-    "mark": "x",
-    "score": 1.0
    },
    {
     "id": "A9b",
@@ -1381,48 +1409,37 @@
     "id": "A10",
     "mark": "~",
     "score": 0.5
-   },
-   {
-    "id": "A11b",
-    "mark": "x",
-    "score": 1.0
-   },
-   {
-    "id": "A11",
-    "mark": "x",
-    "score": 1.0
-   },
-   {
-    "id": "A12",
-    "mark": "x",
-    "score": 1.0
    }
   ],
   "G": [
    {
     "id": "G1",
     "mark": "x",
-    "score": 1.0
+    "score": 1.0,
+    "archived": true
    },
    {
     "id": "G2",
     "mark": "x",
-    "score": 1.0
+    "score": 1.0,
+    "archived": true
+   },
+   {
+    "id": "G4",
+    "mark": "x",
+    "score": 1.0,
+    "archived": true
+   },
+   {
+    "id": "G5",
+    "mark": "x",
+    "score": 1.0,
+    "archived": true
    },
    {
     "id": "G3",
     "mark": " ",
     "score": 0.0
-   },
-   {
-    "id": "G4",
-    "mark": "x",
-    "score": 1.0
-   },
-   {
-    "id": "G5",
-    "mark": "x",
-    "score": 1.0
    },
    {
     "id": "G6",

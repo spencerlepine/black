@@ -22,7 +22,8 @@ Logic bucket = ported / in-scope:
   The numerator counts Ghidra-level functions and is not mapped to files; SCOPE.tsv is the place to re-baseline.
 
 Phase buckets A, G, U, H, R = ticked items / items in docs/migration/checklist/<P>.md (top-level `- [.]` lines only;
-`[x]` = 1, `[~]` = 0.5, `[!]`/`[-]` excluded). A `[x]` Phase U item counts as 1 only if every ui-ref/manifest.json
+`[x]` = 1, `[~]` = 0.5, `[!]`/`[-]` excluded) plus the `[x]` stubs of that phase in checklist/DONE.md (items archived
+by tools/archive-checklist.py count as done). A `[x]` Phase U item counts as 1 only if every ui-ref/manifest.json
 case for that screen has a passing report under ui-ref/report/ (else 0.5 = pending sign-off).
 
 Overall = 0.56·logic + 0.075·A + 0.05·G + 0.19·U + 0.125·(H+R)/2   (weights from the 2026-10-11 effort estimate,
@@ -175,12 +176,30 @@ def ui_pass_by_screen():
     return out
 
 
+def archived(letter):
+    """Finished items moved out of <P>.md by tools/archive-checklist.py: stubs `- [x] ID — P — ...` in DONE.md."""
+    path = os.path.join(CHECKLIST, "DONE.md")
+    if not os.path.exists(path):
+        return []
+    out = []
+    for line in open(path, encoding="utf-8"):
+        m = re.match(r"^- \[(.)\] (\S+) — (\w) — ", line)
+        if m and m.group(3) == letter:
+            out.append((m.group(1), m.group(2)))
+    return out
+
+
 def phase(letter, ui=None):
     path = os.path.join(CHECKLIST, letter + ".md")
     done = half = total = 0
     items = []
     if not os.path.exists(path):
         return {"error": "missing " + path}
+    for mark, iid in archived(letter):
+        if mark == "x":
+            total += 1
+            done += 1
+            items.append({"id": iid, "mark": "x", "score": 1.0, "archived": True})
     for line in open(path, encoding="utf-8"):
         m = ITEM_RE.match(line)
         if not m:
