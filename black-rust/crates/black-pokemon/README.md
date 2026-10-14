@@ -126,3 +126,25 @@ read with the box getter, then `FUN_02018584`), hash 1a566a4812a0b332. Growth lo
 is `create::recalc`, level-up learnset scan is `create::next_level_up_move`. The battle EXP formula is not in this
 crate: `black-battle` `calc::exp_yield` (0x021D7EB4), `server_flow::events::exp_scale` (0x021CB55C),
 `exp_distribute` (0x021CB2D4), `BattleMon::gain_exp` (0x021D69B8), `exp_for_max_level` (0x021D6B6C).
+
+## P7: egg generation (`egg.rs`)
+
+The Pokemon-side logic of the day care: overlay 21, `0x021C38F4-0x021C4570`, 39 functions (the driver
+`FUN_021C38F4` and the steps it runs on a 0x8C-byte work struct, `egg::Egg`, plus the helpers
+`FUN_021C42F4` add-move, `FUN_021C447C` TM compatibility, `FUN_021C4504` baby form, `FUN_021C452C` ability slot).
+Verified per function in the `field` set (`tools/check-fn.sh black-pokemon egg --per-function`, spec
+`tools/rom-diff/specs/black-pokemon/egg.spec`); every callee outside the area (Pokemon accessors, RNG,
+personal records, archive readers, message and string routines, item helpers) is `egg::EggHooks` and a stub.
+
+Steps, in driver order: parent order (male first, Ditto second), baby species (ARC 20), Nidoran /
+Volbeat / Illumise coin flips, Manaphy -> Phione, incense babies, forms (Shellos, Burmy, Basculin), nature
+(Everstone), ability slot (hidden-ability roll), egg cycles (personal field 0x15, stored as friendship),
+Power-item IVs then random IVs up to three, OT id, PID (Masuda: up to five re-rolls), moves (level-1
+learnset, egg moves from ARC 123 = the first parent's, moves both parents know, TM moves, Volt Tackle),
+then `build_mon` (`FUN_021C4340`) creates the egg Pokemon and sets the egg flag (id 0x4C).
+
+Deviations: the parents and the work struct are `[u32; 2]` / `[u32; 35]` (the work struct is a stack local
+of the driver); Pokemon are `u32` handles behind the hooks. `EggHooks::learnset_end` is 0xFFFF in the game;
+the differential test moves it because a random stub buffer never ends. `FUN_021C3898` (the day care
+struct reader that calls the driver) and the rest of `sodateya.c` are F13. Hatching (the step counter
+and the hatch scene) is in no decompiled overlay set (main, 10, 11, 18, 20, 21, battle set): not found.
