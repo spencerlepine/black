@@ -777,3 +777,21 @@ the four areas; `--strict-callees` (plain and with the ports) and `--order-check
 * Callees whose answer is compared with the bitwise complement of an argument (the integrity checks 021882DC / 02188354 / 02188390 of
   the battle proc, ARM entries of an overlay outside the field set) answer `pick+u32:` lists with the passing value.
 * `fix ... rel K` places a rect field next to scalar argument K (`0215F118`: rect x / z within -3..+3 of the position).
+
+## F6b-spec additions (black-field mapchange_proc / mapchange_new / mapchange_zone)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-field/mapchange_{proc,new,zone}.spec` (headers), on top of the F5b ones: closure stubs (checked with every function of
+the area treated as ported: no fault, stray write or unstubbed callee); every out-of-area stub is `force`, also between the three
+areas; `--strict-callees` (plain and with the ports) and `--order-check` clean; instruction coverage (own body, plain / closure)
+1784/1784, 1000/1000, 1212/1212 in both modes.
+
+* Blocks are generated from one stub library (per-callee `ret=` / `args=` with an `{A}` placeholder for the block's arena argument)
+  plus per-function arguments / fixes; a block whose closure contains a pointer-answering stub gets that stub's arena-zone fixes.
+  The arena is a trailing `buf 0x1000` the function never reads as a register.
+* Out LOCATIONs that a caller tests the kind of (`02185788` in-area, `021625FC`) are `outm:0x1C:3/0/0/0/0xFF..` (kind 0..3); a
+  callee that may change a field the caller re-reads in a loop is `outk` on that field (`021869E0`, `+2` bit 0).
+* Several zonedata predicates of one function on the same argument get pick lists of coprime lengths (`pick+u32:0/1`, `0/1/0`,
+  `0/1/0/0/0`, `0/1/0/0/0/0/0`): with equal lengths their answers are correlated and some branch combinations never occur.
+* A 64-bit callee (`0203F524`) is `ret=u64`; black-field ports read it through an area trait (`MapChangeEnv::call64`) whose test
+  impl forwards to `StubEnv::call64`.

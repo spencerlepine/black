@@ -1429,3 +1429,81 @@ remainder test, `hp * 2 <= max`, lost type 4, capture-demo level, record 0x4F `=
 `exclude` filter, roamer index swap, rect `>=`, flag shift `>= 32`, ctx flag 0x40, skill-1 form 3, light flags `& ~1`, symbol kind
 `<= 2`, record bits `& 0x3F`, flag 0xF001 `!= 0`, zone remap key). The 2 survivors are equivalent (sum + 0x9E instead of + 0x9D:
 both leave a nonzero remainder; remap result `& 0xFF`: the results 0x88 / 0xF0 fit a byte).
+
+## F6b: `event_mapchange.c` (F1 row 20.00): `mapchange_proc` (29/29), `mapchange_new` (24/24), `mapchange_zone` (33/33): specs + ports
+
+Overlay 20 `0x02183B60..0x02186278` (the first part of overlay 20; `field_wfbc_data_local.c` starts at 0x02186278, el_scoreboard.c
+at 0x021875F4), split by address into three spec areas under `tools/rom-diff/specs/black-field/` (set `field`), all ported and
+verified with `tools/check-fn.sh black-field AREA --per-function`. Closure stubs (with every function of an area treated as ported
+all blocks run without a fault, stray write or unstubbed callee); every out-of-area stub is `force`, also between the three areas;
+`svflow.py AREA --all --strict-callees` (plain and with the ports) and `--order-check` are clean.
+
+| area | contents | range | fns | coverage (plain / closure) | spec hash (`--all`, plain) | area hash (ported) |
+|---|---|---|---|---|---|---|
+| `mapchange_proc` | game-start events (new game / continue), season check, door sub-record, zone-change child event, the map-change GMEVENT procs | `0x02183B60..0x02184CEC` | 29 | 1784/1784 / 1784/1784 | 5a2823bd7f68bb8e | 078713bd544aa28b |
+| `mapchange_new` | MAPCHANGE work init and the map-change event constructors, the player's LOCATION, the zone entry from the special location | `0x02184CEC..0x02185694` | 24 | 1000/1000 / 1000/1000 | 0c170847d5bf9697 | 3fbd14c0c9f80f4c |
+| `mapchange_zone` | zone entry / zone data load / SB list (ARC 101), comm map-change events, special-location updates, default record, WFBC list helpers | `0x02185694..0x02186278` | 33 | 1212/1212 / 1212/1212 | b22ab8f52bcb6889 | 49f7ebffefd10b9b |
+
+File bound: `Heap_AllocDebug(0x8004, 0x1000, 0, "event_mapchange.c", 0xE35 / 0xE3A)` in 0218604C / 0218606C (string 0x02187EA0).
+Function list: bl/blx targets of the whole field set, odd code pointers, the Ghidra index and a Thumb walk from every entry; 86
+entries (F1's 92 counted 6 switch-case labels / shared tails that Ghidra lists as `LAB_` functions). `0x0218609C..0x0218625C` (WFBC
+people-list helpers that the game-start events use) sit inside the event_mapchange.c bound and are ported here. Render-only
+functions: none (the VRAM clears `0208068C` / `02082AC0` / `02080B98`, fades, sound, the place name are callees, D3).
+
+### The map change (from the code)
+
+* A constructor (`mapchange_new`) creates a GMEVENT whose work is a MAPCHANGE work M (0x9C, `work_init` 02184CEC: `+0` GAMESYS, `+4`
+  GAMEDATA, `+8` FIELDMAP, `+0xC` u16 the zone being left, `+0x40 / +0x44` season flags, `+0x48 / +0x4A` the season twice) and fills the
+  destination LOCATION at `+0x10` (0x1C: `+0` kind, `+4` u16 zone, `+6` u16 warp, `+8` s16 direction code, `+0xC` rail flag, `+0x10`
+  position; grid `02014184`, rail `020141A8`, warp record `02162694`, zone `02014204`), `+0x2C` the door kind (`021626E8`), `+0x30` u8
+  the zone-change kind, `+0x34` a 12-byte position.
+* Its proc (`mapchange_proc`: door 02184388, comm door 02184410, warp 02184504, fade 02184584, wait 0218466C, position 02184730,
+  special location 021847CC / 02184894, zone 0218495C / 02184AB4, 02184A14, grid 02184B54, union room in / out 02184BF8 / 02184C78)
+  sequences leave-the-map (`02161824`), fades (`021BE8D4` / `021BE92C`), transitions (`021BD648` / `021BD9BC` on the door
+  sub-record at M + 0x4C, `021BFxxx`), the zone BGM (`02029D44`), the zone-change child event (02184360 -> proc 021841C0) and the
+  place name (`021BC550`).
+* The zone-change child (021841C0) loads overlay 0xE6 around the zone switch: leave (02185B70), the season change, the zone data
+  load (02185A68: event data, map matrix, the flash flags, the GAMEDATA kind) and the zone entry (021857C0: LOCATION resolve, PLAYER
+  record zone / direction / position, SB list of ARC 101 member 0, NPCs, WFBC people, weather), the zone hook of kind 1..3
+  (eventdata_tail 02164454 / 02164464 / 0216445C), and three integrity calls into an overlay outside the field set (`021882A0` /
+  `02188318` / `021883CC` with the invoker 02183B60 and the callbacks 0218604D / 0218606D / 0218608D; their answers are unused).
+* Game start (02183B6C by kind): the start event (02183B90: VRAM clear, el_scoreboard event, `02161B90`, then the new game), the new
+  game (02183D68 / proc 02183C9C: WFBC lists, RTC record, the default record 02185F6C from message bank 190), continue (02183F5C /
+  proc 02183DE4: flag 0x966, RTC record check with the 64-bit tick `0203F524`, var 0x4041 -> script 0x83B).
+* Comm (X1 / D9 callees are force stubs): 02185140 / 02185214 start the comm map change (02185BFC proc 02185D38: scripts 0x279A..0x279F,
+  02185C4C proc 02185C8C).
+
+### Spec conventions (these three areas)
+
+* All blocks `nowork`; a GMEVENT proc is `(event, seq buf 0x10, work buf)`; the MAPCHANGE work is `buf 0x100` with its fields fixed
+  (zones 0..20, kind / flags biased to 0 / 1); a trailing `buf 0x1000` is the arena the stubs' pointer answers point into (GMEVENT
+  work +0, comm record +0x100 with `+0x86` / `+0x902` fixed, LOCATIONs +0x200..+0x300 with zone 136 / 158 biases, positions +0x340 /
+  +0x360, event-work vars +0x380, the ARC 101 table +0x400 (keys 0..3), WFBC lists +0x480 / +0x4C0, WFBC records +0x500); functions
+  never read it as a register.
+* The LOCATION resolver `02185788` (in-area stub) and the exit-location callee `021625FC` fill their out LOCATION with kind 0..3
+  (`outm`), so the kind-3 branch of 021857C0 is reached in both modes; `021869E0` may set bit 0 of the list's `+2` (`outk`), so the
+  per-pick re-read of 021860D4 is compared; the zone-data load reads `02012B70` / `020129AC` up to three times (`seq`) and its four
+  zonedata predicates use pick lists of coprime lengths (decorrelated).
+* `0203F524` answers 64 bits: the ports reach it through `mapchange_proc::MapChangeEnv::call64` (the test env forwards to
+  `StubEnv::call64`).
+
+Ports: every callee outside an area (the other two mapchange areas included) is reached through `FieldEnv::call` by address;
+in-area callees are Rust calls; stack locals are `Mem::push_local` windows; the callback of 02183B60 goes through `FieldEnv::call`
+at its address. No ROM tables are read by these functions (the strings 0x02187DA4 / 0x02187DAC / 0x02187DB4 are passed by address).
+
+| C | Rust |
+|---|------|
+| `FUN_02183B6C` / `02183C34` / `02183D68` / `02183F5C` | `mapchange_proc::{start_event, start_new, new_game_new, continue_new}` |
+| `FUN_02184360` / `021841C0` | `mapchange_proc::{zone_change_new, zone_change_proc}` |
+| `FUN_02184CEC` | `mapchange_new::work_init` |
+| `FUN_02185458` / `021854B0` | `mapchange_new::{warp_new, warp0_new}` |
+| `FUN_021857C0` / `02185A68` | `mapchange_zone::{zone_enter, zone_load}` |
+
+UNVERIFIED (unreachable for the differential tests): none beyond the stub models (what the callees do is only what their comments
+say). Deliberate deviations: none in behaviour; unused arguments of the original are dropped from the Rust signatures (the doc
+comments say which).
+
+Mutation spot check (`check-fn.sh --fn`, reverted; `/tmp/blk/f6b/mutate.py`): 20 of 20 caught (direction-angle table, flash flag
+`& ~1 | 2`, kind set `3 / 4 / 6`, SB-list `break`, WFBC pick field `+6`, `== 21`, special zone 136, LOCATION kind 3, comm x offset
+`0x10000 +`, `& 7`, work init `+0x44 = 0`, union-room x, `02013E7C == 1`, comm-state window `<= 1`, season check `&& f`, comm door
+step 7, invoker `!f`, weather `< 16`, season byte `+0x48`, zone-change kind 4).
