@@ -54,9 +54,9 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021D2990, "3efc5f0cb6f6816f"),
     (0x021D299C, "5bd1973e1e6d105a"),
     (0x021D29CC, "6a7f1c2652fbc4bc"),
-    (0x021D2A20, "0e41ffb59c008a05"),
+    (0x021D2A20, "b55be042a2bdc3b7"),
     (0x021D2C7C, "b271ff9d79f401b9"),
-    (0x021D2CA8, "042273250d684c53"),
+    (0x021D2CA8, "3294ae96b4ec45b5"),
 ];
 // svflow-recorded-end
 

@@ -38,7 +38,9 @@ impl FlowEnv for RecEnv {
                     self.log.push(*v);
                     h = mix(h, *v);
                 }
-                Arg::P | Arg::PBuf(_) | Arg::PHost(_) | Arg::PAt(_) => self.log.push(PTR),
+                Arg::P | Arg::PBuf(_) | Arg::PHost(_) | Arg::PAt(_) | Arg::PWork(_) => {
+                    self.log.push(PTR)
+                }
                 Arg::In(b) => {
                     self.log.push(PTR);
                     self.log.extend(b.iter().map(|&x| x as u32));
@@ -514,7 +516,7 @@ wired!(
         let mut o = [0u8; 4];
         probe.call(
             0x021B_FEAC,
-            &mut [Arg::P, Arg::V(ma), Arg::V(mb), Arg::Out(&mut o)],
+            &mut [Arg::PWork(0), Arg::V(ma), Arg::V(mb), Arg::Out(&mut o)],
         );
         assert_eq!(probe.log, e.log);
         (r, u32::from_le_bytes(o))

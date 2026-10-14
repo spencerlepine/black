@@ -997,20 +997,24 @@ pub fn mmdl_blocks<E: FieldEnv>(
 /// `FUN_0216DD1C(MMDLSYS, &o, &i)`) that blocks `m` at `(x, y, z)` ([`mmdl_blocks`] with `all = 1`)?
 pub fn mmdl_at<E: FieldEnv>(env: &mut E, m: u32, x: u32, y: u32, z: u32) -> u32 {
     let sys = c1(env, SYS_OF, m);
-    loop {
+    // the iterator index `i` (0): a stack local of the original, passed by address (B18b)
+    let i = env.mem().push_local(4);
+    let r = loop {
         let mut o = [0u8; 4];
         let more = env.call(
             NEXT_IN_USE,
-            &mut [CArg::V(sys), CArg::OutBuf(&mut o), CArg::P(0)],
+            &mut [CArg::V(sys), CArg::OutBuf(&mut o), CArg::P(i)],
         );
         if more != 1 {
-            return 0;
+            break 0;
         }
         let o = u32::from_le_bytes(o);
         if m != o && mmdl_blocks(env, m, o, x, y, z, 1) == 1 {
-            return 1;
+            break 1;
         }
-    }
+    };
+    env.mem().pop_local(i);
+    r
 }
 
 /// C: `FUN_02163C04` (unlabeled routine at `0x02163C04`): is `(x, z)` inside the footprint of `m` at its grid, or

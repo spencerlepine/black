@@ -554,7 +554,7 @@ fn 0216cdc4 ret=ofs:work inputs=300
   stub 0216da88 ret=none args=v  # in-area
   stub 0216daa0 ret=pick:0/1 args=v  # in-area
   stub 0216db98 ret=none args=v,v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216deec ret=ptr:work:0x100:1 args=v  # in-area
   stub 0216df64 ret=none args=v,v  # in-area
   stub 0216e114 ret=none args=v  # in-area
@@ -682,7 +682,7 @@ fn 0216ce60 ret=ofs:work inputs=100
   stub 0216da88 ret=none args=v  # in-area
   stub 0216daa0 ret=pick:0/1 args=v  # in-area
   stub 0216db98 ret=none args=v,v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216deec ret=ptr:work:0x100:1 args=v  # in-area
   stub 0216df64 ret=none args=v,v  # in-area
   stub 0216e114 ret=none args=v  # in-area
@@ -817,7 +817,7 @@ fn 0216ce6c ret=ofs:work inputs=200
   stub 0216da88 ret=none args=v  # in-area
   stub 0216daa0 ret=pick:0/1 args=v  # in-area
   stub 0216db98 ret=none args=v,v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216deec ret=ptr:work:0x100:1 args=v  # in-area
   stub 0216df64 ret=none args=v,v  # in-area
   stub 0216e114 ret=none args=v  # in-area
@@ -951,7 +951,7 @@ fn 0216ceac ret=none inputs=200
   stub 0216da88 ret=none args=v  # in-area
   stub 0216daa0 ret=pick:0/1 args=v  # in-area
   stub 0216db98 ret=none args=v,v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216deec ret=ptr:work:0x100:1 args=v  # in-area
   stub 0216df64 ret=none args=v,v  # in-area
   stub 0216e114 ret=none args=v  # in-area
@@ -1087,7 +1087,7 @@ fn 0216cee4 ret=ofs:work inputs=300
   stub 0216da88 ret=none args=v  # in-area
   stub 0216daa0 ret=pick:0/1 args=v  # in-area
   stub 0216db98 ret=none args=v,v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216deec ret=ptr:work:0x100:1 args=v  # in-area
   stub 0216df64 ret=none args=v,v  # in-area
   stub 0216e114 ret=none args=v  # in-area
@@ -1201,7 +1201,7 @@ fn 0216cf6c ret=none inputs=200
   stub 0216d55c ret=pick:0/1 args=v,v  # in-area
   stub 0216d76c ret=none args=v  # in-area
   stub 0216d948 ret=pick:0/1 args=v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216e180 ret=none args=v  # in-area
   stub 02ee0070 force ret=none args=v  # FAKE draw proc delete(mmdl) (+8)
 
@@ -1387,7 +1387,7 @@ fn 0216d040 ret=none inputs=300
   stub 0216d85c ret=none args=v,v  # in-area
   stub 0216d874 ret=none args=v,v  # in-area
   stub 0216d89c ret=none args=v,in:12  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216e2e8 ret=none args=v,v,v  # in-area
   stub 0216e39c ret=none args=v,v,v  # in-area
   stub 0216e3d8 ret=pick:0xb9/0xa/0x6d/1/0x2003 args=v,v  # in-area
@@ -1800,7 +1800,7 @@ fn 0216d2ac ret=none inputs=200
   stub 0216d568 ret=none args=v,v  # in-area
   stub 0216d780 ret=none args=v  # in-area
   stub 0216d948 ret=pick:0/1 args=v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216dfac ret=none args=v  # in-area
   stub 02ee0080 force ret=none args=v  # FAKE draw proc push(mmdl) (+0xC)
 
@@ -1865,7 +1865,7 @@ fn 0216d2f8 ret=none inputs=300
   stub 0216d948 ret=pick:0/1 args=v  # in-area
   stub 0216da88 ret=none args=v  # in-area
   stub 0216daa0 ret=pick:0/1 args=v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216df64 ret=none args=v,v  # in-area
   stub 0216e114 ret=none args=v  # in-area
   stub 0216e160 ret=none args=v  # in-area
@@ -6936,7 +6936,7 @@ fn 0216d9a0 ret=none inputs=200
   stub 0216d57c ret=pick:0/1 args=v,v  # in-area
   stub 0216daf8 ret=none args=v  # in-area
   stub 0216dc80 ret=pick:0/1 args=v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
 
 # 0216D9E4(sys): every MMDL in use: +4 &= ~8 (0216DB04); 0216D4E4(sys, 0x20)
 fn 0216d9e4 ret=none inputs=200
@@ -6979,7 +6979,7 @@ fn 0216d9e4 ret=none inputs=200
   stub 0216d55c ret=pick:0/1 args=v,v  # in-area
   stub 0216d570 ret=none args=v,v  # in-area
   stub 0216db04 ret=none args=v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
 
 # 0216DA20(m, v): 0216D4D4(0216D67C(m), v)
 fn 0216da20 ret=u32 inputs=30
@@ -8427,7 +8427,7 @@ fn 0216dd60 ret=u32 inputs=200
   stub 02163c04 force ret=pick:0/1 args=v,v,v,v  # position match (mmdl, x, z, flag)
   stub 0216d4f0 ret=pick:1/2/8 args=v  # in-area
   stub 0216d55c ret=pick:0/1 args=v,v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
 
 # 0216DDC0(sys, x, z, f): local list; 0216DD60(sys, x, z, f, &list) != 0: list m[0] else 0
 fn 0216ddc0 ret=ofs:work inputs=200
@@ -8471,7 +8471,7 @@ fn 0216ddc0 ret=ofs:work inputs=200
   stub 02163c04 force ret=pick:0/1 args=v,v,v,v  # position match (mmdl, x, z, flag)
   stub 0216d4f0 ret=pick:1/2/8 args=v  # in-area
   stub 0216d55c ret=pick:0/1 args=v,v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216dd60 ret=pick:0/1/2 args=v,v,v,v,out:0x44  # in-area
 
 # 0216DDDC(sys, x, z, y, dy, f): n = 0216DD60(sys, x, z, f, &list); first m (i < n) with |0216D8AC(m) - y| < dy (the
@@ -8520,7 +8520,7 @@ fn 0216dddc ret=ofs:work inputs=300
   stub 0216d4f0 ret=pick:1/2/8 args=v  # in-area
   stub 0216d55c ret=pick:0/1 args=v,v  # in-area
   stub 0216d8ac force ret=pick:0/0x10000/0xFFFF0000/0x30000/0x7FFFFFFF args=v  # MMDL +0x48 (pos y); forced: 0216DDDC reads it from list entries of the 0216DD60 stub
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216dd60 ret=pick:0/1/2 args=v,v,v,v,out:0x44  # in-area
 
 # 0216DE54(sys, code): first MMDL in use with move code (+0xE) == code, else 0
@@ -8563,7 +8563,7 @@ fn 0216de54 ret=ofs:work inputs=200
   stub 0216d4f0 ret=pick:1/2/8 args=v  # in-area
   stub 0216d55c ret=pick:0/1 args=v,v  # in-area
   stub 0216d5a0 ret=pick:0x30/0x32/0/1 args=v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
 
 # 0216DE94(sys, id): first MMDL in use, no alias (+0 & 0x800), with OBJ id (+8) == id, else 0
 fn 0216de94 ret=ofs:work inputs=200
@@ -8606,7 +8606,7 @@ fn 0216de94 ret=ofs:work inputs=200
   stub 0216d55c ret=pick:0/1 args=v,v  # in-area
   stub 0216d588 ret=pick:0/1/2/0xff args=v  # in-area
   stub 0216dbb4 ret=pick:0/1 args=v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
 
 # 0216DEE0(sys): 0216DE94(sys, 0xFF) (the player object)
 fn 0216dee0 ret=ofs:work inputs=100
@@ -8648,7 +8648,7 @@ fn 0216dee0 ret=ofs:work inputs=100
   stub 0216d55c ret=pick:0/1 args=v,v  # in-area
   stub 0216d588 ret=pick:0/1/2/0xff args=v  # in-area
   stub 0216dbb4 ret=pick:0/1 args=v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216de94 ret=nullable:2:ptr:work:0x100:1 args=v,v  # in-area
 
 # 0216DEEC(sys): first MMDL with !(+0 & 1) (do-while over max (+4) entries, so MMDL 0 is always looked at), else 0
@@ -8737,7 +8737,7 @@ fn 0216df1c ret=none inputs=200
   stub 0216d71c ret=none args=v  # in-area
   stub 0216d76c ret=none args=v  # in-area
   stub 0216d948 ret=pick:0/1 args=v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216dfac ret=none args=v  # in-area
   stub 0216e180 ret=none args=v  # in-area
   stub 02ee0030 force ret=none args=v  # FAKE move proc delete(mmdl) (+0xC)
@@ -8866,7 +8866,7 @@ fn 0216dfc4 ret=u32 inputs=200
   stub 0216d55c ret=pick:0/1 args=v,v  # in-area
   stub 0216d598 ret=pick:0x6d/0x2003/0xb9/0xffff/0/1 args=v  # in-area
   stub 0216d67c ret=ptr:work:0:1 args=v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
 
 # 0216E014(m, v, dir): +0x3C/+0x3E/+0x40 = grid(v.x / v.y / v.z) (fx32 >> 4, signed / 4096, as s16); position = v;
 # 02163F10(m); 0216D5D8(m, dir); 0216D4B4(m); +4 |= 0x20; +4 &= ~0x50
@@ -9457,7 +9457,7 @@ fn 0216e204 ret=none inputs=300
   stub 0216da88 ret=none args=v  # in-area
   stub 0216da94 ret=none args=v  # in-area
   stub 0216daa0 ret=pick:0/1 args=v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216e114 ret=none args=v  # in-area
   stub 0216e160 ret=none args=v  # in-area
   stub 0216e174 ret=none args=v  # in-area
@@ -9706,7 +9706,7 @@ fn 0216e2e8 ret=none inputs=300
   stub 0216d4f0 ret=pick:1/2/8 args=v  # in-area
   stub 0216d55c ret=pick:0/1 args=v,v  # in-area
   stub 0216d598 ret=pick:0x6d/0x2003/0xb9/0xffff/0/1 args=v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
 
 # 0216E39C(sys, code, m): +0 &= ~1 (out of use); 0216E2E8(sys, code, m + 0xE4); +0 |= 1
 fn 0216e39c ret=none inputs=200
@@ -9753,7 +9753,7 @@ fn 0216e39c ret=none inputs=200
   stub 0216d550 ret=none args=v,v  # in-area
   stub 0216d55c ret=pick:0/1 args=v,v  # in-area
   stub 0216d598 ret=pick:0x6d/0x2003/0xb9/0xffff/0/1 args=v  # in-area
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216e2e8 ret=none args=v,v,v  # in-area
 
 # 0216E3C4(m): m + 0xE4 (OBJ data, 0x1C bytes)
@@ -10215,7 +10215,7 @@ fn 0216e5b0 ret=u32 inputs=300
   stub 0216d598 ret=pick:0x6d/0x2003/0xb9/0xffff/0/1 args=v  # in-area
   stub 0216d67c ret=ptr:work:0:1 args=v  # in-area
   stub 0216d8ac force ret=pick:0/0x10000/0xFFFF0000/0x30000/0x7FFFFFFF args=v  # MMDL +0x48 (pos y); forced: 0216DDDC reads it from list entries of the 0216DD60 stub
-  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,p  # in-area
+  stub 0216dd1c seq ret=pick:0/1 args=v,outp:work:0x100:1,ptr  # in-area
   stub 0216dd60 ret=pick:0/1/2 args=v,v,v,v,out:0x44  # in-area
   stub 0216dddc ret=nullable:2:ptr:work:0x100:1 args=v,v,v,v,v,v  # in-area
   stub 0216e490 ret=pick:0/1 args=v  # in-area

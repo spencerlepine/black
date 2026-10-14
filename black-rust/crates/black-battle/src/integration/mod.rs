@@ -381,6 +381,11 @@ impl Env {
                 let p = self.host_addr(&lent, h);
                 *a = Arg::PAt(p);
             }
+            // B18b: the flow work (+ offset) a port passes through without holding it
+            if let Arg::PWork(o) = *a {
+                assert!(self.waddr != 0, "B16: flow work used before it was created");
+                *a = Arg::PAt(self.waddr + o);
+            }
         }
         let Lent {
             mut work,
@@ -629,6 +634,7 @@ impl<'a, 'b> Bufs<'a, 'b> {
             Arg::In(b) => b.to_vec(),
             Arg::Out(b) | Arg::PBuf(b) => b.to_vec(),
             Arg::V(a) | Arg::PAt(a) => env.read_vec(lent, *a, len),
+            Arg::PWork(o) => env.read_vec(lent, env.waddr + *o, len),
             Arg::PHost(h) => {
                 let a = env.host_addr(lent, *h);
                 env.read_vec(lent, a, len)
@@ -649,6 +655,7 @@ impl<'a, 'b> Bufs<'a, 'b> {
             }
             Arg::In(_) => {}
             Arg::V(a) | Arg::PAt(a) => env.write_bytes(lent, *a, data),
+            Arg::PWork(o) => env.write_bytes(lent, env.waddr + *o, data),
             Arg::PHost(h) => {
                 let a = env.host_addr(lent, *h);
                 env.write_bytes(lent, a, data)

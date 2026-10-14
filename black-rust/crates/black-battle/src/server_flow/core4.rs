@@ -596,7 +596,7 @@ pub fn list_apply_557c<E: FlowEnv>(env: &mut E, rec: &[u8], list: u32) {
         {
             env.call(
                 0x021C_557C,
-                &mut [Arg::P, Arg::V(mon), Arg::V(3), Arg::V(1)],
+                &mut [Arg::PWork(0), Arg::V(mon), Arg::V(3), Arg::V(1)],
             );
         }
         mon = list_next(env, 0x021C_1D50, list);
@@ -639,7 +639,12 @@ pub fn chance_gate<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, mon: u32, chance
         mon_set5fc0(&mut Lend::new(env, w), mon, 6);
         return 1;
     }
-    if env.callw(0x021C_76F4, &mut [Arg::P, Arg::V(mon), Arg::V(chance)], w) != 0 {
+    if env.callw(
+        0x021C_76F4,
+        &mut [Arg::PWork(0), Arg::V(mon), Arg::V(chance)],
+        w,
+    ) != 0
+    {
         mon_set5fc0(&mut Lend::new(env, w), mon, 4);
         return 1;
     }
@@ -710,7 +715,12 @@ pub fn category8_followup<E: FlowEnv>(
     let x = env.callwc(0x0201_BD28, &mut [Arg::V(rec_id(rec)), Arg::V(0x19)], w, cx);
     let y = env.callwc(0x021D_7B3C, &mut [Arg::V(r5), Arg::V(x)], w, cx);
     if pick_and_apply(env, w, cx, r2, r3, y & 0xFFFF) != 0 {
-        env.callwc(0x021C_5D88, &mut [Arg::P, Arg::V(r3), Arg::V(0x383)], w, cx);
+        env.callwc(
+            0x021C_5D88,
+            &mut [Arg::PWork(0), Arg::V(r3), Arg::V(0x383)],
+            w,
+            cx,
+        );
     }
 }
 
@@ -883,8 +893,8 @@ pub fn event_90<E: FlowEnv>(env: &mut E, mon: u32, v: u32) -> u32 {
 
 /// C: `FUN_overlay_d_93__021c2314`: `5be4(work, mon, 0)` then `4f64(work, mon)`.
 pub fn run_5be4_4f64<E: FlowEnv>(env: &mut E, mon: u32) {
-    env.call(0x021C_5BE4, &mut [Arg::P, Arg::V(mon), Arg::V(0)]);
-    env.call(0x021C_4F64, &mut [Arg::P, Arg::V(mon)]);
+    env.call(0x021C_5BE4, &mut [Arg::PWork(0), Arg::V(mon), Arg::V(0)]);
+    env.call(0x021C_4F64, &mut [Arg::PWork(0), Arg::V(mon)]);
 }
 
 /// C: `FUN_overlay_d_93__021c20d0`: applies `-amount` to mon `mon` (0 = nothing): `5b74`, state
@@ -903,7 +913,7 @@ pub fn apply_amount<E: FlowEnv>(
     env.callw(
         0x021C_5B74,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::V(mon),
             Arg::V(amount.wrapping_neg()),
             Arg::V(1),
@@ -912,12 +922,12 @@ pub fn apply_amount<E: FlowEnv>(
     );
     mon_set5fc0(&mut Lend::new(env, w), mon, 2);
     if !hem.is_null() {
-        env.callw(0x021C_99A0, &mut [Arg::P, hem.arg()], w);
+        env.callw(0x021C_99A0, &mut [Arg::PWork(0), hem.arg()], w);
         env.callw(0x021C_8810, &mut [hem.arg()], w);
     }
     record_bracket_199c(env, w, mon, 1);
-    if env.callw(0x021C_4F64, &mut [Arg::P, Arg::V(mon)], w) != 0 {
-        env.callw(0x021B_C2B0, &mut [Arg::P], w);
+    if env.callw(0x021C_4F64, &mut [Arg::PWork(0), Arg::V(mon)], w) != 0 {
+        env.callw(0x021B_C2B0, &mut [Arg::PWork(0)], w);
         return 1;
     }
     1
@@ -969,7 +979,12 @@ pub fn mon_state_change<E: FlowEnv>(
     env.callwc(0x021C_7AD0, &mut [Arg::P, Arg::V(mon), Arg::V(r2)], w, cx);
     bracket_close(w, old);
     if r2 == 0 {
-        env.callwc(0x021C_60EC, &mut [Arg::P, Arg::V(mon), Arg::V(0xF)], w, cx);
+        env.callwc(
+            0x021C_60EC,
+            &mut [Arg::PWork(0), Arg::V(mon), Arg::V(0xF)],
+            w,
+            cx,
+        );
     }
     env.callwc(0x021D_CF24, &mut [Arg::V(mon)], w, cx);
     cmd_queue::put_cmd(
@@ -995,7 +1010,12 @@ pub fn mon_state_change<E: FlowEnv>(
             &[id, v],
             &mut cx.g[cx.gb..],
         );
-        env.callwc(0x021C_6134, &mut [Arg::P, Arg::V(mon), Arg::V(8)], w, cx);
+        env.callwc(
+            0x021C_6134,
+            &mut [Arg::PWork(0), Arg::V(mon), Arg::V(8)],
+            w,
+            cx,
+        );
     }
 }
 
@@ -1028,7 +1048,7 @@ pub fn placeholder_effect<E: FlowEnv>(
             );
             let old = cmd_queue::advance_fields_set_low10(&mut w.mem[OFS_QUEUE_HEADER..], key);
             env.callwc(0x021C_6DD0, &mut [Arg::P, Arg::V(mon)], w, cx);
-            done = env.callwc(0x021C_88E4, &mut [Arg::P], w, cx) == 2;
+            done = env.callwc(0x021C_88E4, &mut [Arg::PWork(0)], w, cx) == 2;
             bracket_close(w, old);
             if done {
                 let id = mon_id(&mut Lend::wc(env, w, cx), mon);
@@ -1092,7 +1112,7 @@ pub fn base_damage<E: FlowEnv>(
         let pow = env.callwr(
             0x021C_7374,
             &mut [
-                Arg::P,
+                Arg::PWork(0),
                 Arg::V(mon_a),
                 Arg::V(mon_b),
                 Arg::PAt(rec_addr),
@@ -1103,7 +1123,7 @@ pub fn base_damage<E: FlowEnv>(
         let def = env.callwr(
             0x021C_7474,
             &mut [
-                Arg::P,
+                Arg::PWork(0),
                 Arg::V(mon_a),
                 Arg::V(mon_b),
                 Arg::PAt(rec_addr),
@@ -1328,12 +1348,12 @@ pub fn notify_others<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, mon: u32) {
     let a = mon_id(&mut Lend::new(env, w), mon);
     // the iterator state lives in the caller's frame
     let mut it = [0u8; 4];
-    env.callw(0x021B_D2B4, &mut [Arg::PBuf(&mut it), Arg::P], w);
+    env.callw(0x021B_D2B4, &mut [Arg::PBuf(&mut it), Arg::PWork(0)], w);
     loop {
         let mut o = [0u8; 4];
         let more = env.callw(
             0x021B_D34C,
-            &mut [Arg::PBuf(&mut it), Arg::P, Arg::Out(&mut o)],
+            &mut [Arg::PBuf(&mut it), Arg::PWork(0), Arg::Out(&mut o)],
             w,
         );
         if more == 0 {
@@ -1366,7 +1386,7 @@ pub fn failure_message<E: FlowEnv>(
 ) {
     env.callwc(
         0x021C_5C1C,
-        &mut [Arg::P, Arg::V(mon), Arg::V(reason), Arg::V(r5)],
+        &mut [Arg::PWork(0), Arg::V(mon), Arg::V(reason), Arg::V(r5)],
         w,
         cx,
     );
@@ -1381,12 +1401,17 @@ pub fn failure_message<E: FlowEnv>(
         _ => None,
     };
     if let Some(id) = msg {
-        env.callwc(0x021C_5480, &mut [Arg::P, Arg::V(mon), Arg::V(id)], w, cx);
+        env.callwc(
+            0x021C_5480,
+            &mut [Arg::PWork(0), Arg::V(mon), Arg::V(id)],
+            w,
+            cx,
+        );
     }
     if r6 == 0 {
         if r8 != 0 {
             // r1 still holds `r8` (the original reloads it for the test)
-            env.callwc(0x021C_99A0, &mut [Arg::P, Arg::PAt(r8)], w, cx);
+            env.callwc(0x021C_99A0, &mut [Arg::PWork(0), Arg::PAt(r8)], w, cx);
         }
     } else {
         let hem = cx.w_addr.wrapping_add(OFS_HEM_1AE4);
@@ -1396,7 +1421,7 @@ pub fn failure_message<E: FlowEnv>(
             w,
             cx,
         );
-        env.callwc(0x021C_99A0, &mut [Arg::P, Arg::PAt(hem)], w, cx);
+        env.callwc(0x021C_99A0, &mut [Arg::PWork(0), Arg::PAt(hem)], w, cx);
         env.callwc(0x021C_8810, &mut [Arg::PAt(hem)], w, cx);
     }
     if reason == 3
@@ -1414,7 +1439,12 @@ pub fn failure_message<E: FlowEnv>(
             &mut cx.g[cx.gb..],
         );
         env.callwc(0x021D_8484, &mut [Arg::V(mon)], w, cx);
-        env.callwc(0x021C_5D88, &mut [Arg::P, Arg::V(mon), Arg::V(0xDE)], w, cx);
+        env.callwc(
+            0x021C_5D88,
+            &mut [Arg::PWork(0), Arg::V(mon), Arg::V(0xDE)],
+            w,
+            cx,
+        );
     }
     let old = bracket_open(w);
     if env.callwc(0x021D_7D6C, &mut [Arg::V(reason)], w, cx) == 0 {
@@ -1453,7 +1483,7 @@ pub fn immunity_or_message<E: FlowEnv>(
         if f != 0 {
             env.callw(
                 0x021C_5C74,
-                &mut [Arg::P, Arg::V(a), Arg::V(r), Arg::V(c)],
+                &mut [Arg::PWork(0), Arg::V(a), Arg::V(r), Arg::V(c)],
                 w,
             );
         }
@@ -1524,7 +1554,7 @@ pub fn effect_round<E: FlowEnv>(
     let ok = check_then_fail(env, w, cx, mon_b, mon_a, r5, r6, r7, (busy == 0) as u32);
     if ok != 0 {
         if busy != 0 {
-            env.callwc(0x021C_99A0, &mut [Arg::P, Arg::PAt(hem)], w, cx);
+            env.callwc(0x021C_99A0, &mut [Arg::PWork(0), Arg::PAt(hem)], w, cx);
             env.callwc(0x021C_8810, &mut [Arg::PAt(hem)], w, cx);
         }
         return 1;
@@ -1553,7 +1583,7 @@ pub fn effect_each<E: FlowEnv>(
     let mut ty_word = ty;
     let mut hit = false;
     if env.callwc(0x021C_2564, &mut [Arg::V(list)], w, cx) == 0 {
-        env.callwc(0x021C_5718, &mut [Arg::P], w, cx);
+        env.callwc(0x021C_5718, &mut [Arg::PWork(0)], w, cx);
         return;
     }
     env.callwc(0x021C_2574, &mut [Arg::V(list)], w, cx);
@@ -1576,7 +1606,7 @@ pub fn effect_each<E: FlowEnv>(
         el = env.callwc(0x021C_2594, &mut [Arg::V(list)], w, cx);
     }
     if !hit && w.mem[OFS_FLAGS_78A] & 0x10 == 0 {
-        env.callwc(0x021C_5718, &mut [Arg::P], w, cx);
+        env.callwc(0x021C_5718, &mut [Arg::PWork(0)], w, cx);
     }
 }
 
@@ -1673,7 +1703,7 @@ pub fn hit_gate<E: FlowEnv>(
         if loud != 0 {
             env.callwc(
                 0x021C_5A4C,
-                &mut [Arg::P, Arg::V(mon), Arg::V(p4), Arg::V(delta)],
+                &mut [Arg::PWork(0), Arg::V(mon), Arg::V(p4), Arg::V(delta)],
                 w,
                 cx,
             );
@@ -1715,7 +1745,7 @@ pub fn hit_gate<E: FlowEnv>(
         env.callwc(
             0x021C_5A8C,
             &mut [
-                Arg::P,
+                Arg::PWork(0),
                 Arg::V(mon),
                 Arg::V(p4),
                 Arg::V(delta),
@@ -1982,7 +2012,7 @@ pub fn cmd_4d_then_5b74<E: FlowEnv>(env: &mut E, cx: &mut Cx, mon: u32, r2: u32)
     }
     env.callc(
         0x021C_5B74,
-        &mut [Arg::P, Arg::V(mon), Arg::V(r2), Arg::V(1)],
+        &mut [Arg::PWork(0), Arg::V(mon), Arg::V(r2), Arg::V(1)],
         cx,
     );
 }
@@ -2151,18 +2181,18 @@ pub fn effect_by_move<E: FlowEnv>(
     if c == 0 {
         let old = bracket_open(w);
         event_9e(&mut Lend::wc(env, w, cx), mon, rec_id(rec));
-        let r = env.callwc(0x021C_88E4, &mut [Arg::P], w, cx);
+        let r = env.callwc(0x021C_88E4, &mut [Arg::PWork(0)], w, cx);
         bracket_close(w, old);
         if r == 2 {
             set_turn_flag(p);
         } else {
-            env.callwc(0x021C_5718, &mut [Arg::P], w, cx);
+            env.callwc(0x021C_5718, &mut [Arg::PWork(0)], w, cx);
         }
     } else {
         let c3 = event_7c(&mut Lend::wc(env, w, cx), c as i8 as i32 as u32, mon) as u8;
         let r2 = (c3 as i8 as i32 + 5) as u32;
         if slot_gate_apply(env, w, cx, c as i8 as i32 as u32, r2) == 0 {
-            env.callwc(0x021C_5718, &mut [Arg::P], w, cx);
+            env.callwc(0x021C_5718, &mut [Arg::PWork(0)], w, cx);
             return;
         }
         set_turn_flag(p);
@@ -2218,7 +2248,7 @@ pub fn cmd_32_then_16f8<E: FlowEnv>(
 ) {
     env.callwc(
         0x021C_604C,
-        &mut [Arg::P, Arg::V(mon), Arg::V(r6 & 0xFFFF)],
+        &mut [Arg::PWork(0), Arg::V(mon), Arg::V(r6 & 0xFFFF)],
         w,
         cx,
     );
@@ -2242,7 +2272,11 @@ pub fn cmds_28_52<E: FlowEnv>(env: &mut E, cx: &mut Cx, mon: u32) {
         &mut [Arg::PAt(cx.w_addr + 0x1AB8), Arg::V(id)],
         cx,
     );
-    env.callc(0x021C_5D88, &mut [Arg::P, Arg::V(mon), Arg::V(0x31A)], cx);
+    env.callc(
+        0x021C_5D88,
+        &mut [Arg::PWork(0), Arg::V(mon), Arg::V(0x31A)],
+        cx,
+    );
     env.callc(0x021D_6D70, &mut [Arg::V(mon)], cx);
     cmd_queue::put_cmd(env, cx.q, 0x28, &[id], &mut cx.g[cx.gb..]);
     cmd_queue::put_cmd(env, cx.q, 0x52, &[v], &mut cx.g[cx.gb..]);
@@ -2344,7 +2378,12 @@ pub fn pay_quarter_hp<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, cx: &mut Cx, 
             if slot != 6 {
                 env.callwc(
                     0x021C_5B74,
-                    &mut [Arg::P, Arg::V(mon), Arg::V(cost.wrapping_neg()), Arg::V(1)],
+                    &mut [
+                        Arg::PWork(0),
+                        Arg::V(mon),
+                        Arg::V(cost.wrapping_neg()),
+                        Arg::V(1),
+                    ],
                     w,
                     cx,
                 );
@@ -2377,14 +2416,14 @@ pub fn pay_quarter_hp<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, cx: &mut Cx, 
         }
         env.callwc(
             0x021C_5DAC,
-            &mut [Arg::P, Arg::V(0x7B), Arg::V(0), Arg::V(0)],
+            &mut [Arg::PWork(0), Arg::V(0x7B), Arg::V(0), Arg::V(0)],
             w,
             cx,
         );
     } else {
         env.callwc(
             0x021C_5D88,
-            &mut [Arg::P, Arg::V(mon), Arg::V(0x314)],
+            &mut [Arg::PWork(0), Arg::V(mon), Arg::V(0x314)],
             w,
             cx,
         );
@@ -2417,7 +2456,12 @@ pub fn apply_target_effects<E: FlowEnv>(
         &[id, s0 & 0xFF, rec_id(rec), 0],
         &mut cx.g[cx.gb..],
     );
-    env.callwc(0x021C_5D88, &mut [Arg::P, Arg::V(b), Arg::V(0x317)], w, cx);
+    env.callwc(
+        0x021C_5D88,
+        &mut [Arg::PWork(0), Arg::V(b), Arg::V(0x317)],
+        w,
+        cx,
+    );
     // the original passes its stack words: `&s0` (an argument slot), `&b` (a local copy) and `&s1`;
     // `b` is read back from the local afterwards
     let mut s0w = s0.to_le_bytes();
@@ -2426,7 +2470,7 @@ pub fn apply_target_effects<E: FlowEnv>(
     env.callwc(
         0x021C_5840,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::V(1),
             Arg::PBuf(&mut s0w),
             Arg::PBuf(&mut bw),
@@ -2438,7 +2482,7 @@ pub fn apply_target_effects<E: FlowEnv>(
     env.callwc(
         0x021C_59C4,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::V(1),
             Arg::PBuf(&mut bw),
             Arg::PBuf(&mut s1w),
@@ -2465,12 +2509,12 @@ pub fn collect_mons<E: FlowEnv>(env: &mut E, w_addr: u32, list: u32) {
     env.call(0x021C_443C, &mut [Arg::V(list)]);
     // the iterator state lives in the caller's frame
     let mut it = [0u8; 4];
-    env.call(0x021B_D2B4, &mut [Arg::PBuf(&mut it), Arg::P]);
+    env.call(0x021B_D2B4, &mut [Arg::PBuf(&mut it), Arg::PWork(0)]);
     loop {
         let mut o = [0u8; 4];
         let more = env.call(
             0x021B_D34C,
-            &mut [Arg::PBuf(&mut it), Arg::P, Arg::Out(&mut o)],
+            &mut [Arg::PBuf(&mut it), Arg::PWork(0), Arg::Out(&mut o)],
         );
         if more == 0 {
             break;
@@ -2520,7 +2564,7 @@ pub fn list_message<E: FlowEnv>(
     let r = read_back(env, 0x51);
     out[0..4].copy_from_slice(&r.to_le_bytes());
     msg_end(env, 0x24BA);
-    (env.call(0x021C_88E4, &mut [Arg::P]) != 0) as u32
+    (env.call(0x021C_88E4, &mut [Arg::PWork(0)]) != 0) as u32
 }
 
 /// C: `FUN_overlay_d_93__021c3e0c`: Skill-Swap-style exchange between mon `mon` and the first mon
@@ -2630,10 +2674,10 @@ pub fn effect_by_id<E: FlowEnv>(
             return;
         }
         let old = bracket_open(w);
-        let mut gate = env.callwc(0x021C_88E4, &mut [Arg::P], w, cx);
+        let mut gate = env.callwc(0x021C_88E4, &mut [Arg::PWork(0)], w, cx);
         let mut out = [0u8; 4];
         if list_message(&mut Lend::wc(env, w, cx), rec, mon, list, &mut out) != 0 {
-            gate = env.callwc(0x021C_88E4, &mut [Arg::P], w, cx);
+            gate = env.callwc(0x021C_88E4, &mut [Arg::PWork(0)], w, cx);
             if gate == 2 {
                 set_turn_flag(p);
             }
@@ -2752,7 +2796,7 @@ pub fn single_mon_effect<E: FlowEnv>(
     }
     let old = bracket_open(w);
     let c = event_8b(&mut Lend::new(env, w), cx.w_addr, mon_b) as u8;
-    if c != 0 && env.callwc(0x021C_88E4, &mut [Arg::P], w, cx) != 0 {
+    if c != 0 && env.callwc(0x021C_88E4, &mut [Arg::PWork(0)], w, cx) != 0 {
         out5[0..4].copy_from_slice(&1u32.to_le_bytes());
     }
     bracket_close(w, old);
@@ -2794,18 +2838,18 @@ pub fn single_mon_effect<E: FlowEnv>(
         let id = mon_id(&mut Lend::wc(env, w, cx), switched);
         env.callwc(
             0x021B_DD7C,
-            &mut [Arg::P, Arg::V(mon_b), Arg::V(r6 & 0xFFFF)],
+            &mut [Arg::PWork(0), Arg::V(mon_b), Arg::V(r6 & 0xFFFF)],
             w,
             cx,
         );
         if r8 != 0 {
             // r1 still holds `r8` (the original reloads it for the test)
-            env.callwc(0x021C_99A0, &mut [Arg::P, Arg::PAt(r8)], w, cx);
+            env.callwc(0x021C_99A0, &mut [Arg::PWork(0), Arg::PAt(r8)], w, cx);
         }
         env.callwc(
             0x021B_D9D4,
             &mut [
-                Arg::P,
+                Arg::PWork(0),
                 Arg::V(b1[0] as u32),
                 Arg::V(b2[0] as u32),
                 Arg::V(pick & 0xFF),
@@ -2815,7 +2859,7 @@ pub fn single_mon_effect<E: FlowEnv>(
             cx,
         );
         cmd_queue::put_cmd_list(&mut Lend::new(env, w), cx.q, 0x5B, 0x34D, &[id, LIST_END]);
-        env.callwc(0x021B_DA00, &mut [Arg::P], w, cx);
+        env.callwc(0x021B_DA00, &mut [Arg::PWork(0)], w, cx);
     } else {
         let id = mon_id(&mut Lend::wc(env, w, cx), mon_a);
         let client = env.callwc(0x021B_8D08, &mut [Arg::V(id)], w, cx);
@@ -2837,7 +2881,7 @@ pub fn single_mon_effect<E: FlowEnv>(
         );
         env.callwc(
             0x021B_DD7C,
-            &mut [Arg::P, Arg::V(mon_b), Arg::V(r6 & 0xFFFF)],
+            &mut [Arg::PWork(0), Arg::V(mon_b), Arg::V(r6 & 0xFFFF)],
             w,
             cx,
         );
@@ -2863,7 +2907,7 @@ pub fn each_single_mon_effect<E: FlowEnv>(
     while el != 0 {
         if single_mon_effect(env, w, cx, mon, el, 0, &mut local, 0, 0, 0) == 0 {
             if u32::from_le_bytes(local) == 0 {
-                env.callwc(0x021C_5718, &mut [Arg::P], w, cx);
+                env.callwc(0x021C_5718, &mut [Arg::PWork(0)], w, cx);
             }
         } else {
             set_turn_flag(p);
@@ -2899,7 +2943,7 @@ pub fn damage_each<E: FlowEnv>(
         let id_b = mon_id(&mut Lend::wc(env, w, cx), bpp);
         let blocked = (env.callwc(
             0x021B_F324,
-            &mut [Arg::P, Arg::V(mon_a), Arg::V(bpp)],
+            &mut [Arg::PWork(0), Arg::V(mon_a), Arg::V(bpp)],
             w,
             cx,
         ) == 0
@@ -2911,12 +2955,17 @@ pub fn damage_each<E: FlowEnv>(
             ) != 0)
             || env.callwc(
                 0x021B_FA00,
-                &mut [Arg::P, Arg::V(mon_a), Arg::V(bpp), Arg::V(rec_id(rec))],
+                &mut [
+                    Arg::PWork(0),
+                    Arg::V(mon_a),
+                    Arg::V(bpp),
+                    Arg::V(rec_id(rec)),
+                ],
                 w,
                 cx,
             ) != 0;
         if blocked {
-            env.callwc(0x021C_572C, &mut [Arg::P, Arg::V(bpp)], w, cx);
+            env.callwc(0x021C_572C, &mut [Arg::PWork(0), Arg::V(bpp)], w, cx);
             continue;
         }
         let level_b = mon_get(&mut Lend::wc(env, w, cx), bpp, 0xF) as u8;
@@ -2926,19 +2975,24 @@ pub fn damage_each<E: FlowEnv>(
             tbl == 0
         };
         if skip {
-            env.callwc(0x021C_5774, &mut [Arg::P, Arg::V(bpp)], w, cx);
+            env.callwc(0x021C_5774, &mut [Arg::PWork(0), Arg::V(bpp)], w, cx);
             continue;
         }
         let old = bracket_open(w);
         let found = env.callwc(
             0x021C_6A9C,
-            &mut [Arg::P, Arg::V(mon_a), Arg::V(bpp), Arg::V(rec_id(rec))],
+            &mut [
+                Arg::PWork(0),
+                Arg::V(mon_a),
+                Arg::V(bpp),
+                Arg::V(rec_id(rec)),
+            ],
             w,
             cx,
         );
         if found == 0 {
-            if env.callwc(0x021C_88E4, &mut [Arg::P], w, cx) == 0 {
-                env.callwc(0x021C_572C, &mut [Arg::P, Arg::V(bpp)], w, cx);
+            if env.callwc(0x021C_88E4, &mut [Arg::PWork(0)], w, cx) == 0 {
+                env.callwc(0x021C_572C, &mut [Arg::PWork(0), Arg::V(bpp)], w, cx);
             }
         } else {
             let ida = mon_id(&mut Lend::wc(env, w, cx), mon_a);
@@ -3000,7 +3054,7 @@ pub fn damage_each<E: FlowEnv>(
             if chained || fainted != 0 {
                 msg_1c88(&mut Lend::wc(env, w, cx), mon_a, rec, 0);
             }
-            env.callwc(0x021C_4F64, &mut [Arg::P, Arg::V(bpp)], w, cx);
+            env.callwc(0x021C_4F64, &mut [Arg::PWork(0), Arg::V(bpp)], w, cx);
         }
         bracket_close(w, old);
     }
@@ -3065,25 +3119,25 @@ pub fn pair_sides<E: FlowEnv>(env: &mut E, w: &SvFlowWork, cx: &mut Cx) {
         );
         env.callwrc(
             0x021B_D43C,
-            &mut [Arg::P, Arg::V(lo), Arg::V(ca), Arg::V(1), Arg::V(1)],
+            &mut [Arg::PWork(0), Arg::V(lo), Arg::V(ca), Arg::V(1), Arg::V(1)],
             w,
             cx,
         );
         env.callwrc(
             0x021B_D43C,
-            &mut [Arg::P, Arg::V(hi), Arg::V(cb), Arg::V(1), Arg::V(1)],
+            &mut [Arg::PWork(0), Arg::V(hi), Arg::V(cb), Arg::V(1), Arg::V(1)],
             w,
             cx,
         );
         env.callwrc(
             0x021B_D4E4,
-            &mut [Arg::P, Arg::V(lo), Arg::V(ca), Arg::V(1)],
+            &mut [Arg::PWork(0), Arg::V(lo), Arg::V(ca), Arg::V(1)],
             w,
             cx,
         );
         env.callwrc(
             0x021B_D4E4,
-            &mut [Arg::P, Arg::V(hi), Arg::V(cb), Arg::V(1)],
+            &mut [Arg::PWork(0), Arg::V(hi), Arg::V(cb), Arg::V(1)],
             w,
             cx,
         );
@@ -3173,18 +3227,18 @@ pub fn turn_end<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, cx: &mut Cx) -> u32
                             &[0],
                             &mut cx.g[cx.gb..],
                         );
-                        env.callwc(0x021C_4D1C, &mut [Arg::P, Arg::V(list)], w, cx)
+                        env.callwc(0x021C_4D1C, &mut [Arg::PWork(0), Arg::V(list)], w, cx)
                     }
                     2 => env.callwc(
                         0x021C_4838,
-                        &mut [Arg::P, Arg::V(list), Arg::V(0x76)],
+                        &mut [Arg::PWork(0), Arg::V(list), Arg::V(0x76)],
                         w,
                         cx,
                     ),
-                    3 => env.callwc(0x021C_493C, &mut [Arg::P, Arg::V(list)], w, cx),
+                    3 => env.callwc(0x021C_493C, &mut [Arg::PWork(0), Arg::V(list)], w, cx),
                     _ => env.callwc(
                         0x021C_4838,
-                        &mut [Arg::P, Arg::V(list), Arg::V(0x77)],
+                        &mut [Arg::PWork(0), Arg::V(list), Arg::V(0x77)],
                         w,
                         cx,
                     ),
@@ -3192,7 +3246,7 @@ pub fn turn_end<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, cx: &mut Cx) -> u32
                 if waiting != 0 {
                     return 1;
                 }
-                if env.callwc(0x021B_C2B0, &mut [Arg::P], w, cx) != 0 {
+                if env.callwc(0x021B_C2B0, &mut [Arg::PWork(0)], w, cx) != 0 {
                     return 0;
                 }
                 stage += 1;
@@ -3200,7 +3254,7 @@ pub fn turn_end<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, cx: &mut Cx) -> u32
             4 => {
                 bump_state(w);
                 env.callwc(0x021C_4B8C, &mut [Arg::P], w, cx);
-                env.callwc(0x021C_4C24, &mut [Arg::P], w, cx);
+                env.callwc(0x021C_4C24, &mut [Arg::PWork(0)], w, cx);
                 stage = 5;
             }
             6 => return turn_end_tail(env, w, cx, list),
@@ -3218,7 +3272,7 @@ fn bump_state(w: &mut SvFlowWork) {
 fn turn_end_tail<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, cx: &mut Cx, list: u32) -> u32 {
     env.callwc(
         0x021C_4838,
-        &mut [Arg::P, Arg::V(list), Arg::V(0x78)],
+        &mut [Arg::PWork(0), Arg::V(list), Arg::V(0x78)],
         w,
         cx,
     );
@@ -3280,7 +3334,7 @@ pub fn per_target_damage<E: FlowEnv>(
     let mut total = env.callwc(0x021C_0D70, &mut [Arg::PAt(record)], w, cx);
     let n = env.callwc(
         0x021C_0C38,
-        &mut [Arg::P, Arg::PAt(record), g(0x18), g(6), g(0xC), g(0)],
+        &mut [Arg::PWork(0), Arg::PAt(record), g(0x18), g(6), g(0xC), g(0)],
         w,
         cx,
     ) & 0xFF;
@@ -3316,7 +3370,12 @@ pub fn per_target_damage<E: FlowEnv>(
         }
     }
     if byte1_is_zero(b) != 0 {
-        let n2 = env.callwc(0x021C_0CB4, &mut [Arg::P, Arg::PAt(record), g(0x18)], w, cx) & 0xFF;
+        let n2 = env.callwc(
+            0x021C_0CB4,
+            &mut [Arg::PWork(0), Arg::PAt(record), g(0x18)],
+            w,
+            cx,
+        ) & 0xFF;
         if n2 != 0 {
             let mut i = 0usize;
             loop {
@@ -3332,7 +3391,15 @@ pub fn per_target_damage<E: FlowEnv>(
     b[1] = b[1].wrapping_add(1);
     let cnt = env.callwc(
         0x021C_0CE8,
-        &mut [Arg::P, Arg::PAt(record), g(0x18), g(6), g(0xC), g(0), g(3)],
+        &mut [
+            Arg::PWork(0),
+            Arg::PAt(record),
+            g(0x18),
+            g(6),
+            g(0xC),
+            g(0),
+            g(3),
+        ],
         w,
         cx,
     ) & 0xFF;
@@ -3346,7 +3413,7 @@ pub fn per_target_damage<E: FlowEnv>(
     env.callwc(
         0x021C_5798,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::PAt(rec_addr),
             Arg::V(cnt),
             g(0xC),
@@ -3359,7 +3426,7 @@ pub fn per_target_damage<E: FlowEnv>(
     if byte3(b) == 0 {
         env.callwc(
             0x021C_5840,
-            &mut [Arg::P, Arg::V(cnt), g(0xC), g(0x18), Arg::V(flag)],
+            &mut [Arg::PWork(0), Arg::V(cnt), g(0xC), g(0x18), Arg::V(flag)],
             w,
             cx,
         );
@@ -3369,7 +3436,7 @@ pub fn per_target_damage<E: FlowEnv>(
     }
     env.callwc(
         0x021C_59C4,
-        &mut [Arg::P, Arg::V(cnt), g(0x18), g(0), Arg::V(flag)],
+        &mut [Arg::PWork(0), Arg::V(cnt), g(0x18), g(0), Arg::V(flag)],
         w,
         cx,
     );
@@ -3423,9 +3490,9 @@ pub fn per_target_damage<E: FlowEnv>(
     }
     for i in 0..cnt as usize {
         let mon = mon_at(cx.g, i);
-        env.callwc(0x021C_4F64, &mut [Arg::P, Arg::V(mon)], w, cx);
+        env.callwc(0x021C_4F64, &mut [Arg::PWork(0), Arg::V(mon)], w, cx);
     }
-    env.callwc(0x021C_4F64, &mut [Arg::P, Arg::V(mon_a)], w, cx);
+    env.callwc(0x021C_4F64, &mut [Arg::PWork(0), Arg::V(mon_a)], w, cx);
     total
 }
 
@@ -3522,7 +3589,7 @@ pub fn apply_move_to_targets<E: FlowEnv>(
             env.callwc(
                 0x021C_0A4C,
                 &mut [
-                    Arg::P,
+                    Arg::PWork(0),
                     Arg::V(mon_a),
                     Arg::V(p4),
                     Arg::PAt(rec_addr),
@@ -3549,7 +3616,12 @@ pub fn apply_move_to_targets<E: FlowEnv>(
             if b[2] != 0
                 && env.callwc(
                     0x021B_FA60,
-                    &mut [Arg::P, Arg::V(mon_a), Arg::V(target), Arg::PAt(rec_addr)],
+                    &mut [
+                        Arg::PWork(0),
+                        Arg::V(mon_a),
+                        Arg::V(target),
+                        Arg::PAt(rec_addr),
+                    ],
                     w,
                     cx,
                 ) == 0

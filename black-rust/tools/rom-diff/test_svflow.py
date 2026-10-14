@@ -248,6 +248,46 @@ class PtrArgs(unittest.TestCase):
         self.assertEqual(len(S.bare_p_lint(t)), 1)
         self.assertEqual(S.bare_p_lint([(a, s.replace("args=p", "args=ptr")) for a, s in t]), [])
 
+    def test_every_repository_spec_is_clean(self):
+        """B18b: the lint covers specs/CRATE/*.spec (check-fn.sh areas) as well as the battle specs."""
+        keys = [k for k, _ in S.repo_specs()]
+        self.assertIn("black-text/wordset", keys)
+        self.assertIn("core4", keys)
+        S.BARE_P.clear()
+        S.battle_bare_p("")
+        self.assertEqual([m for a, ms in S.BARE_P.items() if a for m in ms], [])
+
+    def test_work_and_region_arguments_count(self):
+        """B18b: a callee's `work` / `region` argument is a pointer too."""
+        t = [("x", "area x\nfn 021c0000 ret=none\n  arg work 0x10\n  region r 8\n  arg region r\n"
+                   "fn 021c0100 ret=none\n  stub 021c0000 ret=none args=p,p\n")]
+        self.assertEqual([m.split("declares it ")[1] for m in S.bare_p_lint(t)], ["`work`: use `ptr`", "`region`: use `ptr`"])
+
+    def test_declarations_match_by_memory_set(self):
+        """B18b: an overlay address is the same function only within one set class; ARM9 main everywhere."""
+        decl = "area d\nset field\nfn 021ca238 ret=none\n  arg buf 0x10\nfn 02045cac ret=none\n  arg buf 0x10\n"
+        use = "area u\n%sfn 021c0000 ret=none\n  stub 021ca238 ret=none args=p\n  stub 02045cac ret=none args=p\n"
+        battle = S.bare_p_lint([("d", decl), ("u", use % "")])
+        self.assertEqual([m.split()[3] for m in battle], ["02045cac"])
+        field = S.bare_p_lint([("d", decl), ("u", use % "set field\n")])
+        self.assertEqual([m.split()[3] for m in field], ["021ca238", "02045cac"])
+        self.assertEqual(S.lint_set("battle+96"), "battle")
+
+    def test_check_fn_area_with_bare_p_is_refused(self):
+        """B18b: load_spec refuses a --spec area (check-fn.sh path) that passes a declared pointer as `p`."""
+        import tempfile
+        d = tempfile.mkdtemp()
+        p = os.path.join(d, "bad.spec")
+        with open(p, "w") as f:
+            f.write("area bad\nset field\nfn 021c0100 ret=none\n  stub 02045cac ret=none args=v,v,p\n")
+        S.SPEC_PATH["bad"] = p
+        try:
+            with self.assertRaises(SystemExit):
+                S.load_spec("bad")
+        finally:
+            del S.SPEC_PATH["bad"]
+            S.BARE_P.clear()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -78,9 +78,9 @@ fn 021c88b4 ret=none
   arg u32 alt range 0 0xC || range 0xE 0x3B
   arg u32 any
   fix work 0x1D74 u32 range 0 0x100 bits=10:9
-  stub 021c88a4 ret=ptr:work:0x1D78:1 args=p,v,v
-  stub 021c88c8 ret=none args=p,v
-  stub 021c8918 force ret=none args=p,v
+  stub 021c88a4 ret=ptr:work:0x1D78:1 args=ptr,v,v
+  stub 021c88c8 ret=none args=ptr,v
+  stub 021c8918 force ret=none args=ptr,v
 
 # handex_pop(work, rec): execute (021c8918, force stub) then free_last_record(work + 0x1D74, rec)
 fn 021c88c8 ret=none
@@ -90,7 +90,7 @@ fn 021c88c8 ret=none
   fix work 0x1D78 u32 range 0 4 bits=13:10
   fix work 0x1D7C u32 range 0 4 bits=13:10
   fix work 0x1D80 u32 range 0 4 bits=13:10
-  stub 021c8918 force ret=none args=p,v
+  stub 021c8918 force ret=none args=ptr,v
 
 # handex_state(work): 0 / 1 / 2 from manager bits 30 / 29
 fn 021c88e4 ret=u32
@@ -99,4 +99,4 @@ fn 021c88e4 ret=u32
 # thunk to 021c88e4 (the thunk lands on the 88e4 stub, or on the real 88e4 once it is ported)
 fn 021c8910 ret=u32
   arg work
-  stub 021c88e4 ret=pick:0/1/2 args=p
+  stub 021c88e4 ret=pick:0/1/2 args=ptr

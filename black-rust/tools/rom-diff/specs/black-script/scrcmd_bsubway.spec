@@ -66,7 +66,7 @@ fn 021c9934 ret=u32 inputs=400
   arg u32 alt range 0 9 || any
   arg buf 0x2000
   stub 0200db80 force ret=pick:0/1/2/3/0x14/0x31/0x32 args=v,v
-  stub 0200d884 force ret=pick:0/1/2/7/8 args=v,v,p
+  stub 0200d884 force ret=pick:0/1/2/7/8 args=v,v,ptr
   stub 0200da14 force ret=none args=v
   stub 0200d914 force ret=none args=v,v,in:1
   stub 020127a4 force ret=u32 args=v
@@ -139,7 +139,7 @@ fn 021c9c54 ret=none inputs=200
   arg buf 0x1000
   fix arg0 9 u8 alt range 0 9 || any
   fix arg0 8 u8 range 0 4
-  stub 0200d884 force ret=u32 args=v,v,p
+  stub 0200d884 force ret=u32 args=v,v,ptr
   stub 0201ab28 force ret=u32 args=v,v
   stub 021ca270 ret=pick:0/1/2/3/4 args=v
   stub 021ca210 ret=u32 args=v
@@ -166,7 +166,7 @@ fn 021c9d30 ret=u8 inputs=200
   fix arg0 0x1C u32 addrof arg0 0x40
   fix arg0 0xE u8 range 0 2
   fix arg1 0x20 u32 addrof arg1 0x100
-  stub 0200d884 force ret=u32 args=v,v,p
+  stub 0200d884 force ret=u32 args=v,v,ptr
   stub 0200db1c force ret=none args=v,v
   stub 020071cc force ret=u32 args=v,v
   stub 020120f4 force ret=u32 args=v
@@ -198,7 +198,7 @@ fn 021c9d70 ret=none inputs=200
   stub 020307b0 force ret=none args=v
   stub 021ca3b4 ret=none args=v,v
   stub 02030734 force ret=seqptr:arg2:0x100:0x100 args=v,v,v,v,v
-  stub 0200d884 force ret=u32 args=v,v,p
+  stub 0200d884 force ret=u32 args=v,v,ptr
   stub 02012934 force ret=u32 args=v
   stub 02017e1c force ret=pick:0/1/2/0x1D/0x20/0x249/0x24A args=v,v,v
 
@@ -214,7 +214,7 @@ fn 021c9db0 ret=u32 inputs=1000
   fix arg0 0xC u16 alt range 0 0x1F || any
   stub 0200dc08 force ret=pick:0/1/5/9/0xA/0xFF/0x80 args=v
   stub 0200db80 force ret=pick:0/1/2/9/10/11/0x8000 args=v,v
-  stub 0200d884 force ret=pick:0/1/2 args=v,v,p
+  stub 0200d884 force ret=pick:0/1/2 args=v,v,ptr
   stub 0200da80 force ret=none args=v,v
 
 # bsub_pick_trainers(W): n = 021CA2CC(W+0xE) (streak / 7); modes 2 / 3 / 7 / 8: n = max(n, W+0x18); 14 ids W+0x32 from 021CBD90(W,
@@ -249,7 +249,7 @@ fn 021c9f44 ret=bool inputs=200
   stub 0201ab28 force ret=u32 args=v,v
   stub 02017e1c force ret=pick:0/1/2/0x1D/0x20/0x249/0x24A args=v,v,v
   # closure: 021ca210
-  stub 0200d884 force ret=u32 args=v,v,p
+  stub 0200d884 force ret=u32 args=v,v,ptr
   stub 02012934 force ret=u32 args=v
 
 # bsub_check_rounds(W): W+0xC bit 0 set -> 1; 0200DA54(P) >= 7 -> set bit 0, 1; else 0.
@@ -286,7 +286,7 @@ fn 021c9ffc ret=none inputs=200
   stub 020307b0 force ret=none args=v
   stub 021ca3b4 ret=none args=v,v
   stub 02030734 force ret=seqptr:arg1:0x100:0x100 args=v,v,v,v,v
-  stub 0200d884 force ret=u32 args=v,v,p
+  stub 0200d884 force ret=u32 args=v,v,ptr
   stub 02012934 force ret=u32 args=v
   stub 02017e1c force ret=pick:0/1/2/0x1D/0x20/0x249/0x24A args=v,v,v
 
@@ -344,7 +344,7 @@ fn 021ca1e4 ret=none inputs=200
 fn 021ca210 ret=u32 inputs=200
   nowork
   arg buf 0x1000
-  stub 0200d884 force ret=pick:0/1 args=v,v,p
+  stub 0200d884 force ret=pick:0/1 args=v,v,ptr
   stub 02012934 force ret=u32 args=v
 
 # bsub_streak(W): W+0xE.
@@ -415,7 +415,7 @@ fn 021ca2dc ret=none inputs=200
   stub 020307b0 force ret=none args=v
   stub 021ca3b4 ret=none args=v,v
   stub 02030734 force ret=seqptr:arg4:0x100:0x100 args=v,v,v,v,v
-  stub 0200d884 force ret=u32 args=v,v,p
+  stub 0200d884 force ret=u32 args=v,v,ptr
   stub 02012934 force ret=u32 args=v
   stub 02017e1c force ret=pick:0/1/2/0x1D/0x20/0x249/0x24A args=v,v,v
 
@@ -454,7 +454,7 @@ fn 021ca4c0 ret=none inputs=200
   stub 021ca3b4 ret=none args=v,v
   stub 02030734 force ret=seqptr:arg3:0x100:0x100 args=v,v,v,v,v
   # closure: 021ca210 / 021ca3b4
-  stub 0200d884 force ret=u32 args=v,v,p
+  stub 0200d884 force ret=u32 args=v,v,ptr
   stub 02012934 force ret=u32 args=v
   stub 02017e1c force ret=pick:0/1/2/0x1D/0x20/0x249/0x24A args=v,v,v
 
@@ -479,7 +479,7 @@ fn 021ca544 ret=u32 inputs=200
   stub 02158f58 force ret=ptr:arg1:0x300:0x10 args=v
   # closure: 021c9934
   stub 0200db80 force ret=pick:0/1/2/3/0x14/0x31/0x32 args=v,v
-  stub 0200d884 force ret=u32 args=v,v,p
+  stub 0200d884 force ret=u32 args=v,v,ptr
   stub 0200da14 force ret=none args=v
   stub 0200d914 force ret=none args=v,v,in:1
   stub 020127a4 force ret=u32 args=v
@@ -629,7 +629,7 @@ fn 021ca5c4 ret=u32 inputs=4000
   stub 021eee78 force ret=u32 args=v
   stub 02188c7c force ret=u32 args=v
   stub 0200d87c force ret=none args=v
-  stub 0200d884 force ret=pick:0/1/2/3/4/5/6/7/8/9 args=v,v,p
+  stub 0200d884 force ret=pick:0/1/2/3/4/5/6/7/8/9 args=v,v,ptr
   stub 021f388c force ret=none args=v
   stub 021cd48c force ret=u32 args=v,v,v,v,v,v,v,v
   stub 021c9e8c ret=none args=v
@@ -820,7 +820,7 @@ fn 021cb754 ret=u32 inputs=200
   fix arg1 0x200E u16 range 0 20
   fix arg1 0x2018 u16 range 0 2
   fix arg1 0x2720 u32 addrof arg1 0x780
-  stub 0200d884 force ret=u32 args=v,v,p
+  stub 0200d884 force ret=u32 args=v,v,ptr
   stub 021cd5a4 force ret=none args=v
   stub 021cd688 force ret=pick:0/1/2/3/4 args=v
   stub 0201296c force ret=u32 args=v
@@ -846,7 +846,7 @@ fn 021cb7e8 ret=u32 inputs=200
   fix arg1 0x200E u16 range 0 20
   fix arg1 0x2018 u16 range 0 2
   fix arg1 0x2720 u32 addrof arg1 0x780
-  stub 0200d884 force ret=u32 args=v,v,p
+  stub 0200d884 force ret=u32 args=v,v,ptr
   stub 021cd5a4 force ret=none args=v
   stub 021cd688 force ret=pick:0/1/2/3 args=v
   stub 0201296c force ret=u32 args=v
@@ -1032,7 +1032,7 @@ fn 021cbd08 ret=u32 inputs=200
   stub 020307b0 force ret=none args=v
   stub 0201a954 force ret=none args=v,v
   # closure: 021ca210
-  stub 0200d884 force ret=u32 args=v,v,p
+  stub 0200d884 force ret=u32 args=v,v,ptr
   stub 02012934 force ret=u32 args=v
 
 # bsub_rec_ptr(W): W + 0x74C.

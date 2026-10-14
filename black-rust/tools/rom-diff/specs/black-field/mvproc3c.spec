@@ -473,7 +473,7 @@ fn 0219bae0 ret=none inputs=100
   stub 0216d83c force ret=pick:0/1 args=v  # fldmmdl: grid x (s16; m)
   stub 0216d86c force ret=pick:0/1 args=v  # fldmmdl: grid z (s16; m)
   stub 0216da50 force ret=none args=v  # fldmmdl: move bit 0x10 off (m)
-  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:0:0:2,p  # fldmmdl: next MMDL in use (sys, &mmdl, &index): 1 = *mmdl set (here m itself or m + 4: only passed to stubs)
+  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:0:0:2,ptr  # fldmmdl: next MMDL in use (sys, &mmdl, &index): 1 = *mmdl set (here m itself or m + 4: only passed to stubs)
   stub 0219bc48 ret=pick:0/1 args=v,v  # in-area
   stub 0219bcc0 ret=none args=v,v,v  # in-area
   stub 021ae884 force ret=pick:1/2 args=v  # trainer_eye: trainer id (m)
@@ -501,7 +501,7 @@ fn 0219bb08 ret=none inputs=200
   stub 0216da50 force ret=none args=v  # fldmmdl: move bit 0x10 off (m)
   stub 0216da5c force ret=pick:0/1 args=v  # fldmmdl: move bit 0x10 set (m)
   stub 0216da7c force ret=none args=v  # fldmmdl: move bit 0x40 off (m)
-  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:0:0:2,p  # fldmmdl: next MMDL in use (sys, &mmdl, &index): 1 = *mmdl set (here m itself or m + 4: only passed to stubs)
+  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:0:0:2,ptr  # fldmmdl: next MMDL in use (sys, &mmdl, &index): 1 = *mmdl set (here m itself or m + 4: only passed to stubs)
   stub 02197e7c force ret=u32 args=v,v  # acmd1: the acmd code of the kind of code for dir (dir, code)
   stub 02197edc force seq ret=pick:0/1 args=v  # acmd1: run the acmd one frame (m): 1 = done
   stub 0219bb48 seq ret=pick:0/1 args=v,v  # in-area
@@ -563,7 +563,7 @@ fn 0219bba4 ret=u32 inputs=300
   stub 0216d590 force ret=pick:0/1 args=v  # fldmmdl: zone id (m)
   stub 0216d5a8 force ret=pick:0/1/2/3/4/5/6/7/8/9/0xA/0x13/0x14/0x15 args=v  # fldmmdl: event type (m)
   stub 0216d67c force ret=u32 args=v  # fldmmdl: MMDLSYS of m (+0x88)
-  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:0:0:2,p  # fldmmdl: next MMDL in use (sys, &mmdl, &index): 1 = *mmdl set (here m itself or m + 4: only passed to stubs)
+  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:0:0:2,ptr  # fldmmdl: next MMDL in use (sys, &mmdl, &index): 1 = *mmdl set (here m itself or m + 4: only passed to stubs)
   stub 021ae884 force ret=pick:1/2 args=v  # trainer_eye: trainer id (m)
 
 # 0219BC48(m, w) -> 1 when the partner (same search as 0219BBA4, without the event-type test) exists; then, with u8 w+1 == 0, 0219BCC0(m,
@@ -577,7 +577,7 @@ fn 0219bc48 ret=u32 inputs=300
   stub 0216d67c force ret=u32 args=v  # fldmmdl: MMDLSYS of m (+0x88)
   stub 0216d83c force ret=pick:0/1 args=v  # fldmmdl: grid x (s16; m)
   stub 0216d86c force ret=pick:0/1 args=v  # fldmmdl: grid z (s16; m)
-  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:0:0:2,p  # fldmmdl: next MMDL in use (sys, &mmdl, &index): 1 = *mmdl set (here m itself or m + 4: only passed to stubs)
+  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:0:0:2,ptr  # fldmmdl: next MMDL in use (sys, &mmdl, &index): 1 = *mmdl set (here m itself or m + 4: only passed to stubs)
   stub 0219bcc0 ret=none args=v,v,v  # in-area
   stub 021ae884 force ret=pick:1/2 args=v  # trainer_eye: trainer id (m)
 

@@ -340,7 +340,7 @@ fn 021b61e8 ret=u32 inputs=200
   fix arg0 0x1C u32 addrof arg0 0x40
   fix arg0 0xE u8 range 0 2
   fix arg1 0x20 u32 addrof arg1 0x100
-  stub 021b6048 ret=pick:0/1/2 args=v,v,v,p,v
+  stub 021b6048 ret=pick:0/1/2 args=v,v,v,ptr,v
   stub 02159ae8 force ret=ptr:arg1:0x600:0x80 args=v,v seq
   stub 0215a0e8 force ret=u32 args=v,v,v,v,v
   stub 02159b10 force ret=pick:0/1/2/3 args=v,v seq

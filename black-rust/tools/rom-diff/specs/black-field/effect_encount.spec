@@ -112,7 +112,7 @@ fn 021aa80c ret=none inputs=600
   stub 0216d83c force ret=pick:0/1/2/3/0x1F/0x20/0xFFFF args=v  # MMDL gx
   stub 0216d86c force ret=pick:0/1/2/3/0x1F/0x20/0xFFFF args=v  # MMDL gz
   stub 0216d88c force ret=none args=v,out:12  # MMDL position VecFx32 -> out
-  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,p  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
+  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,ptr  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
   stub 0216e3c4 force ret=ptr:work:0x900:1 args=v  # MMDL OBJ data (m + 0xE4)
   stub 02188c7c force ret=u32 args=v  # fieldmap -> MMDLSYS
   stub 02188c98 force ret=u32 args=v  # fieldmap -> map mapper
@@ -320,7 +320,7 @@ fn 021aae34 ret=none inputs=100
   stub 02005728 force ret=lt:0 args=v  # RNG next_scaled(count): below count
   stub 0216d454 force ret=pick:0/1 args=v  # MMDL in use
   stub 0216d828 force ret=none args=v,outm:6:0x3/0/0/0/0x3/0  # MMDL grid x / y / z (s16 x3) -> out
-  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,p  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
+  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,ptr  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
   stub 0216e3c4 force ret=ptr:work:0x900:1 args=v  # MMDL OBJ data (m + 0xE4)
   stub 02188c7c force ret=u32 args=v  # fieldmap -> MMDLSYS
   stub 02188c9c force ret=pick:0/1/0x3f/0xFFFF args=v  # fieldmap zone id
@@ -342,7 +342,7 @@ fn 021aaec0 ret=u32 inputs=200
   stub 0216d828 force ret=none args=v,outm:6:3/0/1/0/3/0  # MMDL grid x / y / z -> out
   stub 021a3074 force ret=pick:0x02E00100/0x02E00104/0 args=v  # field player -> MMDL
   stub 0216d454 force ret=pick:0/1 args=v  # MMDL in use
-  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,p  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
+  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,ptr  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
   stub 0216e3c4 force ret=ptr:work:0x900:1 args=v  # MMDL OBJ data (m + 0xE4)
   stub 02188c7c force ret=u32 args=v  # fieldmap -> MMDLSYS
   stub 02188cb4 force ret=u32 args=v  # fieldmap +0x8C (field player)
@@ -359,7 +359,7 @@ fn 021aaf54 ret=u32 inputs=100
   stub 02012a38 force ret=ptr:arg0:0x7C0:1 args=v  # GAMEDATA -> ENCOUNT WORK (0x20)
   stub 0216d828 force ret=none args=v,outm:6:3/0/1/0/3/0  # MMDL grid x / y / z -> out
   stub 0216d454 force ret=pick:0/1 args=v  # MMDL in use
-  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,p  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
+  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,ptr  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
   stub 0216e3c4 force ret=ptr:work:0x900:1 args=v  # MMDL OBJ data (m + 0xE4)
   stub 02188c7c force ret=u32 args=v  # fieldmap -> MMDLSYS
   stub 02188cb4 force ret=u32 args=v  # fieldmap +0x8C (field player)

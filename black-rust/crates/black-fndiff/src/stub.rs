@@ -38,39 +38,80 @@ pub fn canon_ptr(v: u32) -> u32 {
     }
 }
 
+/// B18b: `[lo, hi)` of the ARM9 main image of black.us (`LINT_MAIN` in svflow.py, whose `--selftest`
+/// checks it against main.sbin): code every memory set loads at the same address.
+pub const LINT_MAIN: std::ops::Range<u32> = 0x0200_4000..0x020A_A7CC;
+
+/// B18b: the `set NAME` line of a spec text (`None` without one).
+fn spec_set(text: &str) -> Option<&str> {
+    text.lines().find_map(|l| {
+        let mut t = l.split('#').next().unwrap().split_whitespace();
+        (t.next() == Some("set")).then(|| t.next()).flatten()
+    })
+}
+
+/// B18b: memory-image class of a spec's `set` line: no line / `battle` / `battle+N` are one class
+/// (`lint_set` in svflow.py).
+fn lint_set(name: Option<&str>) -> &str {
+    match name {
+        None | Some("battle") => "battle",
+        Some(n) if n.starts_with("battle+") => "battle",
+        Some(n) => n,
+    }
+}
+
+/// B18b: which declarations of an address describe the same code: an ARM9 main address in every
+/// set, an overlay address only within one set class (`lint_key` in svflow.py).
+fn lint_key(addr: u32, cls: &str) -> (&str, u32) {
+    if LINT_MAIN.contains(&addr) {
+        ("", addr)
+    } else {
+        (cls, addr)
+    }
+}
+
 /// B18: the `p` stub arguments of `texts` (`(area, spec text)`) whose callee's own `fn` block (in
-/// any of the texts) declares that argument `buf` or a custom pointer kind (`bpp`): such a pointer
+/// any of the texts) declares that argument `buf` or a custom pointer kind (`bpp`; B18b: or `work` /
+/// `region`): such a pointer
 /// must be `ptr` (value checked). Returns the messages, empty when clean (`bare_p_lint` in
-/// svflow.py; same text).
+/// svflow.py; same text). B18b: the declarations of every given spec count, matched by
+/// [`lint_key`] (the spec's `set` line); the test `all_specs_pass_buffers_as_ptr` runs it over every
+/// repository spec (svflow_specs/*.spec and specs/CRATE/*.spec).
 pub fn bare_p_lint(texts: &[(&str, &str)]) -> Vec<String> {
     use crate::spec::{parse_spec, ArgSpec};
-    let parsed: Vec<_> = texts.iter().map(|(a, t)| (*a, parse_spec(t))).collect();
-    let mut kinds: Vec<(u32, usize, String)> = Vec::new();
-    for (_, fs) in &parsed {
+    let parsed: Vec<_> = texts
+        .iter()
+        .map(|(a, t)| (*a, lint_set(spec_set(t)), parse_spec(t)))
+        .collect();
+    let mut kinds: Vec<((&str, u32), usize, String)> = Vec::new();
+    for (_, cls, fs) in &parsed {
         for f in fs {
+            let key = lint_key(f.addr, cls);
             for (i, a) in f.args.iter().enumerate() {
                 let k = match a {
                     ArgSpec::Buf(_) => "buf",
                     ArgSpec::Custom(k) if k == "bpp" => "bpp",
+                    // B18b: the flow work / a named region are pointers too
+                    ArgSpec::Work(_) => "work",
+                    ArgSpec::Region(..) => "region",
                     _ => continue,
                 };
-                if !kinds.iter().any(|(x, j, _)| *x == f.addr && *j == i) {
-                    kinds.push((f.addr, i, k.to_string()));
+                if !kinds.iter().any(|(x, j, _)| *x == key && *j == i) {
+                    kinds.push((key, i, k.to_string()));
                 }
             }
         }
     }
     let mut out = Vec::new();
-    for (area, fs) in &parsed {
+    for (area, cls, fs) in &parsed {
         for f in fs {
             for st in &f.stubs {
+                let key = lint_key(st.addr, cls);
                 for (i, k) in st.args.iter().enumerate() {
                     if k != "p" {
                         continue;
                     }
-                    if let Some((_, _, kk)) =
-                        kinds.iter().find(|(x, j, _)| *x == st.addr && *j == i)
-                    {
+                    if let Some((_, _, kk)) = kinds.iter().find(|(x, j, _)| *x == key && *j == i) {
                         out.push(format!(
                             "{area} {:08x}: stub {:08x} arg {i} is `p` but {:08x} declares it `{kk}`: use `ptr`",
                             f.addr, st.addr, st.addr
@@ -525,6 +566,87 @@ mod tests {
                 "b 021c1000: stub 021c0000 arg 0 is `p` but 021c0000 declares it `buf`: use `ptr`",
                 "b 021c1000: stub 021c0000 arg 2 is `p` but 021c0000 declares it `bpp`: use `ptr`",
             ]
+        );
+        // B18b: declarations cross specs by memory set (`ptr_selftest` in svflow.py, same vectors)
+        let texts = [
+            (
+                "c/x",
+                "area x\nset field\nfn 02045cac ret=none\n  arg u32 any\n  arg buf 0x10\n\
+                 fn 021ca238 ret=none\n  arg buf 0x10\n",
+            ),
+            (
+                "y",
+                "area y\nfn 021c3000 ret=none\n  stub 02045cac ret=none args=v,p\n  stub 021ca238 ret=none args=p\n",
+            ),
+            (
+                "z",
+                "area z\nset battle+96\nfn 021ca238 ret=none\n  arg bpp\n\
+                 fn 021c4000 ret=none\n  stub 021ca238 ret=none args=p\n",
+            ),
+            (
+                "c/w",
+                "area w\nset field\nfn 021c5000 ret=none\n  stub 021ca238 ret=none args=p\n  stub 02045cac ret=none args=v,ptr\n",
+            ),
+        ];
+        assert_eq!(
+            bare_p_lint(&texts),
+            [
+                "y 021c3000: stub 02045cac arg 1 is `p` but 02045cac declares it `buf`: use `ptr`",
+                "y 021c3000: stub 021ca238 arg 0 is `p` but 021ca238 declares it `bpp`: use `ptr`",
+                "z 021c4000: stub 021ca238 arg 0 is `p` but 021ca238 declares it `bpp`: use `ptr`",
+                "c/w 021c5000: stub 021ca238 arg 0 is `p` but 021ca238 declares it `buf`: use `ptr`",
+            ]
+        );
+        // B18b: `work` and `region` callee arguments count too
+        let texts = [(
+            "w",
+            "area w\nfn 021c6000 ret=none\n  arg work\n  arg u32 any\n  region r 0x10\n  arg region r\n\
+             fn 021c6100 ret=none\n  stub 021c6000 ret=none args=p,v,p\n\
+             fn 021c6200 ret=none\n  stub 021c6000 ret=none args=ptr,v,ptr\n",
+        )];
+        assert_eq!(
+            bare_p_lint(&texts),
+            [
+                "w 021c6100: stub 021c6000 arg 0 is `p` but 021c6000 declares it `work`: use `ptr`",
+                "w 021c6100: stub 021c6000 arg 2 is `p` but 021c6000 declares it `region`: use `ptr`",
+            ]
+        );
+    }
+
+    /// B18b: every repository spec (tools/rom-diff/svflow_specs/*.spec, keyed AREA, and
+    /// tools/rom-diff/specs/CRATE/*.spec, keyed CRATE/AREA; the same set `svflow.py` lints when it
+    /// loads any area, battle or check-fn.sh) passes no `buf` / `bpp` argument as a bare `p`.
+    #[test]
+    fn all_specs_pass_buffers_as_ptr() {
+        let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../../tools/rom-diff");
+        let specs = |dir: &str, pre: &str| -> Vec<(String, String)> {
+            let mut v: Vec<(String, String)> = std::fs::read_dir(dir)
+                .unwrap()
+                .filter_map(|e| {
+                    let p = e.unwrap().path();
+                    let n = p.file_name()?.to_str()?.strip_suffix(".spec")?.to_string();
+                    Some((format!("{pre}{n}"), std::fs::read_to_string(&p).unwrap()))
+                })
+                .collect();
+            v.sort();
+            v
+        };
+        let mut all = specs(&format!("{root}/svflow_specs"), "");
+        let mut crates: Vec<String> = std::fs::read_dir(format!("{root}/specs"))
+            .unwrap()
+            .map(|e| e.unwrap().file_name().into_string().unwrap())
+            .collect();
+        crates.sort();
+        for c in &crates {
+            all.extend(specs(&format!("{root}/specs/{c}"), &format!("{c}/")));
+        }
+        assert!(all.len() > 100, "found only {} specs", all.len());
+        let texts: Vec<(&str, &str)> = all.iter().map(|(a, t)| (a.as_str(), t.as_str())).collect();
+        let bad = bare_p_lint(&texts);
+        assert!(
+            bad.is_empty(),
+            "bare `p` for buf/bpp arguments:\n{}",
+            bad.join("\n")
         );
     }
 

@@ -13,7 +13,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x0201313C, "c0a2a7e69f8e0b15"),
     (0x02013144, "1001620537c5df7e"),
     (0x02013158, "96a924dc56753f38"),
-    (0x02013160, "c85257a8a6db04ac"),
+    (0x02013160, "535113fdd114dfce"),
     (0x0201320C, "0c3bd759b3ec680e"),
     (0x02013220, "36138428fecde7d2"),
     (0x02013234, "15e6cafd73cd910f"),
@@ -21,7 +21,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x02013284, "bf17197096dfc9c3"),
     (0x0201333C, "903dccdf5281f95f"),
     (0x02013360, "8a33a4a7b8197047"),
-    (0x0201347C, "98c11dc0b2e19764"),
+    (0x0201347C, "09c57a9725849319"),
     (0x020134F4, "a852a15e5d3dfdcf"),
     (0x02013528, "078d73d421f58705"),
     (0x02013610, "d9fe80ed6b4eae15"),
@@ -81,8 +81,9 @@ impl BtlSetupHooks for Rom<'_> {
     fn fun_0200ae54(&mut self, x: u32, n: u32) -> u32 {
         self.v(0x0200_AE54, &[x, n])
     }
-    fn fun_0200b040(&mut self, x: u32, _out: u32) {
-        self.stubs.call(0x0200_B040, &mut [Arg::V(x), Arg::P]);
+    fn fun_0200b040(&mut self, x: u32, out: u32) {
+        self.stubs
+            .call(0x0200_B040, &mut [Arg::V(x), Arg::Ptr(out)]);
     }
     fn fun_0201a30c(&mut self, x: u32, party: u32, y: u32) {
         self.v(0x0201_A30C, &[x, party, y]);
@@ -166,8 +167,12 @@ impl BtlSetupHooks for Rom<'_> {
         self.v(0x0201_293C, &[x])
     }
     fn fun_020076d0(&mut self, v: u32, _a: &mut u32, _b: &mut u32) -> u32 {
-        self.stubs
-            .call(0x0200_76D0, &mut [Arg::V(v), Arg::P, Arg::P])
+        // B18b: both out-pointers are locals of the caller (canon_ptr: PTR_LOCAL)
+        let local = black_fndiff::STACK_ZERO.start;
+        self.stubs.call(
+            0x0200_76D0,
+            &mut [Arg::V(v), Arg::Ptr(local), Arg::Ptr(local)],
+        )
     }
     fn fun_0200846c(&mut self, heap: u32) -> u32 {
         self.v(0x0200_846C, &[heap])

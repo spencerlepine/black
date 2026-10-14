@@ -1,5 +1,5 @@
 use super::*;
-use black_fndiff::{run_suite, Arg, Case, StubEnv, Suite};
+use black_fndiff::{region_addr, run_suite, Arg, Case, Layout, StubEnv, Suite};
 
 // Written by tools/check-fn.sh only, after the Rust hashes matched the ROM run.
 // fndiff-recorded-begin
@@ -7,18 +7,18 @@ const RECORDED: &[(u32, &str)] = &[
     (0x0201ED50, "e16e4c0ef8aa5ef2"),
     (0x0201ED64, "34a7735b5b3487b2"),
     (0x0201ED84, "4eb71b3463491128"),
-    (0x0201EDD0, "196344da8e2a003e"),
+    (0x0201EDD0, "6e4a340bc5ce9f94"),
     (0x0201EE0C, "167ce35d533747ed"),
-    (0x0201EE60, "dd209eee673ed877"),
+    (0x0201EE60, "65515b114ad0a99d"),
     (0x0201EFA4, "48b4140c6d61b95b"),
     (0x0201F02C, "9344c162196335bb"),
-    (0x0201F048, "f3391295ed053470"),
-    (0x0201F184, "acc2621967d618e3"),
-    (0x0201F198, "df06618411682c03"),
-    (0x0201F1B0, "9baaaaf534962bcc"),
-    (0x0201F1C8, "56dbcf3e63095dec"),
-    (0x0201F1E0, "1f492e365ef072aa"),
-    (0x0201F230, "cd09d909f3b8c495"),
+    (0x0201F048, "e4bd7b0df4df07ad"),
+    (0x0201F184, "9288dffa9ca2226a"),
+    (0x0201F198, "7cde83bb8eb21489"),
+    (0x0201F1B0, "fcec8166847561c3"),
+    (0x0201F1C8, "5d4dd311ea57578b"),
+    (0x0201F1E0, "0a74891875a7ce2b"),
+    (0x0201F230, "7dfd8d3571413682"),
     (0x0201F250, "a19a8c445e647e19"),
     (0x0201F31C, "71617b43ba5e3f8f"),
     (0x0201F35C, "0139da324487d3c1"),
@@ -69,6 +69,17 @@ fn load_ws(c: &Case) -> (WordSet, Regs) {
     )
 }
 
+/// B18b: the emulator addresses of the word set's string buffers (its copies of the regions), so
+/// `FUN_02045CAC`'s StrBuf argument (`ptr`) is the region the original passes.
+fn ws_layout(ws: &WordSet, regs: Regs) -> Layout {
+    let mut l = Layout::default();
+    l.push(&ws.scratch, region_addr(regs[ENTRIES]));
+    for (e, &k) in ws.entries.iter().zip(&regs[..ENTRIES]) {
+        l.push(&e.buf, region_addr(k));
+    }
+    l
+}
+
 fn store_ws(c: &mut Case, ws: &WordSet, regs: Regs) {
     let base = (rd32(&c.bufs[0], 8) - ARG_BASE) as usize;
     for (i, e) in ws.entries.iter().enumerate() {
@@ -81,7 +92,7 @@ fn store_ws(c: &mut Case, ws: &WordSet, regs: Regs) {
 
 /// The `MsgData` callees and `FUN_02008500`, routed to the spec's stub lines. The string buffers
 /// they fill are not written: the stub lines say the callees leave them alone.
-struct Stubs<'a>(&'a mut StubEnv);
+struct Stubs<'a>(&'a mut StubEnv, Layout);
 
 impl WordSetHooks for Stubs<'_> {
     fn msg_create(&mut self, typ: u32, arc: u32, bank: u32, heap: u32) -> u32 {
@@ -90,9 +101,11 @@ impl WordSetHooks for Stubs<'_> {
             &mut [Arg::V(typ), Arg::V(arc), Arg::V(bank), Arg::V(heap)],
         )
     }
-    fn msg_fetch(&mut self, md: u32, msgid: u32, _sb: &mut [u8]) {
-        self.0
-            .call(0x0204_5CAC, &mut [Arg::V(md), Arg::V(msgid), Arg::P]);
+    fn msg_fetch(&mut self, md: u32, msgid: u32, sb: &mut [u8]) {
+        self.0.call(
+            0x0204_5CAC,
+            &mut [Arg::V(md), Arg::V(msgid), self.1.ptr(sb)],
+        );
     }
     fn msg_delete(&mut self, md: u32) {
         self.0.call(0x0204_5C04, &mut [Arg::V(md)]);
@@ -129,13 +142,14 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         }
         0x0201_EDD0 => {
             let (mut ws, regs) = load_ws(c);
+            let lay = ws_layout(&ws, regs);
             let (bank, msgid) = (c.vals[2], c.vals[3]);
             set_msg(
                 &mut ws,
                 c.vals[1] as usize,
                 bank,
                 msgid,
-                &mut Stubs(&mut c.env),
+                &mut Stubs(&mut c.env, lay),
             );
             store_ws(c, &ws, regs);
             0
@@ -149,13 +163,14 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         }
         0x0201_EE60 => {
             let (mut ws, regs) = load_ws(c);
+            let lay = ws_layout(&ws, regs);
             let md = rd32(&c.globals[0], 0);
             set_msg_global(
                 &mut ws,
                 c.vals[1] as usize,
                 md,
                 c.vals[2],
-                &mut Stubs(&mut c.env),
+                &mut Stubs(&mut c.env, lay),
             );
             store_ws(c, &ws, regs);
             0
@@ -169,30 +184,33 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         }
         0x0201_F02C => {
             let (mut ws, regs) = load_ws(c);
+            let lay = ws_layout(&ws, regs);
             set_via_02008500(
                 &mut ws,
                 c.vals[1] as usize,
                 c.vals[2],
-                &mut Stubs(&mut c.env),
+                &mut Stubs(&mut c.env, lay),
             );
             store_ws(c, &ws, regs);
             0
         }
         0x0201_F048 => {
             let (mut ws, regs) = load_ws(c);
+            let lay = ws_layout(&ws, regs);
             set_msg_bank_e7(
                 &mut ws,
                 c.vals[1] as usize,
                 c.vals[2],
-                &mut Stubs(&mut c.env),
+                &mut Stubs(&mut c.env, lay),
             );
             store_ws(c, &ws, regs);
             0
         }
         0x0201_F184 | 0x0201_F198 | 0x0201_F1B0 | 0x0201_F1C8 | 0x0201_F1E0 | 0x0201_F230 => {
             let (mut ws, regs) = load_ws(c);
+            let lay = ws_layout(&ws, regs);
             let (i, v) = (c.vals[1] as usize, c.vals[2]);
-            let h = &mut Stubs(&mut c.env);
+            let h = &mut Stubs(&mut c.env, lay);
             match addr {
                 0x0201_F184 => set_msg_bank_a0(&mut ws, i, v, h),
                 0x0201_F198 => set_msg_bank_2b(&mut ws, i, v, h),

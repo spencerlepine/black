@@ -582,7 +582,7 @@ impl<E: FlowEnv, U: Unported, W: WazaHooks> FlowHost for FlowWorkHost<E, U, W> {
         let r = self.env.call_wr(
             &self.work,
             0x021B_FEAC,
-            &mut [Arg::P, Arg::V(ma), Arg::V(mb), Arg::Out(&mut o)],
+            &mut [Arg::PWork(0), Arg::V(ma), Arg::V(mb), Arg::Out(&mut o)],
         );
         *out = u32::from_le_bytes(o);
         r != 0

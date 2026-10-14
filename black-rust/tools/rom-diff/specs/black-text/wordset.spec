@@ -110,7 +110,7 @@ fn 0201edd0 ret=none
   fix region:s3 0 u16 range 0 20
   fix region:s3 2 u16 range 0 20
   stub 02045b38 ret=nullable:4:u32 args=v,v,v,v
-  stub 02045cac ret=none args=v,v,p
+  stub 02045cac ret=none args=v,v,ptr
   stub 02045c04 ret=none args=v
 
 # FUN_0201EE0C(ws, i, str, n, plain): entry i = {info zeroed, +3 = (n & 0x7f) | ((plain == 0) << 7)}, string copied from str
@@ -176,7 +176,7 @@ fn 0201ee60 ret=none
   fix region:s3 0 u16 range 0 20
   fix region:s3 2 u16 range 0 20
   global 020a7370 4
-  stub 02045cac ret=none args=v,v,p
+  stub 02045cac ret=none args=v,v,ptr
 
 # FUN_0201EFA4(ws, i, value, digits, mode, ascii): FUN_0201F35C(scratch, value, digits, mode, ascii); set entry i from scratch
 fn 0201efa4 ret=none
@@ -269,7 +269,7 @@ fn 0201f048 ret=none
   fix region:s3 0 u16 range 0 20
   fix region:s3 2 u16 range 0 20
   stub 02045b38 ret=nullable:4:u32 args=v,v,v,v
-  stub 02045cac ret=none args=v,v,p
+  stub 02045cac ret=none args=v,v,ptr
   stub 02045c04 ret=none args=v
   stub 02045f50 ret=mod:8 args=v
 
@@ -302,7 +302,7 @@ fn 0201f184 ret=none
   fix region:s3 0 u16 range 0 20
   fix region:s3 2 u16 range 0 20
   stub 02045b38 ret=nullable:4:u32 args=v,v,v,v
-  stub 02045cac ret=none args=v,v,p
+  stub 02045cac ret=none args=v,v,ptr
   stub 02045c04 ret=none args=v
 
 # FUN_0201F230(ws, i, v): EDD0(ws, i, 278, clamp(v, 1, 12) - 1)
@@ -334,7 +334,7 @@ fn 0201f230 ret=none
   fix region:s3 0 u16 range 0 20
   fix region:s3 2 u16 range 0 20
   stub 02045b38 ret=nullable:4:u32 args=v,v,v,v
-  stub 02045cac ret=none args=v,v,p
+  stub 02045cac ret=none args=v,v,ptr
   stub 02045c04 ret=none args=v
 
 # FUN_0201F198(ws, i, v): v > 8 ? clear entry i : EDD0(ws, i, 0x2B, v)
@@ -366,7 +366,7 @@ fn 0201f198 ret=none
   fix region:s3 0 u16 range 0 20
   fix region:s3 2 u16 range 0 20
   stub 02045b38 ret=nullable:4:u32 args=v,v,v,v
-  stub 02045cac ret=none args=v,v,p
+  stub 02045cac ret=none args=v,v,ptr
   stub 02045c04 ret=none args=v
 
 # FUN_0201F1B0(ws, i, v): v > 0x91 ? clear entry i : EDD0(ws, i, 0, v)
@@ -398,7 +398,7 @@ fn 0201f1b0 ret=none
   fix region:s3 0 u16 range 0 20
   fix region:s3 2 u16 range 0 20
   stub 02045b38 ret=nullable:4:u32 args=v,v,v,v
-  stub 02045cac ret=none args=v,v,p
+  stub 02045cac ret=none args=v,v,ptr
   stub 02045c04 ret=none args=v
 
 # FUN_0201F1C8(ws, i, v): v > 8 ? clear entry i : EDD0(ws, i, 0x38, v)
@@ -430,7 +430,7 @@ fn 0201f1c8 ret=none
   fix region:s3 0 u16 range 0 20
   fix region:s3 2 u16 range 0 20
   stub 02045b38 ret=nullable:4:u32 args=v,v,v,v
-  stub 02045cac ret=none args=v,v,p
+  stub 02045cac ret=none args=v,v,ptr
   stub 02045c04 ret=none args=v
 
 # unlabeled 0x0201F1E0(ws, i, v): md = MsgData_Create(0, 3, 461, heap); clear entry i; if v <= 6 and md: GetString(md, v + 0x2B) + set entry i; delete md
@@ -462,7 +462,7 @@ fn 0201f1e0 ret=none
   fix region:s3 0 u16 range 0 20
   fix region:s3 2 u16 range 0 20
   stub 02045b38 ret=nullable:4:u32 args=v,v,v,v
-  stub 02045cac ret=none args=v,v,p
+  stub 02045cac ret=none args=v,v,ptr
   stub 02045c04 ret=none args=v
 
 # FUN_0201F31C(ws): clear the string of every entry (info bytes untouched)

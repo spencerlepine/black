@@ -83,7 +83,7 @@ fn 02017eb4 ret=bool inputs=600
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
 
 # FUN_02017F08(mon): gender from species (id 5), form (0x6F), PID (0).
@@ -105,7 +105,7 @@ fn 02017f08 ret=u8 inputs=600
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
 
 # FUN_02017C50(mon, species): ability slot (id 10) after a form change.
@@ -129,7 +129,7 @@ fn 02017c50 ret=none inputs=900
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
 
 # FUN_02017CC8(mon, old_species, new_species): stored gender (id 0x6E) after a form change.
@@ -152,7 +152,7 @@ fn 02017cc8 ret=none inputs=900
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
 
 # FUN_020179B8(mon, form): set the form (id 0x6F); if it changed, refresh ability slot and gender. Returns changed.
@@ -178,5 +178,5 @@ fn 020179b8 ret=bool inputs=900
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v

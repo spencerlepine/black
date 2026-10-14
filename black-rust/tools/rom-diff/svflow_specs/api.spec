@@ -76,8 +76,8 @@ fn 021c7d54 ret=u32
   arg u32 any
   arg buf 0x40
   stub 021b9a24 force ret=pick:0/1 args=v,v
-  stub 021bd2b4 force ret=none args=ptr,p
-  stub 021bd34c force ret=pick:0/1/1 args=ptr,p,out:4 seq
+  stub 021bd2b4 force ret=none args=ptr,ptr
+  stub 021bd34c force ret=pick:0/1/1 args=ptr,ptr,out:4 seq
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
 
 # (work, atk pokeID, def pokeID, move): counter work[0x774] around 64b4 (fills a 0x14-byte move record) and
@@ -90,7 +90,7 @@ fn 021c7dac ret=u32
   stub 021b937c force ret=u32 args=v,v,v
   stub 021b9934 force ret=u32 args=v,v
   stub 021c64b4 force ret=none args=p,v,v,out:0x14
-  stub 021c6e3c force ret=u32 args=p,v,v,in:0x10,v
+  stub 021c6e3c force ret=u32 args=ptr,v,v,in:0x10,v
   stub 021d6c24 ret=pick:0/1 args=v
 
 # (work, atk, def, move, stack0 = use 7dac, stack1 = flag): 0 for move 0 or 0201c314(move) == 0; else 1e74 with the
@@ -105,10 +105,10 @@ fn 021c7e14 ret=u16 inputs=300
   stub 0201c314 ret=pick:0/1/1 args=v
   stub 021b937c force ret=u32 args=v,v,v
   stub 021b9934 force ret=u32 args=v,v
-  stub 021c1e74 force ret=none args=p,v,v,in:0x10,v,v,v,v,out:2
+  stub 021c1e74 force ret=none args=ptr,v,v,in:0x10,v,v,v,v,out:2
   stub 021c64b4 force ret=none args=p,v,v,out:0x14
-  stub 021c6e3c force ret=u32 args=p,v,v,in:0x10,v
-  stub 021c7dac ret=u32 args=p,v,v,v
+  stub 021c6e3c force ret=u32 args=ptr,v,v,in:0x10,v
+  stub 021c7dac ret=u32 args=ptr,v,v,v
   stub 021d6c24 ret=pick:0/1 args=v
 
 # work[0x774] != 0
@@ -137,7 +137,7 @@ fn 021c7f04 ret=u32
   stub 021b8588 force ret=pick:0/1/2/3 args=v
   stub 021b8d08 force ret=pick:0/1/2/3 args=v
   stub 021bb85c force ret=ptr:work:0x400:8 args=ptr,v
-  stub 021c7eec ret=u32 args=p,v
+  stub 021c7eec ret=u32 args=ptr,v
 
 # 021b9bc4(7fcc(work, id), 7f04(work, id)) != 0
 fn 021c7f24 ret=bool
@@ -148,9 +148,9 @@ fn 021c7f24 ret=bool
   stub 021b9af8 force ret=u32 args=v,v
   stub 021b9bc4 force ret=pick:0/1 args=v,v
   stub 021bb85c force ret=ptr:work:0x400:8 args=ptr,v
-  stub 021c7eec ret=u32 args=p,v
-  stub 021c7f04 ret=u32 args=p,v
-  stub 021c7fcc ret=u32 args=p,v
+  stub 021c7eec ret=u32 args=ptr,v
+  stub 021c7f04 ret=u32 args=ptr,v
+  stub 021c7fcc ret=u32 args=ptr,v
 
 # test-and-set work[0x78A] bit 3: 0 if it was set, else sets it and returns 1 (not in the Ghidra fn list)
 fn 021c7f4c ret=bool
@@ -280,17 +280,17 @@ fn 021c81c8 ret=u16
   arg work
   arg u32 any
   arg u32 alt const 0 || const 1 || any
-  stub 021bc948 force ret=u16 args=p,v,v
+  stub 021bc948 force ret=u16 args=ptr,v,v
 
 # counts the other mons (bd2b4 / bd34c iterator) whose 81c8(work, m, r2) value exceeds that of mon r1
 fn 021c81d0 ret=u32
   arg work
   arg u32 any
   arg u32 alt const 0 || const 1 || any
-  stub 021bc948 force ret=u16 args=p,v,v
-  stub 021bd2b4 force ret=none args=ptr,p
-  stub 021bd34c force ret=pick:0/1/1 args=ptr,p,out:4 seq
-  stub 021c81c8 ret=u16 args=p,v,v
+  stub 021bc948 force ret=u16 args=ptr,v,v
+  stub 021bd2b4 force ret=none args=ptr,ptr
+  stub 021bd34c force ret=pick:0/1/1 args=ptr,ptr,out:4 seq
+  stub 021c81c8 ret=u16 args=ptr,v,v
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
 
 # core6 6f0c(work, mon, 1)
@@ -312,7 +312,7 @@ fn 021c824c ret=bool
 # thunk to core4 021c2ab0(work) (26 callers)
 fn 021c8288 ret=u32
   arg work
-  stub 021c2ab0 force ret=u32 args=p
+  stub 021c2ab0 force ret=u32 args=ptr
 
 # core3 bfa00(work, mon(r1), mon(r2), r3)
 fn 021c8290 ret=u32
@@ -321,7 +321,7 @@ fn 021c8290 ret=u32
   arg u32 alt range 0 5 || any
   arg u32 any
   stub 021b9934 force ret=u32 args=v,v
-  stub 021bfa00 force ret=pick:0/1 args=p,v,v,v
+  stub 021bfa00 force ret=pick:0/1 args=ptr,v,v,v
 
 # tail call 021b911c(work[4], r1) (a stub that returns 0 and reads nothing)
 fn 021c82b8 ret=u32
@@ -372,7 +372,7 @@ fn 021c8374 ret=bool
   arg work
   arg u32 alt range 0 5 || any
   stub 021b9934 force ret=u32 args=v,v
-  stub 021c8348 ret=pick:0/1 args=p,v
+  stub 021c8348 ret=pick:0/1 args=ptr,v
   stub 021d62c4 ret=pick:0/1 args=v,v
   stub 021d69ac ret=pick:0/1/2/0x18/0x19/0x20/0xFF args=v,v
 
@@ -381,19 +381,19 @@ fn 021c83a0 ret=u32
   arg work
   arg u32 alt range 0 5 || any
   stub 021b9934 force ret=u32 args=v,v
-  stub 021c2af0 force ret=u32 args=p,v
+  stub 021c2af0 force ret=u32 args=ptr,v
   stub 021d67e8 ret=u32 args=v
   stub 021d7b10 ret=pick:0/1/2/100 args=v,v
 
 # thunk to core4 021c2e4c(work)
 fn 021c83cc ret=u32
   arg work
-  stub 021c2e4c force ret=u32 args=p
+  stub 021c2e4c force ret=u32 args=ptr
 
 # thunk to core1 021bc2b0(work)
 fn 021c83d4 ret=u32
   arg work
-  stub 021bc2b0 force ret=pick:0/1 args=p
+  stub 021bc2b0 force ret=pick:0/1 args=ptr
 
 # byte +4 of the record behind work[0x4A8] := r1
 fn 021c83dc ret=none
@@ -433,33 +433,33 @@ fn 021c846c ret=u32
   arg u32 alt range 0 5 || any
   arg u32 any
   stub 021b9934 force ret=u32 args=v,v
-  stub 021bfeac force ret=u32 args=p,v,v,ptr
+  stub 021bfeac force ret=u32 args=ptr,v,v,ptr
 
 # core3 bff60(work, mon, 1)
 fn 021c8494 ret=none
   arg work
   arg u32 alt range 0 5 || any
   stub 021b9934 force ret=u32 args=v,v
-  stub 021bff60 force ret=none args=p,v,v
+  stub 021bff60 force ret=none args=ptr,v,v
 
 # clears work[0x78A] bit 5, core4 2128(work, r1), then *r2 (byte) = bit 5; returns 2128's result
 fn 021c84ac ret=u32
   arg work
   arg u32 any
   arg buf 4
-  stub 021c2128 force ret=pick:0/1 args=p,v
+  stub 021c2128 force ret=pick:0/1 args=ptr,v
 
 # thunk to core2 021bdbb8(work, r1)
 fn 021c84d0 ret=none
   arg work
   arg u32 any
-  stub 021bdbb8 force ret=none args=p,v
+  stub 021bdbb8 force ret=none args=ptr,v
 
 # thunk to events 021cc668(work, mon)
 fn 021c84d8 ret=u32
   arg work
   arg u32 any
-  stub 021cc668 force ret=u32 args=p,v
+  stub 021cc668 force ret=u32 args=ptr,v
 
 # thunk to 021c84f4
 fn 021c84e0 ret=none
@@ -467,7 +467,7 @@ fn 021c84e0 ret=none
   arg u32 alt range 0 5 || any
   fix work 0x785 u8 alt range 0 0x18 || any
   fix work 0x791 u8 range 0 5 rep=24,1
-  stub 021c84f4 ret=none args=p,v
+  stub 021c84f4 ret=none args=ptr,v
 
 # work[0x785] := 0
 fn 021c84e8 ret=none
@@ -491,7 +491,7 @@ fn 021c8534 ret=bool
 fn 021c8588 ret=none
   arg work
   stub 021bd1e0 force ret=none args=ptr
-  stub 021c85d4 ret=none args=p,v,v
+  stub 021c85d4 ret=none args=ptr,v,v
   stub 021c87a0 ret=none args=p
   stub 021c87b0 ret=none args=p
   stub 021c87c0 ret=none args=p
@@ -505,7 +505,7 @@ fn 021c859c ret=none
   arg work
   fix work 0x1A64 u32 alt range 0 7 || any
   stub 021bd1e0 force ret=none args=ptr
-  stub 021c85d4 ret=none args=p,v,v
+  stub 021c85d4 ret=none args=ptr,v,v
   stub 021c87a0 ret=none args=p
   stub 021c87b0 ret=none args=p
   stub 021c87c0 ret=none args=p
@@ -519,7 +519,7 @@ fn 021c85b8 ret=none
   arg work
   fix work 0x1A64 u32 range 0 7
   stub 021bd1e0 force ret=none args=ptr
-  stub 021c85d4 ret=none args=p,v,v
+  stub 021c85d4 ret=none args=ptr,v,v
   stub 021c87a0 ret=none args=p
   stub 021c87b0 ret=none args=p
   stub 021c87c0 ret=none args=p

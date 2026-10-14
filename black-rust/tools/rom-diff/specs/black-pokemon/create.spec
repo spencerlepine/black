@@ -122,7 +122,7 @@ fn 02017588 ret=none inputs=300
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
   stub 02045a38 ret=none args=v,v,v
   stub 0201f448 ret=bool args=v,v
@@ -177,7 +177,7 @@ fn 0201761c ret=none inputs=600
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
   stub 02045a38 ret=none args=v,v,v
   stub 0201f448 ret=bool args=v,v
@@ -218,7 +218,7 @@ fn 0201747c ret=ofs:arg2 inputs=300
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
   stub 02045a38 ret=none args=v,v,v
   stub 0201f448 ret=bool args=v,v
@@ -255,7 +255,7 @@ fn 020185c4 ret=none inputs=400
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
   stub 02045a38 ret=none args=v,v,v
   stub 0201f448 ret=bool args=v,v
@@ -296,7 +296,7 @@ fn 02018328 ret=u32 inputs=600
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
   stub 02045a38 ret=none args=v,v,v
   stub 0201f448 ret=bool args=v,v

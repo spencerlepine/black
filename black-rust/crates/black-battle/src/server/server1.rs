@@ -609,7 +609,10 @@ pub fn record_reader_init<E: FlowEnv>(env: &mut E, mem: &Mem, m: u32, setup_p: u
     }
     let a = mem.r32(setup_p + 0x94);
     let b = mem.r32(setup_p + 0x98);
-    env.call(0x021E_E644, &mut [Arg::P, Arg::V(a), Arg::V(b)]);
+    env.call(
+        0x021E_E644,
+        &mut [Arg::PAt(m + 0x2C8), Arg::V(a), Arg::V(b)],
+    );
     for ofs in [0x10, 0x14] {
         let c = mem.r32(m + ofs);
         env.call(0x021C_D938, &mut [Arg::V(c), Arg::P]);
@@ -880,7 +883,10 @@ pub fn subproc_local_multi<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u3
     if mem.r8(s + 0x23) != 0 {
         let a = mem.r32(s + 0x94);
         let b = mem.r32(s + 0x98);
-        env.call(0x021E_E644, &mut [Arg::P, Arg::V(a), Arg::V(b)]);
+        env.call(
+            0x021E_E644,
+            &mut [Arg::PAt(m + 0x2C8), Arg::V(a), Arg::V(b)],
+        );
         for i in 0..4 {
             if present(env, i) {
                 let c = mem.r32(m + M_CLIENTS + 4 * i);

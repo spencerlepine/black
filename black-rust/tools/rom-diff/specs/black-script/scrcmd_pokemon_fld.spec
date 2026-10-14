@@ -369,7 +369,7 @@ fn 021b6bdc ret=u32 inputs=200
   stub 021b70d4 ret=none args=v
   stub 0216d598 force ret=pick:0x46/1/2 args=v
   stub 02188c7c force ret=u32 args=v
-  stub 0216dd1c force ret=pick:1/1/1/0 args=v,outm:4:0xFF/0xFF/0xFF/0xFF,p seq
+  stub 0216dd1c force ret=pick:1/1/1/0 args=v,outm:4:0xFF/0xFF/0xFF/0xFF,ptr seq
   stub 0201aa18 force ret=pick:4/5/6/7 args=v
   stub 02012934 force ret=u32 args=v
   stub 021b6ee0 ret=u32 args=v,v
@@ -526,7 +526,7 @@ fn 021b6de4 ret=u32 inputs=200
   # closure: 021b6e24 / 021b6e68
   stub 0216d598 force ret=pick:0x46/1/2 args=v
   stub 02188c7c force ret=u32 args=v
-  stub 0216dd1c force ret=pick:1/1/1/0 args=v,outm:4:0xFF/0xFF/0xFF/0xFF,p seq
+  stub 0216dd1c force ret=pick:1/1/1/0 args=v,outm:4:0xFF/0xFF/0xFF/0xFF,ptr seq
   stub 02162740 force ret=nullable:3:ptr:arg1:0x400:1 args=v
   stub 02012844 force ret=u32 args=v
   stub 02162744 force ret=pick:0/1/2/3/4 args=v
@@ -539,7 +539,7 @@ fn 021b6e0c ret=u16 inputs=200
   # closure: 021b6e24
   stub 0216d598 force ret=pick:0x46/1/2 args=v
   stub 02188c7c force ret=u32 args=v
-  stub 0216dd1c force ret=pick:1/1/1/0 args=v,outm:4:0xFF/0xFF/0xFF/0xFF,p seq
+  stub 0216dd1c force ret=pick:1/1/1/0 args=v,outm:4:0xFF/0xFF/0xFF/0xFF,ptr seq
 
 # find_obj_0x46(fm): S = 02188C7C(fm); iterate 0216DD1C(S, &o, &i) == 1: 0216D598(o) == 0x46 -> o; end -> 0.
 fn 021b6e24 ret=u32 inputs=200
@@ -547,7 +547,7 @@ fn 021b6e24 ret=u32 inputs=200
   arg u32 any
   stub 0216d598 force ret=pick:0x46/1/2 args=v
   stub 02188c7c force ret=u32 args=v
-  stub 0216dd1c force ret=pick:1/1/1/0 args=v,outm:4:0xFF/0xFF/0xFF/0xFF,p seq
+  stub 0216dd1c force ret=pick:1/1/1/0 args=v,outm:4:0xFF/0xFF/0xFF/0xFF,ptr seq
 
 # find_record_0x46(GD): S = 02012844(GD); A = 02162740(S), n = 02162744(S); !A or !n -> -1; first i < n with A[0x24 i + 2] u16 ==
 # 0x46 -> A[0x24 i] u16; else -1.  Arena: arg 1 (never read).

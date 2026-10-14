@@ -937,7 +937,7 @@ fn 021d2a20 ret=u32 inputs=600
   stub 021b9358 force ret=none args=v,v
   stub 02017e1c ret=u32 args=v,v,v
   stub 020181f4 ret=none args=v,v,v
-  stub 02018328 ret=pick:0/0xFFFE/0x8021/0x21 args=v,p,v
+  stub 02018328 ret=pick:0/0xFFFE/0x8021/0x21 args=v,ptr,v
   stub 021b9af8 force ret=u32 args=v,v
   stub 021b9cbc force ret=u32 args=v,v
   stub 021d5440 ret=u32 args=v
@@ -968,7 +968,7 @@ fn 021d2ca8 ret=u32 inputs=600
   fix global0 0 u16 alt oneof 0 0xFFFE 0x8005 || any
   stub 021d5440 ret=u32 args=v
   stub 021d5844 ret=u32 args=v
-  stub 02018328 ret=pick:0/0xFFFE/0x8021/0x21 args=v,p,v
+  stub 02018328 ret=pick:0/0xFFFE/0x8021/0x21 args=v,ptr,v
   stub 021b9934 force ret=u32 args=v,v
   stub 021d6bfc ret=none args=v
   stub 021eaf18 ret=none args=p,v,v

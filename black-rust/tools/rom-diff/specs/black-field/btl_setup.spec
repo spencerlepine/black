@@ -89,7 +89,7 @@ fn 02013160 ret=none inputs=200
   arg u32 any
   fix arg0 0x24 u32 alt const 0 || any rep=4,4
   stub 0200ae54 ret=pick:0/1/2/3/5/9 args=v,v
-  stub 0200b040 ret=none args=v,p
+  stub 0200b040 ret=none args=v,ptr
   stub 0201a30c ret=none args=v,v,v
   stub 0201a2a8 ret=none args=v,v
 
@@ -206,7 +206,7 @@ fn 0201347c ret=none inputs=300
   stub 0201aa18 ret=pick:0/1/2 args=v
   stub 0201aa14 ret=pick:0/1/2 args=v
   stub 0201293c ret=u32 args=v
-  stub 020076d0 ret=pick:0/1 args=v,p,p
+  stub 020076d0 ret=pick:0/1 args=v,ptr,ptr
 
 # FUN_020134F4(p, x, kind, q, heap): FUN_020130C4(p); FUN_02013360(p, x, q); FUN_0201333C(p, x, heap); +0 = 1; +4 = kind; u16 +0x1A = 0x47D
 fn 020134f4 ret=none inputs=100

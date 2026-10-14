@@ -1,6 +1,6 @@
 use super::*;
 use crate::item::RECORD_SIZE;
-use black_fndiff::{run_suite, Arg, Case, StubEnv, Suite};
+use black_fndiff::{run_suite, Arg, Case, Layout, StubEnv, Suite};
 
 // Written by tools/check-fn.sh only, after the Rust hashes matched the ROM run.
 // fndiff-recorded-begin
@@ -13,8 +13,8 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021BC228, "78c0594e115eddc8"),
     (0x021BC24C, "132949ccb4c381ed"),
     (0x021BC288, "65a7bd912fd33ec8"),
-    (0x021BDD78, "77bda323c4286001"),
-    (0x021BE2B4, "65fa7e39dada769c"),
+    (0x021BDD78, "43bd7a9cdeba7f57"),
+    (0x021BE2B4, "bbdc79a2a607ce8f"),
     (0x021BE874, "be5c2c7557ec71da"),
     (0x021BE914, "1b13127432912a55"),
     (0x021BE948, "77e439f37030644d"),
@@ -27,6 +27,8 @@ const RECORDED: &[(u32, &str)] = &[
 /// the record the stubbed archive loader "returns". The Pokemon getters run as real code
 /// (`black_pokemon::poke_tool`); the callees of the getters are not reached by the ids the item code reads.
 struct Rom<'a> {
+    /// B18b: where the port's copy of the `mon` region stands for (its `ptr` stub arguments).
+    lay: Layout,
     env: &'a mut StubEnv,
     rec: [u8; RECORD_SIZE],
 }
@@ -101,8 +103,9 @@ impl PokeToolHooks for Rom<'_> {
 }
 
 impl ItemUseHooks for Rom<'_> {
-    fn recalc(&mut self, _mon: &mut [u8]) {
-        self.env.call(0x0201_85C4, &mut [Arg::P]);
+    fn recalc(&mut self, mon: &mut [u8]) {
+        let p = self.lay.ptr(mon);
+        self.env.call(0x0201_85C4, &mut [p]);
     }
     fn exp_for_species_level(&mut self, species: u32, form: u32, level: u32) -> u32 {
         self.env.call(
@@ -110,17 +113,20 @@ impl ItemUseHooks for Rom<'_> {
             &mut [Arg::V(species), Arg::V(form), Arg::V(level)],
         )
     }
-    fn slot_below_max(&mut self, _mon: &mut [u8], slot: u32) -> u32 {
-        self.env.call(0x0201_B920, &mut [Arg::P, Arg::V(slot)])
+    fn slot_below_max(&mut self, mon: &mut [u8], slot: u32) -> u32 {
+        let p = self.lay.ptr(mon);
+        self.env.call(0x0201_B920, &mut [p, Arg::V(slot)])
     }
-    fn raise_pp(&mut self, _mon: &mut [u8], slot: u32, amount: u32) -> u32 {
+    fn raise_pp(&mut self, mon: &mut [u8], slot: u32, amount: u32) -> u32 {
+        let p = self.lay.ptr(mon);
         self.env
-            .call(0x0201_B970, &mut [Arg::P, Arg::V(slot), Arg::V(amount)])
+            .call(0x0201_B970, &mut [p, Arg::V(slot), Arg::V(amount)])
     }
-    fn friendship_by_item(&mut self, _mon: &mut [u8], item: u32, location: u32, heap: u32) {
+    fn friendship_by_item(&mut self, mon: &mut [u8], item: u32, location: u32, heap: u32) {
+        let p = self.lay.ptr(mon);
         self.env.call(
             0x0201_B7B4,
-            &mut [Arg::P, Arg::V(item), Arg::V(location), Arg::V(heap)],
+            &mut [p, Arg::V(item), Arg::V(location), Arg::V(heap)],
         );
     }
     fn set_form(&mut self, _mon: &mut [u8], form: u32) {
@@ -130,6 +136,13 @@ impl ItemUseHooks for Rom<'_> {
 
 fn record(c: &Case, arg: usize) -> [u8; RECORD_SIZE] {
     c.bufs[arg][..RECORD_SIZE].try_into().unwrap()
+}
+
+/// B18b: the port works on a copy of the `mon` region; its pointer is the region's address.
+fn mon_layout(c: &Case, mon: &[u8]) -> Layout {
+    let mut l = Layout::default();
+    l.push(mon, c.region_at("mon"));
+    l
 }
 
 fn call(addr: u32, c: &mut Case) -> u64 {
@@ -142,6 +155,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
                 _ => 0,
             };
             let mut h = Rom {
+                lay: Layout::default(),
                 env: &mut c.env,
                 rec,
             };
@@ -156,6 +170,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             let rec = record(c, 4);
             let mut mon = c.region("mon").to_vec();
             let mut h = Rom {
+                lay: mon_layout(c, &mon),
                 env: &mut c.env,
                 rec,
             };
@@ -167,6 +182,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             let rec = record(c, 5);
             let mut mon = c.region("mon").to_vec();
             let mut h = Rom {
+                lay: mon_layout(c, &mon),
                 env: &mut c.env,
                 rec,
             };
@@ -177,6 +193,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x021B_E874 | 0x021B_E914 | 0x021B_EA48 | 0x021B_E9BC => {
             let mut mon = c.region("mon").to_vec();
             let mut h = Rom {
+                lay: mon_layout(c, &mon),
                 env: &mut c.env,
                 rec: [0; RECORD_SIZE],
             };
@@ -200,6 +217,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x021B_C24C | 0x021B_C288 | 0x0201_7F90 => {
             let mut mon = c.region("mon").to_vec();
             let mut h = Rom {
+                lay: mon_layout(c, &mon),
                 env: &mut c.env,
                 rec: [0; RECORD_SIZE],
             };

@@ -83,7 +83,7 @@ fn 021b6100 ret=u32
   stub 021ef958 ret=u32 args=v
   stub 021b93e0 force ret=none args=ptr,p,v                # server3
   stub 021ba82c force ret=none args=ptr                    # server3 (setup)
-  stub 0203f258 ret=none args=p
+  stub 0203f258 ret=none args=ptr
   stub 021d7840 ret=none args=p,v
   stub 021cd6ec force ret=none                           # client1
   stub 021d7f88 ret=u32 args=p
@@ -118,14 +118,14 @@ fn 021b6434 ret=u32
   stub 021ba2e4 force ret=none args=ptr                    # server3
   stub 021b64cc ret=pick:0/1 args=ptr                      # in-area
   stub 021b8b9c force ret=pick:0/1 args=ptr,v              # server2 (64cc)
-  stub 021ee894 ret=pick:0/1 args=p,v                    # BattleRecordReader_IsAtEnd (64cc)
+  stub 021ee894 ret=pick:0/1 args=ptr,v                    # BattleRecordReader_IsAtEnd (64cc)
 
 # 1 unless some client id i (0..3) is present (8b9c) and its record reader is not at the end (021ee894(M+0x2C8, i)).
 fn 021b64cc ret=u32
   nowork
   arg buf 0x1000
   stub 021b8b9c force ret=pick:0/1 args=ptr,v              # server2
-  stub 021ee894 ret=pick:0/1/1 args=p,v                  # BattleRecordReader_IsAtEnd
+  stub 021ee894 ret=pick:0/1/1 args=ptr,v                  # BattleRecordReader_IsAtEnd
 
 # BattleProc exit (r0 proc, r1 &seq, r3 M): seq 0 fade start (02005E30 unless M[0x473] bit5), brightness (0207D55C /
 # 0207D534 on 0x0400006C / 0x0400106C; M[0x460] = 0 or -16, seq += 1 or 2); seq 1 fade step M[0x460]-- while > -16; seq 2 wait
@@ -285,7 +285,7 @@ fn 021b6a3c ret=none
   arg buf 0x1000
   arg u32 addrof arg0 0x480
   fix arg0 0x4a3 u8 alt const 0 || any
-  stub 021ee644 ret=none args=p,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
+  stub 021ee644 ret=none args=ptr,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
   stub 021cd938 force ret=none args=v,p                  # client1: attach record reader
 
 # View create (r0 M, r1 setup, r2 mode): client c = comm ? M[0x10 + 4 * setup->0x21] : M[0x10]; M[4] =
@@ -334,7 +334,7 @@ fn 021b6aac ret=u32
   stub 021b6954 ret=none args=ptr,v                        # in-area
   stub 021b9e7c force ret=none args=ptr,v                  # server3
   stub 021b9e38 force ret=none args=ptr,v,v                # server3
-  stub 021ee644 ret=none args=p,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
+  stub 021ee644 ret=none args=ptr,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
   stub 021cd938 force ret=none args=v,p                  # client1: attach record reader
   stub 021e8f20 ret=u32 args=p,v,p,v,v                   # view create (M, client, M+0xC8, mode, 0x13)
   stub 021cd95c force ret=none args=v,v                  # client1
@@ -395,7 +395,7 @@ fn 021b6c5c ret=u32
   stub 021b6954 ret=none args=ptr,v                        # in-area
   stub 021b9e7c force ret=none args=ptr,v                  # server3
   stub 021b9e38 force ret=none args=ptr,v,v                # server3
-  stub 021ee644 ret=none args=p,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
+  stub 021ee644 ret=none args=ptr,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
   stub 021cd938 force ret=none args=v,p                  # client1: attach record reader
   stub 021e8f20 ret=u32 args=p,v,p,v,v                   # view create (M, client, M+0xC8, mode, 0x13)
   stub 021cd95c force ret=none args=v,v                  # client1
@@ -443,7 +443,7 @@ fn 021b6dd0 ret=u32
   stub 021b6954 ret=none args=ptr,v                        # in-area
   stub 021b9e7c force ret=none args=ptr,v                  # server3
   stub 021b9e38 force ret=none args=ptr,v,v                # server3
-  stub 021ee644 ret=none args=p,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
+  stub 021ee644 ret=none args=ptr,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
   stub 021cd938 force ret=none args=v,p                  # client1: attach record reader
   stub 021e8f20 ret=u32 args=p,v,p,v,v                   # view create (M, client, M+0xC8, mode, 0x13)
   stub 021cd95c force ret=none args=v,v                  # client1
@@ -489,7 +489,7 @@ fn 021b7050 ret=u32
   stub 021b6954 ret=none args=ptr,v                        # in-area
   stub 021b9e7c force ret=none args=ptr,v                  # server3
   stub 021b9e38 force ret=none args=ptr,v,v                # server3
-  stub 021ee644 ret=none args=p,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
+  stub 021ee644 ret=none args=ptr,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
   stub 021cd938 force ret=none args=v,p                  # client1: attach record reader
   stub 021e8f20 ret=u32 args=p,v,p,v,v                   # view create (M, client, M+0xC8, mode, 0x13)
   stub 021cd95c force ret=none args=v,v                  # client1
@@ -535,7 +535,7 @@ fn 021b71d4 ret=u32
   stub 021b6954 ret=none args=ptr,v                        # in-area
   stub 021b9e7c force ret=none args=ptr,v                  # server3
   stub 021b9e38 force ret=none args=ptr,v,v                # server3
-  stub 021ee644 ret=none args=p,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
+  stub 021ee644 ret=none args=ptr,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
   stub 021cd938 force ret=none args=v,p                  # client1: attach record reader
   stub 021e8f20 ret=u32 args=p,v,p,v,v                   # view create (M, client, M+0xC8, mode, 0x13)
   stub 021cd95c force ret=none args=v,v                  # client1

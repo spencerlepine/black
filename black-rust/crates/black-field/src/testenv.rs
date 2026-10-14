@@ -3,7 +3,7 @@
 //! emulator uses (work 0x02E00000, argument i 0x02E10000 + i * 0x10000, region k 0x02F10000 + k * 0x10000,
 //! globals at their spec addresses).
 
-use crate::hooks::{CArg, FieldEnv, Mem, MemEnv};
+use crate::hooks::{CArg, FieldEnv, Mem, MemEnv, LOCAL_BASE};
 use black_fndiff::{Arg, Case, StubEnv};
 
 /// Address of the spec's `work` arena.
@@ -96,7 +96,14 @@ impl FieldEnv for Env<'_> {
                 }
                 sa.push(match a {
                     CArg::V(v) => Arg::V(*v),
-                    CArg::P(_) => Arg::P,
+                    // B18b: the value goes along (checked at a `ptr` stub argument, ignored at `p`);
+                    // a stack local of the original (`Mem::push_local`, LOCAL_BASE..) is a local
+                    // here too (`canon_ptr`: PTR_LOCAL, like the original's stack address)
+                    CArg::P(v) => Arg::Ptr(if (LOCAL_BASE..LOCAL_BASE + 0x1_0000).contains(v) {
+                        black_fndiff::STACK_ZERO.start
+                    } else {
+                        *v
+                    }),
                     CArg::In(..) => Arg::In(ii.next().unwrap()),
                     CArg::Out(..) => Arg::Out(oi.next().unwrap()),
                     CArg::InBuf(b) => Arg::In(b),

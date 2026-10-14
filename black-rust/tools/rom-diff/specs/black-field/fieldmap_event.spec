@@ -45,7 +45,7 @@ fn 02189bd0 ret=u32 inputs=1500
   fix work 0x150 u32 alt const 0 || any
   fix work 0xD8 u16 alt range 0 0x1ff || any
   stub 0218a4e0 ret=none args=outm:0x40:0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/3/0/0/0/3/0/0/0/3/0/1/0/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/3/0/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/7/0/0,v,v
-  stub 0218a738 ret=pick:0/0/0/0/0/0/1 args=p  # in-area
+  stub 0218a738 ret=pick:0/0/0/0/0/0/1 args=ptr  # in-area
   stub 02012ed0 force ret=ptr:work:0x220:1 args=v  # gamedata -> record whose first word is read
   stub 021c868c force ret=pick:0/0/0/0/0/1 args=v,v
   stub 021ae0cc force ret=pick:0/0/0/0/0/1 args=v
@@ -53,11 +53,11 @@ fn 02189bd0 ret=u32 inputs=1500
   stub 0218a76c ret=pick:0/0/0/0/0/0/1 args=v  # in-area
   stub 0218acd0 ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
   stub 0218ad28 ret=pick:0/0/0/0/0/0/1 args=v,v  # in-area
-  stub 0218a9b0 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218a9b0 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0218a7f0 ret=pick:0/0/0/0/0/0/1 args=v  # in-area
   stub 0218a824 ret=pick:0/0/0/0/0/0/1 args=v  # in-area
   stub 0218a878 ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
-  stub 0218b208 ret=pick:0/0/0/0/0/0/1 args=p,p,v  # in-area
+  stub 0218b208 ret=pick:0/0/0/0/0/0/1 args=ptr,p,v  # in-area
   stub 0201296c force ret=u32 args=v  # main
   stub 020142e8 force ret=pick:0/1/2 args=v,v  # main
   stub 021a2f20 force ret=pick:0/0/0/0/0/1 args=v,v,v,v
@@ -79,9 +79,9 @@ fn 02189bd0 ret=u32 inputs=1500
   stub 0217bde0 force ret=pick:0/0/0/0/1 args=v,v,v
   stub 0217afc4 force ret=pick:0/0/0/1/2 args=v,v,out:4
   stub 0217fb5c force ret=u32 args=v,v,p,v,v  # ov18
-  stub 0218b408 ret=pick:0/0/0/0/0/0/1 args=p,v,v  # in-area
-  stub 0218aed4 ret=pick:0/0/0/0/0/0/1 args=p,p,v  # in-area
-  stub 0218af90 ret=pick:0/0/0/0/0/0/1 args=p,v,v  # in-area
+  stub 0218b408 ret=pick:0/0/0/0/0/0/1 args=ptr,v,v  # in-area
+  stub 0218aed4 ret=pick:0/0/0/0/0/0/1 args=ptr,p,v  # in-area
+  stub 0218af90 ret=pick:0/0/0/0/0/0/1 args=ptr,v,v  # in-area
   stub 020221a4 force ret=pick:0/1/1 args=
   stub 02188ccc force ret=u32 args=v  # fieldmap (other F2a area)
   stub 0215ff34 force ret=pick:0/1 args=v
@@ -97,13 +97,13 @@ fn 02189bd0 ret=u32 inputs=1500
   stub 021a3050 force ret=u32 args=v  # ov21
   stub 021a3038 force ret=none args=v,outm:12:0/0/3/0/0/0/0/0/0/0/3/0
   stub 02164208 force ret=none args=v,in:12,v
-  stub 0218b4b0 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218b4b0 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0216d5b8 force ret=u32 args=v  # ov10
   stub 02158d90 force ret=pick:0/1/2 args=v
   stub 0219f01c force ret=u32 args=v,p,v,p,v  # ov21
   stub 02162a54 force ret=pick:0xFFFF/0xFFFF/0xFFFF/0xFFFF/1 args=v,v,in:12,v
   stub 02158768 force ret=u32 args=v,v,v,v  # ov10
-  stub 0218b56c ret=pick:0xFFFF/0xFFFF/0xFFFF/0x2712/0x2716 args=p  # in-area
+  stub 0218b56c ret=pick:0xFFFF/0xFFFF/0xFFFF/0x2712/0x2716 args=ptr  # in-area
   stub 02012ebc force ret=u32 args=v  # main
   stub 020071cc force ret=u32 args=v  # main
   stub 02188c9c force ret=u16 args=v  # fieldmap (other F2a area)
@@ -132,7 +132,7 @@ fn 02189bd0 ret=u32 inputs=1500
   stub 02012f2c force ret=u32 args=v  # main
   stub 02008dac force ret=u32 args=v,v,v  # main
   stub 0218a8bc ret=pick:0/0/0/0/0/0/1 args=v  # in-area
-  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0218ae04 ret=pick:0/1/0xFFFF args=v,v
   stub 021625cc force ret=u32 args=v,v  # ov10
   stub 021626ec force ret=pick:0/1 args=v
@@ -150,7 +150,7 @@ fn 02189bd0 ret=u32 inputs=1500
   stub 0218ac84 ret=pick:0/0/0/0/0/0/1 args=v,p,v  # in-area
   stub 0218ab9c ret=none args=v,v  # in-area
   stub 0218ac08 ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
-  stub 0218ab50 ret=pick:0/0/0/0/0/0/1 args=p,v,v,v  # in-area
+  stub 0218ab50 ret=pick:0/0/0/0/0/0/1 args=ptr,v,v,v  # in-area
   stub 0218ac4c ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
   stub 021a2fa4 force ret=pick:0/1/2/3/9 args=v,v
   stub 02013d5c force ret=pick:0/1 args=v
@@ -165,7 +165,7 @@ fn 02189bd0 ret=u32 inputs=1500
   stub 021ab0f8 force ret=pick:0/1/2/4 args=v
   stub 021ab2e8 force ret=pick:0/1 args=v
   stub 0218b6f8 ret=pick:0/1 args=v,v  # in-area
-  stub 0218b3dc ret=pick:0/1 args=p,v,v,v,v  # in-area
+  stub 0218b3dc ret=pick:0/1 args=ptr,v,v,v,v  # in-area
   stub 0218ae48 ret=none args=v,out:12  # in-area
   stub 021626e8 force ret=pick:0/1/5/6/7 args=v
   stub 021be288 force ret=pick:0/0/0/1 args=v,v
@@ -271,7 +271,7 @@ fn 0218a074 ret=u32 inputs=300
   stub 021f3b10 force ret=none args=v
   stub 0218a6e8 ret=none args=v,v  # in-area
   stub 0218a4e0 ret=none args=outm:0x40:0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/3/0/0/0/3/0/0/0/3/0/1/0/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/3/0/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/7/0/0,v,v
-  stub 0218a738 ret=pick:0/0/0/0/0/0/1 args=p  # in-area
+  stub 0218a738 ret=pick:0/0/0/0/0/0/1 args=ptr  # in-area
   stub 02012ed0 force ret=ptr:work:0x220:1 args=v  # gamedata -> record whose first word is read
   stub 021c868c force ret=pick:0/0/0/0/0/1 args=v,v
   stub 021ae0cc force ret=pick:0/0/0/0/0/1 args=v
@@ -279,11 +279,11 @@ fn 0218a074 ret=u32 inputs=300
   stub 0218a76c ret=pick:0/0/0/0/0/0/1 args=v  # in-area
   stub 0218acd0 ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
   stub 0218ad28 ret=pick:0/0/0/0/0/0/1 args=v,v  # in-area
-  stub 0218a9b0 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218a9b0 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0218a7f0 ret=pick:0/0/0/0/0/0/1 args=v  # in-area
   stub 0218a824 ret=pick:0/0/0/0/0/0/1 args=v  # in-area
   stub 0218a878 ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
-  stub 0218b208 ret=pick:0/0/0/0/0/0/1 args=p,p,v  # in-area
+  stub 0218b208 ret=pick:0/0/0/0/0/0/1 args=ptr,p,v  # in-area
   stub 0201296c force ret=u32 args=v  # main
   stub 020142e8 force ret=pick:0/1/2 args=v,v  # main
   stub 021a2f20 force ret=pick:0/0/0/0/0/1 args=v,v,v,v
@@ -305,9 +305,9 @@ fn 0218a074 ret=u32 inputs=300
   stub 0217bde0 force ret=pick:0/0/0/0/1 args=v,v,v
   stub 0217afc4 force ret=pick:0/0/0/1/2 args=v,v,out:4
   stub 0217fb5c force ret=u32 args=v,v,p,v,v  # ov18
-  stub 0218b408 ret=pick:0/0/0/0/0/0/1 args=p,v,v  # in-area
-  stub 0218aed4 ret=pick:0/0/0/0/0/0/1 args=p,p,v  # in-area
-  stub 0218af90 ret=pick:0/0/0/0/0/0/1 args=p,v,v  # in-area
+  stub 0218b408 ret=pick:0/0/0/0/0/0/1 args=ptr,v,v  # in-area
+  stub 0218aed4 ret=pick:0/0/0/0/0/0/1 args=ptr,p,v  # in-area
+  stub 0218af90 ret=pick:0/0/0/0/0/0/1 args=ptr,v,v  # in-area
   stub 020221a4 force ret=pick:0/1/1 args=
   stub 02188ccc force ret=u32 args=v  # fieldmap (other F2a area)
   stub 0215ff34 force ret=pick:0/1 args=v
@@ -323,13 +323,13 @@ fn 0218a074 ret=u32 inputs=300
   stub 021a3050 force ret=u32 args=v  # ov21
   stub 021a3038 force ret=none args=v,outm:12:0/0/3/0/0/0/0/0/0/0/3/0
   stub 02164208 force ret=none args=v,in:12,v
-  stub 0218b4b0 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218b4b0 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0216d5b8 force ret=u32 args=v  # ov10
   stub 02158d90 force ret=pick:0/1/2 args=v
   stub 0219f01c force ret=u32 args=v,p,v,p,v  # ov21
   stub 02162a54 force ret=pick:0xFFFF/0xFFFF/0xFFFF/0xFFFF/1 args=v,v,in:12,v
   stub 02158768 force ret=u32 args=v,v,v,v  # ov10
-  stub 0218b56c ret=pick:0xFFFF/0xFFFF/0xFFFF/0x2712/0x2716 args=p  # in-area
+  stub 0218b56c ret=pick:0xFFFF/0xFFFF/0xFFFF/0x2712/0x2716 args=ptr  # in-area
   stub 02012ebc force ret=u32 args=v  # main
   stub 020071cc force ret=u32 args=v  # main
   stub 02188c9c force ret=u16 args=v  # fieldmap (other F2a area)
@@ -362,7 +362,7 @@ fn 0218a074 ret=u32 inputs=300
   stub 02012f2c force ret=u32 args=v  # main
   stub 02008dac force ret=u32 args=v,v,v  # main
   stub 0218a8bc ret=pick:0/0/0/0/0/0/1 args=v  # in-area
-  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0218ae04 ret=pick:0/1/0xFFFF args=v,v
   stub 021625cc force ret=u32 args=v,v  # ov10
   stub 021626ec force ret=pick:0/1 args=v
@@ -380,7 +380,7 @@ fn 0218a074 ret=u32 inputs=300
   stub 0218ac84 ret=pick:0/0/0/0/0/0/1 args=v,p,v  # in-area
   stub 0218ab9c ret=none args=v,v  # in-area
   stub 0218ac08 ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
-  stub 0218ab50 ret=pick:0/0/0/0/0/0/1 args=p,v,v,v  # in-area
+  stub 0218ab50 ret=pick:0/0/0/0/0/0/1 args=ptr,v,v,v  # in-area
   stub 0218ac4c ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
   stub 021a2fa4 force ret=pick:0/1/2/3/9 args=v,v
   stub 02013d5c force ret=pick:0/1 args=v
@@ -394,7 +394,7 @@ fn 0218a074 ret=u32 inputs=300
   stub 021ab0f8 force ret=pick:0/1/2/4 args=v
   stub 021ab2e8 force ret=pick:0/1 args=v
   stub 0218b6f8 ret=pick:0/1 args=v,v  # in-area
-  stub 0218b3dc ret=pick:0/1 args=p,v,v,v,v  # in-area
+  stub 0218b3dc ret=pick:0/1 args=ptr,v,v,v,v  # in-area
   stub 0218ae48 ret=none args=v,out:12  # in-area
   stub 021626e8 force ret=pick:0/1/5/6/7 args=v
   stub 021be288 force ret=pick:0/0/0/1 args=v,v
@@ -497,11 +497,11 @@ fn 0218a0e4 ret=u32 inputs=1500
   stub 0217391c force ret=pick:0/1/2 args=v
   stub 02173928 force ret=pick:0/1 args=v
   stub 02026400 force ret=none args=  # main
-  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0217b80c force ret=pick:0/0/0/1 args=v,v
   stub 0217b83c force ret=pick:0/0/0/1 args=v,v
   stub 0217394c force ret=pick:0/1/1/2 args=v
-  stub 0218b4b0 ret=pick:0/1 args=p,v
+  stub 0218b4b0 ret=pick:0/1 args=ptr,v
   stub 0216d5b8 force ret=u32 args=v  # ov10
   stub 02158d90 force ret=pick:0/1/2 args=v
   stub 021a3074 force ret=u32 args=v  # ov21
@@ -565,16 +565,16 @@ fn 0218a240 ret=u32 inputs=200
   stub 0218a4e0 ret=none args=outm:0x40:0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/3/0/0/0/3/0/0/0/3/0/1/0/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/3/0/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/7/0/0,v,v
   stub 021a3074 force ret=u32 args=v  # ov21
   stub 0219e634 force ret=pick:0/1 args=v,out:8
-  stub 0218a738 ret=pick:0/0/0/0/0/0/1 args=p  # in-area
+  stub 0218a738 ret=pick:0/0/0/0/0/0/1 args=ptr  # in-area
   stub 0218a728 ret=none args=v  # in-area
   stub 0201296c force ret=u32 args=v  # main
   stub 0219e2f4 force ret=none args=v,outm:8:0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF
   stub 02162958 force ret=pick:0xFFFF/0xFFFF/0xFFFF/1 args=v,v,in:8
   stub 02158768 force ret=u32 args=v,v,v,v  # ov10
-  stub 0218b0cc ret=pick:0/0/0/0/0/0/1 args=p,p,v  # in-area
-  stub 0218a9b0 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
-  stub 0218b208 ret=pick:0/0/0/0/0/0/1 args=p,p,v  # in-area
-  stub 0218b53c ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218b0cc ret=pick:0/0/0/0/0/0/1 args=ptr,p,v  # in-area
+  stub 0218a9b0 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
+  stub 0218b208 ret=pick:0/0/0/0/0/0/1 args=ptr,p,v  # in-area
+  stub 0218b53c ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0216d5b8 force ret=u32 args=v  # ov10
   stub 02158d90 force ret=pick:0/1/2 args=v
   stub 021a2f6c force ret=none args=v  # ov21
@@ -582,9 +582,9 @@ fn 0218a240 ret=u32 inputs=200
   stub 0216d5f8 force ret=pick:0/1/2/3 args=v
   stub 02162a5c force ret=pick:0xFFFF/0xFFFF/0xFFFF/1 args=v,v,in:8,v
   stub 02188cb4 force ret=u32 args=v  # fieldmap (other F2a area)
-  stub 0218b310 ret=pick:0/1 args=v,p  # in-area
-  stub 0218b13c ret=pick:0/0/0/0/0/0/1 args=p,p,v,p  # in-area
-  stub 0218b24c ret=pick:0/0/0/0/0/0/1 args=p,v,v  # in-area
+  stub 0218b310 ret=pick:0/1 args=v,ptr  # in-area
+  stub 0218b13c ret=pick:0/0/0/0/0/0/1 args=ptr,p,v,ptr  # in-area
+  stub 0218b24c ret=pick:0/0/0/0/0/0/1 args=ptr,v,v  # in-area
   stub 020221a4 force ret=pick:0/1/1 args=
   stub 02188ccc force ret=u32 args=v  # fieldmap (other F2a area)
   stub 0215ff34 force ret=pick:0/1 args=v
@@ -623,13 +623,13 @@ fn 0218a240 ret=u32 inputs=200
   stub 021625cc force ret=u32 args=v,v  # ov10
   stub 021626ec force ret=pick:0/1 args=v
   stub 0218aeac ret=pick:0/1 args=v  # in-area
-  stub 0218b2a8 ret=none args=v,v,p  # in-area
-  stub 0218b2e8 ret=pick:0/0/0/0/0/0/1 args=v,v,v,p  # in-area
+  stub 0218b2a8 ret=none args=v,v,ptr  # in-area
+  stub 0218b2e8 ret=pick:0/0/0/0/0/0/1 args=v,v,v,ptr  # in-area
   stub 02188c80 force ret=u32 args=v  # fieldmap (other F2a area)
   stub 0218ac84 ret=pick:0/0/0/0/0/0/1 args=v,p,v  # in-area
   stub 0218ab9c ret=none args=v,v  # in-area
   stub 0218ac08 ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
-  stub 0218ab50 ret=pick:0/0/0/0/0/0/1 args=p,v,v,v  # in-area
+  stub 0218ab50 ret=pick:0/0/0/0/0/0/1 args=ptr,v,v,v  # in-area
   stub 0218ac4c ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
   stub 02188ce8 force ret=u32 args=v  # fieldmap (other F2a area)
   stub 02013dd0 force ret=pick:0/1 args=v
@@ -695,16 +695,16 @@ fn 0218a278 ret=u32 inputs=500
   stub 0218a4e0 ret=none args=outm:0x40:0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/3/0/0/0/3/0/0/0/3/0/1/0/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/3/0/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/7/0/0,v,v
   stub 021a3074 force ret=u32 args=v  # ov21
   stub 0219e634 force ret=pick:0/1 args=v,out:8
-  stub 0218a738 ret=pick:0/0/0/0/0/0/1 args=p  # in-area
+  stub 0218a738 ret=pick:0/0/0/0/0/0/1 args=ptr  # in-area
   stub 0218a728 ret=none args=v  # in-area
   stub 0201296c force ret=u32 args=v  # main
   stub 0219e2f4 force ret=none args=v,outm:8:0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF
   stub 02162958 force ret=pick:0xFFFF/0xFFFF/0xFFFF/1 args=v,v,in:8
   stub 02158768 force ret=u32 args=v,v,v,v  # ov10
-  stub 0218b0cc ret=pick:0/0/0/0/0/0/1 args=p,p,v  # in-area
-  stub 0218a9b0 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
-  stub 0218b208 ret=pick:0/0/0/0/0/0/1 args=p,p,v  # in-area
-  stub 0218b53c ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218b0cc ret=pick:0/0/0/0/0/0/1 args=ptr,p,v  # in-area
+  stub 0218a9b0 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
+  stub 0218b208 ret=pick:0/0/0/0/0/0/1 args=ptr,p,v  # in-area
+  stub 0218b53c ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0216d5b8 force ret=u32 args=v  # ov10
   stub 02158d90 force ret=pick:0/1/2 args=v
   stub 021a2f6c force ret=none args=v  # ov21
@@ -712,9 +712,9 @@ fn 0218a278 ret=u32 inputs=500
   stub 0216d5f8 force ret=pick:0/1/2/3 args=v
   stub 02162a5c force ret=pick:0xFFFF/0xFFFF/0xFFFF/1 args=v,v,in:8,v
   stub 02188cb4 force ret=u32 args=v  # fieldmap (other F2a area)
-  stub 0218b310 ret=pick:0/1 args=v,p  # in-area
-  stub 0218b13c ret=pick:0/0/0/0/0/0/1 args=p,p,v,p  # in-area
-  stub 0218b24c ret=pick:0/0/0/0/0/0/1 args=p,v,v  # in-area
+  stub 0218b310 ret=pick:0/1 args=v,ptr  # in-area
+  stub 0218b13c ret=pick:0/0/0/0/0/0/1 args=ptr,p,v,ptr  # in-area
+  stub 0218b24c ret=pick:0/0/0/0/0/0/1 args=ptr,v,v  # in-area
   stub 020221a4 force ret=pick:0/1/1 args=
   stub 02188ccc force ret=u32 args=v  # fieldmap (other F2a area)
   stub 0215ff34 force ret=pick:0/1 args=v
@@ -748,13 +748,13 @@ fn 0218a278 ret=u32 inputs=500
   stub 021625cc force ret=u32 args=v,v  # ov10
   stub 021626ec force ret=pick:0/1 args=v
   stub 0218aeac ret=pick:0/1 args=v  # in-area
-  stub 0218b2a8 ret=none args=v,v,p  # in-area
-  stub 0218b2e8 ret=pick:0/0/0/0/0/0/1 args=v,v,v,p  # in-area
+  stub 0218b2a8 ret=none args=v,v,ptr  # in-area
+  stub 0218b2e8 ret=pick:0/0/0/0/0/0/1 args=v,v,v,ptr  # in-area
   stub 02188c80 force ret=u32 args=v  # fieldmap (other F2a area)
   stub 0218ac84 ret=pick:0/0/0/0/0/0/1 args=v,p,v  # in-area
   stub 0218ab9c ret=none args=v,v  # in-area
   stub 0218ac08 ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
-  stub 0218ab50 ret=pick:0/0/0/0/0/0/1 args=p,v,v,v  # in-area
+  stub 0218ab50 ret=pick:0/0/0/0/0/0/1 args=ptr,v,v,v  # in-area
   stub 0218ac4c ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
   stub 02188ce8 force ret=u32 args=v  # fieldmap (other F2a area)
   stub 02013dd0 force ret=pick:0/1 args=v
@@ -832,7 +832,7 @@ fn 0218a4bc ret=u32 inputs=200
   stub 0218a6e8 ret=none args=v,v  # in-area
   stub 0218a278 ret=pick:0/0/1/2 args=v,v,p,v  # in-area
   stub 0218a4e0 ret=none args=outm:0x40:0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/3/0/0/0/3/0/0/0/3/0/1/0/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/3/0/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/7/0/0,v,v
-  stub 0218a738 ret=pick:0/0/0/0/0/0/1 args=p  # in-area
+  stub 0218a738 ret=pick:0/0/0/0/0/0/1 args=ptr  # in-area
   stub 02012ed0 force ret=ptr:work:0x220:1 args=v  # gamedata -> record whose first word is read
   stub 021c868c force ret=pick:0/0/0/0/0/1 args=v,v
   stub 021ae0cc force ret=pick:0/0/0/0/0/1 args=v
@@ -840,11 +840,11 @@ fn 0218a4bc ret=u32 inputs=200
   stub 0218a76c ret=pick:0/0/0/0/0/0/1 args=v  # in-area
   stub 0218acd0 ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
   stub 0218ad28 ret=pick:0/0/0/0/0/0/1 args=v,v  # in-area
-  stub 0218a9b0 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218a9b0 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0218a7f0 ret=pick:0/0/0/0/0/0/1 args=v  # in-area
   stub 0218a824 ret=pick:0/0/0/0/0/0/1 args=v  # in-area
   stub 0218a878 ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
-  stub 0218b208 ret=pick:0/0/0/0/0/0/1 args=p,p,v  # in-area
+  stub 0218b208 ret=pick:0/0/0/0/0/0/1 args=ptr,p,v  # in-area
   stub 0201296c force ret=u32 args=v  # main
   stub 020142e8 force ret=pick:0/1/2 args=v,v  # main
   stub 021a2f20 force ret=pick:0/0/0/0/0/1 args=v,v,v,v
@@ -866,9 +866,9 @@ fn 0218a4bc ret=u32 inputs=200
   stub 0217bde0 force ret=pick:0/0/0/0/1 args=v,v,v
   stub 0217afc4 force ret=pick:0/0/0/1/2 args=v,v,out:4
   stub 0217fb5c force ret=u32 args=v,v,p,v,v  # ov18
-  stub 0218b408 ret=pick:0/0/0/0/0/0/1 args=p,v,v  # in-area
-  stub 0218aed4 ret=pick:0/0/0/0/0/0/1 args=p,p,v  # in-area
-  stub 0218af90 ret=pick:0/0/0/0/0/0/1 args=p,v,v  # in-area
+  stub 0218b408 ret=pick:0/0/0/0/0/0/1 args=ptr,v,v  # in-area
+  stub 0218aed4 ret=pick:0/0/0/0/0/0/1 args=ptr,p,v  # in-area
+  stub 0218af90 ret=pick:0/0/0/0/0/0/1 args=ptr,v,v  # in-area
   stub 020221a4 force ret=pick:0/1/1 args=
   stub 02188ccc force ret=u32 args=v  # fieldmap (other F2a area)
   stub 0215ff34 force ret=pick:0/1 args=v
@@ -884,13 +884,13 @@ fn 0218a4bc ret=u32 inputs=200
   stub 021a3050 force ret=u32 args=v  # ov21
   stub 021a3038 force ret=none args=v,outm:12:0/0/3/0/0/0/0/0/0/0/3/0
   stub 02164208 force ret=none args=v,in:12,v
-  stub 0218b4b0 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218b4b0 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0216d5b8 force ret=u32 args=v  # ov10
   stub 02158d90 force ret=pick:0/1/2 args=v
   stub 0219f01c force ret=u32 args=v,p,v,p,v  # ov21
   stub 02162a54 force ret=pick:0xFFFF/0xFFFF/0xFFFF/0xFFFF/1 args=v,v,in:12,v
   stub 02158768 force ret=u32 args=v,v,v,v  # ov10
-  stub 0218b56c ret=pick:0xFFFF/0xFFFF/0xFFFF/0x2712/0x2716 args=p  # in-area
+  stub 0218b56c ret=pick:0xFFFF/0xFFFF/0xFFFF/0x2712/0x2716 args=ptr  # in-area
   stub 02012ebc force ret=u32 args=v  # main
   stub 020071cc force ret=u32 args=v  # main
   stub 02188c9c force ret=u16 args=v  # fieldmap (other F2a area)
@@ -908,13 +908,13 @@ fn 0218a4bc ret=u32 inputs=200
   stub 0219e634 force ret=pick:0/1 args=v,out:8
   stub 0219e2f4 force ret=none args=v,outm:8:0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF
   stub 02162958 force ret=pick:0xFFFF/0xFFFF/0xFFFF/1 args=v,v,in:8
-  stub 0218b0cc ret=pick:0/0/0/0/0/0/1 args=p,p,v  # in-area
-  stub 0218b53c ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218b0cc ret=pick:0/0/0/0/0/0/1 args=ptr,p,v  # in-area
+  stub 0218b53c ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0216d5f8 force ret=pick:0/1/2/3 args=v
   stub 02162a5c force ret=pick:0xFFFF/0xFFFF/0xFFFF/1 args=v,v,in:8,v
-  stub 0218b310 ret=pick:0/1 args=v,p  # in-area
-  stub 0218b13c ret=pick:0/0/0/0/0/0/1 args=p,p,v,p  # in-area
-  stub 0218b24c ret=pick:0/0/0/0/0/0/1 args=p,v,v  # in-area
+  stub 0218b310 ret=pick:0/1 args=v,ptr  # in-area
+  stub 0218b13c ret=pick:0/0/0/0/0/0/1 args=ptr,p,v,ptr  # in-area
+  stub 0218b24c ret=pick:0/0/0/0/0/0/1 args=ptr,v,v  # in-area
   stub 02188c84 force ret=u16 args=v  # fieldmap (other F2a area)
   stub 02012844 force ret=u32 args=v  # main
   stub 020362dc force ret=pick:0/1/0x400/0x800/0x401/0xC01 args=
@@ -932,7 +932,7 @@ fn 0218a4bc ret=u32 inputs=200
   stub 02012f2c force ret=u32 args=v  # main
   stub 02008dac force ret=u32 args=v,v,v  # main
   stub 0218a8bc ret=pick:0/0/0/0/0/0/1 args=v  # in-area
-  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0218ae04 ret=pick:0/1/0xFFFF args=v,v
   stub 021625cc force ret=u32 args=v,v  # ov10
   stub 021626ec force ret=pick:0/1 args=v
@@ -950,7 +950,7 @@ fn 0218a4bc ret=u32 inputs=200
   stub 0218ac84 ret=pick:0/0/0/0/0/0/1 args=v,p,v  # in-area
   stub 0218ab9c ret=none args=v,v  # in-area
   stub 0218ac08 ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
-  stub 0218ab50 ret=pick:0/0/0/0/0/0/1 args=p,v,v,v  # in-area
+  stub 0218ab50 ret=pick:0/0/0/0/0/0/1 args=ptr,v,v,v  # in-area
   stub 0218ac4c ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
   stub 021a2fa4 force ret=pick:0/1/2/3/9 args=v,v
   stub 02013d5c force ret=pick:0/1 args=v
@@ -964,7 +964,7 @@ fn 0218a4bc ret=u32 inputs=200
   stub 021ab0f8 force ret=pick:0/1/2/4 args=v
   stub 021ab2e8 force ret=pick:0/1 args=v
   stub 0218b6f8 ret=pick:0/1 args=v,v  # in-area
-  stub 0218b3dc ret=pick:0/1 args=p,v,v,v,v  # in-area
+  stub 0218b3dc ret=pick:0/1 args=ptr,v,v,v,v  # in-area
   stub 0218ae48 ret=none args=v,out:12  # in-area
   stub 021626e8 force ret=pick:0/1/5/6/7 args=v
   stub 021be288 force ret=pick:0/0/0/1 args=v,v
@@ -1002,8 +1002,8 @@ fn 0218a4bc ret=u32 inputs=200
   stub 021ab230 force ret=pick:0/0/0/1 args=v  # attribute predicate (0218B56C table)
   stub 021ab1c4 force ret=pick:0/0/0/1 args=v  # attribute predicate (0218B56C table)
   stub 02162598 force ret=pick:0/1/0xFFFF args=v,in:8
-  stub 0218b2a8 ret=none args=v,v,p  # in-area
-  stub 0218b2e8 ret=pick:0/0/0/0/0/0/1 args=v,v,v,p  # in-area
+  stub 0218b2a8 ret=none args=v,v,ptr  # in-area
+  stub 0218b2e8 ret=pick:0/0/0/0/0/0/1 args=v,v,v,ptr  # in-area
   stub 0219e570 force ret=u32 args=v,in:8,v  # ov21 (sys, &rail position, flag)
   stub 0219e424 force ret=u32 args=v,v,v  # ov21
   stub 021626b8 force ret=pick:0/1 args=v,v
@@ -1145,7 +1145,7 @@ fn 0218a76c ret=u32 inputs=200
   fix work 0x64E u16 range 0 2
   fix work 0x650 u16 range 0 2
   stub 0218a8bc ret=pick:0/0/0/0/0/0/1 args=v  # in-area
-  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0201210c force ret=u32 args=v  # main
   stub 02188cb4 force ret=u32 args=v  # fieldmap (other F2a area)
   stub 021a3038 force ret=none args=v,outm:12:0/0/3/0/0/0/0/0/0/0/3/0
@@ -1211,7 +1211,7 @@ fn 0218a7f0 ret=u32 inputs=200
   fix work 0x534 u32 addrof work 0x600
   fix work 0x600 u32 alt range 0 0x40000 || any
   fix work 0x608 u32 alt range 0 0x40000 || any
-  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 021a2fa4 force ret=pick:0/1/2/3/9 args=v,v
   stub 0201210c force ret=u32 args=v  # main
   stub 0201296c force ret=u32 args=v  # main
@@ -1243,7 +1243,7 @@ fn 0218a824 ret=u32 inputs=200
   fix work 0x534 u32 addrof work 0x600
   fix work 0x600 u32 alt range 0 0x40000 || any
   fix work 0x608 u32 alt range 0 0x40000 || any
-  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=p,v  # in-area
+  stub 0218a784 ret=pick:0/0/0/0/0/0/1 args=ptr,v  # in-area
   stub 0201210c force ret=u32 args=v  # main
   stub 0201296c force ret=u32 args=v  # main
   stub 021a3038 force ret=none args=v,out:12
@@ -1341,7 +1341,7 @@ fn 0218a9b0 ret=u32 inputs=300
   stub 0218ac84 ret=pick:0/0/0/0/0/0/1 args=v,p,v  # in-area
   stub 0218ab9c ret=none args=v,v  # in-area
   stub 0218ac08 ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
-  stub 0218ab50 ret=pick:0/0/0/0/0/0/1 args=p,v,v,v  # in-area
+  stub 0218ab50 ret=pick:0/0/0/0/0/0/1 args=ptr,v,v,v  # in-area
   stub 0218ac4c ret=pick:0/0/0/0/0/0/1 args=v,v,v  # in-area
   stub 02012ebc force ret=u32 args=v  # main
   stub 02188ce8 force ret=u32 args=v  # fieldmap (other F2a area)
@@ -1669,7 +1669,7 @@ fn 0218aed4 ret=u32 inputs=300
   stub 02188c98 force ret=u32 args=v  # fieldmap (other F2a area)
   stub 021ab0d4 force ret=u32 args=v,in:12
   stub 021ab0f8 force ret=pick:0/1/2/3 args=v
-  stub 0218ae04 ret=pick:0/1/0xFFFF args=v,p  # in-area
+  stub 0218ae04 ret=pick:0/1/0xFFFF args=v,ptr  # in-area
   stub 021625cc force ret=u32 args=v,v  # ov10
   stub 021626ec force ret=pick:0/1 args=v
   stub 021626e8 force ret=pick:0/1/5/6/7 args=v
@@ -1761,8 +1761,8 @@ fn 0218b0cc ret=u32 inputs=200
   stub 021625cc force ret=u32 args=v,v  # ov10
   stub 021626ec force ret=pick:0/1 args=v
   stub 0218aeac ret=pick:0/1 args=v  # in-area
-  stub 0218b2a8 ret=none args=v,v,p  # in-area
-  stub 0218b2e8 ret=pick:0/0/0/0/0/0/1 args=v,v,v,p  # in-area
+  stub 0218b2a8 ret=none args=v,v,ptr  # in-area
+  stub 0218b2e8 ret=pick:0/0/0/0/0/0/1 args=v,v,v,ptr  # in-area
   stub 021626e8 force ret=pick:0/1/5/6/7 args=v
   stub 02188c9c force ret=u16 args=v  # fieldmap (other F2a area)
   stub 02014134 force ret=none args=out:0x1C,v,v,v,v,v,v,v  # LOCATION init, rail form (loc, id, b, c, d, e, f, g)
@@ -1796,8 +1796,8 @@ fn 0218b13c ret=u32 inputs=300
   stub 021626ec force ret=pick:0/1 args=v
   stub 021626b8 force ret=pick:0/1 args=v,v
   stub 021626e8 force ret=pick:0/1/5/6/7 args=v
-  stub 0218b2a8 ret=none args=v,v,p  # in-area
-  stub 0218b2e8 ret=pick:0/0/0/0/0/0/1 args=v,v,v,p  # in-area
+  stub 0218b2a8 ret=none args=v,v,ptr  # in-area
+  stub 0218b2e8 ret=pick:0/0/0/0/0/0/1 args=v,v,v,ptr  # in-area
   stub 02188c9c force ret=u16 args=v  # fieldmap (other F2a area)
   stub 02014134 force ret=none args=out:0x1C,v,v,v,v,v,v,v  # LOCATION init, rail form (loc, id, b, c, d, e, f, g)
   stub 02012878 force ret=none args=v,in:0x1C  # store a LOCATION in the game data (gd, &loc)
@@ -1976,7 +1976,7 @@ fn 0218b408 ret=u32 inputs=300
   stub 021ab2e8 force ret=pick:0/1 args=v
   stub 02164208 force ret=none args=v,in:12,v
   stub 0218b6f8 ret=pick:0/1 args=v,v  # in-area
-  stub 0218b3dc ret=pick:0/1 args=p,v,v,v,v  # in-area
+  stub 0218b3dc ret=pick:0/1 args=ptr,v,v,v,v  # in-area
   stub 021a3074 force ret=u32 args=v  # ov21
   stub 0216d83c force ret=u32 args=v  # ov10
   stub 0216d86c force ret=u32 args=v  # ov10

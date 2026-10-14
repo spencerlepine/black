@@ -2201,7 +2201,12 @@ pub fn learn_move_step<E: FlowEnv>(
             let pp = env.callr(0x021D_5844, &mut [Arg::V(mon)], c);
             let r = env.callr(
                 0x0201_8328,
-                &mut [Arg::V(pp), Arg::P, Arg::V(rd16(c, ofs::HP_REF_OWN) as u32)],
+                &mut [
+                    Arg::V(pp),
+                    // B18b: the learn cursor word of the global block (`region cursor` of 02018328)
+                    Arg::PAt(g::ADDR_BASE + g::LEARN_CURSOR as u32),
+                    Arg::V(rd16(c, ofs::HP_REF_OWN) as u32),
+                ],
                 c,
             );
             set_move(gl, r);

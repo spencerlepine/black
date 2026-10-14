@@ -68,7 +68,7 @@ fn 021ae0cc ret=u32 inputs=1000
   stub 0216d63c force ret=pick:0/1/2/3/5/0xFFFF args=v,v  # fldmmdl param(m, i) (i = 0: sight range)
   stub 0216d67c force ret=u32 args=v  # fldmmdl sys_of
   stub 0216d828 force ret=none args=v,outm:6:1/0/0/0/1/0  # fldmmdl grid(m, &s16[3]) (x, y, z)
-  stub 0216dd1c force seq ret=pick:1/1/0 args=v,outp:work:0x100:4,p  # fldmmdl next_in_use(sys, &m, &i): m = work+0x100.. (values only)
+  stub 0216dd1c force seq ret=pick:1/1/0 args=v,outp:work:0x100:4,ptr  # fldmmdl next_in_use(sys, &m, &i): m = work+0x100.. (values only)
   stub 0216e434 force ret=pick:2/1/2/0/3/1/2 args=v  # fldmmdl kind_434(event type) (1 trainer, 2 trainer looking all ways)
   stub 02188c7c force ret=u32 args=v  # fieldmap -> MMDLSYS
   stub 02188c80 force ret=u32 args=v  # fieldmap -> GAMESYS
@@ -134,7 +134,7 @@ fn 021ae1fc ret=u32 inputs=300
   stub 0216d5f8 force ret=pick:0/1/2/3 args=v  # fldmmdl dir_disp
   stub 0216d63c force ret=pick:0/1/2/3/5/0xFFFF args=v,v  # fldmmdl param(m, i) (i = 0: sight range)
   stub 0216d828 force ret=none args=v,outm:6:1/0/0/0/1/0  # fldmmdl grid(m, &s16[3]) (x, y, z)
-  stub 0216dd1c force seq ret=pick:1/1/0 args=v,outp:work:0x100:4,p  # fldmmdl next_in_use(sys, &m, &i): m = work+0x100.. (values only)
+  stub 0216dd1c force seq ret=pick:1/1/0 args=v,outp:work:0x100:4,ptr  # fldmmdl next_in_use(sys, &m, &i): m = work+0x100.. (values only)
   stub 0216e434 force ret=pick:2/1/2/0/3/1/2 args=v  # fldmmdl kind_434(event type) (1 trainer, 2 trainer looking all ways)
   stub 02188c7c force ret=u32 args=v  # fieldmap -> MMDLSYS
   stub 02188c80 force ret=u32 args=v  # fieldmap -> GAMESYS
@@ -696,7 +696,7 @@ fn 021ae8d4 ret=u32 inputs=200
   stub 0216d5a8 force ret=pick:0/1/2/3/4/8/9/11 args=v  # fldmmdl event_type
   stub 0216d5b8 force ret=u16 args=v  # fldmmdl event_id (script)
   stub 0216d67c force ret=u32 args=v  # fldmmdl sys_of
-  stub 0216dd1c force seq ret=pick:1/1/0 args=v,outp:work:0x100:4,p  # fldmmdl next_in_use(sys, &m, &i): m = work+0x100.. (values only)
+  stub 0216dd1c force seq ret=pick:1/1/0 args=v,outp:work:0x100:4,ptr  # fldmmdl next_in_use(sys, &m, &i): m = work+0x100.. (values only)
   stub 0216e434 force ret=pick:2/1/2/0/3/1/2 args=v  # fldmmdl kind_434(event type) (1 trainer, 2 trainer looking all ways)
   stub 021ae79c ret=pick:0/1/2/3 args=v  # in-area trainer kind
   stub 021ae884 ret=pick:0/1/2/0x300 args=v  # in-area trainer id

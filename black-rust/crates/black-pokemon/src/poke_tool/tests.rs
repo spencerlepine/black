@@ -6,16 +6,16 @@ use black_fndiff::{run_suite, Arg, Case, StubEnv};
 const RECORDED: &[(u32, &str)] = &[
     (0x02017DBC, "96b3bd57dca63081"),
     (0x02017DE4, "045b053496f05a59"),
-    (0x02017E1C, "4862d7bd9e447e79"),
+    (0x02017E1C, "c87307fee1f8e462"),
     (0x02017E40, "54ce36810e8ec237"),
     (0x02017E64, "9718f4c47845faff"),
-    (0x02017E88, "93f67ef8c8437db0"),
+    (0x02017E88, "823203e5bd3468a9"),
     (0x02018D10, "dca0230754622b5a"),
     (0x02018D34, "3b7d9529dc863c6a"),
     (0x02018D6C, "3e719f38babfe4ec"),
     (0x02018D8C, "88f0773252508266"),
-    (0x02018DB4, "10c304dd7839ad77"),
-    (0x02018E34, "b09b1190bdb2d3da"),
+    (0x02018DB4, "8445dc0f746c27b6"),
+    (0x02018E34, "15809434c704623b"),
     (0x02019308, "09417e2ad8179f47"),
     (0x02019388, "388e7fd6d05bb879"),
     (0x02019A50, "5f0bb333599315f5"),
@@ -50,6 +50,11 @@ impl<'a> Rom<'a> {
 }
 
 const SCRATCH: u32 = 0x0214_62F0;
+
+/// B18b: the MsgData `FUN_02045CAC` gets (`ptr`): `0x02018E34` passes `*(u32 *)0x020A7370` (the
+/// global egg-name MsgData, `scrcmd_work::EGG_NAME_MSGDATA`). No spec of this crate declares that
+/// global, so every input sees its initial value in main.sbin: 0.
+const EGG_NAME_MSGDATA_VALUE: u32 = 0;
 
 impl PokeToolHooks for Rom<'_> {
     fn gender(&mut self, species: u32, form: u32, pid: u32) -> u32 {
@@ -94,8 +99,14 @@ impl PokeToolHooks for Rom<'_> {
             .call(0x0201_F41C, &mut [Arg::V(src), Arg::V(p), Arg::V(len)]);
     }
     fn bad_egg_name_strbuf(&mut self, strbuf: u32) {
-        self.env
-            .call(0x0204_5CAC, &mut [Arg::P, Arg::V(0x28B), Arg::V(strbuf)]);
+        self.env.call(
+            0x0204_5CAC,
+            &mut [
+                Arg::Ptr(EGG_NAME_MSGDATA_VALUE),
+                Arg::V(0x28B),
+                Arg::V(strbuf),
+            ],
+        );
     }
     fn bad_egg_name_u16(&mut self, dst: u32, len: u32) {
         self.env.call(

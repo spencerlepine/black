@@ -5,25 +5,25 @@ use black_fndiff::{run_suite, Arg, Case, StubEnv, Suite};
 // Written by tools/check-fn.sh only, after the Rust hashes matched the ROM run.
 // fndiff-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
-    (0x021C9934, "d9aa3c535d95d259"),
+    (0x021C9934, "2f1a195a1bc0085c"),
     (0x021C9B24, "7557b07016d91564"),
     (0x021C9B78, "eae5d66bd15bd196"),
     (0x021C9BCC, "b8fcd94c479ad24a"),
-    (0x021C9C54, "5d1dfef6e19265b1"),
+    (0x021C9C54, "9d89290f464ad899"),
     (0x021C9CAC, "cb71248a3c7fea42"),
-    (0x021C9D30, "9d92ab944fc65f63"),
-    (0x021C9D70, "ee6029f17ad61c86"),
-    (0x021C9DB0, "eb783678e01a4661"),
+    (0x021C9D30, "afdf88d296c05b7f"),
+    (0x021C9D70, "07a58e55d75d0d9a"),
+    (0x021C9DB0, "d1a00d1f99c39ba2"),
     (0x021C9E8C, "afa3fef712087b31"),
-    (0x021C9F44, "7224f902f3180ce2"),
+    (0x021C9F44, "22441faf45160fa4"),
     (0x021C9FD0, "6ea29e1f8e9970bf"),
-    (0x021C9FFC, "6474901eb703d8cf"),
+    (0x021C9FFC, "b70691fcee9673e0"),
     (0x021CA048, "01459e7c5a37390f"),
     (0x021CA05C, "705f9c277d28ae95"),
     (0x021CA150, "ee8f5106df8dac60"),
     (0x021CA164, "120e38abe33602cd"),
     (0x021CA1E4, "b1a075dd7998894e"),
-    (0x021CA210, "cf0b1e76c897c4cc"),
+    (0x021CA210, "7eb71e531aa6c93d"),
     (0x021CA234, "5cb7681bcaf7fd8d"),
     (0x021CA238, "4f7af0b644b020d1"),
     (0x021CA23C, "f64d065ba0f72fd8"),
@@ -32,18 +32,18 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021CA270, "2195266678bb00b1"),
     (0x021CA2A4, "0953c1d341c8cf9e"),
     (0x021CA2CC, "82674b25aacfb9d6"),
-    (0x021CA2DC, "018ea06aebccffa8"),
+    (0x021CA2DC, "8617b7efce74bf62"),
     (0x021CA338, "7ce6f99a3297872f"),
     (0x021CA3B4, "acbfd29954cb72e6"),
-    (0x021CA4C0, "55e164977a6c4a1d"),
-    (0x021CA544, "da64d4c6c599db24"),
+    (0x021CA4C0, "5f2e5258a4b80a8a"),
+    (0x021CA544, "5bcb54268e2fc09c"),
     (0x021CA57C, "a4709e63a8608f8b"),
     (0x021CA598, "0f6bd7773ade0d23"),
-    (0x021CA5C4, "9e9e0f6db1d13a89"),
+    (0x021CA5C4, "74cb14c497b46a94"),
     (0x021CB6DC, "0916a3edeb3b460e"),
     (0x021CB700, "ddf00acf1e2c39aa"),
-    (0x021CB754, "35528e8c5a92a45e"),
-    (0x021CB7E8, "6997c388c7e2c156"),
+    (0x021CB754, "68f6c3499d94deec"),
+    (0x021CB7E8, "cdc1c61d69d6a5ad"),
     (0x021CB86C, "75f27ffc588e8036"),
     (0x021CB8AC, "3dc3983ff9916bc0"),
     (0x021CB914, "c38ecd9b4890b01a"),
@@ -56,7 +56,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021CBC14, "7c526f21362719e7"),
     (0x021CBC94, "a671745f0ca3cd40"),
     (0x021CBCC4, "af6ce67fbb3671bc"),
-    (0x021CBD08, "95ff8b696125b95c"),
+    (0x021CBD08, "15aecd708f39a7aa"),
     (0x021CBD84, "3248ff97724e582e"),
     (0x021CBD90, "c9d67c7bf3bb49c0"),
     (0x021CBED8, "1cd0e5dc2445e129"),
@@ -365,7 +365,7 @@ impl BsubwayHooks for Rom<'_> {
         let _ = &out;
         let r = self
             .stubs
-            .call(0x0200d884, &mut [Arg::V(p), Arg::V(id), Arg::P]);
+            .call(0x0200d884, &mut [Arg::V(p), Arg::V(id), Arg::Ptr(out)]);
         self.rets.push((0x0200d884, r));
         r
     }

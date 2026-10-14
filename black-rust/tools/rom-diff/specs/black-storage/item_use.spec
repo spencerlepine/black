@@ -143,10 +143,10 @@ fn 021bdd78 ret=u32 inputs=6000
   stub 02048f60 ret=pick:0x02E50000 args=v,v,v,v
   stub 020307b0 ret=none args=v
   stub 02017988 ret=none args=p,v
-  stub 020185c4 ret=none args=p
+  stub 020185c4 ret=none args=ptr
   stub 02018584 ret=u32 args=v,v,v
-  stub 0201b920 ret=mod:2 args=p,v
-  stub 0201b970 ret=mod:2 args=p,v,v
+  stub 0201b920 ret=mod:2 args=ptr,v
+  stub 0201b970 ret=mod:2 args=ptr,v,v
   stub 0201b7b4 ret=none args=p,v,v,v
   stub 0201c158 ret=u32 args=v,v
   stub 02017988 ret=none args=p,v
@@ -155,7 +155,7 @@ fn 021bdd78 ret=u32 inputs=6000
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
   stub 02008f3c ret=none args=v,v
 
@@ -199,10 +199,10 @@ fn 021be2b4 ret=u32 inputs=6000
   stub 02048f60 ret=pick:0x02E60000 args=v,v,v,v
   stub 020307b0 ret=none args=v
   stub 02017988 ret=none args=p,v
-  stub 020185c4 ret=none args=p
+  stub 020185c4 ret=none args=ptr
   stub 02018584 ret=u32 args=v,v,v
-  stub 0201b920 ret=mod:2 args=p,v
-  stub 0201b970 ret=mod:2 args=p,v,v
+  stub 0201b920 ret=mod:2 args=ptr,v
+  stub 0201b970 ret=mod:2 args=ptr,v,v
   stub 0201b7b4 ret=none args=p,v,v,v
   stub 0201c158 ret=u32 args=v,v
   stub 02017988 ret=none args=p,v
@@ -211,7 +211,7 @@ fn 021be2b4 ret=u32 inputs=6000
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
   stub 02008f3c ret=none args=v,v
 
@@ -239,10 +239,10 @@ fn 021be874 ret=u32 inputs=2500
   # V-0032: the ups count near u32::MAX wraps in `cur + ups` (adds, then unsigned bls)
   arg u32 alt oneof 1 3 || range 0 5 || oneof 0xFFFFFFFF 0xFFFFFFFE 0xFFFFFFFD || any
   stub 02017988 ret=none args=p,v
-  stub 020185c4 ret=none args=p
+  stub 020185c4 ret=none args=ptr
   stub 02018584 ret=u32 args=v,v,v
-  stub 0201b920 ret=mod:2 args=p,v
-  stub 0201b970 ret=mod:2 args=p,v,v
+  stub 0201b920 ret=mod:2 args=ptr,v
+  stub 0201b970 ret=mod:2 args=ptr,v,v
   stub 0201b7b4 ret=none args=p,v,v,v
   stub 0201c158 ret=u32 args=v,v
   stub 02017988 ret=none args=p,v
@@ -251,7 +251,7 @@ fn 021be874 ret=u32 inputs=2500
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
   stub 02008f3c ret=none args=v,v
 
@@ -279,10 +279,10 @@ fn 021be914 ret=none inputs=2500
   arg u32 alt range 0 400 || const 1 || any
   arg u32 alt oneof 0xff 0xfe 0xfd 1 20 || range 0 300 || any
   stub 02017988 ret=none args=p,v
-  stub 020185c4 ret=none args=p
+  stub 020185c4 ret=none args=ptr
   stub 02018584 ret=u32 args=v,v,v
-  stub 0201b920 ret=mod:2 args=p,v
-  stub 0201b970 ret=mod:2 args=p,v,v
+  stub 0201b920 ret=mod:2 args=ptr,v
+  stub 0201b970 ret=mod:2 args=ptr,v,v
   stub 0201b7b4 ret=none args=p,v,v,v
   stub 0201c158 ret=u32 args=v,v
   stub 02017988 ret=none args=p,v
@@ -291,7 +291,7 @@ fn 021be914 ret=none inputs=2500
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
   stub 02008f3c ret=none args=v,v
 
@@ -329,10 +329,10 @@ fn 021be9bc ret=u32 inputs=2500
   fix arg1 0x1f u8 alt oneof 1 3 5 || const 0 || oneof 1 3 5 0xFF 0xFE 0xFB || any rep=3,1
   fix arg1 0xc u8 alt const 1 || const 1 || const 0 || any
   stub 02017988 ret=none args=p,v
-  stub 020185c4 ret=none args=p
+  stub 020185c4 ret=none args=ptr
   stub 02018584 ret=u32 args=v,v,v
-  stub 0201b920 ret=mod:2 args=p,v
-  stub 0201b970 ret=mod:2 args=p,v,v
+  stub 0201b920 ret=mod:2 args=ptr,v
+  stub 0201b970 ret=mod:2 args=ptr,v,v
   stub 0201b7b4 ret=none args=p,v,v,v
   stub 0201c158 ret=u32 args=v,v
   stub 02017988 ret=none args=p,v
@@ -341,7 +341,7 @@ fn 021be9bc ret=u32 inputs=2500
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
   stub 02008f3c ret=none args=v,v
 
@@ -356,10 +356,10 @@ fn 021bea48 ret=u32 inputs=2500
   arg u32 any
   arg u32 any
   stub 02017988 ret=none args=p,v
-  stub 020185c4 ret=none args=p
+  stub 020185c4 ret=none args=ptr
   stub 02018584 ret=u32 args=v,v,v
-  stub 0201b920 ret=mod:2 args=p,v
-  stub 0201b970 ret=mod:2 args=p,v,v
+  stub 0201b920 ret=mod:2 args=ptr,v
+  stub 0201b970 ret=mod:2 args=ptr,v,v
   stub 0201b7b4 ret=none args=p,v,v,v
   stub 0201c158 ret=u32 args=v,v
 
@@ -387,10 +387,10 @@ fn 021bc24c ret=none inputs=1500
   arg region mon
   arg u32 alt near 0x131 0x10 || near 0x12a 4 || near 0x139 4 || any
   stub 02017988 ret=none args=p,v
-  stub 020185c4 ret=none args=p
+  stub 020185c4 ret=none args=ptr
   stub 02018584 ret=u32 args=v,v,v
-  stub 0201b920 ret=mod:2 args=p,v
-  stub 0201b970 ret=mod:2 args=p,v,v
+  stub 0201b920 ret=mod:2 args=ptr,v
+  stub 0201b970 ret=mod:2 args=ptr,v,v
   stub 0201b7b4 ret=none args=p,v,v,v
   stub 0201c158 ret=u32 args=v,v
   stub 02017988 ret=none args=p,v
@@ -399,7 +399,7 @@ fn 021bc24c ret=none inputs=1500
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
   stub 02008f3c ret=none args=v,v
 
@@ -427,10 +427,10 @@ fn 021bc288 ret=none inputs=1500
   arg region mon
   arg u32 alt range 0x72 0x79 || any
   stub 02017988 ret=none args=p,v
-  stub 020185c4 ret=none args=p
+  stub 020185c4 ret=none args=ptr
   stub 02018584 ret=u32 args=v,v,v
-  stub 0201b920 ret=mod:2 args=p,v
-  stub 0201b970 ret=mod:2 args=p,v,v
+  stub 0201b920 ret=mod:2 args=ptr,v
+  stub 0201b970 ret=mod:2 args=ptr,v,v
   stub 0201b7b4 ret=none args=p,v,v,v
   stub 0201c158 ret=u32 args=v,v
   stub 02017988 ret=none args=p,v
@@ -439,7 +439,7 @@ fn 021bc288 ret=none inputs=1500
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
   stub 02008f3c ret=none args=v,v
 
@@ -469,7 +469,7 @@ fn 02017f90 ret=u32 inputs=800
   stub 02019c90 ret=u32 args=v,v,v
   stub 02045924 ret=none args=v,v
   stub 0201f41c ret=none args=v,v,v
-  stub 02045cac ret=none args=p,v,v
+  stub 02045cac ret=none args=ptr,v,v
   stub 02045f5c ret=none args=p,v,v,v
   stub 02008f3c ret=none args=v,v
 

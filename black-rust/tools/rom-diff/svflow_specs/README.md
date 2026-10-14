@@ -84,7 +84,27 @@ fn 021ccaa8 ret=none [mode=arm] [inputs=200]
   `svflow_specs/*.spec`) declares it `buf` or `bpp` must be `ptr`, not `p`: `svflow.py` refuses to load
   such an area, `svflow.py --selftest` and the black-battle test
   `server_flow::testkit::tests::battle_specs_pass_buffers_as_ptr` fail on it (`bare_p_lint` in
-  svflow.py = `black_fndiff::bare_p_lint`). Specs of other crates (`specs/<crate>/`) are not linted yet.
+  svflow.py = `black_fndiff::bare_p_lint`).
+  **B18b (every crate, `work` / `region` too):** the rule covers callee arguments declared `buf`, `bpp`,
+  `work [OFS]` or `region NAME`, and every repository spec: the declarations come from
+  `svflow_specs/*.spec` and `specs/<crate>/*.spec` alike, matched by memory image (an ARM9-main
+  callee, 0x02004000..0x020AA7CC = `LINT_MAIN`, which `--selftest` checks against main.sbin, by
+  address in every set; an overlay callee only within one set class: no `set` line / `battle` /
+  `battle+N` are one class, any other `set` name is its own, so field ov21 021ca238 is not battle ov93
+  021ca238). `svflow.py` refuses to load a violating area, battle or check-fn.sh `--spec` area alike;
+  `svflow.py --selftest`, `test_svflow.py`, the black-fndiff test
+  `stub::tests::all_specs_pass_buffers_as_ptr` (every repository spec) and the battle test above fail
+  on it. Passing the pointer: black-fndiff `Arg::Ptr(addr)`, with `Layout` (`Case::layout()`;
+  `Layout::push` for a port's copy of an image, `Case::region_at`) mapping host slices to emulator
+  addresses and any `STACK_ZERO` address standing for a local of the caller; black-battle
+  `Arg::PWork(ofs)` = the flow work + ofs (testkit: `WORK_ADDR + ofs`; integration: its flow work's
+  address + ofs); black-field `CArg::P(v)` carries its value (`Arg::Ptr(v)`).
+  Why `work` / `region` (the B18 open question): a bare `p` at a work argument meant "the flow work"
+  by convention (the integration resolves it by hand in places, `P` -> `waddr`), so a port passing
+  another part of the work, another object, or the work where the original passes a local matched
+  anyway; as `ptr` the value is checked (1579 spec arguments, ~360 Rust call sites in B18b). A crate
+  spec's `work` may also model a caller's stack locals (fldmmdl `0216DD1C(sys, &m, &i)`): the stub
+  then sees the original's local (`PTR_LOCAL`) and the port passes a local too.
 * A stub is **active** only while its address is not in any server_flow module's `PORTED`; once the
   callee is ported, both sides run the real code (ROM / Rust port). (Z20: the black-battle server_flow / client / server
   lists count only for areas on the battle memory set, see "Z20 additions".)

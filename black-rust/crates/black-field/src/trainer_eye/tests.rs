@@ -7,9 +7,9 @@ const SPEC: &str = include_str!("../../../../tools/rom-diff/specs/black-field/tr
 // Written by tools/check-fn.sh only, after the Rust hashes matched the ROM run.
 // fndiff-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
-    (0x021AE0CC, "7cc6a2ba4a773d01"),
+    (0x021AE0CC, "47bc89a18ba5c0ef"),
     (0x021AE198, "0c20bccb920c0f94"),
-    (0x021AE1FC, "dbdb0668c88c75cd"),
+    (0x021AE1FC, "c93f75304885a8be"),
     (0x021AE288, "29c5a68dd7ba8a0d"),
     (0x021AE348, "3cc557c88f633dca"),
     (0x021AE360, "a37f5802b499ec4f"),
@@ -43,7 +43,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021AE884, "1e54150b7c2b26bd"),
     (0x021AE890, "016f1bcc7186fab2"),
     (0x021AE8B4, "2e28e9bf224997bf"),
-    (0x021AE8D4, "60b8622a3d3c3254"),
+    (0x021AE8D4, "a1661df7546a8576"),
     (0x021AE930, "47eb113f8c280758"),
 ];
 // fndiff-recorded-end

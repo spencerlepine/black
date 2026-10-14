@@ -215,7 +215,7 @@ fn 021c6a04 ret=u32 inputs=300
 
 # # 59b4(mon r1, 0xf) vs 59b4(mon r2, 0xf): message 0x2.. (reply 0x41); bf324 (core3); percent roll against bd28(r3, 4)
 fn 021c6a9c ret=u32 inputs=400
-  arg u32 any
+  arg work                                        # B18b: param_1 is the flow work (passed on to 021d70f0 and a `work` callee)
   arg u32 any
   arg u32 any
   arg u32 any
@@ -229,7 +229,7 @@ fn 021c6a9c ret=u32 inputs=400
   stub 021d59b4 ret=u32 args=v,v
   stub 0201bd28 ret=u32 args=v,v
   stub 021d78ac ret=pick:0/1/5/10/50/99 args=v
-  stub 021bf324 force ret=pick:0/1 args=p,v,v
+  stub 021bf324 force ret=pick:0/1 args=ptr,v,v
 
 # # message with the byte at r3 + 6 (id 0x16), reply 0x51
 fn 021c6b5c ret=u32
@@ -328,7 +328,7 @@ fn 021c6e3c ret=u32 inputs=500
   stub 021c7038 ret=pick:0/1/2/3 args=p,v,v,v,v
   stub 021c6f0c ret=pick:0/1 args=p,v,v
   stub 021c6f34 ret=pick:0/1 args=p,v,v
-  stub 021c6fc0 ret=none args=p,v
+  stub 021c6fc0 ret=none args=ptr,v
   stub 021c7008 ret=none args=p,v
   stub 021d57fc ret=pick:0/1/2/3/4/5/6/7 args=v
   stub 021e8cfc ret=pick:0/1/2/3/4/17 args=v
@@ -347,8 +347,8 @@ fn 021c6e3c ret=u32 inputs=500
   stub 021d794c ret=pick:0/1/2/4 args=v,v
   stub 021d5814 ret=pick:0/1 args=v,v
   stub 021c6fb0 ret=none args=p,v
-  stub 021c88e4 force ret=pick:0/1/2 args=p
-  stub 021c5750 force ret=none args=p,v
+  stub 021c88e4 force ret=pick:0/1/2 args=ptr
+  stub 021c5750 force ret=none args=ptr,v
 
 # # ef948(2) == 0 && 6f34(…) != 0
 fn 021c6f0c ret=bool
@@ -392,8 +392,8 @@ fn 021c6fc0 ret=none
   stub 021d75ec ret=none args=v,v
   stub 021d70f0 ret=none args=p,v
   stub 021d7540 ret=none args=v
-  stub 021c88e4 force ret=pick:0/1/2 args=p
-  stub 021c5750 force ret=none args=p,v
+  stub 021c88e4 force ret=pick:0/1/2 args=ptr
+  stub 021c5750 force ret=none args=ptr,v
 
 # # message id 0x1b
 fn 021c7008 ret=none
@@ -519,7 +519,7 @@ fn 021c7374 ret=u32 inputs=400
 
 # # two messages 0x3a / 0x3c; type multiplier id 9 / 0xb; c2ab0(work) == 4 && 5814(mon, 5) && id 0xb -> 7b10(x, 0x1800)
 fn 021c7474 ret=u16 inputs=500
-  arg u32 any
+  arg work                                        # B18b: param_1 is the flow work (passed on to 021d70f0 and a `work` callee)
   arg u32 any
   arg u32 any
   arg buf 0x10
@@ -539,7 +539,7 @@ fn 021c7474 ret=u16 inputs=500
   stub 021d58a8 ret=u32 args=v,v
   stub 021d7b10 ret=u32 args=v,v
   stub 021d5814 ret=pick:0/1 args=v,v
-  stub 021c2ab0 force ret=pick:0/1/2/4 args=p
+  stub 021c2ab0 force ret=pick:0/1/2/4 args=ptr
 
 # # 5814(mon r1, r2); messages 0x40 (reply 0x51) and 0x41 (value 0x1000 / 0x1800), returns reply 0x35
 fn 021c75ec ret=u32
@@ -573,7 +573,7 @@ fn 021c7664 ret=u32 inputs=300
 
 # # message 0x6d (reply 0x26 / 0x41); 82b8(r0) or a percent roll against the reply
 fn 021c76f4 ret=bool inputs=300
-  arg u32 any
+  arg work                                        # B18b: param_1 is the flow work (passed on to 021d70f0 and a `work` callee)
   arg u32 any
   arg u32 any
   stub 021d74f8 ret=none args=v
@@ -585,7 +585,7 @@ fn 021c76f4 ret=bool inputs=300
   stub 021d775c ret=pick:0/0/1/2/8/50/100/4096/65535 args=v
   stub 021d7540 ret=none args=v
   stub 021d78ac ret=pick:0/1/5/10/50/99 args=v
-  stub 021c82b8 force ret=pick:0/1 args=p
+  stub 021c82b8 force ret=pick:0/1 args=ptr
 
 # # message id 0x6e
 fn 021c7780 ret=none

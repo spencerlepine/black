@@ -238,7 +238,9 @@ A lent slice that matches two held blocks (a stale holder) panics. Flow cases st
 (arguments overlap, e.g. the 0x021F3B20 arrays) and treat regions / buffers inside the work as
 parts of the work. `Arg::{PBuf, PHost, PAt}` carry the pointer values the ports used to drop; since
 B18 the stubs check them where the callee's spec declares a buffer / BattleMon (`ptr` stub
-arguments, see `tools/rom-diff/svflow_specs/README.md`), elsewhere they see `P`. `FlowEnv::peek` lets a port read memory its test model placed
+arguments, see `tools/rom-diff/svflow_specs/README.md`), elsewhere they see `P`. B18b extended the check
+to callee arguments declared `work` / `region` (and to every crate's specs): ports pass the flow work as
+`Arg::PWork(ofs)` (testkit: the work image's address + ofs; integration: `waddr + ofs`) instead of a bare `P`. `FlowEnv::peek` lets a port read memory its test model placed
 inside its own image (`S` slot table, adapter reply blocks).
 
 **Gaps found (see the B16 report for the full list).** High (B18 fixed the ~120 call sites that

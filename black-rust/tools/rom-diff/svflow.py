@@ -10,7 +10,7 @@ tools/rom-diff/svflow_specs/README.md.
   svflow.py AREA --order-check    (Z19) exit 1 if an input's hash changes when the inputs run in reverse order
                                   after junk in r0-r12 / flags / the stack window (combine with --all / --fn)
   svflow.py --selftest            (Z19) reset probes (r3, r4, r12, stack, flags) + order check of server1 021b6848
-                                  + (B18) `ptr` parity vectors and the bare-`p` lint over the battle specs
+                                  + (B18) `ptr` parity vectors and the bare-`p` lint over every spec (B18b: all crates)
                                   + (Z23) `pick+W:` parity vectors
 
 Generic mode (any crate; tools/check-fn.sh passes these):
@@ -289,9 +289,9 @@ def load_spec(area):
     text = open(SPEC_PATH.get(area) or os.path.join(SPECS, area + ".spec")).read()
     if "NEEDS-HAND" in text and not os.environ.get("SVFLOW_ALLOW_DRAFT"):
         sys.exit("svflow: %s.spec still has NEEDS-HAND lines (genspec.py draft); resolve them first" % area)
-    if not SPEC_PATH.get(area) and battle_bare_p(area):  # B18: battle svflow areas only (other crates: see README)
-        sys.exit("svflow: %s.spec passes a buf/bpp argument as a bare `p` (B18):\n  %s"
-                 % (area, "\n  ".join(battle_bare_p(area))))
+    if battle_bare_p(spec_key(area)):  # B18 battle svflow areas; B18b every crate's area (check-fn.sh --spec) too
+        sys.exit("svflow: %s.spec passes a buf/bpp/work/region argument as a bare `p` (B18, B18b):\n  %s"
+                 % (area, "\n  ".join(battle_bare_p(spec_key(area)))))
     return parse_spec(text)[1]
 
 
@@ -511,40 +511,86 @@ def canon_ptr(v):
     return PTR_LOCAL if STACK_LO <= v < STACK_HI else v
 
 
+LINT_MAIN = (0x02004000, 0x020AA7CC)  # B18b: [lo, hi) of the ARM9 main image of black.us (--selftest: == main_range())
+LINT_KINDS = ("buf", "bpp", "work", "region")  # B18 buf/bpp, B18b work/region: callee argument kinds a stub must not pass as a bare `p`
+
+
+def lint_set(name):
+    """B18b: memory-image class of a spec's `set` line for bare_p_lint: no line / `battle` / `battle+N` are one class
+    (main + overlays 93-96, loaded together), any other set is its own class (sets.txt: overlays loaded together)."""
+    return "battle" if name in (None, "battle") or name.startswith("battle+") else name
+
+
+def lint_key(addr, cls):
+    """B18b: which declarations of an address describe the same code: an ARM9 main address is the same function in
+    every set; an overlay address only within one set class (field ov21 021ca238 is not battle ov93 021ca238)."""
+    return (None, addr) if LINT_MAIN[0] <= addr < LINT_MAIN[1] else (cls, addr)
+
+
 def bare_p_lint(texts):
     """B18: `p` stub arguments where the callee's own `fn` block (in any of the given specs) declares that argument
-    `buf` or `bpp`: such a pointer must be `ptr` (value checked), or a port could pass any pointer (or none) and still
-    match. texts = [(area, spec text)]; returns the messages (empty = clean). Mirrored by `black_fndiff::bare_p_lint`."""
+    `buf` or `bpp` (B18b: or `work` / `region`, LINT_KINDS): such a pointer must be `ptr` (value checked), or a port could
+    pass any pointer (or none) and still match. B18b: the declarations of every spec count (battle svflow specs and every crate's specs), matched by
+    lint_key (the spec's `set` line). texts = [(area, spec text)]; returns the messages (empty = clean). Mirrored by
+    `black_fndiff::bare_p_lint`."""
     kinds, parsed = {}, []
     for area, text in texts:
         funcs = parse_spec(text)[1]
-        parsed.append((area, funcs))
+        cls = lint_set(funcs.set)
+        parsed.append((area, cls, funcs))
         for f in funcs:
             for i, a in enumerate(f.args):
-                if a.kind in ("buf", "bpp"):
-                    kinds.setdefault(f.addr, {}).setdefault(i, a.kind)
+                if a.kind in LINT_KINDS:
+                    kinds.setdefault(lint_key(f.addr, cls), {}).setdefault(i, a.kind)
     out = []
-    for area, funcs in parsed:
+    for area, cls, funcs in parsed:
         for f in funcs:
             for st in f.stubs:
                 for i, k in enumerate(st.args):
-                    kk = kinds.get(st.addr, {}).get(i)
+                    kk = kinds.get(lint_key(st.addr, cls), {}).get(i)
                     if k == "p" and kk:
                         out.append("%s %08x: stub %08x arg %d is `p` but %08x declares it `%s`: use `ptr`"
                                    % (area, f.addr, st.addr, i, st.addr, kk))
     return out
 
 
-BARE_P = {}  # B18: area -> bare_p_lint messages of the battle svflow specs (computed once)
+BARE_P = {}  # B18: area -> bare_p_lint messages of every repository spec (computed once)
+
+
+def repo_specs():
+    """B18b: (area key, path) of every repository spec: svflow_specs/AREA.spec as AREA, specs/CRATE/AREA.spec as
+    CRATE/AREA."""
+    out = [(fn[:-5], os.path.join(SPECS, fn)) for fn in sorted(os.listdir(SPECS)) if fn.endswith(".spec")]
+    cdir = os.path.join(HERE, "specs")
+    for c in sorted(os.listdir(cdir)):
+        if os.path.isdir(os.path.join(cdir, c)):
+            out += [(c + "/" + fn[:-5], os.path.join(cdir, c, fn)) for fn in sorted(os.listdir(os.path.join(cdir, c)))
+                    if fn.endswith(".spec")]
+    return out
+
+
+def spec_key(area):
+    """B18b: the bare_p_lint area key of a loaded area: its repository key, or its --spec path (outside the tree)."""
+    p = SPEC_PATH.get(area)
+    if not p:
+        return area
+    p = os.path.abspath(p)
+    for k, q in repo_specs():
+        if os.path.abspath(q) == p:
+            return k
+    return p
 
 
 def battle_bare_p(area):
-    """B18: bare_p_lint over every battle svflow spec (svflow_specs/*.spec), the messages of one area."""
+    """B18: bare_p_lint messages of one area. B18b: over every repository spec (battle svflow specs and
+    specs/CRATE/*.spec, see repo_specs); a --spec file outside the tree is linted together with them."""
     if not BARE_P:
         BARE_P[None] = []
-        texts = [(fn[:-5], open(os.path.join(SPECS, fn)).read()) for fn in sorted(os.listdir(SPECS)) if fn.endswith(".spec")]
-        for m in bare_p_lint(texts):
+        for m in bare_p_lint([(k, open(p).read()) for k, p in repo_specs()]):
             BARE_P.setdefault(m.split()[0], []).append(m)
+    if area and area not in BARE_P and area.endswith(".spec") and os.path.isfile(area):
+        texts = [(k, open(p).read()) for k, p in repo_specs()] + [(area, open(area).read())]
+        BARE_P[area] = [m for m in bare_p_lint(texts) if m.split()[0] == area]
     return BARE_P.get(area, [])
 
 
@@ -571,6 +617,31 @@ def ptr_selftest():
             "b 021c1000: stub 021c0000 arg 2 is `p` but 021c0000 declares it `bpp`: use `ptr`"]
     if bare_p_lint(texts) != want:
         bad.append("bare_p_lint: %s" % bare_p_lint(texts))
+    # B18b: declarations cross specs by memory set: an ARM9 main callee (02045cac) everywhere, an overlay callee
+    # (021ca238) only within one set class (battle = no line / battle / battle+N)
+    texts = [("c/x", "area x\nset field\nfn 02045cac ret=none\n  arg u32 any\n  arg buf 0x10\n"
+                     "fn 021ca238 ret=none\n  arg buf 0x10\n"),
+             ("y", "area y\nfn 021c3000 ret=none\n  stub 02045cac ret=none args=v,p\n  stub 021ca238 ret=none args=p\n"),
+             ("z", "area z\nset battle+96\nfn 021ca238 ret=none\n  arg bpp\n"
+                   "fn 021c4000 ret=none\n  stub 021ca238 ret=none args=p\n"),
+             ("c/w", "area w\nset field\nfn 021c5000 ret=none\n  stub 021ca238 ret=none args=p\n  stub 02045cac ret=none args=v,ptr\n")]
+    want = ["y 021c3000: stub 02045cac arg 1 is `p` but 02045cac declares it `buf`: use `ptr`",
+            "y 021c3000: stub 021ca238 arg 0 is `p` but 021ca238 declares it `bpp`: use `ptr`",
+            "z 021c4000: stub 021ca238 arg 0 is `p` but 021ca238 declares it `bpp`: use `ptr`",
+            "c/w 021c5000: stub 021ca238 arg 0 is `p` but 021ca238 declares it `buf`: use `ptr`"]
+    if bare_p_lint(texts) != want:
+        bad.append("bare_p_lint (sets): %s" % bare_p_lint(texts))
+    # B18b: `work` and `region` callee arguments count too
+    texts = [("w", "area w\nfn 021c6000 ret=none\n  arg work\n  arg u32 any\n  region r 0x10\n  arg region r\n"
+                   "fn 021c6100 ret=none\n  stub 021c6000 ret=none args=p,v,p\n"
+                   "fn 021c6200 ret=none\n  stub 021c6000 ret=none args=ptr,v,ptr\n")]
+    want = ["w 021c6100: stub 021c6000 arg 0 is `p` but 021c6000 declares it `work`: use `ptr`",
+            "w 021c6100: stub 021c6000 arg 2 is `p` but 021c6000 declares it `region`: use `ptr`"]
+    if bare_p_lint(texts) != want:
+        bad.append("bare_p_lint (work/region): %s" % bare_p_lint(texts))
+    lo, hi = main_range()
+    if hi > lo and (lo, hi) != LINT_MAIN:
+        bad.append("LINT_MAIN %#x..%#x != ARM9 main %#x..%#x" % (LINT_MAIN + (lo, hi)))
     return bad
 
 
@@ -1085,7 +1156,7 @@ def selftest():
         fails.append("arguments r0/r3/stack word 0 not passed")
     fails += pick_any_selftest()  # Z23: `pick+W:` parity vectors (mirrored in black-fndiff stub.rs)
     fails += ptr_selftest()  # B18: `ptr` stub arguments + bare_p_lint vectors (mirrored in black-fndiff stub.rs)
-    battle_bare_p("")  # B18: the lint over every battle svflow spec (fills BARE_P)
+    battle_bare_p("")  # B18: the lint over every repository spec (B18b: every crate's too; fills BARE_P)
     fails += [m for a in sorted(k for k in BARE_P if k) for m in BARE_P[a]]
     checks = [("server1", 0x021B6848)] + [("selftest", f.addr) for f in load_spec("selftest")]
     for area, addr in checks:

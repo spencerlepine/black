@@ -79,6 +79,28 @@ impl<X: Ext> Case<X> {
         self.global_addrs[k]
     }
 
+    /// B18b: the [`Layout`] of this input's images (`work`, `buf` / custom arguments, regions,
+    /// globals) at their emulator addresses.
+    pub fn layout(&self) -> Layout {
+        let mut l = Layout::default();
+        l.push(&self.work, WORK);
+        for (i, b) in self.bufs.iter().enumerate() {
+            l.push(b, buf_addr(i));
+        }
+        for (k, b) in self.regions.iter().enumerate() {
+            l.push(b, region_addr(k));
+        }
+        for (k, b) in self.globals.iter().enumerate() {
+            l.push(b, self.global_addrs[k]);
+        }
+        l
+    }
+
+    /// B18b: emulator address of the named `region` (for a [`Layout`] of a port's copy of it).
+    pub fn region_at(&self, name: &str) -> u32 {
+        region_addr(self.region_index(name))
+    }
+
     pub fn region(&self, name: &str) -> &[u8] {
         &self.regions[self.region_index(name)]
     }
@@ -149,6 +171,41 @@ pub fn buf_addr(i: usize) -> u32 {
 /// Emulator address of the `k`-th `region` of a function.
 pub fn region_addr(k: usize) -> u32 {
     REGION_BASE + k as u32 * BUF_STRIDE
+}
+
+/// B18b: host-to-emulator address map of the byte images a port holds (an input's `work`, `buf`
+/// arguments, regions and globals: [`Case::layout`]; or copies the port made of them, added with
+/// [`Layout::push`]), so a pass-through pointer reaches a `ptr` stub argument
+/// ([`Arg::Ptr`](crate::Arg::Ptr)) as the address the original passes.
+#[derive(Clone, Debug, Default)]
+pub struct Layout(Vec<(usize, usize, u32)>);
+
+impl Layout {
+    /// Adds an image: the bytes `host` stand for emulator address `emu`.
+    pub fn push(&mut self, host: &[u8], emu: u32) {
+        if !host.is_empty() {
+            self.0.push((host.as_ptr() as usize, host.len(), emu));
+        }
+    }
+
+    /// Emulator address of host address `h`: inside an image (or one past its end), the address
+    /// there; any other address is a buffer local to the port, given as [`STACK_ZERO`]`.start`
+    /// (`canon_ptr` logs it as `PTR_LOCAL`, as it does for the original's locals).
+    pub fn addr(&self, h: *const u8) -> u32 {
+        let h = h as usize;
+        if let Some(&(s, _, e)) = self.0.iter().find(|&&(s, n, _)| h >= s && h < s + n) {
+            return e + (h - s) as u32;
+        }
+        if let Some(&(_, n, e)) = self.0.iter().find(|&&(s, n, _)| h == s + n) {
+            return e + n as u32;
+        }
+        STACK_ZERO.start
+    }
+
+    /// [`Arg::Ptr`](crate::Arg::Ptr) of the first byte of `b` ([`Layout::addr`]).
+    pub fn ptr(&self, b: &[u8]) -> crate::Arg<'static> {
+        crate::Arg::Ptr(self.addr(b.as_ptr()))
+    }
 }
 
 type Kept = Option<Vec<(String, u32)>>;
@@ -452,6 +509,26 @@ pub fn run_suite<X: Ext>(suite: &Suite<'_>, call: &dyn Fn(u32, &mut Case<X>) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// B18b: host slices map to their images' emulator addresses (one past the end too); any
+    /// other host address is a local (`STACK_ZERO.start`, logged as `PTR_LOCAL` by `canon_ptr`).
+    #[test]
+    fn layout_maps_host_addresses() {
+        let host = [0u8; 64];
+        let (a, b) = (&host[..16], &host[32..40]);
+        let mut l = Layout::default();
+        l.push(a, 0x02E1_0000);
+        l.push(b, region_addr(2));
+        l.push(&[], 0x0200_0000);
+        assert_eq!(l.addr(a.as_ptr()), 0x02E1_0000);
+        assert_eq!(l.addr(a[12..].as_ptr()), 0x02E1_000C);
+        assert_eq!(l.addr(a.as_ptr().wrapping_add(16)), 0x02E1_0010);
+        assert_eq!(l.addr(b[3..].as_ptr()), 0x02F3_0003);
+        let local = [0u8; 4];
+        assert_eq!(l.addr(local.as_ptr()), STACK_ZERO.start);
+        assert!(matches!(l.ptr(b), crate::Arg::Ptr(0x02F3_0000)));
+        assert_eq!(crate::canon_ptr(l.addr(local.as_ptr())), crate::PTR_LOCAL);
+    }
 
     #[test]
     fn entry_state_matches_emu_reset() {

@@ -383,7 +383,7 @@ pub fn priority_roll<E: FlowEnv>(env: &mut E, a: u32, b: u32, r3: u32) -> u32 {
     if r != 0 {
         return 0;
     }
-    if env.call(0x021B_F324, &mut [Arg::P, Arg::V(a), Arg::V(b)]) == 0 {
+    if env.call(0x021B_F324, &mut [Arg::PWork(0), Arg::V(a), Arg::V(b)]) == 0 {
         let u = field(env, r3, 4) & 0xFF;
         let roll = env.call(0x021D_78AC, &mut [Arg::V(100)]);
         if (u.wrapping_add(va.wrapping_sub(vb) & 0xFF) & 0xFF) <= roll {
@@ -577,7 +577,7 @@ pub fn type_check<E: FlowEnv>(
     }
     if flag != 0 {
         if !local {
-            env.callw(0x021C_5750, &mut [Arg::P, Arg::V(b)], w);
+            env.callw(0x021C_5750, &mut [Arg::PWork(0), Arg::V(b)], w);
         } else {
             bracketed_messages(env, w, b);
         }
@@ -659,8 +659,8 @@ pub fn pair_resists<E: FlowEnv>(env: &mut E, mon: u32, flag: u32) -> bool {
 pub fn bracketed_messages<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, mon: u32) {
     let old = cmd_queue::advance_fields(&mut w.mem[OFS_QUEUE_WORD..OFS_QUEUE_WORD + 4]);
     message_1b(&mut Lend::new(env, w), mon);
-    if env.callw(0x021C_88E4, &mut [Arg::P], w) != 2 {
-        env.callw(0x021C_5750, &mut [Arg::P, Arg::V(mon)], w);
+    if env.callw(0x021C_88E4, &mut [Arg::PWork(0)], w) != 2 {
+        env.callw(0x021C_5750, &mut [Arg::PWork(0), Arg::V(mon)], w);
     }
     cmd_queue::set_word(&mut w.mem[OFS_QUEUE_WORD..OFS_QUEUE_WORD + 4], old);
 }
@@ -868,7 +868,7 @@ pub fn multiplier_message<E: FlowEnv>(env: &mut E, a: u32, b: u32, rec: &[u8], a
     let flagged = read(env, 0x51) & 0xFF != 0;
     end(env, 0x3142);
     let mut v = pick_value(env, b, id, flagged, alt != 0) & 0xFFFF;
-    let c = env.call(0x021C_2AB0, &mut [Arg::P]);
+    let c = env.call(0x021C_2AB0, &mut [Arg::PWork(0)]);
     if c == 4 && env.call(0x021D_5814, &mut [Arg::V(b), Arg::V(5)]) != 0 && id == 0xB {
         v = scale(env, v, 0x1800) & 0xFFFF;
     }
@@ -954,7 +954,7 @@ pub fn message_31c9<E: FlowEnv>(env: &mut E, mon: u32, x: u32) -> bool {
         return false;
     }
     if r26 != 0 {
-        if env.call(0x021C_82B8, &mut [Arg::P]) != 0 {
+        if env.call(0x021C_82B8, &mut [Arg::PWork(0)]) != 0 {
             return true;
         }
         let roll = env.call(0x021D_78AC, &mut [Arg::V(100)]);

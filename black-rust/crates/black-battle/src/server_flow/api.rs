@@ -117,13 +117,13 @@ pub fn poke_pos<E: FlowEnv>(env: &mut E, w: &SvFlowWork, poke_id: u32) -> u32 {
 pub fn list_foes<E: FlowEnv>(env: &mut E, poke_id: u32, out: &mut [u8]) -> u32 {
     // the iterator state lives in the caller's frame
     let mut it = [0u8; 4];
-    env.call(0x021B_D2B4, &mut [Arg::PBuf(&mut it), Arg::P]);
+    env.call(0x021B_D2B4, &mut [Arg::PBuf(&mut it), Arg::PWork(0)]);
     let mut n = 0u32;
     loop {
         let mut m = [0u8; 4];
         if env.call(
             0x021B_D34C,
-            &mut [Arg::PBuf(&mut it), Arg::P, Arg::Out(&mut m)],
+            &mut [Arg::PBuf(&mut it), Arg::PWork(0), Arg::Out(&mut m)],
         ) == 0
         {
             break;
@@ -179,7 +179,7 @@ pub fn move_type_check<E: FlowEnv>(
     let r = env.callw(
         0x021C_6E3C,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::V(atk_mon),
             Arg::V(def_mon),
             Arg::In(&rec[..0x10]),
@@ -227,7 +227,7 @@ pub fn move_damage_value<E: FlowEnv>(
     env.callw(
         0x021C_1E74,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::V(atk_mon),
             Arg::V(def_mon),
             Arg::In(&rec[..0x10]),
@@ -495,7 +495,7 @@ pub fn species_check<E: FlowEnv>(env: &mut E, w: &SvFlowWork, poke_id: u32) -> b
 
 /// C: `sub_021c81c8`: thunk to core1 `021bc948(work, mon, flag)` (a stat of a BattleMon).
 pub fn mon_stat<E: FlowEnv>(env: &mut E, mon: u32, flag: u32) -> u32 {
-    env.call(0x021B_C948, &mut [Arg::P, Arg::V(mon), Arg::V(flag)])
+    env.call(0x021B_C948, &mut [Arg::PWork(0), Arg::V(mon), Arg::V(flag)])
 }
 
 /// C: `FUN_021c81d0(work, mon, flag)`: how many other mons (core2 iterator `021bd2b4` /
@@ -506,12 +506,12 @@ pub fn count_faster<E: FlowEnv>(env: &mut E, mon: u32, flag: u32) -> u32 {
     let mut n = 0u16;
     // the iterator state lives in the caller's frame
     let mut it = [0u8; 4];
-    env.call(0x021B_D2B4, &mut [Arg::PBuf(&mut it), Arg::P]);
+    env.call(0x021B_D2B4, &mut [Arg::PBuf(&mut it), Arg::PWork(0)]);
     loop {
         let mut m = [0u8; 4];
         if env.call(
             0x021B_D34C,
-            &mut [Arg::PBuf(&mut it), Arg::P, Arg::Out(&mut m)],
+            &mut [Arg::PBuf(&mut it), Arg::PWork(0), Arg::Out(&mut m)],
         ) == 0
         {
             break;
@@ -546,7 +546,7 @@ pub fn mon_check_824c<E: FlowEnv>(env: &mut E, w: &SvFlowWork, poke_id: u32) -> 
 /// C: `thunk_FUN_overlay_d_93__021c2ab0` (`0x021C8288`): thunk to core4 `021c2ab0(work)` (the
 /// weather).
 pub fn weather<E: FlowEnv>(env: &mut E) -> u32 {
-    env.call(0x021C_2AB0, &mut [Arg::P])
+    env.call(0x021C_2AB0, &mut [Arg::PWork(0)])
 }
 
 /// C: `FUN_overlay_d_93__021c8290`: core3 `021bfa00(work, mon(atk), mon(def), x)`.
@@ -555,7 +555,7 @@ pub fn mon_pair_bfa00<E: FlowEnv>(env: &mut E, w: &SvFlowWork, atk: u32, def: u3
     let d = mon_of(env, w, def);
     env.callwr(
         0x021B_FA00,
-        &mut [Arg::P, Arg::V(a), Arg::V(d), Arg::V(x)],
+        &mut [Arg::PWork(0), Arg::V(a), Arg::V(d), Arg::V(x)],
         w,
     )
 }
@@ -627,7 +627,7 @@ pub fn mon_check_8374<E: FlowEnv>(env: &mut E, w: &SvFlowWork, poke_id: u32) -> 
 /// (a weight-like value).
 pub fn mon_weight<E: FlowEnv>(env: &mut E, w: &SvFlowWork, poke_id: u32) -> u32 {
     let mon = mon_of(env, w, poke_id);
-    let m = env.callwr(0x021C_2AF0, &mut [Arg::P, Arg::V(mon)], w);
+    let m = env.callwr(0x021C_2AF0, &mut [Arg::PWork(0), Arg::V(mon)], w);
     let base = env.callwr(0x021D_67E8, &mut [Arg::V(mon)], w);
     let r = env.callwr(0x021D_7B10, &mut [Arg::V(base), Arg::V(m)], w);
     if r < 1 {
@@ -639,12 +639,12 @@ pub fn mon_weight<E: FlowEnv>(env: &mut E, w: &SvFlowWork, poke_id: u32) -> u32 
 
 /// C: `FUN_overlay_d_93__021c2e4c` (thunk at `0x021C83CC`): thunk to core4 `021c2e4c(work)`.
 pub fn counter_2e4c<E: FlowEnv>(env: &mut E) -> u32 {
-    env.call(0x021C_2E4C, &mut [Arg::P])
+    env.call(0x021C_2E4C, &mut [Arg::PWork(0)])
 }
 
 /// C: `thunk_FUN_overlay_d_93__021bc2b0` (`0x021C83D4`): thunk to core1 `021bc2b0(work)`.
 pub fn core1_bc2b0<E: FlowEnv>(env: &mut E) -> u32 {
-    env.call(0x021B_C2B0, &mut [Arg::P])
+    env.call(0x021B_C2B0, &mut [Arg::PWork(0)])
 }
 
 /// C: `FUN_overlay_d_93__021c83dc`: byte +4 of the per-turn record behind `work[0x4A8]` := `v`
@@ -690,7 +690,7 @@ pub fn mon_pair_bfeac<E: FlowEnv>(env: &mut E, w: &SvFlowWork, a: u32, b: u32, o
     let mb = mon_of(env, w, b);
     env.callwr(
         0x021B_FEAC,
-        &mut [Arg::P, Arg::V(ma), Arg::V(mb), Arg::PAt(out)],
+        &mut [Arg::PWork(0), Arg::V(ma), Arg::V(mb), Arg::PAt(out)],
         w,
     )
 }
@@ -698,7 +698,7 @@ pub fn mon_pair_bfeac<E: FlowEnv>(env: &mut E, w: &SvFlowWork, a: u32, b: u32, o
 /// C: `FUN_overlay_d_93__021c8494`: core3 `021bff60(work, mon(poke_id), 1)`.
 pub fn mon_bff60<E: FlowEnv>(env: &mut E, w: &SvFlowWork, poke_id: u32) {
     let mon = mon_of(env, w, poke_id);
-    env.callwr(0x021B_FF60, &mut [Arg::P, Arg::V(mon), Arg::V(1)], w);
+    env.callwr(0x021B_FF60, &mut [Arg::PWork(0), Arg::V(mon), Arg::V(1)], w);
 }
 
 /// C: `FUN_021c84ac(work, x, out)`: clears bit 5 of `work[0x78A]`, calls core4
@@ -706,19 +706,19 @@ pub fn mon_bff60<E: FlowEnv>(env: &mut E, w: &SvFlowWork, poke_id: u32) {
 pub fn call_2128_flag<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, x: u32, out: &mut [u8]) -> u32 {
     let b = w.u8_at(OFS_FLAGS_78A) & !0x20;
     w.set_u8_at(OFS_FLAGS_78A, b);
-    let r = env.callw(0x021C_2128, &mut [Arg::P, Arg::V(x)], w);
+    let r = env.callw(0x021C_2128, &mut [Arg::PWork(0), Arg::V(x)], w);
     out[0] = (w.u8_at(OFS_FLAGS_78A) >> 5) & 1;
     r
 }
 
 /// C: `FUN_overlay_d_93__021bdbb8` (thunk at `0x021C84D0`): thunk to core2 `021bdbb8(work, x)`.
 pub fn core2_bdbb8<E: FlowEnv>(env: &mut E, x: u32) {
-    env.call(0x021B_DBB8, &mut [Arg::P, Arg::V(x)]);
+    env.call(0x021B_DBB8, &mut [Arg::PWork(0), Arg::V(x)]);
 }
 
 /// C: `thunk_FUN_overlay_d_93__021cc668` (`0x021C84D8`): thunk to events `021cc668(work, mon)`.
 pub fn events_cc668<E: FlowEnv>(env: &mut E, mon: u32) -> u32 {
-    env.call(0x021C_C668, &mut [Arg::P, Arg::V(mon)])
+    env.call(0x021C_C668, &mut [Arg::PWork(0), Arg::V(mon)])
 }
 
 /// C: `sub_021c84f4` (thunk at `0x021C84E0`): thunk to [`set_add`].

@@ -24,9 +24,9 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021B6D64, "73c4dfea93108a1e"),
     (0x021B6D98, "444a1526a1c335fe"),
     (0x021B6DC0, "1295b0945e4ed0a1"),
-    (0x021B6DE4, "8124154931cea7cf"),
-    (0x021B6E0C, "968b7a084de39357"),
-    (0x021B6E24, "49ec9de089930584"),
+    (0x021B6DE4, "30694d0f51d4dd9e"),
+    (0x021B6E0C, "1823de8a449e2771"),
+    (0x021B6E24, "1af12d376907f911"),
     (0x021B6E68, "8be005379b12d0d0"),
     (0x021B6EB0, "0f6b075168531dca"),
     (0x021B6EE0, "ffb0a4e4ea2767f7"),
@@ -534,11 +534,15 @@ impl PokemonFldHooks for Rom<'_> {
     fn fun_02162744(&mut self, s: u32) -> u32 {
         self.stubs.call(0x02162744, &mut [Arg::V(s)])
     }
-    // the spec stub passes the index pointer as `p`
+    // the index pointer is a local of the caller (B18b: `ptr`, logged as PTR_LOCAL)
     fn fun_0216dd1c(&mut self, sys: u32, obj: &mut [u8; 4], _index: &mut [u8; 4]) -> u32 {
         self.stubs.call(
             0x0216_DD1C,
-            &mut [Arg::V(sys), Arg::Out(&mut obj[..]), Arg::P],
+            &mut [
+                Arg::V(sys),
+                Arg::Out(&mut obj[..]),
+                Arg::Ptr(black_fndiff::STACK_ZERO.start),
+            ],
         )
     }
     fn fun_0201efa4(&mut self, ws: u32, i: u32, n: u32, digits: u32, a: u32, b: u32) {

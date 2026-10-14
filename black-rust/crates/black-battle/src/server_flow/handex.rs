@@ -63,12 +63,12 @@ fn veneer_ab8<E: FlowEnv>(env: &mut E, addr: u32, id: u32, helper: usize) -> boo
 
 /// core5 `021c5a1c(work, mon)` (opens the effect bracket of header bit 23).
 fn bracket_open<E: FlowEnv>(env: &mut E, mon: u32) {
-    env.call(0x021C_5A1C, &mut [Arg::P, Arg::V(mon)]);
+    env.call(0x021C_5A1C, &mut [Arg::PWork(0), Arg::V(mon)]);
 }
 
 /// core5 `021c5a34(work, mon)` (closes the effect bracket of header bit 23).
 fn bracket_close<E: FlowEnv>(env: &mut E, mon: u32) {
-    env.call(0x021C_5A34, &mut [Arg::P, Arg::V(mon)]);
+    env.call(0x021C_5A34, &mut [Arg::PWork(0), Arg::V(mon)]);
 }
 
 /// The mon of the record's pokeID, or 0 when the pokeID is 0x1F (none).
@@ -196,7 +196,7 @@ pub fn proc_00<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     if f & 1 != 0 && env.callwr(0x021D_5B48, &mut [Arg::V(mon)], w) != 0 {
         return 0;
     }
-    (env.callwr(0x021C_2128, &mut [Arg::P, Arg::V(mon)], w) != 0) as u32
+    (env.callwr(0x021C_2128, &mut [Arg::PWork(0), Arg::V(mon)], w) != 0) as u32
 }
 
 /// C: `FUN_overlay_d_93__021c8c6c`: HANDEX proc 0x01: when the veneer `8cac(work + 0x1AB8,
@@ -211,7 +211,7 @@ pub fn proc_01<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
         return 0;
     }
     let mon = mon_of(env, w, rec_poke_id(rec));
-    env.callwr(0x021C_60D4, &mut [Arg::P, Arg::V(mon)], w);
+    env.callwr(0x021C_60D4, &mut [Arg::PWork(0), Arg::V(mon)], w);
     1
 }
 
@@ -263,7 +263,7 @@ pub fn proc_05<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32, q: &
     let t = mon_of(&mut Lend::hv(env, vec![&mut *q]), w, rec[6] as u32);
     if env.call_l(
         0x021C_3370,
-        &mut [Arg::P, Arg::V(t)],
+        &mut [Arg::PWork(0), Arg::V(t)],
         Lent::of(None, Some(w), vec![&mut *q]),
     ) != 0
     {
@@ -275,7 +275,7 @@ pub fn proc_05<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32, q: &
     let ok = if rec[7] == 0 {
         env.call_l(
             0x021C_3394,
-            &mut [Arg::P, Arg::V(t), Arg::V(1)],
+            &mut [Arg::PWork(0), Arg::V(t), Arg::V(1)],
             Lent::of(None, Some(w), vec![&mut *q]),
         ) == 0
     } else {
@@ -284,7 +284,7 @@ pub fn proc_05<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32, q: &
     if ok {
         env.call_l(
             0x021C_33E8,
-            &mut [Arg::P, Arg::V(t), Arg::V(rd16(rec, 4))],
+            &mut [Arg::PWork(0), Arg::V(t), Arg::V(rd16(rec, 4))],
             Lent::of(None, Some(w), vec![&mut *q]),
         );
         if rec[0xA] != 0 {
@@ -325,7 +325,7 @@ pub fn proc_06<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     }
     if env.callwr(
         0x021C_1E14,
-        &mut [Arg::P, Arg::V(t), Arg::V(a), Arg::V(rd16(rec, 4))],
+        &mut [Arg::PWork(0), Arg::V(t), Arg::V(a), Arg::V(rd16(rec, 4))],
         w,
     ) == 0
     {
@@ -361,7 +361,7 @@ pub fn proc_07<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     }
     if env.callwr(
         0x021C_20BC,
-        &mut [Arg::P, Arg::V(t), Arg::V(rd16(rec, 4))],
+        &mut [Arg::PWork(0), Arg::V(t), Arg::V(rd16(rec, 4))],
         w,
     ) == 0
     {
@@ -374,7 +374,7 @@ pub fn proc_07<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
         env.callwr(
             0x021C_70E4,
             &mut [
-                Arg::P,
+                Arg::PWork(0),
                 Arg::V(rd16(rec, 8)),
                 Arg::V(rec[0xA] as u32),
                 Arg::V(rec[0xB] as u32),
@@ -386,7 +386,7 @@ pub fn proc_07<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     }
     env.callwr(
         0x021C_20D0,
-        &mut [Arg::P, Arg::V(t), Arg::V(rd16(rec, 4)), Arg::P],
+        &mut [Arg::PWork(0), Arg::V(t), Arg::V(rd16(rec, 4)), Arg::P],
         w,
     );
     if bit23(rec) {
@@ -415,7 +415,7 @@ pub fn proc_08<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
                 env.callwr(
                     0x021C_5B74,
                     &mut [
-                        Arg::P,
+                        Arg::PWork(0),
                         Arg::V(mon),
                         Arg::V(rd32(rec, 0x10 + 4 * i)),
                         Arg::V((rec[5] == 0) as u32),
@@ -423,7 +423,7 @@ pub fn proc_08<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
                     w,
                 );
                 if rec[6] == 0 {
-                    env.callwr(0x021C_195C, &mut [Arg::P, Arg::V(mon), Arg::V(1)], w);
+                    env.callwr(0x021C_195C, &mut [Arg::PWork(0), Arg::V(mon), Arg::V(1)], w);
                 }
                 r = 1;
             }
@@ -455,7 +455,7 @@ pub fn proc_09<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     env.callwr(
         0x021C_6080,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::V(t),
             Arg::V(rec[6] as u32),
             Arg::V(rec[4] as u32),
@@ -478,7 +478,7 @@ pub fn proc_0a<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     if env.callwr(
         0x021C_0898,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::V(t),
             Arg::V(rec[6] as u32),
             Arg::V(rec[4] as u32),
@@ -493,7 +493,7 @@ pub fn proc_0a<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
             w,
         ) != 0
         {
-            env.callwr(0x021C_2128, &mut [Arg::P, Arg::V(t)], w);
+            env.callwr(0x021C_2128, &mut [Arg::PWork(0), Arg::V(t)], w);
         }
     }
     1
@@ -523,7 +523,7 @@ pub fn proc_0b<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32) -> u
                 let mut x = [0u8; 4];
                 env.callwr(
                     0x021C_5620,
-                    &mut [Arg::P, Arg::V(t), Arg::V(k), Arg::Out(&mut x)],
+                    &mut [Arg::PWork(0), Arg::V(t), Arg::V(k), Arg::Out(&mut x)],
                     w,
                 );
                 if rec[0x15] == 0 {
@@ -550,7 +550,7 @@ pub fn proc_0b<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32) -> u
                     message(&mut Lend::new_ref(env, w), str_at(rec, 0x18));
                 }
                 if k == 0x13 {
-                    env.callwr(0x021C_195C, &mut [Arg::P, Arg::V(t), Arg::V(0)], w);
+                    env.callwr(0x021C_195C, &mut [Arg::PWork(0), Arg::V(t), Arg::V(0)], w);
                 }
                 k = env.callwr(0x021C_56A8, &mut [Arg::V(t), Arg::In(&cursor)], w);
             }
@@ -588,7 +588,7 @@ pub fn proc_0c<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], ra: u32) -> 
     if env.callwr(
         0x021C_27A0,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::V(t),
             Arg::V(a),
             Arg::V(rd32(rec, 4)),
@@ -607,7 +607,7 @@ pub fn proc_0c<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], ra: u32) -> 
     env.callwr(
         0x021C_2910,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::V(t),
             Arg::V(a),
             Arg::V(rd32(rec, 4)),
@@ -676,7 +676,7 @@ pub fn proc_0e<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32) -> u
                 if env.callwr(
                     0x021C_3008,
                     &mut [
-                        Arg::P,
+                        Arg::PWork(0),
                         Arg::V(rec_poke_id(rec)),
                         Arg::V(mon),
                         Arg::V(rd32(rec, 4)),
@@ -875,7 +875,7 @@ pub fn proc_13<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
         return 0;
     }
     message(&mut Lend::new_ref(env, w), str_at(rec, 8));
-    env.callwr(0x021C_2314, &mut [Arg::P, Arg::V(mon)], w);
+    env.callwr(0x021C_2314, &mut [Arg::PWork(0), Arg::V(mon)], w);
     1
 }
 
@@ -973,7 +973,11 @@ fn work_mon_word_call<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], addr:
     if fainted(&mut Lend::new_ref(env, w), mon) {
         return 0;
     }
-    env.callwr(addr, &mut [Arg::P, Arg::V(mon), Arg::V(rd32(rec, 4))], w);
+    env.callwr(
+        addr,
+        &mut [Arg::PWork(0), Arg::V(mon), Arg::V(rd32(rec, 4))],
+        w,
+    );
     1
 }
 
@@ -1040,7 +1044,10 @@ pub fn proc_1a<E: FlowEnv>(env: &mut E, rec: &[u8]) -> u32 {
         let j = ((i >> 3) + 1) as usize;
         let hit = j < rec[4] as usize && (1u8 << (i & 7)) & rec[4 + j] != 0;
         if hit && env.call(0x021C_9888, &mut [Arg::V(rec[7] as u32), Arg::V(i)]) != 0 {
-            env.call(0x021C_4BAC, &mut [Arg::P, Arg::V(i), Arg::V(rec[7] as u32)]);
+            env.call(
+                0x021C_4BAC,
+                &mut [Arg::PWork(0), Arg::V(i), Arg::V(rec[7] as u32)],
+            );
             r = 1;
         }
     }
@@ -1053,7 +1060,7 @@ pub fn proc_1b<E: FlowEnv>(env: &mut E, rec: &[u8]) -> u32 {
     if env.call(
         0x021C_3C60,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::V(rd32(rec, 4)),
             Arg::V(rd32(rec, 8)),
             Arg::V(rec[0xC] as u32),
@@ -1072,7 +1079,7 @@ pub fn proc_1c<E: FlowEnv>(env: &mut E, rec: &[u8]) -> u32 {
     if env.call(0x021E_F8E8, &mut [Arg::V(rd32(rec, 4))]) == 0 {
         return 0;
     }
-    env.call(0x021C_4C50, &mut [Arg::P, Arg::V(rd32(rec, 4))]);
+    env.call(0x021C_4C50, &mut [Arg::PWork(0), Arg::V(rd32(rec, 4))]);
     1
 }
 
@@ -1086,7 +1093,7 @@ pub fn proc_1d<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, rec: &[u8]) -> u32 {
     if rec[4] != 0 {
         if env.callw(
             0x021C_3B8C,
-            &mut [Arg::P, Arg::V(rec[4] as u32), Arg::V(rec[5] as u32)],
+            &mut [Arg::PWork(0), Arg::V(rec[4] as u32), Arg::V(rec[5] as u32)],
             w,
         ) == 0
         {
@@ -1097,7 +1104,7 @@ pub fn proc_1d<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, rec: &[u8]) -> u32 {
         }
         env.callw(
             0x021C_3BB8,
-            &mut [Arg::P, Arg::V(rec[4] as u32), Arg::V(rec[5] as u32)],
+            &mut [Arg::PWork(0), Arg::V(rec[4] as u32), Arg::V(rec[5] as u32)],
             w,
         );
         message(&mut Lend::new(env, w), str_at(rec, 8));
@@ -1252,14 +1259,14 @@ pub fn proc_1f<E: FlowEnv>(
         if cur == 0x67 {
             env.call_l(
                 0x021C_195C,
-                &mut [Arg::P, Arg::V(t), Arg::V(0)],
+                &mut [Arg::PWork(0), Arg::V(t), Arg::V(0)],
                 Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
             );
         }
         if cur == 0x7F {
             env.call_l(
                 0x021C_3FDC,
-                &mut [Arg::P, Arg::V(t)],
+                &mut [Arg::PWork(0), Arg::V(t)],
                 Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
             );
         }
@@ -1319,7 +1326,7 @@ pub fn proc_20<E: FlowEnv>(
     );
     env.call_l(
         0x021C_2250,
-        &mut [Arg::P, Arg::V(t), Arg::V(rd16(rec, 4)), Arg::V(0)],
+        &mut [Arg::PWork(0), Arg::V(t), Arg::V(rd16(rec, 4)), Arg::V(0)],
         Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
     );
     if bit23(rec) {
@@ -1354,7 +1361,7 @@ pub fn proc_20<E: FlowEnv>(
     }
     env.call_l(
         0x021C_195C,
-        &mut [Arg::P, Arg::V(t), Arg::V(0)],
+        &mut [Arg::PWork(0), Arg::V(t), Arg::V(0)],
         Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
     );
     1
@@ -1366,7 +1373,7 @@ pub fn proc_21<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let mon = mon_of(env, w, rec[4] as u32);
     env.callwr(
         0x021C_195C,
-        &mut [Arg::P, Arg::V(mon), Arg::V(rd32(rec, 8))],
+        &mut [Arg::PWork(0), Arg::V(mon), Arg::V(rd32(rec, 8))],
         w,
     );
     1
@@ -1409,7 +1416,7 @@ pub fn proc_22<E: FlowEnv>(
     );
     if env.call_l(
         0x021C_88E4,
-        &mut [Arg::P],
+        &mut [Arg::PWork(0)],
         Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
     ) == 2
     {
@@ -1437,12 +1444,12 @@ pub fn proc_22<E: FlowEnv>(
 pub fn proc_23<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let mon = mon_of(env, w, rec_poke_id(rec));
     if rd32(rec, 4) == 0 {
-        env.callwr(0x021C_60D4, &mut [Arg::P, Arg::V(mon)], w);
+        env.callwr(0x021C_60D4, &mut [Arg::PWork(0), Arg::V(mon)], w);
         message(&mut Lend::new_ref(env, w), str_at(rec, 8));
     }
     env.callwr(
         0x021C_2250,
-        &mut [Arg::P, Arg::V(mon), Arg::V(0), Arg::V(1)],
+        &mut [Arg::PWork(0), Arg::V(mon), Arg::V(0), Arg::V(1)],
         w,
     );
     1
@@ -1478,16 +1485,16 @@ pub fn proc_24<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, rec: &[u8]) -> u32 {
     }
     env.callw(
         0x021C_2250,
-        &mut [Arg::P, Arg::V(b), Arg::V(va), Arg::V(0)],
+        &mut [Arg::PWork(0), Arg::V(b), Arg::V(va), Arg::V(0)],
         w,
     );
     env.callw(
         0x021C_2250,
-        &mut [Arg::P, Arg::V(a), Arg::V(vb), Arg::V(0)],
+        &mut [Arg::PWork(0), Arg::V(a), Arg::V(vb), Arg::V(0)],
         w,
     );
-    env.callw(0x021C_195C, &mut [Arg::P, Arg::V(b), Arg::V(0)], w);
-    env.callw(0x021C_195C, &mut [Arg::P, Arg::V(a), Arg::V(0)], w);
+    env.callw(0x021C_195C, &mut [Arg::PWork(0), Arg::V(b), Arg::V(0)], w);
+    env.callw(0x021C_195C, &mut [Arg::PWork(0), Arg::V(a), Arg::V(0)], w);
     1
 }
 
@@ -1536,7 +1543,7 @@ pub fn proc_26<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     env.callwr(
         0x021C_0780,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::V(mon),
             Arg::V(rec[5] as u32),
             Arg::V(rec[6] as u32),
@@ -1570,30 +1577,42 @@ pub fn proc_27<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], d: &mut [u8]
     env.callwr(0x021C_A0E8, &mut [Arg::V(o), Arg::V(1)], w);
     env.callwr(0x021C_A0F8, &mut [Arg::V(o)], w);
     if env.callwr(0x021C_A108, &mut [Arg::V(o)], w) != 0 {
-        env.callwr(0x021C_5718, &mut [Arg::P], w);
+        env.callwr(0x021C_5718, &mut [Arg::PWork(0)], w);
         return 0;
     }
     let mr = &m[..0x10];
     env.callwr(
         0x021B_F83C,
-        &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o)],
+        &mut [Arg::PWork(0), Arg::In(mr), Arg::V(a), Arg::V(o)],
         w,
     );
     // the original passes `work + 0x1F88` as the last argument of 3d8 / 4ac / c091c
     let f88 = w.mem[0x1F88..].as_ptr() as usize;
     env.callwr(
         0x021B_F3D8,
-        &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o), Arg::PHost(f88)],
+        &mut [
+            Arg::PWork(0),
+            Arg::In(mr),
+            Arg::V(a),
+            Arg::V(o),
+            Arg::PHost(f88),
+        ],
         w,
     );
     env.callwr(
         0x021B_F4AC,
-        &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o), Arg::PHost(f88)],
+        &mut [
+            Arg::PWork(0),
+            Arg::In(mr),
+            Arg::V(a),
+            Arg::V(o),
+            Arg::PHost(f88),
+        ],
         w,
     );
     env.callwr(
         0x021B_F8D4,
-        &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o)],
+        &mut [Arg::PWork(0), Arg::In(mr), Arg::V(a), Arg::V(o)],
         w,
     );
     if env.callwr(0x021C_A118, &mut [Arg::V(o)], w) != 0 {
@@ -1604,7 +1623,7 @@ pub fn proc_27<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], d: &mut [u8]
     env.callwr(0x021B_D1E0, &mut [Arg::Out(&mut d[..6])], w);
     env.callwr(
         0x021B_D200,
-        &mut [Arg::Out(&mut d[..6]), Arg::P, Arg::V(a), Arg::V(o)],
+        &mut [Arg::Out(&mut d[..6]), Arg::PWork(0), Arg::V(a), Arg::V(o)],
         w,
     );
     d[4] = 1;
@@ -1630,7 +1649,7 @@ pub fn proc_27<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], d: &mut [u8]
 /// agrees, `work[0x14] = 5` and 1. Else 0.
 pub fn proc_28<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, rec: &[u8]) -> u32 {
     let mon = mon_of(env, w, rec_poke_id(rec));
-    if env.callw(0x021B_D60C, &mut [Arg::P, Arg::V(mon), Arg::V(1)], w) == 0 {
+    if env.callw(0x021B_D60C, &mut [Arg::PWork(0), Arg::V(mon), Arg::V(1)], w) == 0 {
         return 0;
     }
     w.set_u32_at(0x14, 5);
@@ -1644,10 +1663,10 @@ pub fn proc_28<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, rec: &[u8]) -> u32 {
 pub fn proc_29<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, rec: &[u8]) -> u32 {
     let id = rec[0x4C] as u32;
     let t = mon_of(env, w, id);
-    if env.callw(0x021B_C2B0, &mut [Arg::P], w) != 0 {
+    if env.callw(0x021B_C2B0, &mut [Arg::PWork(0)], w) != 0 {
         return 0;
     }
-    if env.callw(0x021C_8374, &mut [Arg::P, Arg::V(id)], w) != 0 {
+    if env.callw(0x021C_8374, &mut [Arg::PWork(0), Arg::V(id)], w) != 0 {
         return 0;
     }
     if w.u32_at(0x14) != 0 {
@@ -1656,7 +1675,7 @@ pub fn proc_29<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, rec: &[u8]) -> u32 {
     message(&mut Lend::new(env, w), str_at(rec, 4));
     if env.callw(
         0x021B_DD00,
-        &mut [Arg::P, Arg::V(t), Arg::V(rec[0x4D] as u32)],
+        &mut [Arg::PWork(0), Arg::V(t), Arg::V(rec[0x4D] as u32)],
         w,
     ) == 0
     {
@@ -1701,7 +1720,7 @@ pub fn proc_2a<E: FlowEnv>(
     {
         env.call_l(
             0x021C_2CA8,
-            &mut [Arg::P, Arg::V(b)],
+            &mut [Arg::PWork(0), Arg::V(b)],
             Lent::of(None, Some(w), vec![&mut *q, &mut *scratch]),
         );
     }
@@ -1742,7 +1761,7 @@ pub fn proc_2b<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let mon = mon_of(env, w, rec[4] as u32);
     (env.callwr(
         0x021C_1D60,
-        &mut [Arg::P, Arg::V(mon), Arg::V(rec[5] as u32)],
+        &mut [Arg::PWork(0), Arg::V(mon), Arg::V(rec[5] as u32)],
         w,
     ) != 0) as u32
 }
@@ -1789,12 +1808,12 @@ pub fn proc_2c<E: FlowEnv>(
         );
         env.call_l(
             0x021B_D9D4,
-            &mut [Arg::P, Arg::V(c), Arg::V(x), Arg::V(x), Arg::V(1)],
+            &mut [Arg::PWork(0), Arg::V(c), Arg::V(x), Arg::V(x), Arg::V(1)],
             Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
         );
         env.call_l(
             0x021B_DA00,
-            &mut [Arg::P],
+            &mut [Arg::PWork(0)],
             Lent::of(Some(&mut *w), None, vec![&mut *q, &mut *scratch]),
         );
     }
@@ -1843,7 +1862,7 @@ pub fn proc_2e<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     (env.callwr(
         0x021C_3810,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::V(p),
             Arg::V(t),
             Arg::V((rec[7] & 0xF) as u32),
@@ -1859,7 +1878,7 @@ pub fn proc_2e<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
 /// Shared shape of procs 0x2F / 0x31: when core2 `addr(work, rec[4])` agrees, the message at +8
 /// and 1. Else 0.
 fn check_then_message<E: FlowEnv>(env: &mut E, rec: &[u8], addr: u32) -> u32 {
-    if env.call(addr, &mut [Arg::P, Arg::V(rec[4] as u32)]) == 0 {
+    if env.call(addr, &mut [Arg::PWork(0), Arg::V(rec[4] as u32)]) == 0 {
         return 0;
     }
     message(env, str_at(rec, 8));
@@ -1875,7 +1894,7 @@ pub fn proc_2f<E: FlowEnv>(env: &mut E, rec: &[u8]) -> u32 {
 /// C: `FUN_overlay_d_93__021ca394`: HANDEX proc 0x30: whether core2 `d170(work, u16 rec[4])` is
 /// nonzero.
 pub fn proc_30<E: FlowEnv>(env: &mut E, rec: &[u8]) -> u32 {
-    (env.call(0x021B_D170, &mut [Arg::P, Arg::V(rd16(rec, 4))]) != 0) as u32
+    (env.call(0x021B_D170, &mut [Arg::PWork(0), Arg::V(rd16(rec, 4))]) != 0) as u32
 }
 
 /// C: `FUN_overlay_d_93__021ca3ac`: HANDEX proc 0x31: core2 `d1b0(work, rec[4])` -> the message
@@ -1911,13 +1930,13 @@ pub fn proc_32<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     let (i, j) = ((i as u32) & 0xFF, (j as u32) & 0xFF);
     env.callwr(
         0x021B_D43C,
-        &mut [Arg::P, Arg::V(c), Arg::V(i), Arg::V(j), Arg::V(0)],
+        &mut [Arg::PWork(0), Arg::V(c), Arg::V(i), Arg::V(j), Arg::V(0)],
         w,
     );
     message(&mut Lend::new_ref(env, w), str_at(rec, 8));
     env.callwr(
         0x021B_D4E4,
-        &mut [Arg::P, Arg::V(c), Arg::V(i), Arg::V(j)],
+        &mut [Arg::PWork(0), Arg::V(c), Arg::V(i), Arg::V(j)],
         w,
     );
     1
@@ -2105,7 +2124,11 @@ pub fn proc_35<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], q: &mut [u8]
     let mut ids = [0u8; 4];
     let n = env.call_l(
         0x021C_7F68,
-        &mut [Arg::P, Arg::V((0x800 | pos) & 0xFFFF), Arg::Out(&mut ids)],
+        &mut [
+            Arg::PWork(0),
+            Arg::V((0x800 | pos) & 0xFFFF),
+            Arg::Out(&mut ids),
+        ],
         Lent::of(None, Some(w), vec![&mut *q]),
     );
     let mut i = 0u32;
@@ -2121,7 +2144,7 @@ pub fn proc_35<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], q: &mut [u8]
         {
             env.call_l(
                 0x021C_5418,
-                &mut [Arg::P, Arg::V(mon), Arg::V(3)],
+                &mut [Arg::PWork(0), Arg::V(mon), Arg::V(3)],
                 Lent::of(None, Some(w), vec![&mut *q]),
             );
             let s = env.call_l(
@@ -2165,7 +2188,7 @@ pub fn proc_35<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], q: &mut [u8]
             {
                 env.call_l(
                     0x021C_5620,
-                    &mut [Arg::P, Arg::V(mon), Arg::V(st), Arg::V(0)],
+                    &mut [Arg::PWork(0), Arg::V(mon), Arg::V(st), Arg::V(0)],
                     Lent::of(None, Some(w), vec![&mut *q]),
                 );
                 any = true;
@@ -2188,7 +2211,7 @@ pub fn proc_36<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8]) -> u32 {
     }
     if env.callwr(
         0x021C_5418,
-        &mut [Arg::P, Arg::V(mon), Arg::V(rd32(rec, 8))],
+        &mut [Arg::PWork(0), Arg::V(mon), Arg::V(rd32(rec, 8))],
         w,
     ) == 0
     {
@@ -2208,7 +2231,7 @@ pub fn proc_37<E: FlowEnv>(env: &mut E, rec: &[u8], q: &mut [u8], scratch: &mut 
     env.call_l(
         0x021C_70E4,
         &mut [
-            Arg::P,
+            Arg::PWork(0),
             Arg::V(rd16(rec, 4)),
             Arg::V(rec[6] as u32),
             Arg::V(rec[7] as u32),
@@ -2322,12 +2345,21 @@ pub fn message<E: FlowEnv>(env: &mut E, s: &[u8]) -> u32 {
         _ => return 0,
     };
     if h & 0x8000 == 0 {
-        env.call(plain, &mut [Arg::P, Arg::V(id), Arg::V(n), Arg::In(args)]);
+        env.call(
+            plain,
+            &mut [Arg::PWork(0), Arg::V(id), Arg::V(n), Arg::In(args)],
+        );
     } else {
         let extra = rd32(s, 0x20) & 0xFFFF;
         env.call(
             with_extra,
-            &mut [Arg::P, Arg::V(id), Arg::V(extra), Arg::V(n), Arg::In(args)],
+            &mut [
+                Arg::PWork(0),
+                Arg::V(id),
+                Arg::V(extra),
+                Arg::V(n),
+                Arg::In(args),
+            ],
         );
     }
     1
@@ -2353,7 +2385,7 @@ pub fn rule_dispatch<E: FlowEnv>(
     let rule = env.callw(0x021B_8588, &mut [Arg::V(w.u32_at(4))], w);
     let mut extra = 0x1F;
     if rd32(rec, 0x10) & 1 == 0 {
-        extra = env.callw(0x021C_B214, &mut [Arg::P, Arg::V(a), Arg::V(ra)], w);
+        extra = env.callw(0x021C_B214, &mut [Arg::PWork(0), Arg::V(a), Arg::V(ra)], w);
     }
     env.callw(0x021C_A8C8, &mut [Arg::V(s)], w);
     w.set_u8_at(0x77F, 6);
@@ -2361,7 +2393,7 @@ pub fn rule_dispatch<E: FlowEnv>(
         1 => env.callw(
             0x021C_AA58,
             &mut [
-                Arg::P,
+                Arg::PWork(0),
                 Arg::V(a),
                 Arg::V(b),
                 Arg::V(ra),
@@ -2374,7 +2406,7 @@ pub fn rule_dispatch<E: FlowEnv>(
         2 => env.callw(
             0x021C_ACF4,
             &mut [
-                Arg::P,
+                Arg::PWork(0),
                 Arg::V(a),
                 Arg::V(b),
                 Arg::V(ra),
@@ -2388,7 +2420,7 @@ pub fn rule_dispatch<E: FlowEnv>(
         _ => env.callw(
             0x021C_A8F8,
             &mut [
-                Arg::P,
+                Arg::PWork(0),
                 Arg::V(a),
                 Arg::V(b),
                 Arg::V(ra),
@@ -2412,7 +2444,7 @@ pub fn rule_dispatch<E: FlowEnv>(
         if env.callw(
             0x021C_AFD8,
             &mut [
-                Arg::P,
+                Arg::PWork(0),
                 Arg::V(rule),
                 Arg::V(a),
                 Arg::V(ra),

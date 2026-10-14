@@ -1455,7 +1455,7 @@ fn 021638cc ret=u32 inputs=400
   stub 0216d91c force ret=pick:0/1/2/3 args=v  # MMDL size x (u8)
   stub 0216d924 force ret=pick:0/1/2/3 args=v  # MMDL size z (u8)
   stub 0216dcb4 force ret=pick:0/1 args=v  # MMDL +0 & 0x400
-  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,p  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
+  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,ptr  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
   stub 0218daec force ret=pick:0/1 args=v,in:12,outm:16:0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0xFF/0x1F/0/0x80  # map height / attribute query (fsys, &pos, &out); Z22: height +0xC = 0..0x1FFF or 0x80000000.. (|pos.y - h| meets the 0x14000 threshold)
   stub 0218dc04 force ret=pick:0/1 args=v,in:12  # map bound / hit test (fsys, &pos)
   stub 021ab0f0 force ret=u32 args=v  # attribute value of an attribute
@@ -1511,7 +1511,7 @@ fn 02163994 ret=u32 inputs=100
   stub 0216d91c force ret=pick:0/1/2/3 args=v  # MMDL size x (u8)
   stub 0216d924 force ret=pick:0/1/2/3 args=v  # MMDL size z (u8)
   stub 0216dcb4 force ret=pick:0/1 args=v  # MMDL +0 & 0x400
-  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,p  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
+  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,ptr  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
   stub 0218daec force ret=pick:0/1 args=v,in:12,out:16  # map height / attribute query (fsys, &pos, &out)
   stub 0218dc04 force ret=pick:0/1 args=v,in:12  # map bound / hit test (fsys, &pos)
   stub 021ab0f0 force ret=u32 args=v  # attribute value of an attribute
@@ -1567,7 +1567,7 @@ fn 021639c0 ret=u32 inputs=100
   stub 0216d91c force ret=pick:0/1/2/3 args=v  # MMDL size x (u8)
   stub 0216d924 force ret=pick:0/1/2/3 args=v  # MMDL size z (u8)
   stub 0216dcb4 force ret=pick:0/1 args=v  # MMDL +0 & 0x400
-  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,p  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
+  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,ptr  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
   stub 0218daec force ret=pick:0/1 args=v,in:12,out:16  # map height / attribute query (fsys, &pos, &out)
   stub 0218dc04 force ret=pick:0/1 args=v,in:12  # map bound / hit test (fsys, &pos)
   stub 021ab0f0 force ret=u32 args=v  # attribute value of an attribute
@@ -1675,7 +1675,7 @@ fn 02163bac ret=u32 inputs=100
   stub 0216d86c force ret=pick:0/1/2/3/0xFFFFFFFF args=v  # MMDL gz
   stub 0216d91c force ret=pick:0/1/2/3 args=v  # MMDL size x (u8)
   stub 0216d924 force ret=pick:0/1/2/3 args=v  # MMDL size z (u8)
-  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,p  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
+  stub 0216dd1c force seq ret=pick:0/1 args=v,outp:work:0x100:2,ptr  # MMDL iterator (sys, &m, &i): MMDL work+0x100 or +0x104
 
 # 02163C04(m, x, z, old) -> bool: (x, z) inside the footprint at the grid, or (old == 1) at the old grid
 fn 02163c04 ret=u32 inputs=300

@@ -60,6 +60,11 @@ pub enum Arg<'a> {
     /// A pass-through pointer whose value the caller knows (B16): the stubs treat it exactly like
     /// [`Arg::P`]; the battle integration uses the address.
     PAt(u32),
+    /// The flow work (`SvFlowWork`) plus a byte offset (B18b), for a port that passes the work
+    /// pointer through without holding it: at a `ptr` stub argument the testkit logs the work
+    /// image's address + offset (`arg work` callees); the battle integration passes its flow
+    /// work's address + offset.
+    PWork(u32),
 }
 
 /// A pointer a port only passes through (B18), kept as a value so it can be handed down: the

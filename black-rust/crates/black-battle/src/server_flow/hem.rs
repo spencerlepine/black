@@ -87,7 +87,7 @@ pub fn handex_push_exec<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, waddr: u32,
 /// frees relative to address 0; callers never do that).
 pub fn handex_pop<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, waddr: u32, rec: u32) {
     let addr = if rec == 0 { 0 } else { waddr.wrapping_add(rec) };
-    env.callw(0x021C_8918, &mut [Arg::P, Arg::V(addr)], w);
+    env.callw(0x021C_8918, &mut [Arg::PWork(0), Arg::V(addr)], w);
     free_last_record(
         &mut w.mem[HANDEX_MGR..],
         rec.wrapping_sub(HANDEX_MGR as u32),
