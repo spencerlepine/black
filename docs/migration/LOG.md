@@ -152,3 +152,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14** — Merged S5b (497aac8; 16 save blocks / 217 fns). Told F13 to reuse black_storage::daycare (block 50) instead of a second daycare model.
 
 - **2026-10-14 ~14:15Z** — Usage ORANGE 77% → DRAIN (this window: 5 Opus-heavy agents, ~0.6–0.9%/min). Handler modules (abilities/items/moves/effects) green on main after B18.
+
+- **2026-10-14** — Human: concurrency cap lowered from 5 to 3 workers (more than 3 maxes out the laptop CPU); session protocol rule 7 updated. The 4 workers already running (F5b, F13, B18b, B19) finish under DRAIN; no new spawns until fewer than 3 run.

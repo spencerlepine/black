@@ -24,5 +24,5 @@ _2026-10-14T14:14:21Z, commit 497aac8, `python3 -I tools/progress.py`._
 - **Next:** merge as workers report; then F2b, F3b, F6b, U0b, F14, F11.
 - **Blocked:** none. B16 flake: B17 fixed `ro_snap` keying; 3/3 full black-battle suites green on main after merge (root cause not proven, OPEN.md).
 - **Usage guard:** DRAINING (ORANGE 77%) since ~14:15Z — no new spawns; F5b, F13, B18b, B19 finish and merge; then pause until resume_at 17:25Z (resume_cron "25 10 14 10 *").
-- **Disk:** 39 GB free (the human cleared space 2026-10-14); 5 slots usable.
+- **Disk:** 39 GB free (the human cleared space 2026-10-14); worker cap 3 (human, 2026-10-14: CPU).
 - **RE tooling:** Ghidra headless + rizin + rea (MCP) via `tools/re/` (`ENV.md` "RE workflow"); `tools/doctor.sh` green on macOS. Sets battle, field, bag (ov70), party-summary (ov90/91/131/134) decompiled under /tmp/blk/re/.
