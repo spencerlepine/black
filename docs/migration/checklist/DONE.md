@@ -122,3 +122,5 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [x] F5 — F — PAR — Wild encounters: encounter rates, slots, shaking grass/dust/ripples, repel, catch-rate formula (in battle). — (144e63c)
 - [x] F13 — F — PAR — Daycare: sodateya.c (ov21 0x021C31D4, 83 fns) + scrcmd_sodateya (18). — (5db13e0)
 - [x] B18b — B — PAR — harness: extend bare_p_lint/`ptr` to the fn-area specs of the other crates (black-text wordset 9 stub args, black-script scrcmd_c03cen… — (e86606a)
+- [x] B19b — B — PAR — (= V-0033, low; validator confirmed the widened spec MATCHes 41778e03be68b664 at 1000 inputs) harness: events.spec declares the pass-t… — (e99e227)
+- [x] F6 — F — PAR — Warps, doors, map transitions, triggers. — (dd1a031)

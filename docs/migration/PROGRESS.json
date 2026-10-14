@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-14T19:18:14Z",
- "commit": "d708ead",
+ "generated": "2026-10-14T19:54:11Z",
+ "commit": "aaa171b",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -8,16 +8,16 @@
   "U": 0.19,
   "HR": 0.125
  },
- "overall": 0.425,
- "overall_percent": 43,
+ "overall": 0.4356,
+ "overall_percent": 44,
  "logic": {
-  "ported": 5915,
+  "ported": 6105,
   "in_scope": 10087.4,
-  "ratio": 0.5864,
+  "ratio": 0.6052,
   "ported_by_crate": {
    "black-battle": 2125,
    "black-core": 26,
-   "black-field": 1952,
+   "black-field": 2142,
    "black-pokemon": 186,
    "black-script": 1012,
    "black-storage": 562,
@@ -1053,6 +1053,14 @@
     "set": "field",
     "fns": 43
    },
+   "crates/black-field/src/field_task.rs": {
+    "set": "field",
+    "fns": 19
+   },
+   "crates/black-field/src/field_tasks.rs": {
+    "set": "field",
+    "fns": 39
+   },
    "crates/black-field/src/fieldmap.rs": {
     "set": "field",
     "fns": 98
@@ -1086,6 +1094,18 @@
     "fns": 68
    },
    "crates/black-field/src/map_matrix.rs": {
+    "set": "field",
+    "fns": 33
+   },
+   "crates/black-field/src/mapchange_new.rs": {
+    "set": "field",
+    "fns": 24
+   },
+   "crates/black-field/src/mapchange_proc.rs": {
+    "set": "field",
+    "fns": 29
+   },
+   "crates/black-field/src/mapchange_zone.rs": {
     "set": "field",
     "fns": 33
    },
@@ -1140,6 +1160,10 @@
    "crates/black-field/src/player_grid.rs": {
     "set": "field",
     "fns": 97
+   },
+   "crates/black-field/src/proclink.rs": {
+    "set": "field",
+    "fns": 46
    },
    "crates/black-field/src/symbol_map.rs": {
     "set": "field",

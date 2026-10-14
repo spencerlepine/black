@@ -170,3 +170,11 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14** — Merged B18b (e86606a + d708ead; coordinator committed + started the rebase, the worker resolved the core2 conflict with B19 and fixed 14 lint sites in S5b specs). Full verification of main (all svflow, handlers, battle diff, every fn area) running; B19b held until it finishes (CPU).
 
 - **2026-10-14** — Full verification of main after B18b: gate, 22 svflow areas, 4 handler modules, 4-battle Unicorn diff and every fn area (145 MATCH, 0 fail), check-force/symbols green.
+
+- **2026-10-14** — Merged F6b (event_mapchange.c 86/86; rebased onto the B18b lint, its 3 areas load and match). F6 done.
+
+- **2026-10-14** — Spawned F12 (Opus, SEQ: headless field integration, modelled on B16/B19).
+
+- **2026-10-14** — Merged F6b (F6 done) and B19b (V-0033 closed). Spawned F11 (Opus).
+
+- **2026-10-14** — Merged F14 (field_task + proclink, 104/104; README union conflicts). Proclink event proc in row 10.21 → F14b. Spawned F3b.
