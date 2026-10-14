@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-14T08:34:52Z",
- "commit": "155d709",
+ "generated": "2026-10-14T08:58:36Z",
+ "commit": "19e0fd0",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -8,19 +8,19 @@
   "U": 0.19,
   "HR": 0.125
  },
- "overall": 0.3639,
+ "overall": 0.3646,
  "overall_percent": 36,
  "logic": {
-  "ported": 4983,
+  "ported": 4996,
   "in_scope": 10087.4,
-  "ratio": 0.494,
+  "ratio": 0.4953,
   "ported_by_crate": {
    "black-battle": 2125,
    "black-core": 26,
    "black-field": 1712,
    "black-pokemon": 109,
    "black-script": 868,
-   "black-storage": 85,
+   "black-storage": 98,
    "black-text": 61
   },
   "labelled_fns_by_scope": {
@@ -1268,6 +1268,10 @@
    "crates/black-storage/src/box_data.rs": {
     "set": "field",
     "fns": 33
+   },
+   "crates/black-storage/src/item.rs": {
+    "set": "field",
+    "fns": 13
    },
    "crates/black-storage/src/party.rs": {
     "set": "field",

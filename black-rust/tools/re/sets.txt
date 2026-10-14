@@ -1,2 +1,4 @@
 battle main 93 94 95 96
 field main 10 11 18 20 21
+bag main 10 11 70
+party-summary main 10 11 90 91 131 134

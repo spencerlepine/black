@@ -106,3 +106,4 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [x] F9 — F — PAR — Text engine (black-text): string buffers, control codes, variable/word insertion, word wrap, text speed.
 - [x] P3 — P — PAR — EXP curves, level-up, EXP gain formula. — (155d709)
 - [x] P6 — P — PAR — Nature, gender, shininess, ability slot, PID/IV generation. — (eac2678)
+- [x] V-0027 — F — PAR — black-script: zero divisor panics in 3 ports (V-0027 scrcmd_misc21 021d2d7c `event_shake` frames=W+0x10, V-0028 scrcmd_c03center 021b5… — (19e0fd0)
