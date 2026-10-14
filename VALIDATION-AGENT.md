@@ -468,3 +468,5 @@ Other first lines: `BLOCKED: environment — <what>` (nothing reviewed; CSV unto
 - Finding IDs are global and never reused, even after old findings are deleted from VALIDATION.md: take the next number after the highest V-NNNN in `git log --all -p -- validation/VALIDATION.md` (V-0020 was the last as of 2026-10-13). Don't prune COMMITS.csv rows.
 - "Panics" marked UNVERIFIED in ports (`line_test` dir>3, task-state table, `enc_pokeset` slot-pick mode, acmd table indexes) trigger only on indices past ROM tables; don't file them unless the spec can actually draw such an input or the original handles the case (R-20261013-1528).
 - A full check-fn sweep takes ~30 min (`black-field/personal` ~280 s, `evolution` ~200 s); budget the 45-minute cap accordingly.
+- Never stop your own runs with an account-wide `pkill -f ...`: workers run the same check scripts concurrently and it kills theirs too (R-20261014-2233). Kill only the PIDs you started (`$!` / your own process group), or let the run finish.
+- The worker cap is 3 including you (CPU, human 2026-10-14): use `JOBS=4` and `CARGO_BUILD_JOBS=4`; `black-storage/item_use` alone takes ~13 min at its normal input count.
