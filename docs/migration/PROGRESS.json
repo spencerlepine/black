@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-14T09:57:28Z",
- "commit": "3b2678a",
+ "generated": "2026-10-14T10:10:37Z",
+ "commit": "38c1ac0",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -8,19 +8,19 @@
   "U": 0.19,
   "HR": 0.125
  },
- "overall": 0.3835,
- "overall_percent": 38,
+ "overall": 0.3962,
+ "overall_percent": 40,
  "logic": {
-  "ported": 5335,
+  "ported": 5565,
   "in_scope": 10087.4,
-  "ratio": 0.5289,
+  "ratio": 0.5517,
   "ported_by_crate": {
    "black-battle": 2125,
    "black-core": 26,
    "black-field": 1869,
    "black-pokemon": 148,
    "black-script": 1011,
-   "black-storage": 98,
+   "black-storage": 328,
    "black-text": 61
   },
   "labelled_fns_by_scope": {
@@ -1269,17 +1269,65 @@
     "set": "field",
     "fns": 26
    },
+   "crates/black-storage/src/battle_examination.rs": {
+    "set": "field",
+    "fns": 7
+   },
+   "crates/black-storage/src/battle_rec.rs": {
+    "set": "field",
+    "fns": 12
+   },
    "crates/black-storage/src/box_data.rs": {
     "set": "field",
     "fns": 33
+   },
+   "crates/black-storage/src/bsubway.rs": {
+    "set": "field",
+    "fns": 39
+   },
+   "crates/black-storage/src/config.rs": {
+    "set": "field",
+    "fns": 17
    },
    "crates/black-storage/src/item.rs": {
     "set": "field",
     "fns": 13
    },
+   "crates/black-storage/src/mail.rs": {
+    "set": "field",
+    "fns": 26
+   },
+   "crates/black-storage/src/misc.rs": {
+    "set": "field",
+    "fns": 47
+   },
+   "crates/black-storage/src/mystatus.rs": {
+    "set": "field",
+    "fns": 21
+   },
    "crates/black-storage/src/party.rs": {
     "set": "field",
     "fns": 26
+   },
+   "crates/black-storage/src/playtime.rs": {
+    "set": "field",
+    "fns": 14
+   },
+   "crates/black-storage/src/regulation.rs": {
+    "set": "field",
+    "fns": 20
+   },
+   "crates/black-storage/src/save_control.rs": {
+    "set": "field",
+    "fns": 3
+   },
+   "crates/black-storage/src/save_info.rs": {
+    "set": "field",
+    "fns": 14
+   },
+   "crates/black-storage/src/symbol_save.rs": {
+    "set": "field",
+    "fns": 10
    },
    "crates/black-text/src/layout.rs": {
     "set": "field",
