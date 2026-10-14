@@ -36,6 +36,7 @@ pub mod mvproc3b;
 pub mod mvproc3c;
 pub mod mvproc3d;
 pub mod namipoke;
+pub mod ov63_event;
 pub mod player;
 pub mod player_core;
 pub mod player_event;

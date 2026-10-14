@@ -1321,3 +1321,18 @@ Mutation spot check (`check-fn.sh --fn`, reverted; `/tmp/blk/out-F4bp2/mut.py`):
 (leg + 1), `steps_busy` `<` -> `<=`, `partner_due` mask 0x1808 -> 0x1800, `wall_step` hand switch not stored, `fx_tile` bias dropped).
 The survivor (`ev_look_spin` short wait for types 0xF..0x11 instead of 0xF / 0x10) was a spec gap; F4b-spec4 widened the
 `0219B75C` event-type picks to 0xF / 0x10 / 5 / 0 / 0x11 / 0xE / 0x12 and it is now killed (mvproc3c 6820c2c1611ddc38).
+
+## F13: `ov63_event` (3/3)
+
+The tail of F1's row 21.68 (`sodateya.c`, overlay 21 `0x021C46F8-0x021C47AE`) is not day care code (the day care is
+`black_pokemon::daycare`; the field-skill commands `0x021C457C-0x021C46F7` are black-script `scrcmd_misc21b`): a GMEVENT that
+loads overlay 0x3F (63) around a task that overlay runs on a field OBJ (role UNVERIFIED). Spec
+`tools/rom-diff/specs/black-field/ov63_event.spec`, `tools/check-fn.sh black-field ov63_event --per-function`: **3/3, area hash
+84bfb8097dbb5c49**, coverage 100% (the trailing nop aside), `--strict-callees` / `--order-check` clean; mutation spot check 3/3
+caught (task flag 1 -> 0, task word + 1, proc result 1 -> 2).
+
+| C | Rust |
+|---|------|
+| `FUN_021C46F8(gs, fm, x)` | `ov63_event::player_event_new` (the player's OBJ, flag 1; caller `fieldmap_event::push_down_event`) |
+| `FUN_021C474C(gs, fm, obj)` | `ov63_event::obj_event_new` (flag 0; script command 122) |
+| `FUN_021C4788(event, seq, work)` | `ov63_event::proc_` (task done: free it, unload overlay 63, end) |

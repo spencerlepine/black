@@ -148,3 +148,50 @@ of the driver); Pokemon are `u32` handles behind the hooks. `EggHooks::learnset_
 the differential test moves it because a random stub buffer never ends. `FUN_021C3898` (the day care
 struct reader that calls the driver) and the rest of `sodateya.c` are F13. Hatching (the step counter
 and the hatch scene) is in no decompiled overlay set (main, 10, 11, 18, 20, 21, battle set): not found.
+
+## F13: day care (`daycare.rs`)
+
+`sodateya.c` (overlay 21, `0x021C31D4-0x021C38F4`, 29 functions) plus the block getter `FUN_0200BDB0` (main ARM9).
+Same crate as the egg generator (P7): the day care is Pokemon logic (EXP, moves, compatibility, egg roll) over a
+small save block, not field state; the field only owns the object pointer (`FUN_02188D50(field map)`) and calls
+`daycare::step` from its step hook (`hatch::egg_step`'s `daycare_step` hook). Verified per function in the
+`field` set: `tools/check-fn.sh black-pokemon daycare --per-function` (spec
+`tools/rom-diff/specs/black-pokemon/daycare.spec`), **30/30, area hash a72e525e966a7232**; coverage 100% of the
+instructions of every function (nops / literal pools aside), `--strict-callees` and `--order-check` clean.
+
+The save block (block 50, 0x1CC bytes: two 0xE4-byte slots `+0` occupied / `+4` party Pokemon / `+0xE0` EXP
+gained, `+0x1C8` egg flag) and its accessors `0x0200BC10-0x0200BDA0` are `black_storage::daycare` (S5b).
+black-storage depends on this crate, so the overlay code reaches the block through `DaycareHooks::save_*`
+(one per accessor, named after the `black_storage::daycare::Daycare` methods: `save_mon` = `mon` / `FUN_0200BC2C`,
+`save_put` = `put`, `save_take` = `take`, `save_count`, `save_occupied`, `save_exp`, `save_swap`, `save_add_exp`,
+`save_egg` / `save_set_egg` / `save_clear_egg`); the game's hook impl calls those methods. The object
+(`FUN_021C31D4`, 0x10 bytes) is `daycare::DaycareObj`: `+0` u16 heap, `+4` field map, `+8` the save block handle,
+`+0xC` u16 egg-roll counter.
+
+| C | Rust |
+|---|------|
+| `FUN_0200BDB0` | `save_block` (`FUN_020071CC(save data, 0x32)`) |
+| `FUN_021C31D4` / `31FC` | `create` / `delete` |
+| `FUN_021C3204` / `3248` / `3250` | `deposit` / `restore_pp` (veneer to `0201B9F0`) / `reset_form` (Shaymin -> form 0) |
+| `FUN_021C3270` / `32BC` / `36B0` | `withdraw` / `register_dex` / `compact` |
+| `FUN_021C3530` / `360C` / `3670` | `apply_exp` (day care EXP, capped at level 100, level-up moves) / `learn_move` / `knows_move` |
+| `FUN_021C3378` / `385C` | `step` (the field step hook's day care step: 1 EXP per step) / `egg_roll` (every 16 steps: `rand(1600) < compatibility`) |
+| `FUN_021C34C4` / `36EC` / `37F8` | `compatibility` / `compat_pair` (egg groups, Ditto, genders) / `compat_score` (20 / 50 / 70) |
+| `FUN_021C32F4` / `335C` / `3898` | `take_egg` / `refuse_egg` / `make_egg` (calls `egg::generate`, place 0xEA62) |
+| `FUN_021C33A4` / `33E0` | `set_egg_var` / `clear_egg_var` (event var 0x4139: egg waiting and party not full) |
+| `FUN_021C3400` / `340C` / `34F8` | `egg_ready` / `count` / `slot_mon` |
+| `FUN_021C341C` / `3490` / `34B4` | `level_now` / `levels_gained` / `fee` ((levels + 1) * 100) |
+| `FUN_021C3510` / `38DC` | `sat_add` / `party_changed` |
+
+Deviations: Pokemon, parties, the save block, the field map and game data are `u32` handles. `create` returns the
+allocator's handle with the object value. `DaycareHooks::set_work_var` is `*FUN_020143CC(ev, id) = v`. `apply_exp`
+stops at the end of its 26-pair learnset buffer where the original would read on (a real learnset always ends inside
+it). UNVERIFIED roles (named by address in the hooks): `FUN_0216556C` (overlay 10, called on the egg handover),
+`FUN_02007C34(FUN_02012F98(gd), party)` after a deposit.
+
+Mutation spot check (`check-fn.sh --fn`, reverted): 17 of 17 caught (`compat_score` 70 -> 50, egg roll `<=` -> `<`,
+learn `<` -> `<=`, EXP `min` -> `max`, saturating -> wrapping add, `push_move` without the u16 mask, `set_egg_var`
+`<` -> `<=`, one egg-group pair dropped, `take_egg` free before the party add, `withdraw` compact before the free,
+`level_now` empty answer 1 -> 0, `deposit` count `< 2` -> `< 1`, `deposit` into the party index instead of the count,
+Shaymin species masked, step adds 2, compact swap arguments swapped, egg parents swapped). The Shaymin mask first
+survived (spec gap: the species picks now include 0x101EC / 0x11EC).

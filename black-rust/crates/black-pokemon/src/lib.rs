@@ -3,6 +3,7 @@
 //! Logic crate (D6): no Bevy dependency.
 
 pub mod create;
+pub mod daycare;
 pub mod egg;
 pub mod evolution;
 pub mod exp;
