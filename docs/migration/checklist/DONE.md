@@ -116,3 +116,4 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [x] A10 — A — PAR×N — Sprite converters by category: Pokémon front/back/shiny/icons, trainer sprites, overworld NPC/player sprites, battle UI (HP bars, bo… — (4ab30b3)
 - [x] F8-spec5 — F — black-script **scrcmd_misc10b** 35 fns (e416675c4b51e71b smoke; whole c73e4ed35d2690a6), **scrcmd_misc10c** 37 (d872d9c00c90273f; b9828dcf49… — (ce693de)
 - [x] F8 — F — PAR×N — Script commands (scrcmd\_\*.c), split by command range/file.
+- [x] B18 — B — PAR — (also: AI masks that stop in flow areas, from B17: bits 0/1/4 → core6 021c728c gets a caller-local record buffer via 021c7e14 → core4 …
