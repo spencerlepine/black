@@ -162,3 +162,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14** — Merged F5b (4 field areas, 80/80; README union conflict with F13 resolved). F5 done.
 
 - **2026-10-14 ~15:10Z** — Usage RED 94% → WRAP UP NOW: B18b stopped (staged partial work kept in its worktree; it was mid mutation test, see checklist). USAGE-CHECK cron deleted; PAUSED until 17:25Z (resume cron 9ed16f89). This window: 14 items merged (incl. B19 whole-battle differential, S5b, F13, F5b, B18); 41% → 43%.
+
+- **2026-10-14 17:25Z** — Resumed by the one-shot cron: usage GREEN (session 2%, weekly 38%) → RUN; USAGE-CHECK cron ba633253. Cap 3: resumed B18b (same agent), validator (Opus, 7829fcb..e5f4db7), F6b (Opus).
