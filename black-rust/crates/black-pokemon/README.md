@@ -116,5 +116,13 @@ ability count, RNG; supertrait `PokeToolHooks`). The nature is a stored field (i
 | `FUN_02017C50` / `FUN_02017CC8` | `pid::update_ability_slot` / `pid::update_gender` |
 | `FUN_020179B8` | `pid::set_form` |
 
-`FUN_02017F50` is called from the wrappers through `PokeToolHooks::gender` (as `box_put` id 0x6E does). No
-`pid.spec` is in the repo yet (harness job), so these are unit-tested but not yet recorded in `PORTED`-hash form.
+`FUN_02017F50` is called from the wrappers through `PokeToolHooks::gender` (as `box_put` id 0x6E does). Verified
+by `tools/check-fn.sh black-pokemon pid` (11/11, da143d1b836cda45).
+
+## P3: exp
+
+`exp` (new, `exp.rs`): `FUN_0201854C` `exp::exp_at_level` (EXP a record needs for its current level; species/form/level
+read with the box getter, then `FUN_02018584`), hash 1a566a4812a0b332. Growth lookups are `growth`, level storage
+is `create::recalc`, level-up learnset scan is `create::next_level_up_move`. The battle EXP formula is not in this
+crate: `black-battle` `calc::exp_yield` (0x021D7EB4), `server_flow::events::exp_scale` (0x021CB55C),
+`exp_distribute` (0x021CB2D4), `BattleMon::gain_exp` (0x021D69B8), `exp_for_max_level` (0x021D6B6C).

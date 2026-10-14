@@ -4,6 +4,7 @@
 
 pub mod create;
 pub mod evolution;
+pub mod exp;
 pub mod growth;
 pub mod hooks;
 pub mod icon;
