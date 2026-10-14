@@ -1336,3 +1336,96 @@ caught (task flag 1 -> 0, task word + 1, proc result 1 -> 2).
 | `FUN_021C46F8(gs, fm, x)` | `ov63_event::player_event_new` (the player's OBJ, flag 1; caller `fieldmap_event::push_down_event`) |
 | `FUN_021C474C(gs, fm, obj)` | `ov63_event::obj_event_new` (flag 0; script command 122) |
 | `FUN_021C4788(event, seq, work)` | `ov63_event::proc_` (task done: free it, unload overlay 63, end) |
+## F5b: `move_pokemon` (9/9), `field_skill` (43/43), `symbol_map` (11/11), `event_battle` (17/17): specs + ports
+
+Four new spec areas under `tools/rom-diff/specs/black-field/` (set `field`), all ported and verified with
+`tools/check-fn.sh black-field AREA --per-function`. Closure stubs (a block lists the stubs of its callees and of the callees of
+all its in-area descendants and table targets; with every function of the area treated as ported all blocks run without a fault,
+stray write or unstubbed callee); every out-of-area stub is `force`; `svflow.py AREA --all --strict-callees` (plain and with the
+ports) and `--order-check` are clean.
+
+| area | original | range | fns | coverage (plain / closure) | spec hash (`--all`, plain) | area hash (ported) |
+|---|---|---|---|---|---|---|
+| `move_pokemon` | `move_pokemon.c` (ov10, F1 row 10.19, first part) | `0x0215E440..0x0215E840` | 9 | 409/411 / 409/411 | f89602e3d24eea73 | 54958e640135ce65 |
+| `field_skill` | the field-skill (HM) table code (ov10, row 10.19, second part; no `__FILE__`, name by role) | `0x0215E840..0x0215F168` | 43 | 948/948 / 948/948 | 12ce7cd648f56195 | 79e795047c2a0523 |
+| `symbol_map` | `symbol_map.c` (ov10, row 10.27) minus the 17 script-command functions of black-script `scrcmd_misc10b` | `0x021664CC..0x02166F9C` | 11 (+3 render-only, not specced) | 362/362 / 362/362 | 07994c93bbe854d3 | 07994c93bbe854d3 |
+| `event_battle` | `event_battle.c` after the head (`event_battle_head`, F4a) | `0x0216E954..0x0216F088` | 17 | 724/724 / 724/724 | ebe4da9531d998ec | 6907a408fb29a3c2 |
+
+File bounds: `Heap_AllocDebug` `__FILE__` strings "move_pokemon.c" (0x0217293C, in 0215E440), "symbol_map.c" (0x021729EC, 021664CC),
+"event_battle.c" (0x02172B54, 0216E95C). **F1 row 10.19 is two files**: move_pokemon.c ends at 0x0215E840 (its 9 functions use the
+ENC SAVE roamer records); 0x0215E840..0x0215F168 is the field-skill code (two ROM tables of 11 `{event fn, check fn}` pairs at
+0x021711FC / 0x02171254 and their callees). The `0215E740` loc > 16 branch (2 instructions) is dead with the ROM group table (every
+location index is < 16).
+
+Function lists: bl/blx targets of the whole field set, odd code pointers, the Ghidra index and a Thumb walk from every entry. Ghidra
+misses the `.byte` battle proc `0216EB98` and 11 field-skill functions (they are reached only through the skill tables); false
+entries (data words that decode as `bl`): `0215E4C0`, `0216EE4E`.
+
+### Roamers (move_pokemon, from the code)
+
+* Roamer `i` 0 = species 0x282 (Thundurus), `i` 1 = 0x281 (Tornadus), level 40 (`0215E440`, heap 0x8003): ENC SAVE record fields 4
+  species, 6 level, 9 = 1, 7 = 0, 8 = 1, 2 / 3 / 10 / 5 = PokeParam 0xAC / PID / 0x70 / max HP of a temporary Pokemon built with the
+  player's trainer id; the pokedex "seen" entry; then a first move (`exclude` = 5) and state 1. `0215E580` recreates roamers in state 2.
+* Zone change (`0215E740`, called by encount_st `0215E358`): a roamer that is not hidden hides with 20 % (`02005728(100) < 20`:
+  location 16, zone 0xFFFF); otherwise it moves to a uniform pick among its group's locations other than the current one and
+  `exclude` (`ROAM_GROUPS` = ROM 0x021711A8, 5 groups of 3 / 4 locations, group = `FUN_020113D8(season)`, an RTC-based index);
+  the zone is `encount_st::SWARM_ZONES[loc]` (that table is the roamer location -> zone table, 0x021711C6).
+* After a wild battle (`0215E5B0`, from event_battle `0216EFF0`) against a roamer (`0215E804`: active record with that species):
+  result 1 / 2 with 0 HP -> record cleared, hidden, state 2 (respawns); result 5 (caught) -> cleared, hidden, state 3; otherwise HP
+  and status are written back and all roamers move (`0215E364`); against any other Pokemon all roamers move with 30 %.
+* `0215E6A8(gd, zone)` -> 6 / 7 when roamer 0 / 1 is active in `zone`, else 0xFFFF; `0215E6F8` -> any roamer active.
+
+### Field skills (field_skill)
+
+* SKILL CTX (0x14, `0215E840(fm, ctx)`): `+0 u16` zone, `+2 u16` usable flags, `+4` player form, `+8` GAMESYS, `+0xC` front OBJ,
+  `+0x10` FIELDMAP. Flag bit k = skill k (k 0 front OBJ code 0x6C; 1 / 2 `021A3504` / `021A3524` on the front tile; 3 a front OBJ
+  that `0216E5FC` accepts with nothing at its position, or the rect (40, 26) +-(1, 2) with flag 0x112 clear; 4 + 6 `02013C40(zone)
+  == 1`; 5 bit 0 of `02014470` of the GAMEDATA `+0x1B8` object, or the rect (14, 26) +-(1, 2) with flag 0x113 clear (the rects only
+  where `02013FFC(zone) != 0`); 7 `02013C50(zone) == 1`; 10 `021CD440(fm) == 1`; 8 + 9 set when `02013E04(zone) != 0`, otherwise
+  every flag is cleared; all cleared when `02012B70(gd) == 1`).
+* `0215EA14(k, ctx)`: the check fn of skill k (0 = usable; 1 when the bit is clear; skill 1 answers 4 / 1 in player forms 2 / 3);
+  `0215EA38(k, param, ctx)`: the event fn -> a GMEVENT (script events with a 0x14-byte work `{0x19740205, front OBJ, GAMESYS,
+  param}` and procs that start scripts 0x2711..0x271E / 0x28E2 / 0x28E3 with the param's id; skill 5 (normal zones) is the light
+  proc `0215ECBC`; skills 4 / 8 / 9 hand off to overlay-21 events 021C8268 / 021C6078 / 021D1C24). `param` = `{u16 a, u16 b, u32 c}`
+  (`0215EA30`).
+
+### Battle event (event_battle)
+
+* BATTLE EVENT work (0x28, `0216F02C`): `+0` GAMESYS, `+4` GAMEDATA, `+8` BATTLE_SETUP, `+0xC` / `+0x10` the overlay-0x5C parameter,
+  `+0x14` end right after the battle, `+0x18` never lost, `+0x1C` record the battle, `+0x20` keep the setup, `+0x24` cookie.
+* The proc `0216EB98` (12 steps): BGM / fade events, the battle overlays 0x5D (`0x021EFDAC`, with the setup) and 0x5C
+  (`0x021B9D94`), overlay 0xE6 load / unload around them, the post-battle processing `0216EFF0` (GAMEDATA `+0x1BC` = result, roamer
+  update `0215E5B0`, beacon notifications `0216EE7C`, record 0x4F for a wild result 4 (`0216EF84`), `0202C83C`), the battle
+  recording (`+0x1C`), then lost (`0216EFDC`: ROM table 0x021725D8 `[result][type]`, type 4 never) -> white-out event
+  `0215F6E8` / end, else the return fade.
+* Integrity checks in steps 6 / 7: ARM entries 021882DC / 02188354 / 02188390 of an overlay outside the field set must answer
+  `!callback` for `(0x0216E681, callback, 0)`; a sum starting at 0x013A1AB5 gains 0x3D1 / 0x5D1 on the first two mismatches and 0x9D on
+  the third match, and a sum not divisible by 0x1933 calls `020056A0(0x02011D35, 0, 0x7F)` and counts the global 0x0214624C. Ported as
+  is (the callees are by address); a real host answers `!callback`.
+* `0216E95C`: the capture-demo battle (species 0x23C level 7 vs 0x1F8 level 2 through `btl_setup` `020135C0`); `0216EAB0`: the
+  `0216E818` battle whose foe is re-initialised from save entry `f` (`02012FD8` record, `0200E740..0200E7B4`).
+
+### Spec conventions (these four areas)
+
+* All blocks `nowork`; objects are `arg buf` arenas; GMEVENT works and allocations are `ptr:argK` answers into an arena.
+* The battle setup's result / type stay inside the ROM table `0x021725D8` (result 0..6, type 0..4); skill ids are 0..12 (a negative
+  id reads before the skill tables: not drawn, the port panics); `0215F118` rects are drawn near the position (`rel`).
+* Stack locals reach stubs as `out:` / `in:` / `outm:` / `outv:` (the OBJ position, the grid x / y / z, the FIELD SITUATION of the
+  capture demo, the 021CD440 word, the 0216749C kind byte); integrity callees answer `pick+u32` lists with the pass value.
+* D9: the game-beacon notifications (X1 0x02165xxx), the intrude / comm record (overlay 11) are force stubs; the three render
+  functions of symbol_map.c (`02166A6C` V-blank fade callback, `02166B0C` start, `02166B2C` stop) are not specced (`RENDER_ONLY`).
+
+ROM tables embedded (tests compare them with `OVY_10.sbin`): `event_battle::{KIND_TABLE, NOTIFY_TABLE, LOST_TABLE}`,
+`move_pokemon::ROAM_GROUPS`, `field_skill::{SKILL_TABLE, SKILL_TABLE_B, RECTS}`, `symbol_map::ZONE_REMAP`.
+
+UNVERIFIED (unreachable for the differential tests): `field_skill::check_fn` / `event_fn` with a negative skill id (the original reads
+before the table); `event_battle::lost` / `kind_of` outside their tables; `move_pokemon::move_roamer` with a group index >= 5.
+
+Deliberate deviations: none in behaviour. `field_skill::in_rect` reads the two ROM rects from `RECTS` when it is given their ROM
+addresses (other addresses: memory).
+
+Mutation spot check (`check-fn.sh --fn`, reverted; `/tmp/blk/f5b/mutate.py`): 19 of 21 caught (battle proc check-3 polarity and
+remainder test, `hp * 2 <= max`, lost type 4, capture-demo level, record 0x4F `== 4`, roamer hide `< 20`, result `- 1 <= 1`, the
+`exclude` filter, roamer index swap, rect `>=`, flag shift `>= 32`, ctx flag 0x40, skill-1 form 3, light flags `& ~1`, symbol kind
+`<= 2`, record bits `& 0x3F`, flag 0xF001 `!= 0`, zone remap key). The 2 survivors are equivalent (sum + 0x9E instead of + 0x9D:
+both leave a nonzero remainder; remap result `& 0xFF`: the results 0x88 / 0xF0 fit a byte).

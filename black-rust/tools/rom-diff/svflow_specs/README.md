@@ -742,3 +742,18 @@ with every function of the area treated as ported: no fault, stray write or unst
   1177/1177 both; bsubway 3848/3884 / 3844/3884 (26 dead compare-tree defaults + 2 dead jump-table instructions; 346's W-null
   early return, 8 instructions, needs two stubs tied together; closure: the streak bound that keeps 021C9E8C's loop finite hides 4
   instructions the plain run covers).
+
+## F5b-spec additions (black-field move_pokemon / field_skill / symbol_map / event_battle)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-field/{move_pokemon,field_skill,symbol_map,event_battle}.spec` (headers), on top of the F5a ones: closure stubs (checked with
+every function of the area treated as ported: no fault, stray write or unstubbed callee); every out-of-area stub is `force`, also between
+the four areas; `--strict-callees` (plain and with the ports) and `--order-check` clean; instruction coverage (own body, plain / closure)
+409/411 (a dead `loc > 16` branch of 0215E740), 948/948, 362/362, 724/724.
+
+* Calls through in-area ROM function tables (the field-skill tables 0x021711FC / 0x02171254, read by 0215F088 / 0215F0B8 and called by
+  0215EA14 / 0215EA38) land on in-area stubs at every table target; the dispatcher's in-area stub answers `pick:` over the target
+  addresses (Thumb bit set). Out-of-area tables (0x021725C0, game_beacon) land on `force` stubs at their targets.
+* Callees whose answer is compared with the bitwise complement of an argument (the integrity checks 021882DC / 02188354 / 02188390 of
+  the battle proc, ARM entries of an overlay outside the field set) answer `pick+u32:` lists with the passing value.
+* `fix ... rel K` places a rect field next to scalar argument K (`0215F118`: rect x / z within -3..+3 of the position).
