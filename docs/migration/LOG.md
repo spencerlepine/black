@@ -138,3 +138,9 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14** — Merged P7b (egg hatching, hatch area 8/8; hatch scene ov215 is UI). Spawned F8g (Sonnet, scrcmd coverage audit).
 
 - **2026-10-14** — Merged F8g (178e34d; coverage test: 609-slot table, 560 ported + 39 D9-excluded + 1 pending). Spawned F8h (cmd 414).
+
+- **2026-10-14** — Merged F8h (5fb9616; cmd 414 specced + ported; F8g had wrongly called it specced, F8h was resumed as a harness+port job in a coordinator-made worktree) → F8 complete (561 ported, 39 D9-excluded). Spawned F5b (Opus).
+
+- **2026-10-14** — Merged A10d (4ab30b3) → A10 done: battle-hud / menus / effects sprite categories (pairings UNVERIFIED, U-phase ui-diff will catch wrong palettes).
+
+- **2026-10-14** — A7 reconciled as done (all 12 tables converted by black_data::extract; parent never ticked). Spawned F13 (Opus).

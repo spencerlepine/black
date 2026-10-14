@@ -112,3 +112,7 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [x] B17 — B — PAR — Rewire the ai1 ports to real pointer values (~150 sites) so the B16 integration runs the Rust AI instead of a stand-in.
 - [x] S4 — S — PAR — Item use effects outside battle (potions, evolution stones, TMs, repels). — (db30f09)
 - [x] P7b — P — PAR — egg hatching (step counter, egg-cycle decrement, hatch conversion): locate the overlay (not in sets.txt; candidates: field step/event …
+- [x] A7 — A — PAR — Game data tables → RON: personal (base stats/types/abilities/EV yield/catch rate/growth), learnsets, evolutions, moves, items, TM/HM, …
+- [x] A10 — A — PAR×N — Sprite converters by category: Pokémon front/back/shiny/icons, trainer sprites, overworld NPC/player sprites, battle UI (HP bars, bo… — (4ab30b3)
+- [x] F8-spec5 — F — black-script **scrcmd_misc10b** 35 fns (e416675c4b51e71b smoke; whole c73e4ed35d2690a6), **scrcmd_misc10c** 37 (d872d9c00c90273f; b9828dcf49… — (ce693de)
+- [x] F8 — F — PAR×N — Script commands (scrcmd\_\*.c), split by command range/file.
