@@ -164,3 +164,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14 ~15:10Z** — Usage RED 94% → WRAP UP NOW: B18b stopped (staged partial work kept in its worktree; it was mid mutation test, see checklist). USAGE-CHECK cron deleted; PAUSED until 17:25Z (resume cron 9ed16f89). This window: 14 items merged (incl. B19 whole-battle differential, S5b, F13, F5b, B18); 41% → 43%.
 
 - **2026-10-14 17:25Z** — Resumed by the one-shot cron: usage GREEN (session 2%, weekly 38%) → RUN; USAGE-CHECK cron ba633253. Cap 3: resumed B18b (same agent), validator (Opus, 7829fcb..e5f4db7), F6b (Opus).
+
+- **2026-10-14** — Validator R-20261014-1725 (7829fcb..e5f4db7): all areas match, B18 audited strictly stronger, 23 porter specs MATCH at 1000 inputs, 4-battle diff equal; V-0033 (low, B19 UNDECLARED_PASS_THROUGH hides r1/r2 of 021cb174/021cb1a4) = B19b. Spawned F14.

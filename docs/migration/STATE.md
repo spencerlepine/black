@@ -16,11 +16,11 @@
 Ported by crate: black-battle 2125, black-field 1952, black-script 1012, black-storage 562, black-pokemon 186, black-text 61, black-core 26.
 UI cases: U1-title 0.07, U1-title-anim 0.12.
 
-_2026-10-14T17:25:59Z, commit e5f4db7, `python3 -I tools/progress.py`._
+_2026-10-14T18:06:49Z, commit 4eef755, `python3 -I tools/progress.py`._
 <!-- progress-table:end -->
 
 - **Milestones so far:** battle handlers complete; btl_server_flow 644; battle_server.s 207/207; btl_client 228/231; battle AI ai1 161/161; B16 first full headless battle through the ports. Pokémon: poke_tool/create/personal/growth/waza/evolution/icon. Storage: party/bag/box. Field: map matrix/fieldmap, player 304/306, fldmmdl 253/253 + acmd 242/242, trainer_eye 38/38, encounter 151/151, eventdata 184/185; script VM + ~700 scrcmd handlers. Text: strbuf/wordset/layout/speed. Assets A0–A12 mostly; Bevy shell G1/G2/G4/G5. Harness: Z19/Z20/Z22/Z23, check-force/symbols/docsize, progress.py, ui-diff with scripted DeSmuME references.
-- **Running (cap 3):** B18b (Opus, resumed in worktree-agent-adae199e185c4775e; check for a leftover mutant first), validator (Opus, 7829fcb..e5f4db7), F6b (Opus, worktree-agent-ae735f1311f730ad5: event_mapchange.c).
+- **Running (cap 3):** B18b (Opus, worktree-agent-adae199e185c4775e: rebased, fixing 14 lint sites from S5b specs), F6b (Opus, worktree-agent-ae735f1311f730ad5: event_mapchange.c), F14 (Opus, worktree-agent-ac0ada1b9ab597a2b: field_task + proclink).
 - **Next:** B19b after B18b (both touch battle specs/testkit); F2b, F3b, F11, F14, U0b, G-phase.
 - **Blocked:** none. B16 flake: B17 fixed `ro_snap` keying; 3/3 full black-battle suites green on main after merge (root cause not proven, OPEN.md).
 - **Usage guard:** RUN (GREEN 2% session / 38% weekly at 17:25Z; USAGE-CHECK cron ba633253).
