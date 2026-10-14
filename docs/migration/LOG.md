@@ -144,3 +144,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14** — Merged A10d (4ab30b3) → A10 done: battle-hud / menus / effects sprite categories (pairings UNVERIFIED, U-phase ui-diff will catch wrong palettes).
 
 - **2026-10-14** — A7 reconciled as done (all 12 tables converted by black_data::extract; parent never ticked). Spawned F13 (Opus).
+
+- **2026-10-14** — Validator R-20261014-1225 (4ea6a37..7829fcb, 48 areas all match): V-0032 (medium, item_use add_pp_ups overflow panic) fixed by the coordinator (wrapping_add + spec boundary 0xFFFFFFFF.., item_use 15/15 71551ccb541ce214).

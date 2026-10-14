@@ -351,7 +351,7 @@ pub fn add_pp_ups<H: ItemUseHooks>(h: &mut H, mon: &mut [u8], slot: u32, ups: u3
     }
     let pp = get(h, mon, fid::PP + slot) & 0xFF;
     let old_max = h.move_max_pp(mv, cur);
-    let sum = cur + ups;
+    let sum = cur.wrapping_add(ups); // the original wraps (`adds` + unsigned `bls`), V-0032
     let new_ups = if sum > 3 { 3 } else { sum & 0xFF };
     let new_max = h.move_max_pp(mv, new_ups);
     let pp = pp.wrapping_add(new_max).wrapping_sub(old_max) & 0xFF;

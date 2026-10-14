@@ -236,7 +236,8 @@ fn 021be874 ret=u32 inputs=2500
   crypt region:mon 0x88 0x54 u32@0 skipif=u16@4&1
   arg region mon
   arg u32 range 0 3
-  arg u32 alt oneof 1 3 || range 0 5 || any
+  # V-0032: the ups count near u32::MAX wraps in `cur + ups` (adds, then unsigned bls)
+  arg u32 alt oneof 1 3 || range 0 5 || oneof 0xFFFFFFFF 0xFFFFFFFE 0xFFFFFFFD || any
   stub 02017988 ret=none args=p,v
   stub 020185c4 ret=none args=p
   stub 02018584 ret=u32 args=v,v,v
