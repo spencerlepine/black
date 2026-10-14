@@ -86,3 +86,28 @@ easy-chat helpers `FUN_0202428C` / `FUN_02024570` (`pms_word.c`) are field write
 `mail::Pms`; index arguments outside an array (a negative mailbox slot, a mode index above 8, a
 bit index past a regulation bit set) panic where the original reads or writes neighbouring
 memory.
+## S4b: item use on a party Pokemon (`item_use`) and bag helpers (`item_bag`)
+
+Logic only (D3). Party-summary overlay 91 (memory set `party-summary`; `tools/check-fn.sh black-storage item_use --per-function`, spec
+`tools/rom-diff/specs/black-storage/item_use.spec`) and bag overlay 70 (set `bag`; `item_bag`, spec `item_bag.spec`). The Pokemon is a
+party record slice read and written through `black_pokemon::poke_tool::{party_get_value, party_set_value}` (run as real code on the ROM
+side); the item through `item::record_param` on a record from `item::load_item_data`. Callees of other areas are the `ItemUseHooks` methods
+(stubbed identically on both sides; only their arguments are checked).
+
+| C | Rust |
+|---|------|
+| `FUN_overlay_d_91__021bbe74` | `item_use::use_kind` (classifier: which party-menu behaviour an item has) |
+| `021bc17c` / `021bc1b4` / `021bc228` | `item_use::needs_move_slot` / `has_param_1b` / `move_prompt_id` |
+| `021bdd78` | `item_use::can_use` (the "can this item be used on this Pokemon" check) |
+| `021be2b4` | `item_use::apply_item` (cures, HP/revive, level up, PP, EVs, friendship) |
+| `021be874` / `021be914` / `021be948` | `item_use::add_pp_ups` / `heal` / `ev_after` |
+| `021be9bc` / `021bea48` | `item_use::friendship_raises` / `apply_friendship` |
+| `021bc24c` / `021bc288` | `item_use::apply_plate_form` / `apply_drive_form` (Arceus plate / Genesect drive form) |
+| `FUN_02017F90` / `FUN_02019D00` | `item_use::status_of` / `item_use::drive_form` |
+| `021b619c` / `021ba1d0` (bag) | `item_bag::sell_price` / `item_bag::is_field_hm_item` |
+
+Deviations: the party screen's work struct is not modelled, the callers pass the pieces the originals read from it (the heap id, the
+move slot). `apply_item` returns 1 only for a change other than friendship (the original returns the same flag; a friendship-only item
+reports 0 but still applies its friendship deltas). UI glue not ported: `021bc1d0` (find the first party member the item can be used
+on, reads the screen work struct), `021b822c` / `021b8280` / `021ba218` / `021b6ec8` / `021b690c` / `021b7f54` and the labels
+`021b6f08` / `021b7146` (bag menu building and state machine), `021bc2c8..` (screen transitions).

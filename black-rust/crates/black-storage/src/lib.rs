@@ -10,6 +10,8 @@ pub mod bsubway;
 pub mod config;
 pub mod hooks;
 pub mod item;
+pub mod item_bag;
+pub mod item_use;
 mod le;
 pub mod mail;
 pub mod misc;
