@@ -5,4 +5,5 @@
 pub mod bag;
 pub mod box_data;
 pub mod hooks;
+pub mod item;
 pub mod party;
