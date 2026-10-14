@@ -394,14 +394,15 @@ V1: if a newly ported function is called by a function in another area through a
 note (once per run, `medium`, area `harness`) that the pair is still verified separately and name
 the caller/callee for the future end-to-end item (B16) — only if not already listed in §8.
 
-**V6 — UI drift (when `$W/black-rust/ui-ref/` has goldens; numbers only).** Re-score every UI case:
-`python3 -I tools/ui-diff/capture_port.py --all` (headless; needs the game to build in `$W`, so skip
-under `GATE_NO_GAME=1` and say so) then `/tmp/blk/venv/bin/python -I tools/ui-diff/compare.py --all`
-in `$W/black-rust`. Compare each case's `score` in `ui-ref/report/<case>.json` with the score recorded in
+**V6 — UI drift (numbers only).** Re-score every UI case in `$W/black-rust`:
+`/tmp/blk/venv-dsm/bin/python -I tools/ui-diff/capture_ref.py --all` (the original, headless in the DeSmuME
+core; cached per case, ~40 s each the first time; cases whose savestate is missing are skipped), then
+`python3 -I tools/ui-diff/capture_port.py --all` (needs the game to build in `$W`, so skip under
+`GATE_NO_GAME=1` and say so), then `/tmp/blk/venv/bin/python -I tools/ui-diff/compare.py --all`. Compare each case's `score` in `ui-ref/report/<case>.json` with the score recorded in
 `$R/docs/migration/PROGRESS.json` (`ui_cases`): a drop > 0.05, or a previously passing case now failing,
 is a `medium` finding (area `ui:<case>`, claim = both scores and the frame/screen with the lowest
-number). **Never open the report images**; the coordinator or a UI worker does that. No goldens → write
-`V6 skipped (no goldens)` in `RUNS.md`.
+number). **Never open the report images**; the coordinator or a UI worker does that. No capturable case → write
+`V6 skipped (no cases)` in `RUNS.md`.
 
 ## 6. Final report (your last message)
 

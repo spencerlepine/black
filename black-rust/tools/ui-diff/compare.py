@@ -367,6 +367,11 @@ def has_goldens(case):
     return os.path.isdir(d) and any(fn.startswith("ref_") and fn.endswith(".png") for fn in os.listdir(d))
 
 
+def has_port_frames(case):
+    d = os.path.join(UI_REF, case["id"])
+    return os.path.isdir(d) and any(fn.startswith("port_") and fn.endswith(".png") for fn in os.listdir(d))
+
+
 def previous_scores():
     try:
         return json.load(open(PROGRESS)).get("ui_cases", {})
@@ -386,6 +391,9 @@ def run(case_ids, regress=False):
     rc = 0
     for c in with_goldens:
         case_dir = os.path.join(UI_REF, c["id"])
+        if not has_port_frames(c):
+            print("SKIP %-24s no port frames (run capture_port.py %s)" % (c["id"], c["id"]))
+            continue
         report, images = compare_case(c, case_dir)
         with open(os.path.join(REPORT_DIR, c["id"] + ".json"), "w") as f:
             json.dump(report, f, indent=1)

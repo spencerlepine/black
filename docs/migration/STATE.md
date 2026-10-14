@@ -14,8 +14,9 @@
 | **overall** | | | | | **37%** |
 
 Ported by crate: black-battle 2125, black-field 1712, black-script 868, black-pokemon 97, black-storage 85, black-text 61, black-core 26.
+UI cases: U1-title 0.07, U1-title-anim 0.12.
 
-_2026-10-14T00:08:04Z, commit 2732e87, `python3 -I tools/progress.py`._
+_2026-10-14T01:06:53Z, commit 18ae32d, `python3 -I tools/progress.py`._
 <!-- progress-table:end -->
 
 - **Milestones so far:** battle handlers complete (abilities 242, items 229, moves 337, ov95 effects 30 + side-effect adder/remover); btl_server_flow 644; battle_server.s 207/207; btl_client 228/231; btl_adapter 45; battle_record 9; battle AI ai1 161/161; B16 first full headless battle through the ports. Pokémon: poke_tool/create/personal/growth/waza 31/evolution/icon verified. Storage: party/bag/box. Field: F0, F1 split, script VM (vm 16 + script_sys 90), scrcmd 15 areas ported (~700 cmd handlers), fieldmap 192/205, fldmmdl 253/253 + acmd 242/242, player 304/306, trainer_eye 38/38, encounter 151/151, eventdata 184/185. Text: strbuf/wordset/layout/speed. Assets A0–A12 mostly; Bevy shell G1/G2/G4/G5. Harness: deterministic CPU state (Z19), PORTED per set (Z20), check-force.py, check-symbols.py, check-docsize.py, progress.py, ui-diff (U0, port side).

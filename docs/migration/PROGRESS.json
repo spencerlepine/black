@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-14T00:08:04Z",
- "commit": "2732e87",
+ "generated": "2026-10-14T01:06:53Z",
+ "commit": "18ae32d",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -1608,5 +1608,16 @@
    }
   ]
  },
- "ui_cases": {}
+ "ui_cases": {
+  "U1-title-anim": {
+   "score": 0.1224,
+   "pass": false,
+   "min_screen_score": 0.0001
+  },
+  "U1-title": {
+   "score": 0.0664,
+   "pass": false,
+   "min_screen_score": 0.062
+  }
+ }
 }

@@ -1,27 +1,28 @@
 # tools/ui-diff — UI comparison testing (Phase G/U guardrail, item U0)
 
 Screens are rewritten in Bevy (D3), so nothing differential checks them the way `tools/rom-diff`
-checks logic. This kit scores the port's frames against reference frames the human captures once
-from the original running in melonDS. All image work is local compute; an agent reads numbers and
-looks at a picture only when a number is red (at most 3 images per item, `MIGRATION-AGENT.md` §5
-"UI screens").
+checks logic. This kit scores the port's frames against reference frames of the original, captured headless by
+running the game in the DeSmuME core with a frame-exact input script (no human, no emulator GUI). All
+image work is local compute; an agent reads numbers and looks at a picture only when a number is red (at
+most 3 images per item, `MIGRATION-AGENT.md` §5 "UI screens").
 
-Goldens are Nintendo IP (D5): they live in `black-rust/ui-ref/` which is **gitignored** except
-`manifest.json`; the gate fails if anything else under `ui-ref/` is tracked. Only hashes, scores
-and recipes are committed.
+Reference frames and savestates are Nintendo IP (D5): they live in `black-rust/ui-ref/` which is
+**gitignored** except `manifest.json`; the gate fails if anything else under `ui-ref/` is tracked. Only
+hashes, scores and scripts are committed, and everything regenerates from them.
 
 ## Files
 
 | file                       | who runs it              | what                                                                                                                                                              |
 | -------------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ui-ref/manifest.json`     | committed                | the cases: id, screen (checklist item), port script + frames, human recipe + frames, regions/weights, optional timing, recorded golden phashes                     |
-| `capture_ref.sh <case>`    | human, once per case     | grabs the melonDS window at the listed frames, crops the two screens, writes `ui-ref/<case>/ref_<frame>.png`, records phashes in the manifest                     |
+| `ui-ref/manifest.json`     | committed                | the cases: id, screen (checklist item), port script + frames, ref script/savestate + frames, regions/weights, optional timing, recorded reference phashes          |
+| `capture_ref.py <case>`    | agent (headless)         | runs the original in the DeSmuME core (py-desmume, `/tmp/blk/venv-dsm`) from power-on or `ui-ref/states/<name>.dst`, presses the `ref.script` buttons, writes `ui-ref/<case>/ref_<frame>.png`, records phashes; `--save-state` makes reusable states |
 | `capture_port.py <case>`   | agent (headless)         | runs `cargo run -p black-game` with `BLACK_SCRIPT`, `BLACK_FADE_FRAMES`, `BLACK_SCREENSHOT_FRAMES`, crops the window capture to `ui-ref/<case>/port_<frame>.png` |
 | `compare.py --case <case>` | agent / validator / gate | scores ref vs port per screen per frame → `ui-ref/report/<case>.json`; on failure also `report/<case>_<frame>.png` (reference \| port \| heat-map, 768 px wide)   |
 | `test_compare.py`          | anyone (venv)            | self-test of the metric: identical = 1.0, 1 px shift > 0.9, black vs busy screen < 0.3                                                                            |
 
 Python: `/tmp/blk/venv/bin/python -I` for `compare.py`/`test_compare.py` (pillow + numpy; `doctor.sh`
-installs them), plain `python3 -I` for `capture_port.py` (stdlib). On Linux without a display
+installs them), `/tmp/blk/venv-dsm/bin/python -I` for `capture_ref.py` (py-desmume needs CPython ≤ 3.13;
+`doctor.sh` builds that venv), plain `python3 -I` for `capture_port.py` (stdlib). On Linux without a display
 `capture_port.py` wraps the game in `xvfb-run -a` (`doctor.sh` checks for it).
 
 ## Metric
@@ -42,8 +43,15 @@ the venv's Python); results are deterministic.
 
 ## Who does what
 
-- **Human** (`HUMAN.md` lists the open requests with recipes): `sh tools/ui-diff/capture_ref.sh <case>`
-  once per case, then commit `ui-ref/manifest.json` (phashes) — never the PNGs.
+- **Reference side** (any agent, once per case, cached): `/tmp/blk/venv-dsm/bin/python -I
+  tools/ui-diff/capture_ref.py <case>` (`--all`, `--force`). The DeSmuME core boots the ROM directly: frame 0
+  is power-on, the health screen needs `A` at ~400, the intro movie runs to the title screen at ~4900
+  (logo top, Reshiram bottom; the layout flips ~5500). States that take long scripts to reach are saved
+  once with `--save-state NAME --script "..." --at N` into `ui-ref/states/` and named by `ref.savestate`.
+  Save type is forced to FLASH 4 Mbit (autodetect leaves the game on a white screen); the core is a
+  process singleton (`reset()` between cases). ~160 frames/s on an M-series Mac. melonDS is not used:
+  version 1.1 has no scripting interface.
+- **Human**: sign-off decisions only (`HUMAN.md`), never captures.
 - **UI worker** (Phase G/U item): edit → `python3 -I tools/ui-diff/capture_port.py <case>` →
   `/tmp/blk/venv/bin/python -I tools/ui-diff/compare.py --case <case>` → read the JSON. Add cases for the
   screen to the manifest (animations as multi-frame cases). Open a failure PNG at most 3 times per item; then
@@ -61,7 +69,7 @@ the venv's Python); results are deterministic.
 ```json
 { "id": "U6-party-open", "screen": "U6",
   "port": {"script": "70:Start,120:Down,150:A", "fade_frames": 16, "frames": [160, 175, 190]},
-  "ref":  {"savestate": "party.mln", "inputs": "Start at 70, Down at 120, A at 150", "frames": [160, 175, 190]},
+  "ref":  {"savestate": "overworld.dst", "script": "70:Start,120:Down,150:A", "hold": 4, "frames": [160, 175, 190]},
   "regions": {"top": "whole", "bottom": {"rect": [0, 0, 256, 192], "weights": [0.3, 0.2, 0.5]}},
   "timing": {"trigger": {"ref": 150, "port": 150}}, "phash": {} }
 ```
