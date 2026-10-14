@@ -8,5 +8,6 @@ pub mod growth;
 pub mod hooks;
 pub mod icon;
 pub mod personal;
+pub mod pid;
 pub mod poke_tool;
 pub mod waza;

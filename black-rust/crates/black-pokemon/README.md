@@ -97,3 +97,24 @@ original; specified, not ported).
 Deliberate deviations: the DISPCNT helpers take the register value as an argument (the original reads
 0x04000000 / 0x04001000 itself); the 712-byte palette table (main 0x0209E474) is a slice argument (asset data,
 not embedded).
+
+## P6: PID, gender, shininess, ability slot (`pid.rs`)
+
+Eleven `poke_tool.c` functions (0x02017C50-0x02018790, 0x0201AF6C), new `PidHooks` trait (personal record/field,
+ability count, RNG; supertrait `PokeToolHooks`). The nature is a stored field (id 0x70, `personal::nature_of`;
+`rand(25)` in `create::init_core`), not derived from the PID, so nothing new is needed for it.
+
+| C | Rust |
+|---|------|
+| `FUN_02017ED8` | `pid::is_shiny` (re-export of `create::is_shiny`) |
+| `FUN_0201AF6C` | `pid::is_fixed_gender` (ratio 0 / 0xFE / 0xFF) |
+| `FUN_02017F50` | `pid::gender_from_ratio` |
+| `FUN_02017EB4` / `FUN_02017F08` | `pid::is_shiny_mon` / `pid::gender_of` |
+| `FUN_020185F8` | `pid::gender_threshold` (low PID byte for a ratio) |
+| `FUN_0201862C` | `pid::pid_without_rng` |
+| `FUN_020186C8` | `pid::random_pid` |
+| `FUN_02017C50` / `FUN_02017CC8` | `pid::update_ability_slot` / `pid::update_gender` |
+| `FUN_020179B8` | `pid::set_form` |
+
+`FUN_02017F50` is called from the wrappers through `PokeToolHooks::gender` (as `box_put` id 0x6E does). No
+`pid.spec` is in the repo yet (harness job), so these are unit-tested but not yet recorded in `PORTED`-hash form.
