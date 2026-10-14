@@ -174,11 +174,12 @@ fn 021c9d30 ret=u8 inputs=200
   stub 02012ebc force ret=u32 args=v
 
 # bsub_store_streak(-, W): n = W+0xE, mode, S: 0200DB08(S, mode, n), 0200DAEC(S, mode, n); 021CA2DC(W, save, 1, n); 0200DB1C(S, mode);
-# 0200DA14(P).
+# 0200DA14(P).  Arena: arg 2.
 fn 021c9d70 ret=none inputs=200
   nowork
   arg u32 any
   arg buf 0x1000
+  arg buf 0x400
   fix arg1 9 u8 alt range 0 9 || any
   stub 021ca2dc ret=none args=v,v
   stub 0200db1c force ret=none args=v,v
@@ -196,7 +197,7 @@ fn 021c9d70 ret=none inputs=200
   stub 0200dc50 force ret=none args=v,v,in:0xB4
   stub 020307b0 force ret=none args=v
   stub 021ca3b4 ret=none args=v,v
-  stub 02030734 force ret=seqptr:arg1:0x300:0x40 args=v,v,v,v,v
+  stub 02030734 force ret=seqptr:arg2:0x100:0x100 args=v,v,v,v,v
   stub 0200d884 force ret=u32 args=v,v,p
   stub 02012934 force ret=u32 args=v
   stub 02017e1c force ret=pick:0/1/2/0x1D/0x20/0x249/0x24A args=v,v,v
@@ -231,7 +232,7 @@ fn 021c9e8c ret=none inputs=200
   stub 021ca2cc ret=pick:0/1/2/7 args=v
   stub 021ca234 ret=u16 args=v
   # closure: 021cbd90 / 021ca2a4 / 021ca2cc / 021ca234
-  stub 021cbf98 ret=u32 args=v,v
+  stub 021cbf98 ret=u16 args=
   stub 020056ec force ret=u32 args=v seq
 
 # bsub_party_from_list(W): W+0x84 != 0 or (W+0x82 - 7) & 0xFFFF <= 1 -> 0; party; for i < count: slot = W+0x7C[i] - 1 (>= 6 -> W+0x7C[i] =
@@ -259,10 +260,11 @@ fn 021c9fd0 ret=bool inputs=200
   stub 0200da54 force ret=pick:0/1/6/7/8/0x14 args=v
 
 # bsub_store_result(W): mode, n = W+0xE; S: 0200DB08(S, mode, n), 0200DAEC(S, mode, 0200DAC4(S, mode)), 0200DB60(S, mode);
-# 021CA2DC(W, save, 1, n); 0200DA14(P).
+# 021CA2DC(W, save, 1, n); 0200DA14(P).  Arena: arg 1 (the function takes W only).
 fn 021c9ffc ret=none inputs=200
   nowork
   arg buf 0x1000
+  arg buf 0x400
   fix arg0 9 u8 alt range 0 9 || any
   fix arg0 8 u8 range 0 4
   stub 0200db60 force ret=none args=v,v
@@ -283,7 +285,7 @@ fn 021c9ffc ret=none inputs=200
   stub 0200dc50 force ret=none args=v,v,in:0xB4
   stub 020307b0 force ret=none args=v
   stub 021ca3b4 ret=none args=v,v
-  stub 02030734 force ret=seqptr:arg1:0x300:0x40 args=v,v,v,v,v
+  stub 02030734 force ret=seqptr:arg1:0x100:0x100 args=v,v,v,v,v
   stub 0200d884 force ret=u32 args=v,v,p
   stub 02012934 force ret=u32 args=v
   stub 02017e1c force ret=pick:0/1/2/0x1D/0x20/0x249/0x24A args=v,v,v
@@ -393,13 +395,14 @@ fn 021ca2cc ret=u16 inputs=200
   arg u32 alt range 0 100 || any
 
 # bsub_record(W, save, f, n): mode 0 -> 021CA4C0(W, save, 0); 4 -> 021CA4C0(W, save, 1), 0200D914(P, 0, &mode), 0200D914(P, 1,
-# &(0200DA54(P) + 1)), 0200DC94(S, P); 1 / others -> nothing.
+# &(0200DA54(P) + 1)), 0200DC94(S, P); 1 / others -> nothing.  Arena: arg 4 (a stack word the function does not read).
 fn 021ca2dc ret=none inputs=200
   nowork
   arg buf 0x1000
   arg u32 any
   arg u32 any
   arg u32 any
+  arg buf 0x400
   fix arg0 9 u8 alt oneof 0 1 4 || any
   stub 021ca4c0 ret=u32 args=v,v,v
   stub 0200dc94 force ret=none args=v,v
@@ -411,7 +414,7 @@ fn 021ca2dc ret=none inputs=200
   stub 0200dc50 force ret=none args=v,v,in:0xB4
   stub 020307b0 force ret=none args=v
   stub 021ca3b4 ret=none args=v,v
-  stub 02030734 force ret=seqptr:arg1:0x300:0x40 args=v,v,v,v,v
+  stub 02030734 force ret=seqptr:arg4:0x100:0x100 args=v,v,v,v,v
   stub 0200d884 force ret=u32 args=v,v,p
   stub 02012934 force ret=u32 args=v
   stub 02017e1c force ret=pick:0/1/2/0x1D/0x20/0x249/0x24A args=v,v,v
@@ -754,7 +757,7 @@ fn 021ca5c4 ret=u32 inputs=4000
   stub 0200dfb4 force ret=u32 args=v
   stub 0216d5b4 force ret=none args=v,v
   stub 02168878 force ret=u32 args=v,v,v,v,v,v,v
-  stub 021cbf98 ret=u32 args=v,v
+  stub 021cbf98 ret=u16 args=
   stub 021ca4c0 ret=u32 args=v,v,v
   stub 0200dc94 force ret=none args=v,v
   stub 020056ec force ret=u32 args=v seq
@@ -1049,7 +1052,7 @@ fn 021cbd90 ret=u16 inputs=1500
   arg u32 alt oneof 6 || range 0 7
   arg u32 alt range 0 8 || any
   arg u8 range 0 1
-  stub 021cbf98 ret=u16 args=v
+  stub 021cbf98 ret=u16 args=
   # closure: 021cbf98
   stub 020056ec force ret=u32 args=v seq
 

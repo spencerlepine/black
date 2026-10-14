@@ -12,12 +12,12 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C9C54, "5d1dfef6e19265b1"),
     (0x021C9CAC, "cb71248a3c7fea42"),
     (0x021C9D30, "9d92ab944fc65f63"),
-    (0x021C9D70, "15560a41ea09eae4"),
+    (0x021C9D70, "ee6029f17ad61c86"),
     (0x021C9DB0, "eb783678e01a4661"),
     (0x021C9E8C, "afa3fef712087b31"),
     (0x021C9F44, "7224f902f3180ce2"),
     (0x021C9FD0, "6ea29e1f8e9970bf"),
-    (0x021C9FFC, "93b60d149edba1ce"),
+    (0x021C9FFC, "6474901eb703d8cf"),
     (0x021CA048, "01459e7c5a37390f"),
     (0x021CA05C, "705f9c277d28ae95"),
     (0x021CA150, "ee8f5106df8dac60"),
@@ -32,7 +32,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021CA270, "2195266678bb00b1"),
     (0x021CA2A4, "0953c1d341c8cf9e"),
     (0x021CA2CC, "82674b25aacfb9d6"),
-    (0x021CA2DC, "b94e7885eab76331"),
+    (0x021CA2DC, "018ea06aebccffa8"),
     (0x021CA338, "7ce6f99a3297872f"),
     (0x021CA3B4, "acbfd29954cb72e6"),
     (0x021CA4C0, "55e164977a6c4a1d"),
@@ -1168,13 +1168,6 @@ fn with_rom(addr: u32, c: &mut Case, f: impl FnOnce(&mut Rom, &[u32]) -> u64) ->
             keep.push(i);
         }
     }
-    // FUN_021CA2DC / FUN_021C9FFC: the specs hand the record block out at 0x02E20300 (`seqptr:arg1`) while its arg 1 is a scalar: the emulator
-    // has zeroed RAM there (no stray write remains: the block is cleared before it is freed), the port gets a zeroed window.
-    let scratch = addr == 0x021C_A2DC || addr == 0x021C_9FFC;
-    if scratch {
-        mem.bytes = vec![0; 0x1000];
-        mem.base = 0x02E2_0000;
-    }
     // Command 346 reads W + 0x8C + 0x120 * operand (sub-command 0x134) past the ctx arena: zeroed emulator RAM behind the
     // argument buffers (searched after them).
     if addr == 0x021C_A5C4 {
@@ -1187,12 +1180,6 @@ fn with_rom(addr: u32, c: &mut Case, f: impl FnOnce(&mut Rom, &[u32]) -> u64) ->
         rets: Vec::new(),
     };
     let r = f(&mut rom, &vals);
-    if scratch {
-        assert!(
-            rom.mem.bytes.iter().all(|&b| b == 0),
-            "a stray write the emulator would record"
-        );
-    }
     let wins = std::mem::take(&mut rom.mem.extra);
     for (i, (_, bytes)) in keep.into_iter().zip(wins) {
         c.bufs[i] = bytes;
