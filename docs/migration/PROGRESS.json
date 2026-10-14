@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-14T22:25:25Z",
- "commit": "40002b2",
+ "generated": "2026-10-14T22:41:57Z",
+ "commit": "5ebce73",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -8,16 +8,16 @@
   "U": 0.19,
   "HR": 0.125
  },
- "overall": 0.4356,
+ "overall": 0.4422,
  "overall_percent": 44,
  "logic": {
-  "ported": 6105,
+  "ported": 6224,
   "in_scope": 10087.4,
-  "ratio": 0.6052,
+  "ratio": 0.617,
   "ported_by_crate": {
    "black-battle": 2125,
    "black-core": 26,
-   "black-field": 2142,
+   "black-field": 2261,
    "black-pokemon": 186,
    "black-script": 1012,
    "black-storage": 562,
@@ -1013,6 +1013,10 @@
     "set": "field",
     "fns": 35
    },
+   "crates/black-field/src/calender.rs": {
+    "set": "field",
+    "fns": 14
+   },
    "crates/black-field/src/effect_encount.rs": {
     "set": "field",
     "fns": 29
@@ -1048,6 +1052,10 @@
    "crates/black-field/src/eventdata_tail.rs": {
     "set": "field",
     "fns": 19
+   },
+   "crates/black-field/src/field_light.rs": {
+    "set": "field",
+    "fns": 29
    },
    "crates/black-field/src/field_skill.rs": {
     "set": "field",
@@ -1172,6 +1180,14 @@
    "crates/black-field/src/trainer_eye.rs": {
     "set": "field",
     "fns": 38
+   },
+   "crates/black-field/src/weather.rs": {
+    "set": "field",
+    "fns": 16
+   },
+   "crates/black-field/src/weather_task.rs": {
+    "set": "field",
+    "fns": 60
    },
    "crates/black-field/src/wfbc_data.rs": {
     "set": "field",
