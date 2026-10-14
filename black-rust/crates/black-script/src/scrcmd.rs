@@ -27,10 +27,10 @@
 //! | [`crate::scrcmd_c03center`] | `scrcmd_c03center.c` overlay 21 0x021B5A18-0x021B66B7 (row 21.50; no X1 networking) | 22 ids (256, 261..263, 265, 285..288, 307, 446, 447, 462, 463, 484..487, 566..568, 578) | 28/28 fns ported and verified (F8e) |
 //! | [`crate::scrcmd_pokemon_fld`] | `scrcmd_pokemon_fld.c` overlay 21 0x021B66B8-0x021B73FF (row 21.51; cmd 494 = Dream World, X2) | 14 ids (308, 459..461, 470, 471, 494, 526, 527, 564, 565, 581, 585, 586; 494 not dispatched) | 47/48 fns ported and verified (F8e; the cmd 494 handler, X2, specced only) |
 //! | [`crate::scrcmd_misc21`] | overlay 21 0x021CF7DC-0x021D013F (row 21.91), 0x021D1670-0x021D30B7 (row 21.97), no `__FILE__` | 36 ids (233, 309, 347..350, 412..414, 472..476, 479, 481..483, 521..525, 551, 553, 569..571, 573..575, 582, 597..600) | 81/81 logic fns ported and verified (F8e; cmd 414 and 10 render / UI fns behind `Misc21Hooks`) |
-//! | [`crate::scrcmd_misc10b`] | overlay 10 rows 10.27 (handlers in "symbol_map.c") and 10.34 (0x0216AC40-0x0216B504, unanchored) | 13 ids (310, 425, 427, 477, 478, 480, 493, 554..558, 560) | specced (F8-spec5); 6 smoke ports |
-//! | [`crate::scrcmd_misc10c`] | overlay 10: `calender.c` handlers, cmd 505, row 10.36 (0x0216B86C-0x0216BF9C), `namein_setup.c` / `trcard_sys.c` tails | 17 ids (445, 458, 467..469, 505, 534, 544..548, 552, 572, 590..592) | specced (F8-spec5); 6 smoke ports |
-//! | [`crate::scrcmd_bsubway`] | `bsubway_scr.c` overlay 21 0x021C9934-0x021CBFB0 (row 21.84) | 4 ids (343..346; 346 has ~170 sub-commands) | specced (F8-spec5); 7 smoke ports |
-//! | [`crate::scrcmd_misc21b`] | handlers in other files: overlay-20 WFBC, field skills after `sodateya.c`, `fld_wipe_3dobj.c`, `pleasure_boat.c`, `fld_trade.c` | 23 ids (197..200, 415..417, 421..424, 426, 428, 443, 450..457, 576) | specced (F8-spec5); 7 smoke ports |
+//! | [`crate::scrcmd_misc10b`] | overlay 10 rows 10.27 (handlers in "symbol_map.c") and 10.34 (0x0216AC40-0x0216B504, unanchored) | 13 ids (310, 425, 427, 477, 478, 480, 493, 554..558, 560) | 35/35 fns ported and verified (F8f) |
+//! | [`crate::scrcmd_misc10c`] | overlay 10: `calender.c` handlers, cmd 505, row 10.36 (0x0216B86C-0x0216BF9C), `namein_setup.c` / `trcard_sys.c` tails | 17 ids (445, 458, 467..469, 505, 534, 544..548, 552, 572, 590..592) | 37/37 fns ported and verified (F8f) |
+//! | [`crate::scrcmd_bsubway`] | `bsubway_scr.c` overlay 21 0x021C9934-0x021CBFB0 (row 21.84) | 4 ids (343..346; 346 has ~170 sub-commands) | 58/58 fns ported and verified (F8f) |
+//! | [`crate::scrcmd_misc21b`] | handlers in other files: overlay-20 WFBC, field skills after `sodateya.c`, `fld_wipe_3dobj.c`, `pleasure_boat.c`, `fld_trade.c` | 23 ids (197..200, 415..417, 421..424, 426, 428, 443, 450..457, 576) | 39/39 fns ported and verified (F8f; the WFBC talk dialog 0x021871F8 is UI flow, not ported) |
 //!
 //! Command ids in no F8 area (F8-spec5; 37, all out of scope or outside the field set): X2 Musicals (`scrcmd_musical.c`): 93,
 //! 360..366, 495; X1 `scrcmd_network.c`: 313, 315..318, 499..504, 604..606; X1 overlay-18 intrude (Entralink): 367..369,
@@ -49,12 +49,16 @@
 //! no and menu events), init procs ([`call_init_proc`]: `script_sys::INIT_PROCS` slots 1..6 and 9, run through
 //! `ScriptSysHooks::call_init_proc`) and a field task ([`call_task`]: the field fade).
 
+use crate::scrcmd_bsubway::BsubwayHooks;
 use crate::scrcmd_c03center::C03Hooks;
 use crate::scrcmd_encount::EncountHooks;
 use crate::scrcmd_fld::FldHooks;
 use crate::scrcmd_fld_battle::FldBattleHooks;
 use crate::scrcmd_misc10::Misc10Hooks;
+use crate::scrcmd_misc10b::Misc10bHooks;
+use crate::scrcmd_misc10c::Misc10cHooks;
 use crate::scrcmd_misc21::Misc21Hooks;
+use crate::scrcmd_misc21b::Misc21bHooks;
 use crate::scrcmd_obj::ObjHooks;
 use crate::scrcmd_pokemon_fld::PokemonFldHooks;
 use crate::scrcmd_proc::ProcHooks;
@@ -65,8 +69,8 @@ use crate::scrcmd_sodateya::SodateyaHooks;
 use crate::scrcmd_talk::TalkHooks;
 use crate::scrcmd_work::WorkHooks;
 
-/// The command tables of the ported areas (the F8a..F8e areas; `script_sys` apart).
-fn area_tables() -> [&'static [(u16, u32)]; 16] {
+/// The command tables of the ported areas (the F8a..F8f areas; `script_sys` apart).
+fn area_tables() -> [&'static [(u16, u32)]; 20] {
     [
         crate::scrcmd_core::COMMANDS,
         crate::scrcmd_work::COMMANDS,
@@ -84,6 +88,10 @@ fn area_tables() -> [&'static [(u16, u32)]; 16] {
         crate::scrcmd_c03center::COMMANDS,
         crate::scrcmd_pokemon_fld::COMMANDS,
         crate::scrcmd_misc21::COMMANDS,
+        crate::scrcmd_misc10b::COMMANDS,
+        crate::scrcmd_misc10c::COMMANDS,
+        crate::scrcmd_bsubway::COMMANDS,
+        crate::scrcmd_misc21b::COMMANDS,
     ]
 }
 
@@ -134,7 +142,11 @@ pub fn dispatch<
         + FldBattleHooks
         + C03Hooks
         + PokemonFldHooks
-        + Misc21Hooks,
+        + Misc21Hooks
+        + Misc10bHooks
+        + Misc10cHooks
+        + BsubwayHooks
+        + Misc21bHooks,
 >(
     h: &mut H,
     handler: u32,
@@ -157,12 +169,25 @@ pub fn dispatch<
         .or_else(|| crate::scrcmd_c03center::dispatch(h, handler, vm, ctx))
         .or_else(|| crate::scrcmd_pokemon_fld::dispatch(h, handler, vm, ctx))
         .or_else(|| crate::scrcmd_misc21::dispatch(h, handler, vm, ctx))
+        .or_else(|| crate::scrcmd_misc10b::dispatch(h, handler, vm, ctx))
+        .or_else(|| crate::scrcmd_misc10c::dispatch(h, handler, vm, ctx))
+        .or_else(|| crate::scrcmd_bsubway::dispatch(h, handler, vm, ctx))
+        .or_else(|| crate::scrcmd_misc21b::dispatch(h, handler, vm, ctx))
 }
 
 /// Run the wait callback `f` (VM +0x10, Thumb bit set) when it belongs to a ported scrcmd command (3, 28, the overlay-21
 /// message windows, 75, 180, 298, 433, scrcmd_fld 160 / 168 / 170 / 172, scrcmd_obj 101 / 117 / the talk lock, the shop 329);
 /// `None` otherwise.
-pub fn call_wait<H: TalkHooks + ScreenHooks + FldHooks + ObjHooks + ProcHooks + ShopHooks>(
+pub fn call_wait<
+    H: TalkHooks
+        + ScreenHooks
+        + FldHooks
+        + ObjHooks
+        + ProcHooks
+        + ShopHooks
+        + BsubwayHooks
+        + Misc21bHooks,
+>(
     h: &mut H,
     f: u32,
     vm: u32,
@@ -175,13 +200,23 @@ pub fn call_wait<H: TalkHooks + ScreenHooks + FldHooks + ObjHooks + ProcHooks + 
         .or_else(|| crate::scrcmd_obj::call_wait(h, f, vm, ctx))
         .or_else(|| crate::scrcmd_proc::call_wait(h, f, vm, ctx))
         .or_else(|| crate::scrcmd_shop::call_wait(h, f, vm, ctx))
+        .or_else(|| crate::scrcmd_bsubway::call_wait(h, f, vm, ctx))
+        .or_else(|| crate::scrcmd_misc21b::call_wait(h, f, vm, ctx))
 }
 
 /// Run the GMEVENT function `f(event, seq, work)` when a ported command installed it (the yes / no event of command 71, the
 /// menu event of commands 176 / 177, the party-select event of command 247, the object moves of commands 549 / 550, the F8e
 /// events of scrcmd_fld_battle / scrcmd_encount / scrcmd_misc21); `None` otherwise.
 pub fn call_event<
-    H: TalkHooks + SodateyaHooks + Misc10Hooks + FldBattleHooks + EncountHooks + Misc21Hooks,
+    H: TalkHooks
+        + SodateyaHooks
+        + Misc10Hooks
+        + FldBattleHooks
+        + EncountHooks
+        + Misc21Hooks
+        + Misc10bHooks
+        + Misc10cHooks
+        + BsubwayHooks,
 >(
     h: &mut H,
     f: u32,
@@ -195,6 +230,9 @@ pub fn call_event<
         .or_else(|| crate::scrcmd_fld_battle::call_event(h, f, event, seq, work))
         .or_else(|| crate::scrcmd_encount::call_event(h, f, event, seq, work))
         .or_else(|| crate::scrcmd_misc21::call_event(h, f, event, seq, work))
+        .or_else(|| crate::scrcmd_misc10b::call_event(h, f, event, seq, work))
+        .or_else(|| crate::scrcmd_misc10c::call_event(h, f, event, seq, work))
+        .or_else(|| crate::scrcmd_bsubway::call_event(h, f, event, seq, work))
 }
 
 /// Run the app-proc result callback `cb(w)` of scrcmd_proc (commands 334 / 336 / 489, see

@@ -3139,15 +3139,1001 @@ impl Misc21Hooks for Null {
     }
 }
 
+// gen:scrcmd_misc10b-null-begin
+#[allow(clippy::too_many_arguments)]
+impl Misc10bHooks for Null {
+    fn fun_0215a5cc(&mut self, _ctx: u32) -> u32 {
+        0
+    }
+    fn fun_02158f74(&mut self, _sw: u32) -> u32 {
+        0
+    }
+    fn fun_0215901c(&mut self, _sw: u32, _gd: u32, _id: u32) -> u32 {
+        0
+    }
+    fn fun_02158344(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_02161cdc(&mut self, _e: u32, _gamesys: u32, _a: u32, _b: u32) {}
+    fn fun_0216628c(&mut self, _y: u32, _v: u32) -> u32 {
+        0
+    }
+    fn fun_021664cc(&mut self, _heap: u32, _gamesys: u32, _out: &mut u32) -> u32 {
+        0
+    }
+    fn fun_021665d0(&mut self, _gamesys: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_021665f0(&mut self, _gamesys: u32, _a: u32, _b: u32) -> u32 {
+        0
+    }
+    fn fun_02166618(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0216662c(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0216d888(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0216d9a0(&mut self, _objsys: u32) {}
+    fn fun_0216d9e4(&mut self, _objsys: u32) {}
+    fn fun_0216de94(&mut self, _objsys: u32, _id: u32) -> u32 {
+        0
+    }
+    fn fun_020061e4(&mut self, _se: u32) {}
+    fn fun_02007e50(&mut self, _zukan: u32, _id: u32, _a: u32, _b: u32) {}
+    fn fun_02007f1c(&mut self, _zukan: u32, _id: u32, _a: u32, _b: u32) {}
+    fn fun_0200856c(&mut self, _rec: u32) -> u32 {
+        0
+    }
+    fn fun_0200873c(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_02009470(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_020095c8(&mut self, _block: u32) -> u32 {
+        0
+    }
+    fn fun_0200973c(&mut self, _block: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_02009794(&mut self, _block: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_0200ca10(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_0200e0b0(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_0200e18c(&mut self, _y: u32, _v: u32) {}
+    fn fun_0200e2bc(&mut self, _save: u32, _word: &u32, _species: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0200e6f0(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_0200e6fc(&mut self, _x: u32, _k: u32, _out: &mut [u32; 3]) {}
+    fn fun_0200e714(&mut self, _x: u32, _k: u32, _rec: &[u32; 3]) {}
+    fn fun_0201210c(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_02012138(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_02012374(&mut self, _event: u32, _child: u32) {}
+    fn fun_02012444(&mut self, _event: u32, _id: u32, _data: u32, _work: u32) {}
+    fn fun_020124e4(&mut self, _event: u32) -> u32 {
+        0
+    }
+    fn fun_0201292c(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012944(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_020129a0(&mut self, _gamedata: u32, _weather: u32) {}
+    fn fun_02012ebc(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012ed0(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012f38(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012fa4(&mut self, _gamedata: u32, _x: u32) {}
+    fn fun_02012fb0(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_020144dc(&mut self, _gamesys: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_020145cc(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_02017e1c(&mut self, _mon: u32, _id: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0201ee84(&mut self, _ws: u32, _i: u32, _x: u32) {}
+    fn fun_02024044(&mut self, _a: u32, _b: u32, _c: u32, _d: u32, _save: u32, _e: u32) -> u32 {
+        0
+    }
+    fn fun_020240fc(&mut self, _rec: u32) {}
+    fn fun_02024108(&mut self, _rec: u32, _v: &[u32; 3]) {}
+    fn fun_0202411c(&mut self, _rec: u32) -> u32 {
+        0
+    }
+    fn fun_02024124(&mut self, _rec: u32) -> u32 {
+        0
+    }
+    fn fun_02024128(&mut self, _rec: u32, _out: &mut u32) {}
+    fn fun_02024134(&mut self, _rec: u32, _out: &mut [u32; 3]) {}
+    fn fun_02029bcc(&mut self, _gamesys: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_02029c00(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_02029cc0(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_0202c794(&mut self, _gamesys: u32, _zone: u32) -> u32 {
+        0
+    }
+    fn fun_020307b0(&mut self, _p: u32) {}
+    fn fun_02034a5c(&mut self, _id: u32) {}
+    fn fun_02034ac4(&mut self, _id: u32) {}
+    fn fun_0203f1fc(&mut self, _mon: u32, _limit: u32) -> u32 {
+        0
+    }
+    fn fun_021767a0(&mut self, _x: u32, _gd: u32) -> u32 {
+        0
+    }
+    fn fun_021767f0(&mut self, _x: u32, _gd: u32, _pos: &mut [u32; 3]) {}
+    fn fun_02176850(&mut self, _comm: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_02176870(&mut self, _comm: u32) -> u32 {
+        0
+    }
+    fn fun_0217688c(&mut self, _comm: u32, _x: u32) {}
+    fn fun_0217c274(&mut self, _word: &mut u32, _obj: u32) {}
+    fn fun_0217c294(&mut self, _obj: u32) -> u32 {
+        0
+    }
+    fn fun_0217c2a0(&mut self, _k: u32, _gd: u32, _word: &u32) -> u32 {
+        0
+    }
+    fn fun_0217c37c(&mut self, _fm: u32, _w: u32, _rec: u32, _a: u32, _b: u32) {}
+    fn fun_02184d38(
+        &mut self,
+        _gamesys: u32,
+        _fm: u32,
+        _zone: u32,
+        _pos: &[u32; 3],
+        _a: u32,
+        _b: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_021854b0(
+        &mut self,
+        _gamesys: u32,
+        _fm: u32,
+        _zone: u32,
+        _pos: &[u32; 3],
+        _dir: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_02188c6c(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02188c7c(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02188c9c(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02188cb4(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02189a08(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0219c630(&mut self, _objsys: u32) -> u32 {
+        0
+    }
+    fn fun_021a1bdc(&mut self, _weather: u32, _w: u32) {}
+    fn fun_021a1be4(&mut self, _weather: u32, _w: u32) {}
+    fn fun_021a3038(&mut self, _player: u32, _pos: &mut [u32; 3]) {}
+    fn fun_021a3074(&mut self, _player: u32) -> u32 {
+        0
+    }
+    fn fun_021aa304(&mut self, _rec: u32, _gd: u32, _x: u32) {}
+    fn fun_021b6100(
+        &mut self,
+        _gd: u32,
+        _mon: u32,
+        _rec: u32,
+        _status: u32,
+        _zukan: u32,
+        _a: u32,
+        _b: u32,
+        _species: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_021b6158(&mut self, _work: u32) -> u32 {
+        0
+    }
+    fn fun_021b95a0(&mut self, _gd: u32, _result: u32, _mon: u32, _species: u32) -> u32 {
+        0
+    }
+    fn fun_021b95c8(&mut self, _work: u32) {}
+    fn fun_021be8d4(&mut self, _gamesys: u32, _fm: u32, _a: u32, _b: u32) -> u32 {
+        0
+    }
+    fn fun_021be92c(
+        &mut self,
+        _gamesys: u32,
+        _fm: u32,
+        _a: u32,
+        _b: u32,
+        _c: u32,
+        _d: u32,
+        _e: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_021c87a0(&mut self, _w: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_021c87ac(&mut self, _w: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_021c87b8(&mut self, _w: u32, _i: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_021c87c8(&mut self, _w: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_021cf498(&mut self, _x: u32, _event: u32, _a: u32) {}
+}
+// gen:scrcmd_misc10b-null-end
+
+// gen:scrcmd_misc10c-null-begin
+#[allow(clippy::too_many_arguments)]
+impl Misc10cHooks for Null {
+    fn fun_02008530(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0200b3a4(&mut self, _ew: u32, _id: u32) -> u32 {
+        0
+    }
+    fn fun_0200c0e8(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_0200c0f0(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_0200c32c(&mut self, _s: u32) -> u32 {
+        0
+    }
+    fn fun_0200c34c(&mut self, _s: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_0200c37c(&mut self, _s: u32) -> u64 {
+        0
+    }
+    fn fun_0200c38c(&mut self, _s: u32, _k: u32, _v: u32) {}
+    fn fun_0200d418(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_0200d468(&mut self, _x: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_0200e394(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_0200e458(&mut self, _t: u32, _id: u32) -> u32 {
+        0
+    }
+    fn fun_0200e47c(&mut self, _t: u32, _id: u32) -> u32 {
+        0
+    }
+    fn fun_0201210c(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_02012374(&mut self, _event: u32, _child: u32) {}
+    fn fun_020124e4(&mut self, _event: u32) -> u32 {
+        0
+    }
+    fn fun_02012934(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012ebc(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012ec4(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012f50(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02017e1c(&mut self, _mon: u32, _id: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0201aa18(&mut self, _party: u32) -> u32 {
+        0
+    }
+    fn fun_0201ab28(&mut self, _party: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_0202f488(&mut self, _mon: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_0202f630(&mut self, _mon: u32, _k: u32) {}
+    fn fun_02034a5c(&mut self, _id: u32) {}
+    fn fun_02034ac4(&mut self, _id: u32) {}
+    fn fun_0203f524(&mut self) -> u64 {
+        0
+    }
+    fn fun_020891e0(&mut self, _rest: &mut [u32; 3], _days: &mut [u32; 3], _lo: u32, _hi: u32) {}
+    fn fun_02159144(&mut self, _f: u32) {}
+    fn fun_02159168(&mut self, _f: u32) {}
+    fn fun_02188cb4(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_021a3038(&mut self, _player: u32, _pos: &mut [u32; 3]) {}
+    fn fun_021d096c(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_021f3800(&mut self, _gamesys: u32) {}
+    fn fun_021f385c(&mut self, _fm: u32) {}
+    fn fun_021f38bc(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_021f39b8(
+        &mut self,
+        _gamesys: u32,
+        _mode: u32,
+        _from: &[u32; 3],
+        _to: &[u32; 3],
+        _frames: u32,
+        _x: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_021f3aa0(&mut self, _gamesys: u32, _a: u32, _pos: &[u32; 3]) {}
+    fn fun_021f3b40(&mut self, _gamesys: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_021f3b68(&mut self, _gamesys: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_021f5260(&mut self, _a: u32, _b: u32, _c: u32, _gamesys: u32, _ctx: u32) -> u32 {
+        0
+    }
+    fn fun_021f5550(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_021f558c(&mut self, _fm: u32) {}
+}
+// gen:scrcmd_misc10c-null-end
+
+// gen:scrcmd_bsubway-null-begin
+#[allow(clippy::too_many_arguments)]
+impl BsubwayHooks for Null {
+    fn fun_020056ec(&mut self, _n: u32) -> u32 {
+        0
+    }
+    fn fun_020071cc(&mut self, _save: u32, _id: u32) -> u32 {
+        0
+    }
+    fn fun_02008550(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0200b424(&mut self) {}
+    fn fun_0200b5cc(&mut self, _save: u32, _k: u32, _out: &mut u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0200b6e0(
+        &mut self,
+        _gd: u32,
+        _k: u32,
+        _kind: u32,
+        _v: u32,
+        _x: u32,
+        _a: u32,
+        _b: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_0200ba38(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0200ba58(&mut self) {}
+    fn fun_0200ba68(&mut self, _x: u32) {}
+    fn fun_0200bac8(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_0200baf4(&mut self, _x: u32, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_0200bba8(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0200d85c(&mut self, _p: u32) {}
+    fn fun_0200d868(&mut self, _p: u32, _x: u32) {}
+    fn fun_0200d87c(&mut self, _p: u32) -> u32 {
+        0
+    }
+    fn fun_0200d884(&mut self, _p: u32, _id: u32, _out: u32) -> u32 {
+        0
+    }
+    fn fun_0200d914(&mut self, _p: u32, _id: u32, _data: &[u8]) {}
+    fn fun_0200d9e8(&mut self, _p: u32, _a: u32, _b: u32, _c: u32) -> u32 {
+        0
+    }
+    fn fun_0200da14(&mut self, _p: u32) {}
+    fn fun_0200da28(&mut self, _p: u32) -> u32 {
+        0
+    }
+    fn fun_0200da54(&mut self, _p: u32) -> u32 {
+        0
+    }
+    fn fun_0200da80(&mut self, _s: u32, _bp: u32) {}
+    fn fun_0200dac4(&mut self, _s: u32, _mode: u32) -> u32 {
+        0
+    }
+    fn fun_0200daec(&mut self, _s: u32, _mode: u32, _v: u32) {}
+    fn fun_0200db08(&mut self, _s: u32, _mode: u32, _v: u32) {}
+    fn fun_0200db1c(&mut self, _s: u32, _mode: u32) {}
+    fn fun_0200db30(&mut self, _s: u32, _mode: u32) {}
+    fn fun_0200db44(&mut self, _s: u32, _mode: u32) -> u32 {
+        0
+    }
+    fn fun_0200db60(&mut self, _s: u32, _mode: u32) {}
+    fn fun_0200db80(&mut self, _s: u32, _mode: u32) -> u32 {
+        0
+    }
+    fn fun_0200dba0(&mut self, _s: u32, _a: u32, _b: u32) -> u32 {
+        0
+    }
+    fn fun_0200dbf0(&mut self, _s: u32) {}
+    fn fun_0200dbfc(&mut self, _s: u32) {}
+    fn fun_0200dc08(&mut self, _s: u32) -> u32 {
+        0
+    }
+    fn fun_0200dc0c(&mut self, _s: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_0200dc50(&mut self, _s: u32, _k: u32, _records: u32) {}
+    fn fun_0200dc94(&mut self, _s: u32, _p: u32) {}
+    fn fun_0200de5c(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0200de64(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0200de94(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0200dea8(&mut self, _x: u32, _rec: u32, _n: u32, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_0200df40(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0200df4c(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0200df58(&mut self, _x: u32, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_0200df94(&mut self, _list: u32) -> u32 {
+        0
+    }
+    fn fun_0200dfb4(&mut self, _rec: u32) -> u32 {
+        0
+    }
+    fn fun_0200ed48(&mut self, _save: u32) -> u32 {
+        0
+    }
+    fn fun_0200ed54(&mut self, _x: u32, _v: u32) {}
+    fn fun_0200fb24(&mut self, _r0: u32) -> u32 {
+        0
+    }
+    fn fun_0200fb38(&mut self, _x: u32) {}
+    fn fun_0201210c(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_02012124(&mut self, _gamesys: u32, _x: u32) {}
+    fn fun_02012134(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_020124ac(&mut self, _gamesys: u32, _id: u32, _f: u32, _data: &[u32; 4]) -> u32 {
+        0
+    }
+    fn fun_020127a4(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_0201289c(&mut self, _gamedata: u32, _rec: &[u8; 0x1C]) {}
+    fn fun_02012934(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012944(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012ebc(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012ed8(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012ee4(&mut self, _gamedata: u32, _w: u32) {}
+    fn fun_020130b4(&mut self, _x: u32) {}
+    fn fun_02014184(&mut self, _rec: &mut [u8; 0x1C], _a: u32, _b: u32, _c: u32, _d: u32, _e: u32) {
+    }
+    fn fun_02014808(
+        &mut self,
+        _gamesys: u32,
+        _fm: u32,
+        _id: u32,
+        _procs: u32,
+        _work: u32,
+        _a: u32,
+        _b: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_02017e1c(&mut self, _mon: u32, _id: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_02019ed4(&mut self, _a: u32, _party: u32) -> u32 {
+        0
+    }
+    fn fun_0201a354(&mut self, _k: u32, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_0201a920(&mut self, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_0201a954(&mut self, _party: u32, _n: u32) {}
+    fn fun_0201a98c(&mut self, _party: u32, _mon: u32) {}
+    fn fun_0201aa18(&mut self, _party: u32) -> u32 {
+        0
+    }
+    fn fun_0201ab28(&mut self, _party: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_0202b578(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0202c0d0(&mut self, _x: u32, _i: u32) {}
+    fn fun_02030734(&mut self, _heap: u32, _size: u32, _flag: u32, _file: u32, _line: u32) -> u32 {
+        0
+    }
+    fn fun_020307b0(&mut self, _p: u32) {}
+    fn fun_02039338(&mut self) -> u32 {
+        0
+    }
+    fn fun_0203cdbc(&mut self) -> u32 {
+        0
+    }
+    fn fun_0203ceac(&mut self, _x: u32) {}
+    fn fun_0203d1b4(&mut self) -> u32 {
+        0
+    }
+    fn fun_0203d378(&mut self) -> u32 {
+        0
+    }
+    fn fun_0203d7bc(&mut self, _x: u32) {}
+    fn fun_02087bcc(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_02158f54(&mut self, _sw: u32) -> u32 {
+        0
+    }
+    fn fun_02158f58(&mut self, _sw: u32) -> u32 {
+        0
+    }
+    fn fun_02158fe0(&mut self, _sw: u32, _gd: u32, _id: u32) -> u32 {
+        0
+    }
+    fn fun_02167ab0(&mut self, _w: u32) {}
+    fn fun_02167b00(&mut self, _w: u32) {}
+    fn fun_02167b18(&mut self, _w: u32, _x: u32) {}
+    fn fun_02167b24(&mut self, _x: u32) {}
+    fn fun_02167b34(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_02167bfc(&mut self, _w: u32, _a: u32, _b: u32) {}
+    fn fun_02167cb4(&mut self, _w: u32) -> u32 {
+        0
+    }
+    fn fun_02167cf4(&mut self, _w: u32, _x: u32) {}
+    fn fun_02167d00(&mut self, _w: u32, _var: u32) -> u32 {
+        0
+    }
+    fn fun_021681c8(
+        &mut self,
+        _x: u32,
+        _party: u32,
+        _mode: u32,
+        _rec: u32,
+        _trainer: u32,
+        _n: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_021684e8(
+        &mut self,
+        _rec: u32,
+        _species: u32,
+        _a: u32,
+        _b: u32,
+        _iv: u32,
+        _i: u32,
+        _x: u32,
+        _heap: u32,
+    ) {
+    }
+    fn fun_02168878(
+        &mut self,
+        _rec: u32,
+        _id: u32,
+        _n: u32,
+        _a: crate::scrcmd_bsubway::Buf,
+        _b: crate::scrcmd_bsubway::Buf,
+        _c: u32,
+        _heap: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_021688bc(&mut self, _rec: u32, _id: u32, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_02168aec(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0216c538(&mut self, _w: u32, _gamesys: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_0216c640(&mut self, _w: u32, _gamesys: u32, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_0216c6e8(&mut self, _w: u32, _gamesys: u32, _a: u32, _b: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_0216c860(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_0216cb48(&mut self, _gamesys: u32, _k: u32, _id: u32) -> u32 {
+        0
+    }
+    fn fun_0216ce6c(
+        &mut self,
+        _objsys: u32,
+        _x: u32,
+        _z: u32,
+        _dir: u32,
+        _id: u32,
+        _code: u32,
+        _a: u32,
+        _zone: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_0216d5b4(&mut self, _obj: u32, _k: u32) {}
+    fn fun_0216d5e0(&mut self, _obj: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0216d5f8(&mut self, _obj: u32) -> u32 {
+        0
+    }
+    fn fun_0216d620(&mut self, _obj: u32, _v: u32, _k: u32) {}
+    fn fun_0216d63c(&mut self, _obj: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_0216d88c(&mut self, _obj: u32, _pos: &mut [u32; 3]) {}
+    fn fun_0216dac8(&mut self, _obj: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0216daf8(&mut self, _obj: u32) -> u32 {
+        0
+    }
+    fn fun_0216db4c(&mut self, _obj: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0216de94(&mut self, _objsys: u32, _id: u32) -> u32 {
+        0
+    }
+    fn fun_0216e014(&mut self, _obj: u32, _pos: &[u32; 3], _dir: u32) {}
+    fn fun_02188c54(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02188c7c(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02188c9c(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02188cb4(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_021909bc(&mut self, _x: u32) {}
+    fn fun_02190be4(&mut self, _x: u32, _v: u32) -> u32 {
+        0
+    }
+    fn fun_02190c78(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_021a3038(&mut self, _player: u32, _pos: &mut [u32; 3]) {}
+    fn fun_021a3050(&mut self, _player: u32) -> u32 {
+        0
+    }
+    fn fun_021a30b0(&mut self, _player: u32) -> u32 {
+        0
+    }
+    fn fun_021a3190(&mut self, _x: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_021a31a4(&mut self, _x: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_021c9924(&mut self, _gamesys: u32) {}
+    fn fun_021cd48c(
+        &mut self,
+        _status: u32,
+        _fm: u32,
+        _a: u32,
+        _b: u32,
+        _c: u32,
+        _d: u32,
+        _e: u32,
+        _f: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_021cd5a4(&mut self, _menu: u32) {}
+    fn fun_021cd688(&mut self, _menu: u32) -> u32 {
+        0
+    }
+    fn fun_021d024c(&mut self, _x: u32, _a: u32) -> u32 {
+        0
+    }
+    fn fun_021d028c(&mut self, _x: u32, _a: u32) -> u32 {
+        0
+    }
+    fn fun_021eee78(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_021f37c0(&mut self, _fm: u32, _a: u32, _rec: u32) -> u32 {
+        0
+    }
+    fn fun_021f380c(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_021f388c(&mut self, _fm: u32) {}
+}
+// gen:scrcmd_bsubway-null-end
+
+// gen:scrcmd_misc21b-null-begin
+#[allow(clippy::too_many_arguments)]
+impl Misc21bHooks for Null {
+    fn fun_0201210c(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_02012138(&mut self, _gamesys: u32) -> u32 {
+        0
+    }
+    fn fun_020127c4(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_020127d0(&mut self, _gamedata: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_020127f0(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012934(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02012ed0(&mut self, _gamedata: u32) -> u32 {
+        0
+    }
+    fn fun_02017e1c(&mut self, _mon: u32, _id: u32, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0201aa18(&mut self, _party: u32) -> u32 {
+        0
+    }
+    fn fun_0201ab28(&mut self, _party: u32, _i: u32) -> u32 {
+        0
+    }
+    fn fun_0201ec64(&mut self, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_02030734(&mut self, _heap: u32, _size: u32, _flag: u32, _file: u32, _line: u32) -> u32 {
+        0
+    }
+    fn fun_02034a5c(&mut self, _id: u32) {}
+    fn fun_02034ac4(&mut self, _id: u32) {}
+    fn fun_0203f4e4(&mut self, _date: &mut [u32; 3]) {}
+    fn fun_020457b0(&mut self, _len: u32, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_02045b38(&mut self, _a: u32, _b: u32, _c: u32, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_02158344(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_02158434(&mut self, _r0: u32) -> u32 {
+        0
+    }
+    fn fun_02158f58(&mut self, _sw: u32) -> u32 {
+        0
+    }
+    fn fun_02158f74(&mut self, _sw: u32) -> u32 {
+        0
+    }
+    fn fun_0215a5cc(&mut self, _ctx: u32) -> u32 {
+        0
+    }
+    fn fun_0215a644(&mut self, _ctx: u32, _task: u32) {}
+    fn fun_0215a64c(&mut self, _ctx: u32) -> u32 {
+        0
+    }
+    fn fun_021666a4(&mut self, _slot: u32) {}
+    fn fun_0216c204(&mut self, _gamesys: u32, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_0216d588(&mut self, _obj: u32) -> u32 {
+        0
+    }
+    fn fun_0216d5f8(&mut self, _obj: u32) -> u32 {
+        0
+    }
+    fn fun_0216d88c(&mut self, _obj: u32, _pos: u32) {}
+    fn fun_0216ddc0(&mut self, _objsys: u32, _x: u32, _z: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_02186090(&mut self, _obj: u32) -> u32 {
+        0
+    }
+    fn fun_02186278(&mut self, _data: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_02188c54(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02188c7c(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02188c80(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02188c84(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02188c98(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02188cb4(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02188cd0(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_02189a00(&mut self, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_0218dc70(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_021938f4(&mut self, _e: u32) -> u32 {
+        0
+    }
+    fn fun_02193904(&mut self, _e: u32) {}
+    fn fun_0219390c(&mut self, _e: u32, _rec: u32) -> u32 {
+        0
+    }
+    fn fun_0219391c(&mut self, _e: u32) -> u32 {
+        0
+    }
+    fn fun_02193b40(&mut self, _e: u32, _rec: u32) {}
+    fn fun_02193b68(&mut self, _e: u32, _ws: u32, _rec: u32, _v: u32, _heap: u32) {}
+    fn fun_02193bc4(&mut self, _e: u32, _rec: u32) {}
+    fn fun_02193be4(&mut self, _e: u32, _rec: u32) -> u32 {
+        0
+    }
+    fn fun_02193c00(&mut self) -> u32 {
+        0
+    }
+    fn fun_02193c04(&mut self, _person: u32) -> u32 {
+        0
+    }
+    fn fun_021a3050(&mut self, _player: u32) -> u32 {
+        0
+    }
+    fn fun_021a3074(&mut self, _player: u32) -> u32 {
+        0
+    }
+    fn fun_021a3364(&mut self, _player: u32, _dir: u32, _pos: &mut [u32; 3]) {}
+    fn fun_021a3460(&mut self, _player: u32, _x: &mut [u8; 4], _y: &mut [u8; 2], _z: &mut [u8; 2]) {
+    }
+    fn fun_021ab0d4(&mut self, _map: u32, _pos: &[u32; 3]) -> u32 {
+        0
+    }
+    fn fun_021c1024(&mut self, _player: u32, _dir: u32, _x: u32, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_021c1094(&mut self, _task: u32) -> u32 {
+        0
+    }
+    fn fun_021c10a0(&mut self, _task: u32) {}
+    fn fun_021c1228(&mut self, _player: u32, _dir: u32, _v: u32, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_021c12c4(&mut self, _task: u32) -> u32 {
+        0
+    }
+    fn fun_021c12d0(&mut self, _task: u32) {}
+    fn fun_021c1cb0(&mut self, _gamesys: u32, _x: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_021c1d68(&mut self, _gamesys: u32, _x: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_021c30b8(&mut self, _gamesys: u32, _x: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_021c9550(&mut self, _obj: u32, _x: u32) {}
+    fn fun_021d2418(&mut self, _gamesys: u32, _fm: u32) -> u32 {
+        0
+    }
+    fn fun_021d2440(&mut self, _gamesys: u32, _fm: u32, _k: u32) -> u32 {
+        0
+    }
+    fn fun_021f36c0(&mut self, _w: u32) {}
+}
+// gen:scrcmd_misc21b-null-end
+
 /// Ids are unique, handlers are the ROM's table words (bit 0 clear here), and [`handler`] finds each.
 #[test]
 fn table_is_consistent() {
     let c = commands();
     // F8a..F8d: core 49, work 86, talk 33, screen 29, fld 80, obj 55, proc 17, sodateya 15, misc10 29; F8e: shop 1,
-    // proc_fld 20, encount 14, fld_battle 2, c03center 22, pokemon_fld 13 (494 is X2), misc21 35; script_sys 3
+    // proc_fld 20, encount 14, fld_battle 2, c03center 22, pokemon_fld 13 (494 is X2), misc21 35; F8f: misc10b 13,
+    // misc10c 17, bsubway 4, misc21b 23; script_sys 3
     assert_eq!(
         c.len(),
-        49 + 86 + 33 + 29 + 80 + 55 + 17 + 15 + 29 + 1 + 20 + 14 + 2 + 22 + 13 + 35 + 3
+        49 + 86
+            + 33
+            + 29
+            + 80
+            + 55
+            + 17
+            + 15
+            + 29
+            + 1
+            + 20
+            + 14
+            + 2
+            + 22
+            + 13
+            + 35
+            + 13
+            + 17
+            + 4
+            + 23
+            + 3
     );
     for w in c.windows(2) {
         assert!(w[0].0 < w[1].0, "duplicate id {}", w[0].0);
@@ -3401,4 +4387,53 @@ fn events_procs_tasks_dispatch() {
         0x3100
     ));
     assert!(!call_task(&mut h, 0x021B_2F18, 0x3000, 0x3100));
+}
+
+/// F8f: the wait callbacks of commands 346 (bsubway) and 197 / 198, the GMEVENT functions of scrcmd_misc10b / scrcmd_misc10c /
+/// scrcmd_bsubway are routed (null callees: each runs one step without panicking).
+#[test]
+fn f8f_waits_events_dispatch() {
+    let mut h = Null(Mem::new(0, vec![0; 0x4000]));
+    for f in [
+        crate::scrcmd_bsubway::WAIT_6DC,
+        crate::scrcmd_bsubway::WAIT_700,
+        crate::scrcmd_bsubway::WAIT_754,
+        crate::scrcmd_bsubway::WAIT_7E8,
+        crate::scrcmd_bsubway::WAIT_86C,
+        crate::scrcmd_bsubway::WAIT_C14,
+        crate::scrcmd_misc21b::WAIT_197,
+        crate::scrcmd_misc21b::WAIT_198,
+    ] {
+        assert!(
+            matches!(call_wait(&mut h, f, 0x1000, 0x2000), Some(0 | 1)),
+            "{f:#x}"
+        );
+    }
+    for f in [
+        crate::scrcmd_misc10b::EVENT_BOAT,
+        crate::scrcmd_misc10b::EVENT_480,
+        crate::scrcmd_misc10b::EVENT_493,
+        crate::scrcmd_misc10b::EVENT_SYMBOL_BATTLE,
+        crate::scrcmd_misc10b::EVENT_INTRUDE_WAIT,
+        crate::scrcmd_misc10b::EVENT_FOREST_WARP,
+        crate::scrcmd_misc10c::EVENT_468,
+        crate::scrcmd_bsubway::EVENT_DISCONNECT,
+        crate::scrcmd_bsubway::EVENT_934,
+    ] {
+        h.w32(0x1800, 0);
+        assert!(
+            matches!(call_event(&mut h, f, 0x1000, 0x1800, 0x2000), Some(0 | 1)),
+            "{f:#x}"
+        );
+    }
+    assert_eq!(
+        call_event(
+            &mut h,
+            crate::scrcmd_misc21b::EVENT_WFBC_TALK,
+            0x1000,
+            0x1800,
+            0x2000
+        ),
+        None
+    );
 }
