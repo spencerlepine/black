@@ -501,3 +501,19 @@ init procs of mask bits 10 / 12 / 13 to `scrcmd_fld::init_proc`.
   0x12E store 0; 0x19B / 0x19C reach `FUN_021A3190` through a long branch into case 0xC; `event_934` seq 0 falls through into
   seq 1; `scrcmd_misc10b::cmd_555` sub-command 1 stores the r0 `FUN_02166618` leaves. `trainer_id` divides by the id range
   (a zero-width range panics where `_s32_div_f` returns an unknown value; none exists in the table).
+
+## F8g coverage
+
+`tests/f8g_coverage.rs` (ROM-gated: skipped without `$BLACK_ROM_BUILD/OVY_10.sbin`, fails with `REQUIRE_ROM=1`) reads the
+command table (0x0217062C in overlay 10, 609 slots, count word 0x021705D8) and asserts that every non-null slot is ported
+(`scrcmd::commands()`, handler equal to the ROM word), in `EXCLUDED` (handler address and a reason per id) or in `PENDING`.
+The "624 slots / 614 non-null" of F1-SPLIT count the 15 init-proc words at 0x021705F0 as table slots; the real table has 609.
+
+* 609 slots = 9 null (137, 143..145, 153, 154, 156, 157, 435) + 600 non-null.
+* 600 non-null = **560 ported** + **39 excluded (D9)** + **1 pending**.
+* Excluded (39): X2 Musicals 93, 359..366, 495 (10); X1 `scrcmd_network.c` 313, 315..318, 499..504, 604..606 (14); X1
+  Entralink (overlay 18) 367..369, 371..375 (8); X1 `scrcmd_palpark.c` 448, 449, 496..498 (5); 382 (overlay 48 gimmick, parked
+  under F10); 494 (Dream World, X2).
+* Pending (in scope, specced, not ported): **414**, handler 0x021D29F0 (Thumb), overlay 21, 0xEC bytes, `scrcmd_misc21`: draws
+  / clears a text window (BMP window render only; port as a `Misc21Hooks` call). Needs a port job on that area.
+* No id is undocumented.
