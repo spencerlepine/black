@@ -122,8 +122,9 @@ def measure(mod, addrs, jobs):
     n = max(1, min(len(addrs), jobs * 4))
     parts = [(mod, addrs[i::n], stops) for i in range(n)]
     if jobs > 1:
-        from multiprocessing import Pool
-        with Pool(jobs) as p:
+        # fork: spawn/forkserver workers re-import the module and lose globals set in main (V-0031)
+        from multiprocessing import get_context
+        with get_context("fork").Pool(jobs) as p:
             results = p.map(_work, parts)
     else:
         results = [_work(x) for x in parts]

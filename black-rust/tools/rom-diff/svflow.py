@@ -1070,9 +1070,10 @@ def main(argv):
         return 0
     jobs = int(val("--jobs") or 1)
     if jobs > 1:
-        from multiprocessing import Pool
+        # fork: spawn/forkserver workers re-import the module and lose globals set in main (V-0031)
+        from multiprocessing import get_context
         n = jobs * 4
-        with Pool(jobs) as p:
+        with get_context("fork").Pool(jobs) as p:
             parts = p.map(_job, [(area, addrs[i::n], allported) for i in range(n)])
         funcs = {}
         for d in parts:
