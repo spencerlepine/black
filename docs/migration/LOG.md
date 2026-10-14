@@ -182,3 +182,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14 ~20:15Z** — Usage ORANGE 78% → DRAIN (3 Opus workers burned ~16%/20 min at the end). F12, F11, F3b finish; pause until 22:25Z.
 
 - **2026-10-14 ~20:35Z** — Usage RED 90% → WRAP UP NOW: F11, F3b, F12 stopped with unstaged work kept in their worktrees (F11 was about to run its gate). USAGE-CHECK cron deleted; PAUSED until 22:25Z (resume cron 7b55eca2). Window 17:25–20:35Z: merged B18b, F6b, B19b, F14 + validator run; 43% → 44%.
+
+- **2026-10-14 22:25Z** — Resumed by the human ("usage is ready"); deleted the pending resume cron to avoid a double start. Usage GREEN (session 0%, weekly 51%). USAGE-CHECK cron ae0b0b51. Resumed F11, F3b, F12 (same agents).
