@@ -12,7 +12,10 @@
 //!   NCLR.
 //!
 //! ARC 055 (29 members): 26 Japanese 32x16 type/contest labels (members 0..=22, 26..=28; palette
-//! member 25). The in-battle HP box / EXP bar archive was NOT located (see the report).
+//! member 25). A10d found the in-battle archives: ARC 083 is the shared "app common" UI (the
+//! accessors at 0x020275E4..0x02027780 return its member ids; `btlv_gauge` opens ARC 83 with
+//! palette 11 / gfx 12 / cells 13+n / anims 16+n), and the battle HUD sprites live in ARC 011
+//! members 88..=221 (see `gfxarc.rs`, `black extract-sprites battle-hud`).
 
 use super::items::{atlas_ron, load_narc, pack};
 use super::pokemon::{member, Res};

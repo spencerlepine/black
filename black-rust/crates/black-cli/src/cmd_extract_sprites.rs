@@ -1,8 +1,10 @@
 //! `black extract-sprites <category> <out>` (A10): ROM sprites -> `<out>/sprites/<category>/`.
 
+pub(crate) mod gfxarc;
 pub(crate) mod items;
 pub(crate) mod overworld;
 pub(crate) mod pokemon;
+pub(crate) mod spa;
 pub(crate) mod trainers;
 pub(crate) mod ui;
 
@@ -78,9 +80,42 @@ pub fn run(a: &Args) -> Result<(), Box<dyn std::error::Error>> {
             }
             return Ok(());
         }
+        "battle-hud" | "menus" => {
+            let r = gfxarc::extract(&files, &a.out, &a.category)?;
+            println!(
+                "{}: {} images in {} atlases, {} failures",
+                a.category,
+                r.images,
+                r.files,
+                r.failures.len()
+            );
+            for (k, e) in &r.failures {
+                println!("  {k}: {e}");
+            }
+            if let Some(p) = &a.contact {
+                std::fs::write(p, gfxarc::contact_sheet(&files, &a.category)?.to_png()?)?;
+            }
+            return Ok(());
+        }
+        "effects" => {
+            let r = spa::extract(&files, &a.out)?;
+            println!(
+                "effects: {} SPA files, {} textures, {} failures",
+                r.spa_files,
+                r.textures,
+                r.failures.len()
+            );
+            for (k, e) in &r.failures {
+                println!("  {k}: {e}");
+            }
+            if let Some(p) = &a.contact {
+                std::fs::write(p, spa::contact_sheet(&files)?.to_png()?)?;
+            }
+            return Ok(());
+        }
         c => {
             return Err(format!(
-                "unknown sprite category '{c}' (known: pokemon, trainers, overworld, items, icons, battle-ui)"
+                "unknown sprite category '{c}' (known: pokemon, trainers, overworld, items, icons, battle-ui, battle-hud, menus, effects)"
             )
             .into())
         }
