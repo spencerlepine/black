@@ -43,7 +43,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C7C10, "f8ce428e6d266ff6"),
     (0x021C7C74, "94ed552cea1df1df"),
     (0x021C7D28, "8de3f12a4c5550f6"),
-    (0x021C7D78, "38dfdb7ca16d7c34"),
+    (0x021C7D78, "ab0c917505c393a5"),
 ];
 // fndiff-recorded-end
 

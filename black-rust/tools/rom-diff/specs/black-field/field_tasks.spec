@@ -514,5 +514,6 @@ fn 021c7d78 ret=u32 inputs=300
   fix arg0 0xC u8 alt const 0 || any
   fix arg0 0xE u16 alt range 0 20 || any
   fix arg0 0x10 u16 alt range 0 20 || any
-  fix arg0 0x12 u16 alt range 1 4 || range 1 0xFFFF
+  # V-0034: period 0 drawn too (the runtime divide returns remainder 0 for a zero divisor)
+  fix arg0 0x12 u16 alt const 0 || range 1 4 || range 1 0xFFFF
   stub 021add7c force ret=none args=v,v

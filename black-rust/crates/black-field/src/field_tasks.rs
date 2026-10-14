@@ -827,8 +827,9 @@ pub fn periodic_proc<E: FieldEnv>(env: &mut E, w: u32) -> u32 {
     }
     let c = u32::from(env.r16(w + 0xE));
     let p = u32::from(env.r16(w + 0x12));
-    // UNVERIFIED: a period of 0 divides by zero in the runtime divide (0209C0A4); the spec never draws it.
-    let rem = if p == 0 { c } else { c % p };
+    // A period of 0: the runtime divide (0209C0A4) returns remainder 0 for a zero divisor, so the
+    // callback runs every frame (V-0034, ROM-confirmed by the validator).
+    let rem = if p == 0 { 0 } else { c % p };
     if rem == 0 {
         let obj = env.r32(w + 8);
         let x = env.r32(w + 4);
