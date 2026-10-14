@@ -1,6 +1,6 @@
 # Refactor proposal: split the plan file, compute progress, add UI comparison testing
 
-Standalone brief for the agent that refactors `github.com/spencerlepine/black` in place. The
+Standalone brief for the agent that refactors `/Users/notspencer/workplace/black/` in place. The
 migration loop is paused; `main` is at `5d252cf` ("F4b-port1 started (19% complete)"). After this
 refactor the coordinator must be able to resume from the `/loop` prompt and find everything by
 following the new reading order, with no human explanation. All paths below are relative to the repo
@@ -20,23 +20,23 @@ files. Do not port any game code during this refactor, and do not edit `black-ro
 `MIGRATION-AGENT.md` is the plan, the memory, the checklist, the research notes, the open-question
 list, the session log and the human queue in one 257,094-byte file. The `/loop` prompt in its §0
 tells the coordinator to "Read … fully" every iteration, and `VALIDATION-AGENT.md:9` already has to
-warn the validator *not* to. Measured section sizes today (bytes):
+warn the validator _not_ to. Measured section sizes today (bytes):
 
-| section | bytes | nature |
-| --- | --- | --- |
-| §0 Launch | 2,518 | fixed |
-| §1 Goal and locked decisions (D1–D9) | 6,509 | fixed |
-| §2 Current state | 8,911 | overwritten each session |
-| §3 Paths, tools, environment | 17,653 | mostly fixed |
-| §3b RE workflow | 9,261 | fixed |
-| §4 Architecture | 3,588 | fixed |
-| §5 Session protocol | 23,396 | fixed, but grows with "trap found on <date>" notes |
-| §5b Validation | 4,015 | fixed |
-| §6 Master checklist | **111,780** | 235 item lines; the longest single line is 2,853 chars of merge notes |
-| §7 Reference notes | 21,561 | append-only |
-| §8 Open questions | 20,990 | 59 bullets, append-only |
-| §9 Session log | 22,497 | 85 entries, append-only |
-| §10 Human queue | 3,895 | small |
+| section                              | bytes       | nature                                                                |
+| ------------------------------------ | ----------- | --------------------------------------------------------------------- |
+| §0 Launch                            | 2,518       | fixed                                                                 |
+| §1 Goal and locked decisions (D1–D9) | 6,509       | fixed                                                                 |
+| §2 Current state                     | 8,911       | overwritten each session                                              |
+| §3 Paths, tools, environment         | 17,653      | mostly fixed                                                          |
+| §3b RE workflow                      | 9,261       | fixed                                                                 |
+| §4 Architecture                      | 3,588       | fixed                                                                 |
+| §5 Session protocol                  | 23,396      | fixed, but grows with "trap found on <date>" notes                    |
+| §5b Validation                       | 4,015       | fixed                                                                 |
+| §6 Master checklist                  | **111,780** | 235 item lines; the longest single line is 2,853 chars of merge notes |
+| §7 Reference notes                   | 21,561      | append-only                                                           |
+| §8 Open questions                    | 20,990      | 59 bullets, append-only                                               |
+| §9 Session log                       | 22,497      | 85 entries, append-only                                               |
+| §10 Human queue                      | 3,895       | small                                                                 |
 
 The file has already lost data to its own size: the 2026-10-13 07:34Z commit "§8: re-add 9 session
 notes that were silently dropped (wrong anchor)" and the 13:05Z commit "§2 Running line rewritten
@@ -49,16 +49,16 @@ Keep the file name `MIGRATION-AGENT.md` (it is referenced from 15 places, listed
 the **entry point only**, ≤ 25 KB, containing today's §0, §1, §4, §5 (trimmed), §5b, and a new
 "Reading order" table. Move everything else under `docs/migration/`:
 
-| new file | from | size cap | who reads it, when |
-| --- | --- | --- | --- |
-| `MIGRATION-AGENT.md` | §0, §1, §4, §5, §5b | 25 KB | coordinator every iteration; workers read §1, §4, §5 "Rules" + "Definition of done" |
-| `docs/migration/STATE.md` | §2 | 8 KB | coordinator every iteration (read + overwrite); the validator for the "~N% done" line |
-| `docs/migration/ENV.md` | §3 + §3b | 30 KB | coordinator at session start (`doctor.sh` covers most of it); workers read only the §3b part |
-| `docs/migration/checklist/Z.md`, `T.md`, `A.md`, `B.md`, `P.md`, `S.md`, `F.md`, `G.md`, `U.md`, `H.md`, `R.md`, `X.md` (out of scope) | §6, one file per `### Phase` heading (`MIGRATION-AGENT.md:387` onward) | 40 KB each; **an item's done-note is capped at 400 chars**, the rest moves to `docs/migration/log/<ITEM-ID>.md` | coordinator reads only the phases it is dispatching from (step 3 of the iteration) |
-| `docs/migration/NOTES.md` | §7 | 40 KB | workers, by named sub-heading only (as `VALIDATION-AGENT.md:55` already does) |
-| `docs/migration/OPEN.md` | §8 | 40 KB | coordinator every iteration; workers for their area |
-| `docs/migration/LOG.md` | §9 | none (append-only) | nobody reads it whole: the coordinator reads the **last 10 entries** on resume (`tail -n`) |
-| `docs/migration/HUMAN.md` | §10 | 8 KB | coordinator each iteration; the human |
+| new file                                                                                                                               | from                                                                   | size cap                                                                                                        | who reads it, when                                                                           |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `MIGRATION-AGENT.md`                                                                                                                   | §0, §1, §4, §5, §5b                                                    | 25 KB                                                                                                           | coordinator every iteration; workers read §1, §4, §5 "Rules" + "Definition of done"          |
+| `docs/migration/STATE.md`                                                                                                              | §2                                                                     | 8 KB                                                                                                            | coordinator every iteration (read + overwrite); the validator for the "~N% done" line        |
+| `docs/migration/ENV.md`                                                                                                                | §3 + §3b                                                               | 30 KB                                                                                                           | coordinator at session start (`doctor.sh` covers most of it); workers read only the §3b part |
+| `docs/migration/checklist/Z.md`, `T.md`, `A.md`, `B.md`, `P.md`, `S.md`, `F.md`, `G.md`, `U.md`, `H.md`, `R.md`, `X.md` (out of scope) | §6, one file per `### Phase` heading (`MIGRATION-AGENT.md:387` onward) | 40 KB each; **an item's done-note is capped at 400 chars**, the rest moves to `docs/migration/log/<ITEM-ID>.md` | coordinator reads only the phases it is dispatching from (step 3 of the iteration)           |
+| `docs/migration/NOTES.md`                                                                                                              | §7                                                                     | 40 KB                                                                                                           | workers, by named sub-heading only (as `VALIDATION-AGENT.md:55` already does)                |
+| `docs/migration/OPEN.md`                                                                                                               | §8                                                                     | 40 KB                                                                                                           | coordinator every iteration; workers for their area                                          |
+| `docs/migration/LOG.md`                                                                                                                | §9                                                                     | none (append-only)                                                                                              | nobody reads it whole: the coordinator reads the **last 10 entries** on resume (`tail -n`)   |
+| `docs/migration/HUMAN.md`                                                                                                              | §10                                                                    | 8 KB                                                                                                            | coordinator each iteration; the human                                                        |
 
 Today's long per-item merge notes in §6 (e.g. B5, B6, Z17 at `MIGRATION-AGENT.md:445–450`, each
 over 1,500 chars) are the main bulk. Move each note body verbatim into
@@ -78,10 +78,10 @@ them up.
   `git add MIGRATION-AGENT.md` with `git add MIGRATION-AGENT.md docs/migration` wherever it appears
   (§0 "Context overrides", §5 step 4 "Checkpoint", §5 "Pause" step 1 and 4).
 - **The `/loop` prompt in §0** becomes: `Read $HOME/workplace/black/MIGRATION-AGENT.md fully (it is
-  short), then the files its "Reading order" table lists for an iteration, and act as the coordinator
-  in §5 …` (rest unchanged).
+short), then the files its "Reading order" table lists for an iteration, and act as the coordinator
+in §5 …` (rest unchanged).
 - **Worker prompt template** (§5): the line `Read these sections of <worktree>/MIGRATION-AGENT.md
-  first: §1, §3, §3b, §4, §5 (rules + definition of done), §7 notes relevant to <area>, §8` becomes
+first: §1, §3, §3b, §4, §5 (rules + definition of done), §7 notes relevant to <area>, §8` becomes
   a list of files: `MIGRATION-AGENT.md` §1/§4/§5, `docs/migration/ENV.md` ("RE workflow" section),
   `docs/migration/NOTES.md` (named sub-heading), `docs/migration/OPEN.md` (their area).
 - **Section-number references** inside the moved text ("§5 rule 6", "§8", "§3b") must be rewritten
@@ -177,7 +177,7 @@ measured number. Record the re-baseline in `LOG.md`.
 Phase U (22 screens, `MIGRATION-AGENT.md` "### Phase U") has no automatic check. The plan's only
 verification for UI is `MIGRATION-AGENT.md:736`: "side-by-side screenshot/timing comparison against
 the original running in an emulator (manual; human sign-off)", and §10 already holds three
-unanswered "look at /tmp/blk/g2/*.png" items. Blind Bevy rebuilds will drift. Goal from the human:
+unanswered "look at /tmp/blk/g2/\*.png" items. Blind Bevy rebuilds will drift. Goal from the human:
 ≥ 0.70 similarity per screen, strive higher, **minimise LLM tokens**: all image work is local
 compute; an agent reads numbers, and looks at a picture only when a number is red.
 
@@ -266,9 +266,10 @@ existing `/tmp/blk/venv` (add `pillow`, `numpy`, `scikit-image` to `doctor.sh`'s
 ### Acceptance
 
 `compare.py` on two identical PNGs scores 1.0; on a PNG against itself shifted by 1 px scores
+
 > 0.9; on an all-black vs the title screen scores < 0.3 (put these three in
-`tools/ui-diff/test_compare.py`). With goldens absent the gate passes and prints "ui-diff: no
-goldens, skipped". With the first three cases captured, `PROGRESS.json` shows their scores.
+> `tools/ui-diff/test_compare.py`). With goldens absent the gate passes and prints "ui-diff: no
+> goldens, skipped". With the first three cases captured, `PROGRESS.json` shows their scores.
 
 ---
 
