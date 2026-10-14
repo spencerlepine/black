@@ -83,6 +83,27 @@ fn played() -> SaveData {
     s.bag.0[2] = 10;
     s.party.0[4] = 1;
     s.boxes.trays[23].0[0x100] = 0xAB;
+    // S5b blocks
+    s.situation.set_egg_steps(77);
+    s.trcard.set_b602();
+    s.perap.set_exists();
+    s.sysinfo.game_time.count_down(10);
+    s.record.inc(2, &mut crate::record::Plain);
+    s.pms.unlock(5);
+    s.mmdl.records[3].0[0] = 1;
+    s.wfbc.ids[0] = 7;
+    s.event_work.flags[1] = 0x80;
+    s.battle_box.set_flags(4);
+    s.daycare.put(0, &[9; crate::daycare::MON_SIZE]);
+    s.mmdl_positions.positions[0] = [1, 2, 3];
+    s.intrude.add_points_c(5);
+    s.shortcut.set(4, true);
+    s.zukan.set_seen(25, 0, 0);
+    s.match_log.counters.inc(1, 2);
+    s.pms_messages.set(1, &Pms::default());
+    s.trial_house.log.add_count(0, 3);
+    s.hall_of_fame.year = 2026;
+    s.poke_records.records[1].pid = 0xDEAD;
     s
 }
 
@@ -127,6 +148,80 @@ fn round_trip_random_images() {
     s.symbols = SymbolSave::from_bytes(&rnd(crate::symbol_save::SIZE));
     s.battle_examination = BattleExamination::from_bytes(&rnd(crate::battle_examination::SIZE));
     s.bag = Bag(rnd(BAG_SIZE));
+    s.situation = Situation::from_bytes(&rnd(crate::situation::SIZE));
+    s.trcard = TrCard::from_bytes(&rnd(crate::trcard::SIZE));
+    s.perap = Perap::from_bytes(&rnd(crate::perapvoice::SIZE));
+    s.sysinfo = SysInfo::from_bytes(&rnd(crate::sysinfo::SIZE));
+    s.record = Record::from_bytes(&rnd(crate::record::SIZE));
+    s.pms = PmsSave::from_bytes(&rnd(crate::pms_save::SIZE));
+    s.mmdl = MmdlSave::from_bytes(&rnd(crate::mmdl_save::SIZE));
+    s.wfbc = WfbcSave::from_bytes(&rnd(crate::wfbc_save::SIZE));
+    s.event_work = EventWorkSave::from_bytes(&rnd(crate::field_save::EVENT_WORK_SIZE));
+    s.battle_box = BattleBox::from_bytes(&rnd(crate::battle_box::SIZE));
+    s.daycare = Daycare::from_bytes(&rnd(crate::daycare::SIZE));
+    s.mmdl_positions = MmdlPositions::from_bytes(&rnd(crate::field_save::MMDL_POS_SIZE));
+    s.intrude = IntrudeSave::from_bytes(&rnd(crate::intrude_save::SIZE));
+    s.shortcut = Shortcut::from_bytes(&rnd(crate::shortcut::SIZE));
+    s.zukan = Zukan::from_bytes(&rnd(crate::zukan_save::SIZE));
+    s.match_log = MatchLog::from_bytes(&rnd(crate::mac_log::MATCH_SIZE));
+    s.pms_messages = PmsMessages::from_bytes(&rnd(crate::pms_save::MESSAGES_SIZE));
+    s.trial_house = TrialHouse::from_bytes(&rnd(crate::mac_log::SIZE));
+    s.hall_of_fame = HofRecord::from_bytes(&rnd(crate::dendou_save::SIZE));
+    s.poke_records = PokeRecords::from_bytes(&rnd(crate::poke_records::SIZE));
+    // every S5b block model is lossless over arbitrary images
+    type Conv = fn(&[u8]) -> Vec<u8>;
+    let convs: [(usize, Conv); 20] = [
+        (crate::situation::SIZE, |b| {
+            Situation::from_bytes(b).to_bytes()
+        }),
+        (crate::trcard::SIZE, |b| TrCard::from_bytes(b).to_bytes()),
+        (crate::perapvoice::SIZE, |b| Perap::from_bytes(b).to_bytes()),
+        (crate::sysinfo::SIZE, |b| SysInfo::from_bytes(b).to_bytes()),
+        (crate::record::SIZE, |b| Record::from_bytes(b).to_bytes()),
+        (crate::pms_save::SIZE, |b| PmsSave::from_bytes(b).to_bytes()),
+        (crate::mmdl_save::SIZE, |b| {
+            MmdlSave::from_bytes(b).to_bytes()
+        }),
+        (crate::wfbc_save::SIZE, |b| {
+            WfbcSave::from_bytes(b).to_bytes()
+        }),
+        (crate::field_save::EVENT_WORK_SIZE, |b| {
+            EventWorkSave::from_bytes(b).to_bytes()
+        }),
+        (crate::battle_box::SIZE, |b| {
+            BattleBox::from_bytes(b).to_bytes()
+        }),
+        (crate::daycare::SIZE, |b| Daycare::from_bytes(b).to_bytes()),
+        (crate::field_save::MMDL_POS_SIZE, |b| {
+            MmdlPositions::from_bytes(b).to_bytes()
+        }),
+        (crate::intrude_save::SIZE, |b| {
+            IntrudeSave::from_bytes(b).to_bytes()
+        }),
+        (crate::shortcut::SIZE, |b| {
+            Shortcut::from_bytes(b).to_bytes()
+        }),
+        (crate::zukan_save::SIZE, |b| Zukan::from_bytes(b).to_bytes()),
+        (crate::mac_log::MATCH_SIZE, |b| {
+            MatchLog::from_bytes(b).to_bytes()
+        }),
+        (crate::pms_save::MESSAGES_SIZE, |b| {
+            PmsMessages::from_bytes(b).to_bytes()
+        }),
+        (crate::mac_log::SIZE, |b| {
+            TrialHouse::from_bytes(b).to_bytes()
+        }),
+        (crate::dendou_save::SIZE, |b| {
+            HofRecord::from_bytes(b).to_bytes()
+        }),
+        (crate::poke_records::SIZE, |b| {
+            PokeRecords::from_bytes(b).to_bytes()
+        }),
+    ];
+    for (size, conv) in convs {
+        let img = rnd(size);
+        assert_eq!(conv(&img), img, "block of {size:#x} bytes");
+    }
     s.misc = Misc::from_bytes(&rnd(crate::misc::SIZE));
     let back = decode(&encode(&s)).unwrap();
     assert_eq!(back, s);
@@ -257,4 +352,100 @@ fn file_storage_round_trip() {
     st.remove("slot_1").unwrap();
     assert_eq!(read_save(&st, "slot_1").unwrap(), None);
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn new_game_s5b_blocks() {
+    let s = new_game();
+    // block 28: +0x76 = 0x1AB, rest zero
+    let b = s.situation.to_bytes();
+    assert_eq!(&b[0x76..0x78], &[0xAB, 0x01]);
+    assert_eq!(b.iter().filter(|&&x| x != 0).count(), 2);
+    // block 37: game clock started (default RTC: zero), birthday / MAC zero
+    assert_eq!(s.sysinfo.game_time.started, 1);
+    assert_eq!(s.sysinfo.game_time.penalty, 0);
+    // block 38: zero records (plaintext, key 0)
+    assert_eq!(s.record.to_bytes(), vec![0; crate::record::SIZE]);
+    // block 39: words 0xFFFF, group of kind 2 unlocked
+    assert!(s.pms.is_unlocked(1));
+    assert!(s.pms.sentences.iter().all(|p| p.words == [0xFFFF; 2]));
+    // block 43: the town header and ids
+    assert_eq!(s.wfbc.ids, [0xFFFF; 10]);
+    // block 49: six cleared box Pokemon, the name of box 1
+    let mut clear = vec![0u8; crate::battle_box::MON_SIZE];
+    black_pokemon::create::clear_box_pokemon(&mut clear);
+    assert!(s.battle_box.mons.iter().all(|m| m.0 == clear));
+    assert_eq!(s.battle_box.name[0], u16::from(b'B'));
+    // block 51: no kept positions
+    assert!(s.mmdl_positions.to_bytes().iter().all(|&x| x == 0xFF));
+    // block 53: +0x1A0 = 0x30
+    assert_eq!(s.intrude.b1a0, 0x30);
+    // block 54: all free
+    assert_eq!(s.shortcut.to_bytes(), vec![25; crate::shortcut::SIZE]);
+    // block 55: magic, nothing seen
+    assert_eq!(s.zukan.magic, crate::zukan_save::MAGIC);
+    assert_eq!(s.zukan.seen_count_national(), 0);
+    // block 62: the default sentences
+    assert_eq!(s.pms_messages.get(0).words[0], 0x58F);
+    // zero blocks
+    assert_eq!(s.trcard.to_bytes(), vec![0; crate::trcard::SIZE]);
+    assert_eq!(s.daycare.to_bytes(), vec![0; crate::daycare::SIZE]);
+    assert_eq!(
+        s.event_work.to_bytes(),
+        vec![0; crate::field_save::EVENT_WORK_SIZE]
+    );
+    assert_eq!(s.mmdl.to_bytes(), vec![0; crate::mmdl_save::SIZE]);
+}
+
+/// The SaveData of format 1 before S5b (the same fields, same order).
+#[derive(Serialize)]
+struct BeforeS5b<'a> {
+    boxes: &'a BoxStorage,
+    bag: &'a Bag,
+    party: &'a Party,
+    info: &'a SaveInfo,
+    mailbox: &'a MailBox,
+    regulation: &'a RegulationBlock,
+    misc: &'a Misc,
+    battle_rec: &'a BattleRecBlock,
+    bsubway_play: &'a BsubwayPlay,
+    bsubway_score: &'a BsubwayScore,
+    symbols: &'a SymbolSave,
+    battle_examination: &'a BattleExamination,
+}
+
+#[test]
+fn format_1_save_without_s5b_blocks_still_loads() {
+    let s = played();
+    let old = BeforeS5b {
+        boxes: &s.boxes,
+        bag: &s.bag,
+        party: &s.party,
+        info: &s.info,
+        mailbox: &s.mailbox,
+        regulation: &s.regulation,
+        misc: &s.misc,
+        battle_rec: &s.battle_rec,
+        bsubway_play: &s.bsubway_play,
+        bsubway_score: &s.bsubway_score,
+        symbols: &s.symbols,
+        battle_examination: &s.battle_examination,
+    };
+    let payload = ron::to_string(&old).unwrap().into_bytes();
+    let mut env = Vec::new();
+    env.extend_from_slice(&MAGIC);
+    env.extend_from_slice(&1u32.to_le_bytes());
+    env.extend_from_slice(&(payload.len() as u32).to_le_bytes());
+    env.extend_from_slice(&crc32(&payload).to_le_bytes());
+    env.extend_from_slice(&payload);
+    let back = decode(&env).unwrap();
+    assert_eq!(back.info, s.info);
+    assert_eq!(back.symbols, s.symbols);
+    // the S5b blocks come back in their init state (no message bank, clock or MAC)
+    let fresh = SaveData::new_game(&mut NoNames, K);
+    assert_eq!(back.zukan, fresh.zukan);
+    assert_eq!(back.shortcut, fresh.shortcut);
+    assert_eq!(back.battle_box, fresh.battle_box);
+    assert_eq!(back.sysinfo, fresh.sysinfo);
+    assert_eq!(back.mmdl_positions, fresh.mmdl_positions);
 }

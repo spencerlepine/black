@@ -21,16 +21,33 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
+use crate::battle_box::{BattleBox, BattleBoxHooks};
 use crate::battle_examination::BattleExamination;
 use crate::battle_rec::BattleRecBlock;
 use crate::box_data::{self, BoxEnv};
 use crate::bsubway::{BsubwayPlay, BsubwayScore};
+use crate::daycare::Daycare;
+use crate::dendou_save::HofRecord;
+use crate::field_save::{EventWorkSave, MmdlPositions};
+use crate::intrude_save::{IntrudeHooks, IntrudeSave};
+use crate::mac_log::{MacHooks, MatchLog, TrialHouse};
 use crate::mail::{GameConsts, MailBox};
 use crate::misc::{Misc, MiscTextHooks};
+use crate::mmdl_save::MmdlSave;
 use crate::party::{self, PartyHooks};
+use crate::perapvoice::Perap;
+use crate::pms_save::{PmsMessages, PmsSave};
+use crate::poke_records::PokeRecords;
+use crate::record::Record;
 use crate::regulation::RegulationBlock;
 use crate::save_info::SaveInfo;
+use crate::shortcut::Shortcut;
+use crate::situation::Situation;
 use crate::symbol_save::{Plain, SymbolSave};
+use crate::sysinfo::{SysHooks, SysInfo};
+use crate::trcard::{RtcHooks, TrCard};
+use crate::wfbc_save::WfbcSave;
+use crate::zukan_save::Zukan;
 
 /// Format version written by [`encode`].
 pub const FORMAT_VERSION: u32 = 1;
@@ -99,6 +116,18 @@ pub trait NewGameHooks {
     /// Message `entry` of bank 0x2F as a 9-unit name (`FUN_02045EC0` + `FUN_02045A38`): the two
     /// default names of block 52 (entries 0x151 and 0x159).
     fn misc_name(&mut self, entry: u32) -> [u16; 9];
+    /// The RTC now for the game clock of block 37 (`GameTime::start`): date (16 bytes), time
+    /// (12 bytes), the date as a day number, seconds since 2000. Default: all zero.
+    fn rtc_now(&mut self) -> ([u8; 16], [u8; 12], u32, u64) {
+        ([0; 16], [0; 12], 0, 0)
+    }
+    /// This DS's MAC address (block 60's log). Default: zero.
+    fn mac_address(&mut self) -> [u8; 6] {
+        [0; 6]
+    }
+    /// The overlay-11 routine `FUN_021763BC` on the zeroed 0x10-byte record of block 53
+    /// (UNVERIFIED: Pass Power levels; not ported). Default: nothing.
+    fn intrude_power_init(&mut self, _rec: &mut [u8; 16]) {}
 }
 
 /// `MiscTextHooks` for the new game: a string handle is its message entry.
@@ -116,6 +145,214 @@ impl<H: NewGameHooks> MiscTextHooks for NewMisc<'_, H> {
     }
     fn str_free(&mut self, _s: u32) {}
     fn msg_close(&mut self, _msg: u32) {}
+}
+
+/// The hooks the S5b block inits need, on top of [`NewGameHooks`] (and with no-op defaults when a
+/// field is missing from an older save: [`Quiet`]).
+struct NewBlocks<'a, H: NewGameHooks> {
+    h: &'a mut H,
+    name: Option<[u8; box_data::NAME_SIZE]>,
+}
+
+impl<H: NewGameHooks> RtcHooks for NewBlocks<'_, H> {
+    fn date_time(&mut self, date: &mut [u8; 16], time: &mut [u8; 12]) {
+        let (d, t, _, _) = self.h.rtc_now();
+        *date = d;
+        *time = t;
+    }
+    fn to_seconds(&mut self, _date: &[u8; 16], _time: &[u8; 12]) -> u64 {
+        self.h.rtc_now().3
+    }
+}
+
+impl<H: NewGameHooks> SysHooks for NewBlocks<'_, H> {
+    fn rtc_offset(&mut self) -> u64 {
+        0
+    }
+    fn mac(&mut self, buf: &mut [u8; 6]) {
+        *buf = self.h.mac_address();
+    }
+    fn owner_info(&mut self, _buf: &mut [u8; 0x54]) {}
+    fn date_to_days(&mut self, _date: &[u8; 16]) -> u32 {
+        self.h.rtc_now().2
+    }
+}
+
+impl<H: NewGameHooks> MacHooks for NewBlocks<'_, H> {
+    fn mac(&mut self, buf: &mut [u8; 6]) {
+        *buf = self.h.mac_address();
+    }
+    fn compare(&mut self, a: &[u8; 6], b: &[u8; 6]) -> u32 {
+        (a != b) as u32
+    }
+}
+
+impl<H: NewGameHooks> IntrudeHooks for NewBlocks<'_, H> {
+    fn power_init(&mut self, rec: &mut [u8; 16]) {
+        self.h.intrude_power_init(rec);
+    }
+    fn play_time(&mut self, _pt: u32) -> (u32, u32, u32) {
+        (0, 0, 0)
+    }
+}
+
+/// The Battle Box init's message bank: entry 6 of bank 9 is the first PC box's default name
+/// ([`NewGameHooks::box_name`]`(0)`), cut to the block's 0x14 characters.
+impl<H: NewGameHooks> BattleBoxHooks for NewBlocks<'_, H> {
+    fn msg_open(&mut self) -> u32 {
+        self.name = self.h.box_name(0);
+        self.name.is_some() as u32
+    }
+    fn msg_name(&mut self, _msg: u32, name: &mut [u8; crate::battle_box::NAME_SIZE]) {
+        if let Some(n) = self.name {
+            name.copy_from_slice(&n[..crate::battle_box::NAME_SIZE]);
+        }
+    }
+    fn msg_close(&mut self, _msg: u32) {}
+    fn box_param(&mut self, _mon: &[u8], _id: u32) -> u32 {
+        0
+    }
+    fn party_alloc(&mut self, _heap: u32) -> u32 {
+        0
+    }
+    fn party_init(&mut self, _party: u32, _n: u32) {}
+    fn party_add(&mut self, _party: u32, _mon: u32) {}
+    fn party_count(&mut self, _party: u32) -> u32 {
+        0
+    }
+    fn party_mon(&mut self, _party: u32, _i: u32) -> u32 {
+        0
+    }
+    fn box_part(&mut self, _mon: u32) -> [u8; crate::battle_box::MON_SIZE] {
+        [0; crate::battle_box::MON_SIZE]
+    }
+    fn party_mon_from_box(&mut self, _mon: &[u8], _heap: u32) -> u32 {
+        0
+    }
+    fn free(&mut self, _p: u32) {}
+}
+
+/// [`NewGameHooks`] without a message bank, clock or MAC address: the serde defaults of the S5b
+/// blocks (a save written before a block was modelled gets the block as its init leaves it).
+struct Quiet;
+
+impl NewGameHooks for Quiet {
+    fn box_name(&mut self, _i: u32) -> Option<[u8; box_data::NAME_SIZE]> {
+        None
+    }
+    fn misc_name(&mut self, _entry: u32) -> [u16; 9] {
+        [0; 9]
+    }
+}
+
+/// The S5b blocks as their inits leave them (zeroed block first, as the original clears the save).
+struct Fresh {
+    situation: Situation,
+    trcard: TrCard,
+    perap: Perap,
+    sysinfo: SysInfo,
+    record: Record,
+    pms: PmsSave,
+    mmdl: MmdlSave,
+    wfbc: WfbcSave,
+    event_work: EventWorkSave,
+    battle_box: BattleBox,
+    daycare: Daycare,
+    mmdl_positions: MmdlPositions,
+    intrude: IntrudeSave,
+    shortcut: Shortcut,
+    zukan: Zukan,
+    match_log: MatchLog,
+    pms_messages: PmsMessages,
+    trial_house: TrialHouse,
+    hall_of_fame: HofRecord,
+    poke_records: PokeRecords,
+}
+
+impl Fresh {
+    fn new<H: NewGameHooks>(h: &mut H) -> Self {
+        let n = &mut NewBlocks { h, name: None };
+        let mut situation = Situation::default();
+        situation.init();
+        let mut perap = Perap::default();
+        perap.init();
+        let mut sysinfo = SysInfo::default();
+        sysinfo.init(n);
+        let mut record = Record::default();
+        record.init(&mut crate::record::Plain);
+        let mut pms = PmsSave::default();
+        pms.init();
+        let mut wfbc = WfbcSave::default();
+        wfbc.init();
+        let mut battle_box = BattleBox::default();
+        battle_box.init(n);
+        let mut intrude = IntrudeSave::default();
+        intrude.init(n);
+        let mut zukan = Zukan::default();
+        zukan.init();
+        let mut match_log = MatchLog::default();
+        match_log.init(n);
+        let mut pms_messages = PmsMessages::default();
+        pms_messages.init();
+        Fresh {
+            situation,
+            trcard: TrCard::default(),
+            perap,
+            sysinfo,
+            record,
+            pms,
+            mmdl: MmdlSave::default(),
+            wfbc,
+            event_work: EventWorkSave::default(),
+            battle_box,
+            daycare: Daycare::default(),
+            mmdl_positions: MmdlPositions::new_game(),
+            intrude,
+            shortcut: Shortcut::default(),
+            zukan,
+            match_log,
+            pms_messages,
+            trial_house: TrialHouse::default(),
+            hall_of_fame: HofRecord::default(),
+            poke_records: PokeRecords::default(),
+        }
+    }
+}
+
+/// Serde defaults of the S5b fields (a format-1 save written before S5b has none of them).
+mod fresh {
+    use super::*;
+
+    macro_rules! fresh_fn {
+        ($($name:ident: $ty:ty),* $(,)?) => {
+            $(pub fn $name() -> $ty {
+                Fresh::new(&mut Quiet).$name
+            })*
+        };
+    }
+
+    fresh_fn!(
+        situation: Situation,
+        trcard: TrCard,
+        perap: Perap,
+        sysinfo: SysInfo,
+        record: Record,
+        pms: PmsSave,
+        mmdl: MmdlSave,
+        wfbc: WfbcSave,
+        event_work: EventWorkSave,
+        battle_box: BattleBox,
+        daycare: Daycare,
+        mmdl_positions: MmdlPositions,
+        intrude: IntrudeSave,
+        shortcut: Shortcut,
+        zukan: Zukan,
+        match_log: MatchLog,
+        pms_messages: PmsMessages,
+        trial_house: TrialHouse,
+        hall_of_fame: HofRecord,
+        poke_records: PokeRecords,
+    );
 }
 
 /// The whole save.
@@ -145,6 +382,68 @@ pub struct SaveData {
     pub symbols: SymbolSave,
     /// Extra save area 5.
     pub battle_examination: BattleExamination,
+    // S5b blocks: absent from a format-1 save written before S5b, they default to their init
+    // state (no format bump: the payload only gained fields).
+    /// Block 28: location records, the saved player position, counters.
+    #[serde(default = "fresh::situation")]
+    pub situation: Situation,
+    /// Block 33: trainer card (signature, badge records).
+    #[serde(default = "fresh::trcard")]
+    pub trcard: TrCard,
+    /// Block 36: Chatot's recorded cry.
+    #[serde(default = "fresh::perap")]
+    pub perap: Perap,
+    /// Block 37: DS identity and the game clock.
+    #[serde(default = "fresh::sysinfo")]
+    pub sysinfo: SysInfo,
+    /// Block 38: game records (trainer card counters).
+    #[serde(default = "fresh::record")]
+    pub record: Record,
+    /// Block 39: easy-chat words and registered sentences.
+    #[serde(default = "fresh::pms")]
+    pub pms: PmsSave,
+    /// Block 41: field objects (MMDL records).
+    #[serde(default = "fresh::mmdl")]
+    pub mmdl: MmdlSave,
+    /// Block 43: White Forest / Black City.
+    #[serde(default = "fresh::wfbc")]
+    pub wfbc: WfbcSave,
+    /// Block 45: event flags and vars.
+    #[serde(default = "fresh::event_work")]
+    pub event_work: EventWorkSave,
+    /// Block 49: Battle Box.
+    #[serde(default = "fresh::battle_box")]
+    pub battle_box: BattleBox,
+    /// Block 50: daycare.
+    #[serde(default = "fresh::daycare")]
+    pub daycare: Daycare,
+    /// Block 51: kept field-object positions.
+    #[serde(default = "fresh::mmdl_positions")]
+    pub mmdl_positions: MmdlPositions,
+    /// Block 53: Entralink.
+    #[serde(default = "fresh::intrude")]
+    pub intrude: IntrudeSave,
+    /// Block 54: registered shortcuts.
+    #[serde(default = "fresh::shortcut")]
+    pub shortcut: Shortcut,
+    /// Block 55: Pokedex.
+    #[serde(default = "fresh::zukan")]
+    pub zukan: Zukan,
+    /// Block 60: DS log and the Battle Subway record counters (D9 data, modelled whole).
+    #[serde(default = "fresh::match_log")]
+    pub match_log: MatchLog,
+    /// Block 62: the player's easy-chat messages.
+    #[serde(default = "fresh::pms_messages")]
+    pub pms_messages: PmsMessages,
+    /// Block 65: Trial House DS log.
+    #[serde(default = "fresh::trial_house")]
+    pub trial_house: TrialHouse,
+    /// Block 66: a Hall of Fame record.
+    #[serde(default = "fresh::hall_of_fame")]
+    pub hall_of_fame: HofRecord,
+    /// Block 67: two Pokemon records.
+    #[serde(default = "fresh::poke_records")]
+    pub poke_records: PokeRecords,
 }
 
 /// `PartyHooks` for the new-game party: the record clear is `black-pokemon`'s port.
@@ -242,7 +541,14 @@ impl SaveData {
     /// boxes `sub_02007AD0` (30 `clear_box_pokemon` each), bag `sub_02007CB8` (zero), party
     /// `FUN_0201A948`, block 27 `FUN_02008704`, mailbox `FUN_02009004`, regulation
     /// `sub_0200B348`, block 52 `sub_0200C058`, battle recorder `sub_0200B368`, Battle Subway `FUN_0200D85C` /
-    /// `sub_0200DA6C`, symbols `sub_0200E098`, battle examination `sub_0200E590`.
+    /// `sub_0200DA6C`, symbols `sub_0200E098`, battle examination `sub_0200E590`; S5b: situation
+    /// `sub_0200882C`, trainer card `sub_020089B0`, Chatot `FUN_02007B08`, system info
+    /// `sub_02008AF0` (clock from [`NewGameHooks::rtc_now`]), records `sub_02008C28` (key 0: the
+    /// V-count is not modelled), easy chat `sub_02024938` / `sub_0200E6B4`, field objects
+    /// `FUN_0200EE50`, White Forest / Black City `sub_0200A848`, event work `sub_020142D8`, Battle
+    /// Box `sub_0200BA80`, daycare `sub_0200BDA0`, kept positions `FUN_0216E47C`, Entralink
+    /// `sub_0200BDC4`, shortcuts `sub_0200C3F8`, Pokedex `sub_0200C9F4`, blocks 60 / 65
+    /// `sub_0200E9E0` / `sub_0200E8EC`, Hall of Fame record `sub_0200EA2C`, block 67 `sub_0200E734`.
     pub fn new_game<H: NewGameHooks>(h: &mut H, k: GameConsts) -> Self {
         let mut meta = vec![0u8; box_data::META_SIZE];
         box_data::init_meta(
@@ -269,6 +575,7 @@ impl SaveData {
         misc.init(&mut NewMisc(h));
         let mut symbols = SymbolSave::default();
         symbols.init(&mut Plain);
+        let f = Fresh::new(h);
         SaveData {
             boxes: BoxStorage { meta, trays },
             bag: Bag(vec![0; BAG_SIZE]),
@@ -282,6 +589,26 @@ impl SaveData {
             bsubway_score: BsubwayScore::new_game(),
             symbols,
             battle_examination: BattleExamination::default(),
+            situation: f.situation,
+            trcard: f.trcard,
+            perap: f.perap,
+            sysinfo: f.sysinfo,
+            record: f.record,
+            pms: f.pms,
+            mmdl: f.mmdl,
+            wfbc: f.wfbc,
+            event_work: f.event_work,
+            battle_box: f.battle_box,
+            daycare: f.daycare,
+            mmdl_positions: f.mmdl_positions,
+            intrude: f.intrude,
+            shortcut: f.shortcut,
+            zukan: f.zukan,
+            match_log: f.match_log,
+            pms_messages: f.pms_messages,
+            trial_house: f.trial_house,
+            hall_of_fame: f.hall_of_fame,
+            poke_records: f.poke_records,
         }
     }
 }

@@ -68,16 +68,8 @@ Verified per area with `tools/check-fn.sh black-storage <area> --per-function`:
 Every ported function's `/// C:` head names its symbol (or `unlabeled routine at 0x...`).
 Each area's module doc lists the functions of its file that are not ported and why.
 
-Blocks not modelled (size fn address, size): 28 (0x02008828, 0x9C), 29 (0x02009454, 0x1338),
-31 (0x02009D9C, 0xD54), 32 (0x020090B0, 0x2C), 33 (0x020089A8, 0x658), 35 (0x02009228, 0x1AC),
-36 (`perapvoice.c` 0x02007B00, 0x3EC), 37 (0x02008AEC, 0x5C), 38 (0x02008C20, 0x1E0), 39
-(0x02024934, 0xA8), 41 (0x0200EE48, 0x1400), 43 (0x0200A840, 0x2DC), 44 (0x0200AB24, 0x34C), 45
-(0x020142D0, 0x3EA), 46 (0x0200AD78, 0xF8), 49 (0x0200BA78, 0x35C), 50 (0x0200BD98, 0x1CC), 51
-(overlay 0x0216E474, 0x168), 53 (0x0200BDBC, 0x1B0), 54 (0x0200C3F4, 0x1A), 55 (0x0200C9EC,
-0x4D4), 60 (0x0200E9DC, 0x9C; only its +0x5A counters are ported), 62 (0x0200E6B0, 0x28), 63
-(0x0200E368, 0x284), 64 (0x0200E874, 0x10), 65 (0x0200E8E8, 0x5C), 66 (0x0200EA14, 0x16C), 67
-(0x0200E730, 0x40), 68 (0x0200ED38, 0xFC). Out of scope (D9): 30 `wifilist.c`, 34
-`mystery_data.c`, 42 (musical), 56 (`gds_profile.c`), 59 (Battle Subway online).
+The blocks S5 left unmodelled are covered by S5b (below). Out of scope (D9): 30 `wifilist.c`, 34
+`mystery_data.c`, 42 (musical), 56 (`gds_profile.c`), 59 (Battle Subway online), and the S5b list.
 
 Deliberate deviations: the block fetch `FUN_020071CC(sav, id)` is ownership (the tests call its
 stub where the original does); the symbol block is kept in plaintext (its at-rest cipher
@@ -86,6 +78,50 @@ easy-chat helpers `FUN_0202428C` / `FUN_02024570` (`pms_word.c`) are field write
 `mail::Pms`; index arguments outside an array (a negative mailbox slot, a mode index above 8, a
 bit index past a regulation bit set) panic where the original reads or writes neighbouring
 memory.
+
+## S5b: the remaining save blocks
+
+Every in-scope block of the table is a `SaveData` field now (S5b fields carry `#[serde(default)]`
+= the block's init state, so a format-1 payload written before S5b still decodes; the envelope
+stays format 1). Identification (from the init / accessors and the debug source names of their
+callers):
+
+| block | purpose | area / model | fns | area hash |
+|---|---|---|---|---|
+| 28 | situation: location records, saved player position, egg-step / script counters | `situation` | 23 | 8b3cd181e582ddd6 |
+| 33 | trainer card: signature, badge entries + time stamp | `trcard` | 16 | 656b888890ca7961 |
+| 36 | `perapvoice.c`: Chatot's cry | `perapvoice` | 11 | 925dda879068b7ae |
+| 37 | system info: RTC offset, MAC, birthday, game clock (RTC-change penalty) | `sysinfo` | 11 | ae4ee14994e88288 |
+| 38 | game records (trainer-card counters, caps, at-rest cipher as hooks) | `record` | 17 | 804241b85770928f |
+| 39 + 62 | easy chat: unlocked word groups, 20 sentences; the player's 5 messages | `pms_save` | 10 | ab633be5fad18c86 |
+| 41 | field objects: 64 MMDL save records (pack / unpack) | `mmdl_save` | 4 | c741a3fb0ef9713c |
+| 43 | White Forest / Black City town data | `wfbc_save` | 6 | 28912182e303057a |
+| 45 | event flags / vars (accessors: `black_field::event_work`) | `field_save` (model) | 0 | - |
+| 49 | Battle Box | `battle_box` | 10 | 106d5678e61c80ad |
+| 50 | daycare | `daycare` | 13 | 761d2cb81ea63ee7 |
+| 51 | kept MMDL positions (accessors: `black_field::fldmmdl`) | `field_save` (model) | 0 | - |
+| 53 | Entralink | `intrude_save` | 18 | 4c29e941c014efe3 |
+| 54 | registered shortcuts | `shortcut` | 8 | b3a70054d44643e9 |
+| 55 | Pokedex (`zukan`) | `zukan_save` | 40 | ebbde1e72424b154 |
+| 60 + 65 | DS logs (block 60 = Wi-Fi match log + the S5 Subway counters; 65 = Trial House) | `mac_log` | 13 | fce35828371dae38 |
+| 66 | a Hall of Fame record | `dendou_save` | 6 | 9816c1e7b7c268b5 |
+| 67 | two Pokemon records (trainer card / event battle) | `poke_records` | 11 | 37e4dec9c7d6ca8a |
+
+Out of scope (D9) and not modelled: 29 (Wi-Fi history / Unity Tower countries; 0x02009454), 31
+(players met through GTS negotiation / Wi-Fi; 0x02009D9C), 32 (C-Gear panel layout; 0x020090B0),
+35 (Dream World; 0x02009228), 44 (IR feeling check; 0x0200AB24), 46 (GTS deposit; 0x0200AD78), 63
+(research radar / survey; 0x0200E368), 64 (Unity Tower search snapshot; 0x0200E874), 68 (players
+met over wireless; 0x0200ED38).
+
+New-game inits that need the outside world are `NewGameHooks` methods with defaults: `rtc_now`
+(block 37's clock), `mac_address` (block 60), `intrude_power_init` (overlay-11 `FUN_021763BC`,
+block 53); the Battle Box name is `box_name(0)` (the same bank 9 entry 6). Deviations: the record
+block keeps plaintext (cipher = `record::RecordCrypt`, `Plain` in the game; init key from the
+V-count is 0); arguments the original does not check and that reach past a block (a shortcut
+position above 25, an Entralink flag id from 0x80000021, Pokedex language 0 with species 0 / 1,
+a Pokedex form index past the form bits, record ids from 167) panic. The OBJ-data load of
+`mmdl_save::unpack` (`FUN_0216E2E8`), the Entralink power init and the personal / party / string
+callees are hooks.
 ## S4b: item use on a party Pokemon (`item_use`) and bag helpers (`item_bag`)
 
 Logic only (D3). Party-summary overlay 91 (memory set `party-summary`; `tools/check-fn.sh black-storage item_use --per-function`, spec
