@@ -20,9 +20,9 @@ _2026-10-14T07:16:17Z, commit 4ea6a37, `python3 -I tools/progress.py`._
 <!-- progress-table:end -->
 
 - **Milestones so far:** battle handlers complete; btl_server_flow 644; battle_server.s 207/207; btl_client 228/231; battle AI ai1 161/161; B16 first full headless battle through the ports. Pokémon: poke_tool/create/personal/growth/waza/evolution/icon. Storage: party/bag/box. Field: map matrix/fieldmap, player 304/306, fldmmdl 253/253 + acmd 242/242, trainer_eye 38/38, encounter 151/151, eventdata 184/185; script VM + ~700 scrcmd handlers. Text: strbuf/wordset/layout/speed. Assets A0–A12 mostly; Bevy shell G1/G2/G4/G5. Harness: Z19/Z20/Z22/Z23, check-force/symbols/docsize, progress.py, ui-diff with scripted DeSmuME references.
-- **Running (since ~07:15Z):** B17 (Opus, worktree-agent-a8aa8754c8d18669b: ai1 pointer rewire so B16 runs the Rust AI), P6 (Sonnet, worktree-agent-a16130f061fa8dd20: nature/gender/shiny/PID/IV), F8f (Opus, worktree-agent-af6a1ab96ccfa7a1e: port the 4 F8-spec5 areas, 169 fns), validator run on a9c4242..4ea6a37 (Sonnet). Worktrees under `.claude/worktrees/`.
-- **Next:** merge the three workers as they report; then B18 (bare-`P` harness audit; run alone in battle areas), F4b-port2, P3, P7, S4, S5, F5b, F2b, F3b, F6b, A10d, U0b (overworld savestate script).
+- **Running (since ~07:15Z):** B17 (Opus, worktree-agent-a8aa8754c8d18669b: ai1 pointer rewire so B16 runs the Rust AI), P6 (Sonnet, worktree-agent-a16130f061fa8dd20: nature/gender/shiny/PID/IV), F8f (Opus, worktree-agent-af6a1ab96ccfa7a1e: port the 4 F8-spec5 areas, 169 fns), validator run on a9c4242..4ea6a37 (Sonnet). P3 (Sonnet, worktree-agent-aef61f2651669ca53: EXP curves/level-up/EXP gain) since ~07:45Z. Worktrees under `.claude/worktrees/`.
+- **Next:** merge the three workers as they report; then B18 (bare-`P` harness audit; run alone in battle areas), F4b-port2, P7, S4, S5, F5b, F2b, F3b, F6b, A10d, U0b (overworld savestate script).
 - **Blocked:** none.
 - **Usage guard:** RUN (GREEN 40% at 07:10Z; USAGE-CHECK cron 8360cac0, 7,27,47 * * * *).
-- **Disk:** 21 GB free on /tmp after deleting target-validate and target-coord/debug/incremental; ≤ 4 agents while under ~20 GB.
+- **Disk:** 39 GB free (the human cleared space 2026-10-14); 5 slots usable.
 - **RE tooling:** Ghidra headless + rizin + rea (MCP) via `tools/re/` (`ENV.md` "RE workflow"); `tools/doctor.sh` green on macOS. Battle and field sets fully decompiled.
