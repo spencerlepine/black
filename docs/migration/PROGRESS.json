@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-14T14:14:21Z",
- "commit": "497aac8",
+ "generated": "2026-10-14T15:07:25Z",
+ "commit": "df8b5d8",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -8,17 +8,17 @@
   "U": 0.19,
   "HR": 0.125
  },
- "overall": 0.4188,
- "overall_percent": 42,
+ "overall": 0.425,
+ "overall_percent": 43,
  "logic": {
-  "ported": 5802,
+  "ported": 5915,
   "in_scope": 10087.4,
-  "ratio": 0.5752,
+  "ratio": 0.5864,
   "ported_by_crate": {
    "black-battle": 2125,
    "black-core": 26,
-   "black-field": 1869,
-   "black-pokemon": 156,
+   "black-field": 1952,
+   "black-pokemon": 186,
    "black-script": 1012,
    "black-storage": 562,
    "black-text": 61
@@ -1029,6 +1029,10 @@
     "set": "field",
     "fns": 10
    },
+   "crates/black-field/src/event_battle.rs": {
+    "set": "field",
+    "fns": 17
+   },
    "crates/black-field/src/event_battle_head.rs": {
     "set": "field",
     "fns": 7
@@ -1044,6 +1048,10 @@
    "crates/black-field/src/eventdata_tail.rs": {
     "set": "field",
     "fns": 19
+   },
+   "crates/black-field/src/field_skill.rs": {
+    "set": "field",
+    "fns": 43
    },
    "crates/black-field/src/fieldmap.rs": {
     "set": "field",
@@ -1089,6 +1097,10 @@
     "set": "field",
     "fns": 70
    },
+   "crates/black-field/src/move_pokemon.rs": {
+    "set": "field",
+    "fns": 9
+   },
    "crates/black-field/src/mvproc3a.rs": {
     "set": "field",
     "fns": 43
@@ -1109,6 +1121,10 @@
     "set": "field",
     "fns": 18
    },
+   "crates/black-field/src/ov63_event.rs": {
+    "set": "field",
+    "fns": 3
+   },
    "crates/black-field/src/player.rs": {
     "set": "field",
     "fns": 72
@@ -1125,6 +1141,10 @@
     "set": "field",
     "fns": 97
    },
+   "crates/black-field/src/symbol_map.rs": {
+    "set": "field",
+    "fns": 11
+   },
    "crates/black-field/src/trainer_eye.rs": {
     "set": "field",
     "fns": 38
@@ -1140,6 +1160,10 @@
    "crates/black-pokemon/src/create.rs": {
     "set": "field",
     "fns": 13
+   },
+   "crates/black-pokemon/src/daycare.rs": {
+    "set": "field",
+    "fns": 30
    },
    "crates/black-pokemon/src/egg.rs": {
     "set": "field",

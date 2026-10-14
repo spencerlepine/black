@@ -6,17 +6,17 @@
 <!-- progress-table:start -->
 | bucket | done | of | ratio | weight | contributes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| logic (ported fns / in-scope fns per SCOPE.tsv) | 5802 | 10087.4 | 57.5% | 0.560 | 32.2% |
+| logic (ported fns / in-scope fns per SCOPE.tsv) | 5915 | 10087.4 | 58.6% | 0.560 | 32.8% |
 | phase A (items) | 15 | 16 | 93.8% | 0.075 | 7.0% |
 | phase G (items) | 4 | 9 | 44.4% | 0.050 | 2.2% |
 | phase U (items) | 0.5 | 23 | 2.2% | 0.190 | 0.4% |
 | phases H+R (items) | 0 | 8 | 0.0% | 0.125 | 0.0% |
-| **overall** | | | | | **42%** |
+| **overall** | | | | | **43%** |
 
-Ported by crate: black-battle 2125, black-field 1869, black-script 1012, black-storage 562, black-pokemon 156, black-text 61, black-core 26.
+Ported by crate: black-battle 2125, black-field 1952, black-script 1012, black-storage 562, black-pokemon 186, black-text 61, black-core 26.
 UI cases: U1-title 0.07, U1-title-anim 0.12.
 
-_2026-10-14T14:14:21Z, commit 497aac8, `python3 -I tools/progress.py`._
+_2026-10-14T15:07:25Z, commit df8b5d8, `python3 -I tools/progress.py`._
 <!-- progress-table:end -->
 
 - **Milestones so far:** battle handlers complete; btl_server_flow 644; battle_server.s 207/207; btl_client 228/231; battle AI ai1 161/161; B16 first full headless battle through the ports. Pokémon: poke_tool/create/personal/growth/waza/evolution/icon. Storage: party/bag/box. Field: map matrix/fieldmap, player 304/306, fldmmdl 253/253 + acmd 242/242, trainer_eye 38/38, encounter 151/151, eventdata 184/185; script VM + ~700 scrcmd handlers. Text: strbuf/wordset/layout/speed. Assets A0–A12 mostly; Bevy shell G1/G2/G4/G5. Harness: Z19/Z20/Z22/Z23, check-force/symbols/docsize, progress.py, ui-diff with scripted DeSmuME references.

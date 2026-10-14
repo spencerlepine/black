@@ -118,3 +118,6 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [x] F8 — F — PAR×N — Script commands (scrcmd\_\*.c), split by command range/file.
 - [x] B18 — B — PAR — (also: AI masks that stop in flow areas, from B17: bits 0/1/4 → core6 021c728c gets a caller-local record buffer via 021c7e14 → core4 …
 - [x] S5 — S — SEQ — Save data model + persistence (native file / browser localStorage-IndexedDB). Own format (serde), not the DS save layout. — (497aac8)
+- [x] B19 — B — SEQ — Unicorn differential of a whole battle (OV93–96 + ARM9 boot shim) against the B16 integration. — (f8164d9)
+- [x] F5 — F — PAR — Wild encounters: encounter rates, slots, shaking grass/dust/ripples, repel, catch-rate formula (in battle). — (144e63c)
+- [x] F13 — F — PAR — Daycare: sodateya.c (ov21 0x021C31D4, 83 fns) + scrcmd_sodateya (18). — (5db13e0)
