@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-14T09:42:23Z",
- "commit": "5b16ace",
+ "generated": "2026-10-14T09:57:28Z",
+ "commit": "3b2678a",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -8,16 +8,16 @@
   "U": 0.19,
   "HR": 0.125
  },
- "overall": 0.3747,
- "overall_percent": 37,
+ "overall": 0.3835,
+ "overall_percent": 38,
  "logic": {
-  "ported": 5178,
+  "ported": 5335,
   "in_scope": 10087.4,
-  "ratio": 0.5133,
+  "ratio": 0.5289,
   "ported_by_crate": {
    "black-battle": 2125,
    "black-core": 26,
-   "black-field": 1712,
+   "black-field": 1869,
    "black-pokemon": 148,
    "black-script": 1011,
    "black-storage": 98,
@@ -1091,19 +1091,19 @@
    },
    "crates/black-field/src/mvproc3a.rs": {
     "set": "field",
-    "fns": 6
+    "fns": 43
    },
    "crates/black-field/src/mvproc3b.rs": {
     "set": "field",
-    "fns": 6
+    "fns": 55
    },
    "crates/black-field/src/mvproc3c.rs": {
     "set": "field",
-    "fns": 6
+    "fns": 38
    },
    "crates/black-field/src/mvproc3d.rs": {
     "set": "field",
-    "fns": 6
+    "fns": 45
    },
    "crates/black-field/src/namipoke.rs": {
     "set": "field",

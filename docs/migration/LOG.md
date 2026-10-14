@@ -123,3 +123,6 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14** — Merged P7 (egg area 39/39, ov21 daycare egg generator; hatching not located → P7b). Spawned F8f-spec (Opus, small harness job).
 
 - **2026-10-14** — Merged F8f-spec (5b16ace; bsubway spec arenas, 021CBF98 stubs; README hash note fixed by the coordinator); misc21b half → F8f-spec2. REUSE=1 decompile of field/bag/party-summary with the P7 prototypes.
+
+- **2026-10-14 09:52Z** — Usage ORANGE 77
+- **2026-10-14 09:52Z** — Usage ORANGE 77% → DRAIN: no spawns; running B17, S4b, S5 finish and merge, then pause until ~12:25Z.
