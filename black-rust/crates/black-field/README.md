@@ -252,7 +252,7 @@ stub the target): 260 specced. Render-only functions left out: none. The draw si
 * MMDL (0x100): `+0x00 u32` status (1 in use, 2 move proc ready, 8 dir locked, 0x800 alias, 0x2000 rail/3D move, ...),
   `+0x04 u32` move bits (2 draw ready, 8 paused, 0x200/0x400 acmd set/done, ...), `+0x08 u16` OBJ id (0xFF = player),
   `+0x0A u16` zone id, `+0x0C u16` OBJ code (0xA2..0xB1 from event vars 0x4020.., 0xB9 = size from the header), `+0x0E u16`
-  move code (move-proc table ROM `0x021D5E04`, 47 entries), `+0x10` event type, `+0x12` event flag, `+0x14` event id (0xFFFF =
+  move code (move-proc table ROM `0x021D5E04`, 0x55 entries since F4b-port2), `+0x10` event type, `+0x12` event flag, `+0x14` event id (0xFFFF =
   alias), `+0x16` header dir, `+0x18` / `+0x1C` display dir / previous, `+0x1A` / `+0x1E` move dir / previous, `+0x20..+0x24`
   params 0..2, `+0x26` acmd code, `+0x28` acmd seq, `+0x2A`, `+0x2C` / `+0x2E` move limits, `+0x30..+0x34` initial grid x/y/z,
   `+0x36..+0x3A` old grid, `+0x3C..+0x40` current grid (s16), `+0x44` VecFx32 position, `+0x50` / `+0x5C` / `+0x68` VecFx32,
@@ -303,7 +303,7 @@ are Rust calls, except the three the spec keeps behind the seam: `0216E400` (`mo
 (`draw_proc_table`) from `set_move_procs` / `set_draw_procs`, and `0216D8AC` (`pos_y`) from `find_at_height`. The
 callers' stack locals (the HEADER copy of `create`, the HEADER of `create_at`, the position vectors, the 0x44-byte MMDL
 list) are `Mem::push_local` windows; the `while (FUN_0216DD1C(sys, &m, &i))` loops iterate on Rust locals
-(`next_local`, the same steps as `next_in_use`). ROM tables embedded: `MOVE_PROC_TABLES` (0x021D5E04, 47),
+(`next_local`, the same steps as `next_in_use`). ROM tables embedded: `MOVE_PROC_TABLES` (0x021D5E04, 47; 0x55 since F4b-port2),
 `DRAW_PROC_TABLES` (0x021D770C, 21), `SAVE_SLOTS` (0x02172A70), `event_battle_head::BURMY_FORMS` (0x02172554, 25).
 
 `testenv.rs`: a THUNKS entry is no longer mapped to its target when the function's spec block stubs the thunk itself
@@ -312,7 +312,7 @@ list) are `Mem::push_local` windows; the `while (FUN_0216DD1C(sys, &m, &i))` loo
 UNVERIFIED (behaviour the differential tests cannot reach): `create` with no free MMDL (the original goes on with a null
 pointer; the port panics at the window); `create_by_id` with no matching header returns 0 (the original returns an
 uninitialised stack word, which is 0 under the Z19 entry state); `move_proc_table` / `draw_proc_table` panic past the
-47 / 21 entries (the original reads what follows the ROM table).
+0x55 (47 before F4b-port2) / 21 entries (the original reads what follows the ROM table).
 
 Deliberate deviations: none.
 
@@ -1267,3 +1267,57 @@ draw side flag, flag-4 test, `&&` -> `||`, add -> sub; `acmd1`: priority - 1, se
 seq 4 -> 3; `acmd2a`: `>` -> `>=`, a wrapper's speed, face anim, end bit, dir mask; `acmd2b`: frame test, moving test, in-place test, SE,
 a wrapper's frames; `acmd2c`: wait test, rise bound, balloon handle, anim / frames swap, fall SE; `acmd2d`: hop bound, `>=` -> `>`, vector
 `>` -> `>=`, a ROM vector, actor not truncated; `acmd2e`: `s32_div(x, 0)` -> 0 (V-0026), an SE frame, `>` -> `>=`, face dir, anim code).
+
+## F4b-port2: `mvproc3a` (43/43), `mvproc3b` (55/55), `mvproc3c` (38/38), `mvproc3d` (45/45) ported; `MOVE_PROC_TABLES` 0x55
+
+| area | ported | verified (in `PORTED`) | area hash |
+|---|---|---|---|
+| `mvproc3a` | 43 | 43 | `9b9a1b8592c5af48` |
+| `mvproc3b` | 55 | 55 | `1bcf88731679f283` |
+| `mvproc3c` | 38 | 38 | `e2f54cedca23d5ba` |
+| `mvproc3d` | 45 | 45 | `609420d779b2e3a7` |
+
+`--order-check` is clean for all four. Ported from the pseudo-C, checked against the `OVY_21.sbin` disassembly (rizin `-a arm -b 16`)
+where the C has no body (the 18 functions without a pseudo-C file) or hides masking / argument order. Logic only (D3): the draw
+offset, draw animation code, field effects (`021D046C` / `021AC154`) and the acmd driver stay behind [`hooks::FieldEnv::call`] by
+address, as do the fldmmdl.c / mmdl_move.c / trainer_eye / map_attr callees and the ARM9 pad bits. Calls between the four areas go
+through `FieldEnv::call` too (the specs stub them `force`: `mvproc3a` -> `0219B0C4` / `0219B0F0` / `0219B104` / `0219B200`); in-area
+callees are Rust calls. The callee addresses the four modules share are in `mvproc3a` (`MOVE_WORK`, `ACMD_CODE_FOR`, ...) and
+`mvproc3b` (`MOVE_DIR`, `SYS_OF`, `FIND_PLAYER`, ...); `mvproc3a::start_acmd` is the `0216D438(m, (u16)02197E7C(dir, base))` pair.
+
+State procs: the ROM state tables (`mvproc3a::SPIN_STATES`, `mvproc3b::WALK_STATES` / `ROUTE_STATES` / `RROUTE_STATES`,
+`mvproc3c::FOLLOW_STATES` / `PARTNER_STATES`, `mvproc3d::EFFECT_STATES` / `MIRROR_STATES` / `WALL_STATES`) are embedded as address
+lists (compared with the ROM by the tests); the move procs dispatch on the state byte with a Rust `match` and re-read it after
+every call, as the originals do. The event-type procs (`0219B440` / `0219B45C` / `0219B478`) read the ROM tables `0x021D5278` /
+`0x021D52CC` / `0x021D5320` and map the target address to the Rust function.
+
+ROM data: `mvproc3b::rom` embeds the block `0x021D4D04..0x021D548C` (482 words: state tables, the direction sets and routes of
+`0219B120` and their pair list `0x021D50F8`, turn orders, the reversible-route pairs, the event-type tables, wall offsets, the
+effect draw offsets); `rom32` / `rom16` read it (`mvproc3b::tests::rom_block_matches` compares it with the build). Routes are
+read through `rom32` with the original's unchecked leg index, so legs 4 / 5 read the next ROM words as the original does.
+
+Stack locals: the `0216DD1C` partner search (`0219BBA4` / `0219BC48`) iterates on a `Mem::push_local` pair (`o`, `i`); the wall
+tests (`0219C298` / `0219C2BC`) put the position from `0216D88C` in a local window and hand its address to `0219C180` /
+`0219C20C`, which build the probe VecFx32 and pass it to `02163E34` as `CArg::InBuf` (attribute out as `CArg::OutBuf`); the
+effect draw offsets are `CArg::InBuf` copies of the ROM VecFx32. `0219C338` keeps the dir of `0219C314` in a Rust local (the
+`pub fn wall_dir_hit` port of `0219C314` reads and writes it through memory).
+
+**`fldmmdl::MOVE_PROC_TABLES` now has the 0x55 entries of ROM `0x021D5E04`** (was 47; F4b-spec3 found the trap): entry 0x2F is
+null (0), 0x30..0x43 the records of the follow / partner / effect / mirror / wall / random-walk-mode-2 types, 0x44 the
+`field_comm_actor.c` record (X1), 0x45..0x54 the rail records (row 21.11). `mvproc3b::tests::move_proc_tables_match_rom` compares
+the table with the ROM and checks that every init / move / delete / return proc of every record inside `0x0219A098..0x0219C4AC` is
+in one of the four `PORTED` lists. The `fldmmdl` area hash is unchanged (codes 0..0x2E answer as before).
+
+UNVERIFIED (unreachable for the differential tests; the ports panic where the original reads past a table or the stack): a state
+byte past its ROM state table; an event type past 0x14 (the three event-type tables); `0219A4CC` with a move code outside 6..0xD
+(uninitialised rectangle); `0219A6CC` / `0219A7DC` with a display dir outside 0..3; `0219B59C` / `0219B75C` stack-copy indexes
+outside the copies; `0219B0D8` / `0219B120` / the route and wall tables with ids, legs, dirs or hands that leave the embedded ROM
+block (e.g. `0219B104` with an unknown set id: `0219B120` answers 0 and the original counts words from address 0).
+
+Deliberate deviations: none in behaviour.
+
+Mutation spot check (`check-fn.sh --fn`, reverted; `/tmp/blk/out-F4bp2/mut.py`): 9 of 10 caught (`spin_watch` `<` -> `<=`,
+`rand_walk_move` mode-2 hit bit 0 -> 1, `may_move` type 0xC -> 0xD, `sight_dir` `>` -> `>=`, `rroute_reverse` 4 - (leg + 1) -> 3 -
+(leg + 1), `steps_busy` `<` -> `<=`, `partner_due` mask 0x1808 -> 0x1800, `wall_step` hand switch not stored, `fx_tile` bias dropped).
+The survivor (`ev_look_spin` short wait for types 0xF..0x11 instead of 0xF / 0x10) is a spec gap: the `0219B75C` block draws event
+types 0xF / 0x10 / 5 / 0 only.

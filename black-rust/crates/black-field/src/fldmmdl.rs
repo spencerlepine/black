@@ -356,8 +356,10 @@ const BLACT_BUSY: u32 = 0x0219_C630;
 const G3D_MOVE_SETUP: u32 = 0x0219_D6B8;
 const G3D_MOVE_UPDATE: u32 = 0x0219_D6CC;
 
-/// ROM table `0x021D5E04`: the move-proc table of each move code (47 entries, [`move_proc_table`]).
-pub const MOVE_PROC_TABLES: [u32; 47] = [
+/// ROM table `0x021D5E04`: the move-proc record of each move code (0x55 entries, [`move_proc_table`]; F4b-port2 extended it from
+/// the 47 F4a found: entry 0x2F is null, 0x30..0x43 are the `mvproc3c` / `mvproc3d` / random-walk records, 0x44 the
+/// `field_comm_actor.c` record (X1), 0x45..0x54 the rail records of row 21.11). Records `{u32 id, init, move, delete, return}`.
+pub const MOVE_PROC_TABLES: [u32; 0x55] = [
     0x021D_5A24,
     0x021D_58A8,
     0x021D_5D44,
@@ -405,6 +407,44 @@ pub const MOVE_PROC_TABLES: [u32; 47] = [
     0x021D_5AB0,
     0x021D_5C68,
     0x021D_5C54,
+    0x0000_0000,
+    0x021D_5AC4,
+    0x021D_5BC8,
+    0x021D_5B00,
+    0x021D_5B50,
+    0x021D_5B64,
+    0x021D_5B78,
+    0x021D_5BA0,
+    0x021D_5BF0,
+    0x021D_5C04,
+    0x021D_5C40,
+    0x021D_5C90,
+    0x021D_5CA4,
+    0x021D_5CE0,
+    0x021D_5D30,
+    0x021D_58BC,
+    0x021D_56DC,
+    0x021D_5894,
+    0x021D_5704,
+    0x021D_586C,
+    0x021D_5D1C,
+    0x021D_5718,
+    0x021D_5844,
+    0x021D_5754,
+    0x021D_581C,
+    0x021D_5768,
+    0x021D_57F4,
+    0x021D_5790,
+    0x021D_57A4,
+    0x021D_57CC,
+    0x021D_58D0,
+    0x021D_590C,
+    0x021D_5920,
+    0x021D_5948,
+    0x021D_595C,
+    0x021D_5998,
+    0x021D_59AC,
+    0x021D_59D4,
 ];
 
 /// ROM table `0x021D770C`: the draw-proc table of each OBJ DATA draw kind (21 entries, [`draw_proc_table`]).
@@ -2403,7 +2443,8 @@ pub fn resolve_obj_code<E: FieldEnv>(env: &mut E, ew: u32, code: u32) -> u32 {
 }
 
 /// C: `FUN_0216E400` (unlabeled routine at `0x0216E400`): the move-proc table of move code `code` (ROM
-/// `0x021D5E04[code]`, [`MOVE_PROC_TABLES`]). Panics past the 47 entries (the original reads what follows).
+/// `0x021D5E04[code]`, [`MOVE_PROC_TABLES`]). Panics past the 0x55 entries (the original reads what follows); code 0x2F
+/// answers 0 (a null record, as in the ROM).
 pub fn move_proc_table(code: u32) -> u32 {
     MOVE_PROC_TABLES[code as usize]
 }
