@@ -21,6 +21,8 @@ pub mod eventdata;
 pub mod eventdata_tail;
 pub mod events;
 pub mod field_skill;
+pub mod field_task;
+pub mod field_tasks;
 pub mod fieldmap;
 pub mod fieldmap_event;
 pub mod fieldmap_func;
@@ -47,6 +49,7 @@ pub mod player;
 pub mod player_core;
 pub mod player_event;
 pub mod player_grid;
+pub mod proclink;
 pub mod season;
 pub mod symbol_map;
 #[cfg(test)]

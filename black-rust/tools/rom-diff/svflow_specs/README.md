@@ -795,3 +795,19 @@ areas; `--strict-callees` (plain and with the ports) and `--order-check` clean; 
   `0/1/0/0/0`, `0/1/0/0/0/0/0`): with equal lengths their answers are correlated and some branch combinations never occur.
 * A 64-bit callee (`0203F524`) is `ret=u64`; black-field ports read it through an area trait (`MapChangeEnv::call64`) whose test
   impl forwards to `StubEnv::call64`.
+## F14-spec additions (black-field field_task / field_tasks / proclink)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-field/{field_task,field_tasks,proclink}.spec` (headers), on top of the F5b ones: closure stubs (checked with every function
+of the area treated as ported: no fault, stray write or unstubbed callee); every out-of-area stub is `force`; `--strict-callees` (plain
+and with the ports) and `--order-check` clean. No stub argument is `p` (pointers into the arenas are `v`, stack locals `in:` / `out:`),
+so the B18 `ptr` rule has nothing to flag.
+
+* A runtime helper that returns its answer in the flags (`0209BBB0`, float `a > b`, callers `bls` on its C flag) cannot be a stub (stubs
+  set r0 only): it is a spec function (`mode=arm`) of the area whose code calls it and is ported there, so it runs as real code in every
+  block (`field_tasks.spec`).
+* Pure soft-float helpers that are not ported (`fmul` 0209C77C, `fdiv` 0209CE10, `f2u` 0209C4C8, the double helpers 0209BD38 / 0209C5E0 /
+  0209B64C) are `force` stubs; the two double results are `ret=u64`. Where a float result indexes a stack table (`f2i(x) % 4`), the last
+  stub of the chain answers a closed `pick:` of non-negative floats (`nth:` picks the call), since a negative index reads stack garbage.
+* The task manager arena plants eight tasks at fixed offsets and draws the slot / wait words from their addresses, so the tasks' procs
+  (FAKE callee 0x02EE0011) and frees run on real records in closure mode.

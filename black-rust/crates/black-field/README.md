@@ -1507,3 +1507,72 @@ Mutation spot check (`check-fn.sh --fn`, reverted; `/tmp/blk/f6b/mutate.py`): 20
 `& ~1 | 2`, kind set `3 / 4 / 6`, SB-list `break`, WFBC pick field `+6`, `== 21`, special zone 136, LOCATION kind 3, comm x offset
 `0x10000 +`, `& 7`, work init `+0x44 = 0`, union-room x, `02013E7C == 1`, comm-state window `<= 1`, season check `&& f`, comm door
 step 7, invoker `!f`, weather `< 16`, season byte `+0x48`, zone-change kind 4).
+## F14: `field_task` (19/19), `field_tasks` (39/39), `proclink` (46/46): specs + ports
+
+Three new spec areas under `tools/rom-diff/specs/black-field/` (set `field`), ported and verified with
+`tools/check-fn.sh black-field AREA --per-function`. Closure stubs (checked with every function of the area treated as ported: no
+fault, stray write or unstubbed callee); every out-of-area stub is `force`; `svflow.py AREA --all --strict-callees` (plain and with
+the ports) and `--order-check` are clean (0 order-dependent functions).
+
+| area | original | range | fns | spec hash (`--all`, plain) | area hash (ported) |
+|---|---|---|---|---|---|
+| `field_task` | `field_task.c` + `field_task_manager.c` (ov21, F1 row 21.75, first part) | `0x021C6C70..0x021C6F00` | 19 | 08e50d4323d30aac | 48f5f75ae092e906 |
+| `field_tasks` | the concrete field tasks after them (row 21.75, second part; no `__FILE__`) + the runtime float compare `0209BBB0` | `0x021C6F00..0x021C7DAA` | 38 + 1 | 05b672e21020cfd5 | caf9dfe52b9b6076 |
+| `proclink` | `event_field_proclink.c` (ov10, F1 row 10.22) | `0x02160A94..0x02161D96` | 46 | 753566c141f5136b | 2cb0ea86fc4b21cf |
+
+Instruction coverage (own body, plain / closure): field_task 278/278 / 278/278, field_tasks 1530/1530 / 1530/1530 (Thumb functions;
+`0209BBB0` is ARM, its NaN / greater / not-greater paths are drawn from special values: zeros, infinities, NaNs, denormal and sign
+edges), proclink 2013/2023 / 2013/2023 (the 10 missed instructions are dead code in 02161724, below).
+
+File bounds: `Heap_AllocDebug` `__FILE__` strings "field_task.c" (0x021DE4D4, in 021C6C70), "field_task_manager.c" (0x021DE4E4,
+021C6D10), "event_field_proclink.c" (0x02172978, 8 allocations from 02160A94 to 0216163C); the row ends at the next file
+(`eventdata_system.c`, wfbc part, 0x02161D98) and at 021C7DAA (the next function of overlay 21). Function lists: bl targets of the
+whole field set, odd code pointers (the PROCLINK table, GMEVENT / task procs), the Ghidra index and a Thumb walk. Not specced: the
+veneers 021C6CBC (-> 021C6CF4), 021C6CC4 (-> 021C6CE4) and 0216171C (-> Heap_Free, the PROCLINK table's free callback), the false
+entries 021C7338 / 021614B0 (data words in main that decode as `bl`), and mid-function labels (jump-table cases).
+
+### Field tasks (field_task, field_tasks)
+
+* FIELD TASK (0xC): `+0` state (0 idle, 1 running, 2 done), `+4` work block (allocated with the task), `+8` proc `int proc(work)`
+  (1 = done). MANAGER (0xC): `+0 u8` count, `+4` -> task[count], `+8` -> wait[count]; `021C6D90` per frame runs every task, starts
+  idle tasks whose wait task is done, then drops (frees) the done ones; `021C6DE0` adds to the first free slot (wait 0: start now;
+  full: the task is freed).
+* The 16 concrete tasks (constructor + proc; work layouts in the doc comments of `field_tasks.rs`): camera distance, camera angle
+  (smoothstep, short-way unwrap over 0x8000), camera target / position moves, player move, OBJ spin (three direction curves over the
+  ROM table `{1, 3, 0, 2}` at 0x021DAAB8 / 0x021DAAC0 / 0x021DAAC8), OBJ shake (parabola; sounds 0x681 / 0x682), OBJ offset (forward /
+  backward), wait, deferred call (`0204E720` with four words), periodic call (`021ADD7C` every `period` frames).
+* Soft float: the ported helpers (`i2f`, `u2f`, `f2i`, `fadd`, `fsub`) are `black_core::softfloat`; `fmul` 0209C77C, `fdiv` 0209CE10,
+  `f2u` 0209C4C8 and the double helpers 0209BD38 / 0209C5E0 / 0209B64C stay hooks (the two double results go through the new trait
+  `field_tasks::FieldEnv64::call64`). `0209BBB0` (float `a > b`, NaN false) is ported here as `field_tasks::fcmpgt`: its callers
+  branch on the C flag it sets, which a stub cannot produce, so it must run as real code in every block.
+
+### PROCLINK (proclink)
+
+* The PROCLINK table (ROM 0x021712CC, 12 x 0x18 `{overlay, proc data, init, return, special, free}`): entry 0 party list (ov 0x5B,
+  `party_init` / `party_return`), 1 (ov 0xD4, `d4_*`), 2 bag (ov 0x46, `bag_*`), 3 (ov 0x6F, `app6f_*`), 4 the report (`report_special`
+  starts the GMEVENT `event_new`), 5 (ov 0x44), 6 (ov 0x83), 7 (ov 0x48), 8 (ov 0x80), 9 the item screens (no table overlay: overlay
+  0x88 is loaded by `item_init` and unloaded by `item_return` / `item_free`), 10 (ov 0xC3), 11 (ov 0xBB). `init(pl, mode, kind, prev)`
+  builds the parameter block from the field state and from the previous app's block (`kind`); `return(pl, param)` writes the results
+  back (`pl+0x60` slot, `pl+0x62` item, `S+0x28` / `S+0x2C`) and answers 1 (back to the field), 2 / 3 (an event result in `S+0x28`)
+  or 4 (switch to the app `pl+0xC`).
+* The table is read by the proclink event itself (0x0216075C..0x02160A92, literal 0x021712CC at 0x02160A1C), which F1 put in row 10.21
+  (`event_shortcut_menu.c`): not ported here (open question in the F14 report).
+* GMEVENTs: pause the field OBJs (02161824 / 02161724; script commands use it), acmd list on an OBJ (021618A0 / 02161850, eight
+  list slots), jump down along the ROM arc 0x0217140C (02161AC0 / 021619B8), fade + sub-proc `020120B4(gs, 0xCB, 0x021BFB3C, &param)`
+  (02161B90 / 02161BF8, parameter 02161C84 / 02161CDC / 02161D18).
+
+ROM data embedded (tests compare them with the overlays): `field_tasks::{DIR_TABLE_A, DIR_TABLE_B, DIR_TABLE_C}`, `proclink::ARC`;
+`proclink::DIR_LISTS` are ROM addresses (the acmd lists by direction).
+
+UNVERIFIED (unreachable for the differential tests, kept out of the spec inputs): a negative curve index in `field_tasks::dir_of` (the
+original reads below its stack copy; the float is never negative in the game; the port answers 0); a 0 period in `periodic_proc`
+(divide by zero in 0209C0A4); an OBJ direction > 3 in `acmd_new_player` / `acmd_start_player` (the original uses a callee-saved
+register as left by the caller; the port uses 0); an arc index outside 0..=16 in `jump_proc` (other ROM words; the port reads 0).
+
+Deliberate deviations: none in behaviour. The dead code of the original is not ported: in `0x02161724` seq 0 a `movs r6, #0` sets Z
+right before a `beq`, so the bit-2 release test after it never runs (10 instructions; the only instructions coverage misses).
+
+Mutation spot check (`check-fn.sh --fn`, each reverted; `/tmp/blk/f14/mutate.py`): 18 of 18 caught (task proc `== 1`, wait state
+`== DONE`, start when `wait == 0`, active-slot count, NaN bound `>`, angle unwrap `> 0x8000`, smoothstep 3.0, periodic `<= old`, curve
+table order, FX_Mul rounding 0x800, move weight 0x1000, party-list mode index 12, bag action 11, pause flag mask, arc end `> 15`,
+parameter byte +0xD, item next action 2, party field 0xA9).
