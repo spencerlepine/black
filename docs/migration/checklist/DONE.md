@@ -111,3 +111,4 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [x] P7 — P — PAR — Eggs, breeding, egg moves, daycare.
 - [x] B17 — B — PAR — Rewire the ai1 ports to real pointer values (~150 sites) so the B16 integration runs the Rust AI instead of a stand-in.
 - [x] S4 — S — PAR — Item use effects outside battle (potions, evolution stones, TMs, repels). — (db30f09)
+- [x] P7b — P — PAR — egg hatching (step counter, egg-cycle decrement, hatch conversion): locate the overlay (not in sets.txt; candidates: field step/event …

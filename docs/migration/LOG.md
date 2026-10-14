@@ -134,3 +134,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14 12:25Z** — Resumed by the one-shot cron: usage GREEN (session 0%, weekly 26%) → RUN. USAGE-CHECK cron recreated (b177a4a3). Spawned validator (Opus, 4ea6a37..7829fcb), B18 (Opus), P7b (Sonnet), S5b (Opus), F4b-spec4 + F8f-spec2 as one small Opus job.
 
 - **2026-10-14** — Merged F4b-spec4 + F8f-spec2 (412636c; both survivor mutants killed). Found: the pause checkpoint 7829fcb had a dangling section-zero reference in STATE.md (check-docsize red on that commit only; 332f21e fixed it) — lesson: run `tools/check-docsize.py` before committing plan-only edits. Added F8g (scrcmd coverage audit before ticking F8). Spawned A10d (Sonnet).
+
+- **2026-10-14** — Merged P7b (egg hatching, hatch area 8/8; hatch scene ov215 is UI). Spawned F8g (Sonnet, scrcmd coverage audit).
