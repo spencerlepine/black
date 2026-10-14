@@ -4,4 +4,4 @@ Part of the master checklist (moved out of `MIGRATION-AGENT.md` section 6 on 202
 
 (Exact source files come from T2; expected `poke_tool.c`, `poke_personal.c`, `shinka_check.c`, `waza_tool.c`.)
 
-- [~] P7 (worktree-agent-a680479667f83fdbe, 2026-10-14) — PAR — Eggs, breeding, egg moves, daycare. — deps: P1, P4 — egg moves = ARC 123 (650 records, read in overlay 21), baby forms ARC 020 (`FUN_021C4504`); daycare code is field-side
+- [ ] P7b — PAR — egg hatching (step counter, egg-cycle decrement, hatch conversion): locate the overlay (not in sets.txt; candidates: field step/event code, overlay 215 egg_demo for the scene), add the set, port the logic — deps: P7

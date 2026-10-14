@@ -119,3 +119,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14** — Merged V-0030 (a962959; encount next(100) stub = all 0..99 + boundary picks, enc_pokeset `pick+u16:`; reviewed as a widening; encount/enc_pokeset/effect_encount re-checked on main). Spawned S4b (Sonnet).
 
 - **2026-10-14** — Merged F8f (169/169 scrcmd fns of the F8-spec5 areas, 57 cmd ids; Opus ~760k tokens); spec defects it found → F8f-spec. Spawned S5 (Opus, SEQ save model).
+
+- **2026-10-14** — Merged P7 (egg area 39/39, ov21 daycare egg generator; hatching not located → P7b). Spawned F8f-spec (Opus, small harness job).
