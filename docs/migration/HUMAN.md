@@ -4,12 +4,12 @@ Moved out of `MIGRATION-AGENT.md` (its old section 10) on 2026-10-13. Format: `-
 
 ## Open
 
-- [ ] 2026-10-11 — G8 — overworld as 3D (glTF from NSBMD, closest to the original) vs 2D re-render — default if unanswered: **3D**, A5 goes in scope.
-- [ ] 2026-10-11 — R4 — where to host the wasm build privately — default: **localhost only**.
-- [ ] 2026-10-12 — A10c — look at /tmp/blk/a10c/contact.png (item icons, type/ball icons, UI sprite bundle; some UI cells may be magenta = wrong palette) and /tmp/blk/a10b/contact.png + contact_overworld.png (trainers, overworld) — default: continue.
-- [ ] 2026-10-11 — U-phase — visual sign-off per screen: since 2026-10-13 this is `tools/ui-diff` scores against your goldens (below); an item at `[x] pending sign-off` lists its best score here and you decide — default: continue, mark `[x] pending sign-off`, list the screen here.
+- [x] 2026-10-11 — G8 — **DECIDED by the human 2026-10-13: 3D** (glTF from NSBMD, match the original's pattern); A5 in scope. 2D re-render dropped.
+- [x] 2026-10-11 — R4 — **DECIDED by the human 2026-10-13: localhost only, always** (no paid hosting). R4 = local serving instructions only.
+- [x] 2026-10-12 — A10c — closed 2026-10-13 (human): no manual look; sprite correctness is covered by `tools/ui-diff` scores once screens use the sprites (U-phase). Magenta cells (wrong palette) will show up as red scores there.
+- [ ] 2026-10-11 — U-phase — the only standing human role for UI: an item at `[x] pending sign-off` (best `tools/ui-diff` score < 0.70 after the worker's 3 image looks) is listed here with its score and you accept or reject it — default: continue, keep it `pending sign-off`.
 - [ ] 2026-10-11 — R2 — full playthrough by a human — no default; do R3/R5 and fixes from automated tests meanwhile.
-- [ ] 2026-10-13 — F8-spec5 scope — WFBC commands 450..457 (Black City / White Forest; fed by Entralink but present offline) are specced in `scrcmd_misc21b`: port them or treat as X1 and drop? Also who owns overlay 48 (cmd 382 handler)? — default: port 450..457 (they are offline-visible), park 382 under F10.
+- [x] 2026-10-13 — F8-spec5 scope — closed 2026-10-13 with the default (human): port WFBC commands 450..457 (offline-visible), park cmd 382 (overlay 48) under F10.
 - [x] 2026-10-13 — U0 goldens — (resolved the same evening: no human capture needed. The human asked for a scalable solution; melonDS 1.1 has no scripting, so `capture_ref.py` now drives the DeSmuME core headless via py-desmume with frame-exact input scripts and savestates; the title cases are captured and scored automatically. Remaining human role for UI: sign-off decisions on `pending sign-off` items only.)
 
 ## Resolved (recent)
