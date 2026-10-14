@@ -313,9 +313,16 @@ pub fn req_switch_prompt<E: FlowEnv>(
                 ],
                 c,
             );
+            // B19: the party list writes the player's choice into `c + 0x190` (pointers passed)
             env.callh(
                 0x021E_9A78,
-                &mut [Arg::V(view), Arg::P, Arg::V(0), Arg::V(0), Arg::P],
+                &mut [
+                    Arg::V(view),
+                    Arg::PHost(blk),
+                    Arg::V(0),
+                    Arg::V(0),
+                    Arg::PHost(extra),
+                ],
                 c,
             );
             set_state(state, 3);

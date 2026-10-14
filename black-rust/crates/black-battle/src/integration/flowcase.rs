@@ -302,6 +302,9 @@ pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>])
     }
     // ---- the case ----
     let wa = env.waddr;
+    // the frame depth the port's callees report as their caller's (`Env::dispatch`)
+    let depth = env.stack.len();
+    env.work_sync.remove(&depth);
     // a port whose `call` arm does not use the case work (it gets the work address only) runs
     // without taking it, so its callees can (the original passes the pointer on)
     let takes_work = spec.args.iter().any(|a| matches!(a, ArgKind::Work(_)))
@@ -551,11 +554,14 @@ pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>])
                 }
             }
         }
+        // B19: against the image the port's last writable lend handed back (`Env::work_sync`;
+        // the port's callees see `depth` = this frame), else the one it was given
+        let sync = env.work_sync.remove(&depth).unwrap_or(base);
         let mut o = env.objs.borrow_mut();
         let theirs = o.blocks[&wa].data.clone();
         let merged: Vec<u8> = (0..ours.len())
             .map(|i| {
-                if ours[i] != base[i] {
+                if ours[i] != sync[i] {
                     ours[i]
                 } else {
                     theirs[i]

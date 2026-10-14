@@ -181,9 +181,11 @@ level-5 Snivy (player, scripted: move slot 0 every turn) against a level-5 Patra
 from the ROM data (`black-data`, `black-pokemon`), via `server1::proc_init` / `proc_main` (until it
 reports the end) / `proc_exit`. It checks that HP never exceeds the maximum (unsigned, so never
 negative), that exactly one side ends fainted, and that every command frame the server sends
-(adapter message 8) decodes with the ported reader `021cd5e0`. Result (seeded, deterministic):
-3 turns, Snivy wins (Tackle for 5 / 7 / 8; Patrat: Leer, then Tackle with message 0x47, presumably a
-miss), 4 frames / 56 commands.
+(adapter message 8) decodes with the ported reader `021cd5e0`. Result (seeded, deterministic, and
+since B19 equal to the original code's under Unicorn, see "B19" below): 3 turns / 122 main frames,
+Patrat wins (Snivy: Tackle for 5 / 5 / 5; Patrat: Leer, then Tackle for 10 twice), 4 frames / 72
+commands. (Before B19 the integration had Snivy win: the foe's Leer targeted the foe itself and two
+coherence gaps changed the turn ends.)
 
 **Dispatch.** `Env` is the integration `FlowEnv`: `env.call(addr)` goes to `dispatch::call`, which
 routes by address range to the port (`server1`-`3` with `Mem` windows, `server_side`, the flow
@@ -249,6 +251,74 @@ only. Medium: read-only work holders whose callees write the work (`021bbb60`, `
 (`run` merges them), test-shaped data models (`collect_slot_records`, `slot_party`,
 `main_step` code 9: the data was assumed inside the holder's image). Low: unported callees
 modelled here (record builder, Pass Power, IR probe, `020181F4`, `02018480`, `020185C4` wiring).
+
+## B19 Unicorn differential (`src/integration/b19.rs`, test only)
+
+`integration::b19::b19_battles_match_rom` runs whole battles through the ports (the B16
+integration) and compares a trace of each with the trace of the same battle run entirely in the
+original code under Unicorn (`tools/rom-diff/battle_diff.py`). The trace (format in the module doc
+of `b19.rs`): the hash of the two parties as built, the frame counts of proc_init / proc_main /
+proc_exit, after every proc_main frame the HP / max HP of every battle Pokemon of the server's
+pokecon and the battle RNG state (`0x021F6368`), the player's moves and party choices, every
+command frame the server sent (adapter message 8, with the main frame it was sent in) and its
+decoded commands, the number of system Mersenne Twister calls. The test compares the FNV-1a hash
+of the Rust trace with `RECORDED` (written from the ROM side), so the gate needs no emulator; it
+runs in ~1 s (debug) per battle.
+
+```sh
+tools/check-battle-diff.sh             # both sides, line diff on a mismatch (~12 s)
+tools/check-battle-diff.sh switch      # one battle
+tools/check-battle-diff.sh --record    # write RECORDED (only when every trace matches)
+/tmp/blk/venv/bin/python -I tools/rom-diff/battle_diff.py b16 --arm9-funcs   # ROM side only
+```
+
+Outputs: `$BLK_OUT/b19/<name>.trace` (ROM) and `<name>.rust.trace` (ports). Diagnostics:
+`B19_WATCH=021d78ac,...` logs the ROM side's calls of those addresses (frame, args, return
+addresses); `B19_TRACE=K` prints every dispatched call of main frame K on the Rust side.
+
+**Battles** (`BATTLES`, the same in both files): `b16` (the B16 battle), `trainer_ai` (the same,
+AI script mask 7: the trainer-AI scripts run in overlay 96 / vm.c), `status` (Snivy uses Leer twice,
+then Tackle), `switch` (Snivy + Tepig: Snivy faints in turn 3, the player answers "yes" and picks
+party slot 1, Tepig wins). All four traces are equal.
+
+**Emulated side.** ARM9 main (autoload blocks to ITCM / DTCM / MAINEX / VRAM) and overlays 93 / 94 /
+95 / 96 / 231 at their link addresses; boot: the gfl std block (`0203EF5C`) and the system Mersenne
+Twister seeded (`0203F034`, the seed of `Env::mt`), the personal-data archive handle (`0201AD88`).
+Host hooks only for the system boundary, each the counterpart of the integration's host model of
+that address: heap create / alloc (zeroed) / free / destroy, GameProc work, the file system below
+the gfl archive code (open an ARC by id, FS_SeekFile / FS_ReadFile / FS_CloseFile over
+`black-rom/files`), the save-data block table (`020319A4`), OS_GetTick (`Env::tick`), the RTC seed of
+the battle RNG (`0203F258`, `Env::seed`), key input, the overlay loader, sound, the Pokedex and
+friendship updates (save / field data, `0200CFA0`, `0201B7A0`), the IR probe, the headless battle view
+and overlay 94 (the scripted player: move menu, party list `021e9a78`, yes / no `021eac54`). The
+division / square-root coprocessor is emulated; any other I/O or unmapped access fails the run.
+Everything else runs as original code — the battle overlays, btl_setup.c, vm.c, and about 170
+ARM9 functions (poke_tool, pokeparty, personal, waza, strbuf, the archive code, MI / FX helpers):
+where the integration has a host model (`arm9.rs`), the ROM side runs the original.
+
+**Mismatches found and fixed (B19).**
+- `events` `021cb174` / `021cb1a4` (`mon_of_main_a` / `_b`): r1 / r2 of the call pass through to
+  `021b8c50(main, pos, slot)` / `021b8cb0(main, pos)`; the port dropped them (a foe's single-target
+  move, Leer, resolved to the foe itself). The callers (`021ca8f8`, `021caa58`, `021cacf4`) now pass
+  the position (`021b8d8c`) and slot (0 / 1 / 2, or `rand(2)`). The events spec declares only r0
+  for these stubs: `testkit::UNDECLARED_PASS_THROUGH` drops the extra words for the stub log (hashes
+  unchanged); declaring them in `events.spec` (`args=v,v,v` / `v,v`) is open.
+- `core2` `021bec58` (`apply_move_category`): the struct `work[0x4A8]` points at lies in the work
+  (work + 0xCFC); the port kept its image separate, so `021c091c` / `021bfbd0` read stale positions
+  for command 0x30. Now pushed / pulled around the calls (`SvFlowWork::push` / `pull`, no-ops in the
+  differential test).
+- integration `flowcase` merge: a port that changed a work byte, lent the work, and changed it back
+  (the turn-end state `work[0x77E]`) got its intermediate value back from the table: the second
+  turn end did not run. `Env::work_sync` (the image the last writable lend handed back) is the merge
+  base now.
+- `server_side` `021bae60`, `client3` `021d0c78` (`switch_requests`): the adapter reply / request
+  list is the channel object's memory, read through `peek` (the ports indexed their own image).
+- `client2` / `client3` / `client4`: the party list `021e9a78` and the switch answers (`021d8394`,
+  `021d8434`, `021d83c4`) get the pointers the original passes and the client object is lent
+  (hash-neutral: `p` stub arguments).
+- integration: models / wiring for what the new battles reach (`021d7ff8` prize money through the
+  `calc` port, `0200C274` interpreted, `020319A4`, `0201B7A0`, requests 5 / 6 `021d0d38` / `021d0d44`
+  / `021d0d50`, the party list and yes / no answers).
 
 ## Deviations
 

@@ -219,7 +219,13 @@ pub fn state_ae60<E: FlowEnv>(env: &mut E, s_addr: u32, s: &mut [u8], st: &mut S
             each_eeb70(env, s);
             let h = rd32(&s[OFS_SLOTS.wrapping_add((x as usize).wrapping_mul(12))..]);
             let rec = env.callh(0x021E_EB64, &mut [Arg::V(h), Arg::V(0)], s);
-            if s[rec.wrapping_sub(s_addr) as usize] != 0 {
+            // the reply lies inside `S` in the test environment; in the game it is the channel
+            // object's reply block (B19: read through `peek`, as `collect_replies` does)
+            let mut b = [0u8; 1];
+            if !env.peek(rec, &mut b) {
+                b[0] = s[rec.wrapping_sub(s_addr) as usize];
+            }
+            if b[0] != 0 {
                 let v = env.callh(0x021B_C360, &mut [Arg::V(ptr_0x44(s))], s);
                 s[0x48..0x4C].copy_from_slice(&v.to_le_bytes());
                 send_header(env, s_addr, s);

@@ -121,6 +121,14 @@ impl StubEnv {
         self.halted
     }
 
+    /// The number of arguments the spec's stub line for `addr` declares (`None`: no stub).
+    pub fn declared_args(&self, addr: u32) -> Option<usize> {
+        self.stubs
+            .iter()
+            .find(|s| s.addr == addr)
+            .map(|s| s.args.len())
+    }
+
     /// `ret=u64` stub (B14-spec, e.g. OS_GetTick): r0 = the [`StubEnv::call`] result, r1 = `mix(r0, 0x6464)`
     /// (as `make_stub` in svflow.py); returns `r1 << 32 | r0`.
     pub fn call64(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u64 {

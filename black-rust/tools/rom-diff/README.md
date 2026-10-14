@@ -269,3 +269,15 @@ after the hash check (informational). The 337-move run takes about 1.5 min on 8 
 - Hints: `MOVE_HINTS` in `handlers.py` (mirrored by `move_hint` in `handlers/testkit.rs`) force
   event variables and mon bytes on 3 of 4 seeds for the handlers listed there, without extra RNG
   draws; change both sides together. Item handler `021dfe28` keeps its older inline hint.
+
+## Whole battles (B19)
+
+`battle_diff.py` runs scripted battles entirely in the original code (ARM9 main + overlays 93-96 +
+231, a boot / heap / file-system / OS / headless-view shim; the design is in its docstring and in
+crates/black-battle/README.md "B19") and writes a trace per battle that
+`integration::b19::b19_battles_match_rom` reproduces through the ports.
+
+```sh
+tools/check-battle-diff.sh [--record] [BATTLE ...]     # both sides + line diff; --record writes RECORDED
+/tmp/blk/venv/bin/python -I tools/rom-diff/battle_diff.py b16 --arm9-funcs   # ROM side only
+```

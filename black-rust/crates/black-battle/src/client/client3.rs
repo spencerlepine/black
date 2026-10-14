@@ -1238,7 +1238,11 @@ pub fn write_switch_answers<E: FlowEnv>(env: &mut E, c: &mut [u8], c_addr: u32, 
     while i < blk[6] as usize {
         env.callh(
             0x021D_8394,
-            &mut [Arg::P, Arg::V(blk[3 + i] as u32), Arg::V(blk[i] as u32)],
+            &mut [
+                Arg::PAt(c_addr.wrapping_add((OFS_ANSWERS + 4 * i) as u32)),
+                Arg::V(blk[3 + i] as u32),
+                Arg::V(blk[i] as u32),
+            ],
             c,
         );
         i = (i + 1) & 0xFF;
@@ -1275,10 +1279,12 @@ pub fn forced_switch_answers<E: FlowEnv>(env: &mut E, c: &mut [u8], c_addr: u32)
         while i < n {
             let m = party_mon(env, c, i);
             if !fainted(&mut Lend::h(env, c), m) {
+                // `&c[0x124 + 4 * count++]`
+                let rec = c_addr.wrapping_add(OFS_ANSWERS as u32 + 4 * count);
                 count = (count + 1) & 0xFF;
                 env.callh(
                     0x021D_8394,
-                    &mut [Arg::P, Arg::V(b[0] as u32), Arg::V(i & 0xFF)],
+                    &mut [Arg::PAt(rec), Arg::V(b[0] as u32), Arg::V(i & 0xFF)],
                     c,
                 );
                 start = (i + 1) & 0xFF;
@@ -1309,9 +1315,14 @@ pub fn switch_requests<E: FlowEnv>(
         c,
     ) & 0xFF;
     let base = u32::from_le_bytes(p).wrapping_sub(list_addr) as usize;
+    // B19: the list lies in `list` in the test environment; in the game it is the adapter
+    // channel's received data (read through `peek`, as the server side's replies are)
+    let mut ext = vec![0u8; n as usize];
+    let outside = env.peek(u32::from_le_bytes(p), &mut ext);
     let mut k = 0usize;
     for i in 0..n as usize {
-        let id = list[base + i] as u32;
+        let byte = if outside { ext[i] } else { list[base + i] };
+        let id = byte as u32;
         if c[OFS_ID] as u32
             == env.callr(
                 0x021B_8DE4,
@@ -1319,7 +1330,7 @@ pub fn switch_requests<E: FlowEnv>(
                 c,
             )
         {
-            out[k] = list[base + i];
+            out[k] = byte;
             k += 1;
         }
     }
@@ -1403,7 +1414,7 @@ pub fn ai_switch_in<E: ClientUi>(
 ) -> u32 {
     let answers = c_addr.wrapping_add(OFS_ANSWERS as u32);
     if load_requests(env, c, list, list_addr) == 0 {
-        env.callh(0x021D_8434, &mut [Arg::P], c);
+        env.callh(0x021D_8434, &mut [Arg::PAt(answers)], c);
         wr32(c, OFS_RESULT_PTR, answers);
         wr32(c, OFS_RESULT_SIZE, 4);
         return 1;
@@ -1419,7 +1430,7 @@ pub fn ai_switch_in<E: ClientUi>(
                 return 1;
             }
         }
-        env.callh(0x021D_83C4, &mut [Arg::P], c);
+        env.callh(0x021D_83C4, &mut [Arg::PAt(answers)], c);
         wr32(c, OFS_RESULT_PTR, answers);
         wr32(c, OFS_RESULT_SIZE, 4);
         return 1;
@@ -1456,7 +1467,7 @@ pub fn ai_switch_in<E: ClientUi>(
         env.callh(
             0x021D_8394,
             &mut [
-                Arg::P,
+                Arg::PAt(answers.wrapping_add(4 * i)),
                 Arg::V(b[0] as u32),
                 Arg::V(slots[i as usize] as u32),
             ],
@@ -1510,7 +1521,7 @@ pub fn switch_in_step<E: ClientUi>(
     match st(state) {
         0 => {
             if load_requests(env, c, list, list_addr) == 0 {
-                env.callh(0x021D_8434, &mut [Arg::P], c);
+                env.callh(0x021D_8434, &mut [Arg::PAt(answers)], c);
                 set_result(c, 4);
                 set_st(state, 4);
                 return 0;
@@ -1527,7 +1538,7 @@ pub fn switch_in_step<E: ClientUi>(
                         return 0;
                     }
                 }
-                env.callh(0x021D_83C4, &mut [Arg::P], c);
+                env.callh(0x021D_83C4, &mut [Arg::PAt(answers)], c);
                 set_result(c, 4);
                 set_st(state, 4);
                 return 0;
@@ -1538,7 +1549,7 @@ pub fn switch_in_step<E: ClientUi>(
                 if k == 1 && fainted(&mut Lend::h(env, c), mon0) {
                     env.callh(
                         0x021D_8394,
-                        &mut [Arg::P, Arg::V(0), Arg::V(slots[0] as u32)],
+                        &mut [Arg::PAt(answers), Arg::V(0), Arg::V(slots[0] as u32)],
                         c,
                     );
                     set_result(c, 4);
@@ -1560,15 +1571,18 @@ pub fn switch_in_step<E: ClientUi>(
             let block = c_addr.wrapping_add(OFS_PARTY_BLOCK as u32);
             let sel = c_addr.wrapping_add(OFS_PARTY_SEL as u32);
             setup_party_block(env, c, kind, m, block, sel);
-            env.view(
+            // B19: the party list writes the player's choice into `sel` (in the client object):
+            // the pointers it gets and the object are lent
+            env.callh(
                 0x021E_9A78,
                 &mut [
                     Arg::V(view(c)),
-                    Arg::P,
+                    Arg::PAt(block),
                     Arg::V(b[0] as u32),
                     Arg::V(0),
-                    Arg::P,
+                    Arg::PAt(sel),
                 ],
+                c,
             );
             env.callh(0x021C_E068, &mut [Arg::PHost(c.as_ptr() as usize)], c);
             set_st(state, 1);

@@ -185,8 +185,15 @@ pub(crate) fn call<E: FlowEnv + BppEnv>(addr: u32, c: &mut Case<E>) -> u64 {
             super::queue_clear(&mut c.bufs[0]);
             0
         }
-        0x021C_B174 => super::mon_of_main_a(&mut c.env, c.vals[0], &c.bufs[0]) as u64,
-        0x021C_B1A4 => super::mon_of_main_b(&mut c.env, c.vals[0], &c.bufs[0]) as u64,
+        // B19: r1 / r2 pass through to the getter (the spec does not declare them: 0, Z19)
+        0x021C_B174 => {
+            let (pos, slot) = (c.word(1), c.word(2));
+            super::mon_of_main_a(&mut c.env, c.vals[0], &c.bufs[0], pos, slot) as u64
+        }
+        0x021C_B1A4 => {
+            let pos = c.word(1);
+            super::mon_of_main_b(&mut c.env, c.vals[0], &c.bufs[0], pos) as u64
+        }
         0x021C_B214 => {
             let mon = mon(c, 1);
             super::dispatch_check(&mut c.env, c.vals[0], &mon, &c.bufs[2]) as u64

@@ -44,7 +44,8 @@ pub fn call(env: &mut Env, _lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>]
             1
         }
         // 021e97bc(view, mon, &record): opens the move menu for `mon`; the answer goes to the
-        // action record. The script picks move slot 0 against the default target.
+        // action record. The script (`Env::script`, B16: slot 0) picks the move slot; the target is
+        // the default one.
         0x021E_97BC => {
             let rec = val(args, 2);
             let mon = val(args, 1);
@@ -54,7 +55,9 @@ pub fn call(env: &mut Env, _lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>]
         // 021e98b4(view): the move menu is answered (the record is written)
         0x021E_98B4 => {
             let (rec, mon) = env.ui_fight.take().expect("move menu was not opened");
-            let mv = env.with_mon(mon, |_, b| b.move_id(0)) as u32;
+            let k = env.choices.len().min(env.script.len() - 1);
+            let slot = env.script[k];
+            let mv = env.with_mon(mon, |_, b| b.move_id(slot)) as u32;
             let mut r = crate::calc_action::ActionRecord(0);
             r.set_fight(mv, 1);
             env.w32(rec, r.0);
@@ -63,6 +66,33 @@ pub fn call(env: &mut Env, _lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>]
         }
         // 021e98e8: the target menu answer: 1 = confirmed
         0x021E_98E8 => 1,
+        // 021eac54(view, &answer): the yes / no window has an answer (B19): 0, the first choice
+        // ("yes", e.g. send out the next Pokemon)
+        0x021E_AC54 => {
+            env.ui_log.push(addr);
+            super::Bufs::new(args).put(env, _lent, 1, &0u32.to_le_bytes());
+            1
+        }
+        // 021e9a78(view, block, pos, flag, sel): opens the party list (B19). The scripted player
+        // picks party slot `Env::switch_script[k]` (the last one repeats) for position `pos`, as
+        // the list's "add" does (overlay 95 `0689CAEC(sel, pos, slot)`: when `sel[6] < sel[7]`,
+        // `sel[sel[6]] = slot`, `sel[3 + sel[6]] = pos`, `sel[6] += 1`); 021e9b20 then answers
+        // "finished" (the range default below)
+        0x021E_9A78 => {
+            let (pos, sel) = (val(args, 2), val(args, 4));
+            let k = env.switches.len().min(env.switch_script.len() - 1);
+            let slot = env.switch_script[k];
+            env.switches.push(slot);
+            env.ui_log.push(addr);
+            let mut o = env.objs.borrow_mut();
+            let (n, max) = (o.r8(sel + 6), o.r8(sel + 7));
+            if n < max {
+                o.w8(sel + n, slot);
+                o.w8(sel + 3 + n, pos);
+                o.w8(sel + 6, n + 1);
+            }
+            0
+        }
         // sound / BGM (ov94 0x021F7xxx-0x021F8xxx): starts do nothing; "playing" queries say no
         0x021F_7998 | 0x021F_84E8 | 0x021F_8504 | 0x021F_87EC | 0x021F_88BC | 0x021F_8B10 => 0,
         0x021F_7EB4 | 0x021F_8774 | 0x021F_8678 => 0,

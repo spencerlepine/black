@@ -1280,15 +1280,21 @@ pub fn party_page<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u
             } else {
                 1
             };
-            env.view(
+            // B19: the party list writes the player's choice into `c + 0x190`: the pointers and
+            // the client object are lent
+            let (blk, sel) = (c[0x184..].as_ptr() as usize, c[0x190..].as_ptr() as usize);
+            let cur = c[OFS_CUR] as u32;
+            let v = view(c);
+            env.callh(
                 0x021E_9A78,
                 &mut [
-                    Arg::V(view(c)),
-                    Arg::P,
-                    Arg::V(c[OFS_CUR] as u32),
+                    Arg::V(v),
+                    Arg::PHost(blk),
+                    Arg::V(cur),
                     Arg::V(f),
-                    Arg::P,
+                    Arg::PHost(sel),
                 ],
+                c,
             );
             set_st(state, st(state).wrapping_add(1));
         }

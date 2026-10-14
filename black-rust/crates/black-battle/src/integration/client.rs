@@ -405,6 +405,19 @@ pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>])
         0x021D_0CC4 => run(env, lent, args, &[s(1)], |e, c, a, _, b| {
             client3::yes_no_step(e, c, a, &mut b[0])
         }),
+        // B19: requests 5 / 6 (switch-in after a faint, mode 0): `(c, &state)`; the request list
+        // (the adapter's data) is read through `peek` (`client3::switch_requests`)
+        0x021D_0D38 | 0x021D_0D44 => run(env, lent, args, &[s(1)], |e, c, a, _, b| {
+            if addr == 0x021D_0D38 {
+                client3::req5_step(e, c, a, &mut b[0], &[], 0)
+            } else {
+                client3::req6_step(e, c, a, &mut b[0], &[], 0)
+            }
+        }),
+        // requests 5 / 6, mode 1 (the AI client's switch-in)
+        0x021D_0D50 => run(env, lent, args, &[], |e, c, a, _, _| {
+            client3::ai_switch_in(e, c, a, &[], 0)
+        }),
         // ---- client4 / client5 command handlers: (c, &state, args) ----
         0x021D_1A74 | 0x021D_1A60 => return play_commands(env, lent, addr, args),
         _ => return client45(env, lent, addr, args),

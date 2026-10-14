@@ -1680,6 +1680,12 @@ pub fn apply_move_category<E: FlowEnv>(
     env.callwc(0x021B_EFEC, &mut [Arg::V(w.u32_at(OFS_PTR_860))], w, cx);
     let x = cmd_queue::put_cmd_placeholder(&mut Lend::new(env, w), cx.q, 0x30, cx.scratch);
     fill_switch_record(&mut Lend::new(env, w), p, cx.w_addr, mon, r3);
+    // B19: `p` (the struct `work[0x4A8]` points at) lies in the work in the game (work + 0xCFC,
+    // see `SvFlowWork::pull`), where the callees read and write it (021c091c, 021bfbd0: the
+    // positions of command 0x30 come from it): stored there after each change of the image,
+    // reloaded after the calls (no-ops in the differential test, where it is a separate region)
+    let pp = w.u32_at(OFS_PTR_4A8);
+    w.push(cx.w_addr, pp, p);
     let old = cmd_queue::advance_fields(&mut w.mem[OFS_QUEUE_HEADER..]);
     let iv = env.callwc(
         0x021C_65A8,
@@ -1688,9 +1694,11 @@ pub fn apply_move_category<E: FlowEnv>(
         cx,
     );
     cmd_queue::set_word(&mut w.mem[OFS_QUEUE_HEADER..], old);
+    w.pull(cx.w_addr, pp, p);
     if iv != 0 {
         if p[5] & 1 == 0 {
             p[5] = (p[5] & 0xFE) | 1;
+            w.push(cx.w_addr, pp, p);
         }
         if iv == 2 {
             env.callwc(
@@ -1699,6 +1707,7 @@ pub fn apply_move_category<E: FlowEnv>(
                 w,
                 cx,
             );
+            w.pull(cx.w_addr, pp, p);
             return 1;
         }
     }
@@ -1781,6 +1790,7 @@ pub fn apply_move_category<E: FlowEnv>(
             handled = 0;
         }
     }
+    w.pull(cx.w_addr, pp, p);
     if handled == 0 {
         if p[5] & 1 != 0 {
             env.callwc(
@@ -1853,6 +1863,7 @@ pub fn apply_move_category<E: FlowEnv>(
                 _ => 0,
             };
         }
+        w.pull(cx.w_addr, pp, p);
         let b = p[5];
         if b & 1 != 0 {
             if b & 2 == 0 {
@@ -1882,6 +1893,7 @@ pub fn apply_move_category<E: FlowEnv>(
     }
     queue_wrap_bf2b4(&mut Lend::c(env, cx), w, id, r2);
     env.callwc(0x021C_4F64, &mut [Arg::P, Arg::V(mon)], w, cx);
+    w.pull(cx.w_addr, pp, p);
     handled
 }
 

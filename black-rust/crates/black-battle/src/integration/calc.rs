@@ -8,7 +8,7 @@ use crate::calc::{self, MathRandContext32};
 use crate::calc_action::ActionRecord;
 use crate::calc_target::IdSet;
 use crate::hooks;
-use crate::server_flow::env::{Arg, Lent};
+use crate::server_flow::env::{Arg, FlowEnv, Lent};
 use crate::sick_cont::SickCont;
 
 /// A battle Pokemon seen through [`hooks::BattleMon`] (the calc ports' view): `BattleMon_Get` with
@@ -30,6 +30,19 @@ impl hooks::BattleMon for MonView {
     }
     fn species(&self) -> u16 {
         self.mon.species()
+    }
+}
+
+/// A pokecon party as [`hooks::BattleParty`] (its members resolved by the caller).
+struct Members(Vec<MonView>);
+
+impl hooks::BattleParty for Members {
+    type Mon = MonView;
+    fn count(&self) -> u32 {
+        self.0.len() as u32
+    }
+    fn member(&self, index: u8) -> &MonView {
+        &self.0[index as usize]
     }
 }
 
@@ -170,6 +183,20 @@ pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>])
             };
             let words: Vec<u32> = (0..22).map(|i| env.r32(p + 4 * i)).collect();
             crate::calc_leftovers2::fun_021d7f88(&mut NoShop, &words)
+        }
+        // 021d7ff8(badges, party): prize money the player pays when losing (B19: reached by the
+        // B16 battle, which the player loses); the party's members through the server ports
+        // `021b9b94` (count) / `021b9c00` (member)
+        0x021D_7FF8 => {
+            let (badges, party) = (v(0), v(1));
+            let n = env.call(0x021B_9B94, &mut [Arg::V(party)]);
+            let members: Vec<MonView> = (0..n)
+                .map(|i| {
+                    let a = env.call(0x021B_9C00, &mut [Arg::V(party), Arg::V(i)]);
+                    env.mon_view(a)
+                })
+                .collect();
+            calc::prize_money(badges, &Members(members))
         }
         0x021D_78AC => env.calc.rand(v(0)),
         0x021D_78E4 => calc::apply_stat_stage(v(0), v(1)) as u32,

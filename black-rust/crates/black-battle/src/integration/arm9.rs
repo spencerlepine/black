@@ -292,11 +292,28 @@ pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>])
         // 0200CFA0(dex, mon): registers `mon` as seen in the Pokedex (save data, outside the
         // battle's logic); not modelled
         0x0200_CFA0 => 0,
+        // 0201B7A0(pp, event, zone, heap): friendship change of a party Pokemon (B19: reached when
+        // the player's Pokemon faints, `021b92b0`); it reads the field's zone table (`02013E4C`),
+        // which a battle started without the field does not have. Party data after the battle,
+        // outside the battle's logic: not modelled (the Unicorn shim does the same)
+        0x0201_B7A0 => 0,
         // ---- game data / save blocks ----
         // 02012EBC(game data): its first word, the save data
         0x0201_2EBC => env.r32(val(args, 0)),
         // 02007B44(save) = save block 0x24 (the Chatot voice, `perapvoice.c`, 0x3EC bytes)
         0x0200_7B44 => save_block(env, val(args, 0), 0x24, 0x3EC),
+        // 020319A4(mgr, id) (ARM): the save data's block `id` (`020071CC(save, id)` reaches it,
+        // interpreted, with mgr = save[0x10]); B19: block 0x34 (the money, `0200C274`) when the
+        // player loses. One zeroed block per (mgr, id), as the Unicorn shim does
+        0x0203_19A4 => {
+            let (mgr, id) = (val(args, 0), val(args, 1));
+            let size = SAVE_BLOCK_SIZES
+                .iter()
+                .find(|s| s.0 == id)
+                .unwrap_or_else(|| panic!("B16 gap: save block {id:#x} is not modelled"))
+                .1;
+            save_block(env, mgr, id, size)
+        }
         // 02007B20(heap): a new cleared voice block
         0x0200_7B20 => env.objs.borrow_mut().alloc(0x3EC, "perap voice"),
         // 02007C20(dst, src): copies a voice block
@@ -409,6 +426,7 @@ pub const THUMB_ARM9: &[u32] = &[
     0x0200_8560, // MyStatus byte +0x1B set
     0x0202_0F14, // item data archive open (-> 020490F4(0x18, heap))
     0x0202_0F20, // item data member load
+    0x0200_C274, // money of save block 0x34 (B19: the player lost)
     0x0202_428C, // 8-byte record clear
     0x0202_4570, // 8-byte record copy
 ];
@@ -439,6 +457,11 @@ pub const THUMB_ARM9_RANGES: &[std::ops::Range<u32>] = &[
     // vm.c (ported in black-script, whose `Mem` the integration does not provide yet)
     0x0201_11EC..0x0201_13D8,
 ];
+
+/// Sizes of the save blocks the battle reaches (`020319A4`; mirrored by `SAVE_BLOCK_SIZES` in
+/// tools/rom-diff/battle_diff.py): 0x24 the Chatot voice, 0x34 the money (u32 at +0; the size
+/// covers what the readers touch).
+pub const SAVE_BLOCK_SIZES: &[(u32, u32)] = &[(0x24, 0x3EC), (0x34, 0x10)];
 
 /// `020071CC(save, id)`: save block `id` (allocated on first use).
 pub fn save_block(env: &mut Env, save: u32, id: u32, size: u32) -> u32 {

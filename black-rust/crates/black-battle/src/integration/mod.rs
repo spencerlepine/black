@@ -107,6 +107,14 @@ pub struct Env {
     pub ui_fight: Option<(u32, u32)>,
     /// The moves the scripted player chose.
     pub choices: Vec<u32>,
+    /// The scripted player's move slot for each move-menu answer, in order; the last one repeats
+    /// (B19; `[0]` = the B16 script: slot 0 every turn).
+    pub script: Vec<u32>,
+    /// The scripted player's party slot for each party-list opening (`021e9a78`), in order; the
+    /// last one repeats (B19).
+    pub switch_script: Vec<u32>,
+    /// The party slots the scripted player chose.
+    pub switches: Vec<u32>,
     /// Coherence notes (distinct messages, with counts).
     pub notes: BTreeMap<String, u32>,
     /// The OS tick (`OS_GetTick`).
@@ -125,6 +133,13 @@ pub struct Env {
     /// so a later flush stores only the bytes its image changed since then (changes an outer
     /// writable holder made) and keeps the callee's.
     pub ro_snap: BTreeMap<(usize, u32, usize, usize), Vec<u8>>,
+    /// B19: the flow-work image a call that lent the work writable handed back to the port frame
+    /// at depth `d` (the object table holds exactly that image then). A flow case merges the
+    /// port's final image against it (bytes the port changed since then are the port's, others
+    /// the table's), not against the image it started with: a port that changed a byte, lent the
+    /// work, and changed it back (the turn-end state `work[0x77E]` 0 -> 7 -> 0) left an echo of
+    /// its own intermediate value in the table that the old merge kept.
+    pub work_sync: BTreeMap<usize, Vec<u8>>,
     /// The heap the battle calc's blocks come from (`021d7854` / `021d7894`).
     pub calc_heap: black_core::heap::HostHeap,
     /// The command frames the server sent (message 8 of the adapter), in order.
@@ -198,6 +213,7 @@ impl Env {
             cmd_frames: Vec::new(),
             calc_heap: Default::default(),
             ro_snap: BTreeMap::new(),
+            work_sync: BTreeMap::new(),
             mt: {
                 let mut mt = black_core::rng::Mt19937::new();
                 mt.seed(0x89AB_CDEF);
@@ -207,6 +223,9 @@ impl Env {
             ui_log: Vec::new(),
             ui_fight: None,
             choices: Vec::new(),
+            script: vec![0],
+            switch_script: vec![1],
+            switches: Vec::new(),
             waza_cache: false,
             arc_handles: BTreeMap::new(),
             client_stack: Vec::new(),
@@ -461,7 +480,9 @@ impl Env {
         };
         // the callee's frames have ended: their read-only snapshots go
         self.ro_snap.retain(|k, _| k.0 <= depth);
+        self.work_sync.retain(|&k, _| k <= depth);
         let mut ro_note = None;
+        let mut synced = None;
         {
             let mut o = self.objs.borrow_mut();
             let nb = bytes.len();
@@ -481,6 +502,7 @@ impl Env {
                     bytes[k].copy_from_slice(&blk.data[off..off + n]);
                 } else if let Some(w) = work.as_deref_mut() {
                     w.mem.copy_from_slice(&blk.data[..SvFlowWork::SIZE]);
+                    synced = Some(blk.data[..SvFlowWork::SIZE].to_vec());
                 } else if work_ref.is_some() {
                     let before = ro_work_before.as_ref().unwrap();
                     if before[..] != blk.data[..SvFlowWork::SIZE] {
@@ -525,6 +547,9 @@ impl Env {
         }
         if let Some(n) = ro_note {
             self.note(n);
+        }
+        if let Some(s) = synced {
+            self.work_sync.insert(depth, s);
         }
         if self.trace > 0 {
             let a: Vec<String> = args
@@ -708,6 +733,8 @@ pub fn val(args: &[Arg<'_>], i: usize) -> u32 {
     }
 }
 
+#[cfg(test)]
+mod b19;
 pub mod dispatch;
 #[cfg(test)]
 mod tests;

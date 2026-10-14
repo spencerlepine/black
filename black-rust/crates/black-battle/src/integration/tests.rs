@@ -48,7 +48,7 @@ pub fn make_pokemon(arc: &std::rc::Rc<Archives>, species: u32, level: u32, pid: 
 }
 
 /// A PokeParty with the given members.
-fn make_party(env: &mut Env, mons: &[Vec<u8>]) -> u32 {
+pub(super) fn make_party(env: &mut Env, mons: &[Vec<u8>]) -> u32 {
     let p = env
         .objs
         .borrow_mut()
@@ -65,7 +65,7 @@ fn make_party(env: &mut Env, mons: &[Vec<u8>]) -> u32 {
 
 /// Builds the BATTLE_SETUP of a local wild single battle (type 0, rule 0) and the objects it
 /// points at; returns its address.
-fn build_setup(env: &mut Env, player: u32, foe: u32) -> u32 {
+pub(super) fn build_setup(env: &mut Env, player: u32, foe: u32) -> u32 {
     let mut o = env.objs.borrow_mut();
     let setup = o.alloc(0xF0, "BATTLE_SETUP");
     let config = o.alloc(4, "game config");
@@ -301,7 +301,7 @@ fn run_battle(
 }
 
 /// The ROM, or `None` (skip) when it is missing and `REQUIRE_ROM` is not 1.
-fn rom() -> Option<std::rc::Rc<super::rom::Rom>> {
+pub(super) fn rom() -> Option<std::rc::Rc<super::rom::Rom>> {
     match super::rom::Rom::load() {
         Some(r) => Some(std::rc::Rc::new(r)),
         None => {

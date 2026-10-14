@@ -37,8 +37,27 @@ fn emu_addr(layout: &[(usize, usize, u32)], h: usize) -> u32 {
     fnd::STACK_ZERO.start
 }
 
+/// B19: callees whose register arguments past r0 pass through their caller unchanged
+/// (`021cb174(work, pos, slot)` -> `021b8c50(main, pos, slot)`, `021cb1a4(work, pos)` ->
+/// `021b8cb0(main, pos)`; found by the battle differential, `integration::b19`) while the events
+/// spec's stub lines declare only r0 (`args=v`). A call that passes more plain values than the
+/// stub declares reaches it with the declared ones only, so the stub log (and the recorded hashes)
+/// are what the spec defines; the extra words are compared by `b19_battles_match_rom` only, until
+/// the spec declares them (then this list goes).
+const UNDECLARED_PASS_THROUGH: &[u32] = &[0x021B_8C50, 0x021B_8CB0, 0x021C_B174, 0x021C_B1A4];
+
 impl FlowEnv for TestEnv {
     fn call(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u32 {
+        let args = match self.stub.declared_args(addr) {
+            Some(n)
+                if UNDECLARED_PASS_THROUGH.contains(&addr)
+                    && args.len() > n
+                    && args[n..].iter().all(|a| matches!(a, Arg::V(_))) =>
+            {
+                &mut args[..n]
+            }
+            _ => args,
+        };
         let layout = &self.layout;
         let mut conv: Vec<fnd::Arg<'_>> = args
             .iter_mut()

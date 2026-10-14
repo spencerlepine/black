@@ -229,10 +229,18 @@ pub fn queue_clear(p: &mut [u8]) {
 /// party. `server` is the address of the server-side object; the environment keeps it inside `p`
 /// (`p_addr <= server`), so its bytes are `p[server - p_addr..]`. A null slot (unused client or
 /// `client >= 4`) makes the original read address 4, which has no model: it panics here.
-fn slot_party<E: FlowEnv>(env: &mut E, getter: u32, p_addr: u32, p: &[u8]) -> u32 {
+///
+/// B19: r1 / r2 of the call reach the getter unchanged (`getter(main, r1, r2)`: the original loads
+/// only r0 before the `bl`); `pass` are those words (the battle differential found Leer by the
+/// foe resolving to the foe itself when they were dropped).
+fn slot_party<E: FlowEnv>(env: &mut E, getter: u32, pass: &[u32], p_addr: u32, p: &[u8]) -> u32 {
     let server = rd32(p);
     let main = rd32(&p[4..]);
-    let id = env.call(getter, &mut [Arg::V(main)]);
+    let mut gargs: Vec<Arg<'_>> = std::iter::once(main)
+        .chain(pass.iter().copied())
+        .map(Arg::V)
+        .collect();
+    let id = env.call(getter, &mut gargs);
     let mut a = [0u8; 1]; // client (r2)
     let mut b = [0u8; 1]; // index (r3)
     env.call(
@@ -253,14 +261,16 @@ fn slot_party<E: FlowEnv>(env: &mut E, getter: u32, p_addr: u32, p: &[u8]) -> u3
     env.call(0x021B_9BF0, &mut [Arg::V(party), Arg::V(b[0] as u32)])
 }
 
-/// C: `FUN_overlay_d_93__021cb174`: the BattleMon of the pokemon `021b8c50(main)` names.
-pub fn mon_of_main_a<E: FlowEnv>(env: &mut E, p_addr: u32, p: &[u8]) -> u32 {
-    slot_party(env, 0x021B_8C50, p_addr, p)
+/// C: `FUN_overlay_d_93__021cb174(work, pos, slot)`: the BattleMon of the pokemon
+/// `021b8c50(main, pos, slot)` names (slot `slot` of the side opposing position `pos`).
+pub fn mon_of_main_a<E: FlowEnv>(env: &mut E, p_addr: u32, p: &[u8], pos: u32, slot: u32) -> u32 {
+    slot_party(env, 0x021B_8C50, &[pos, slot], p_addr, p)
 }
 
-/// C: `FUN_overlay_d_93__021cb1a4`: as [`mon_of_main_a`] for `021b8cb0(main)`.
-pub fn mon_of_main_b<E: FlowEnv>(env: &mut E, p_addr: u32, p: &[u8]) -> u32 {
-    slot_party(env, 0x021B_8CB0, p_addr, p)
+/// C: `FUN_overlay_d_93__021cb1a4(work, pos)`: as [`mon_of_main_a`] for `021b8cb0(main, pos)`
+/// (the partner position of `pos`).
+pub fn mon_of_main_b<E: FlowEnv>(env: &mut E, p_addr: u32, p: &[u8], pos: u32) -> u32 {
+    slot_party(env, 0x021B_8CB0, &[pos], p_addr, p)
 }
 
 // ---- event-variable stack users ----------------------------------------------------------------------
@@ -1800,7 +1810,8 @@ pub fn message_args_a<E: FlowEnv>(
     obj: u32,
 ) -> u32 {
     let (main, pokecon) = (w.u32_at(4), w.u32_at(8));
-    env.callwr(
+    // the position of `mon` (r1 of the `021cb174` calls below)
+    let pos = env.callwr(
         0x021B_8D8C,
         &mut [Arg::V(main), Arg::V(pokecon), Arg::V(mon.poke_id() as u32)],
         w,
@@ -1808,7 +1819,7 @@ pub fn message_args_a<E: FlowEnv>(
     match rd32(&rec[0xC..]) {
         0 | 3 | 4 | 5 | 9 => {
             let m = if who == 0x1F {
-                mon_of_main_a(env, waddr, &w.mem[..])
+                mon_of_main_a(env, waddr, &w.mem[..], pos, 0)
             } else {
                 env.callwr(0x021B_9934, &mut [Arg::V(pokecon), Arg::V(who)], w)
             };
@@ -1826,7 +1837,7 @@ pub fn message_args_a<E: FlowEnv>(
         }
         8 => {
             env.callwr(0x021C_A9F4, &mut [Arg::V(obj), Arg::V(mon_addr)], w);
-            let m = mon_of_main_a(env, waddr, &w.mem[..]);
+            let m = mon_of_main_a(env, waddr, &w.mem[..], pos, 0);
             env.callwr(0x021C_AA04, &mut [Arg::V(obj), Arg::V(m)], w);
             2
         }
@@ -1903,33 +1914,34 @@ pub fn message_args_b<E: FlowEnv>(
             tail(env, w, r)
         }
         9 => {
-            env.callw(0x021D_78AC, &mut [Arg::V(2)], w);
-            let r = mon_of_main_a(env, waddr, &w.mem[..]);
+            // a random one of the two opposing slots
+            let slot = env.callw(0x021D_78AC, &mut [Arg::V(2)], w) & 0xFF;
+            let r = mon_of_main_a(env, waddr, &w.mem[..], client, slot);
             tail(env, w, r)
         }
         5 => {
-            let m = mon_of_main_a(env, waddr, &w.mem[..]);
+            let m = mon_of_main_a(env, waddr, &w.mem[..], client, 0);
             env.callw(0x021C_AC24, &mut [Arg::V(obj), Arg::V(m)], w);
-            let m = mon_of_main_a(env, waddr, &w.mem[..]);
+            let m = mon_of_main_a(env, waddr, &w.mem[..], client, 1);
             env.callw(0x021C_AC34, &mut [Arg::V(obj), Arg::V(m)], w);
             2
         }
         4 => {
-            let m = mon_of_main_b(env, waddr, &w.mem[..]);
+            let m = mon_of_main_b(env, waddr, &w.mem[..], client);
             env.callw(0x021C_AC44, &mut [Arg::V(obj), Arg::V(m)], w);
-            let m = mon_of_main_a(env, waddr, &w.mem[..]);
+            let m = mon_of_main_a(env, waddr, &w.mem[..], client, 0);
             env.callw(0x021C_AC54, &mut [Arg::V(obj), Arg::V(m)], w);
-            let m = mon_of_main_a(env, waddr, &w.mem[..]);
+            let m = mon_of_main_a(env, waddr, &w.mem[..], client, 1);
             env.callw(0x021C_AC64, &mut [Arg::V(obj), Arg::V(m)], w);
             3
         }
         8 => {
             env.callw(0x021C_AC74, &mut [Arg::V(obj), Arg::V(mon_addr)], w);
-            let m = mon_of_main_b(env, waddr, &w.mem[..]);
+            let m = mon_of_main_b(env, waddr, &w.mem[..], client);
             env.callw(0x021C_AC84, &mut [Arg::V(obj), Arg::V(m)], w);
-            let m = mon_of_main_a(env, waddr, &w.mem[..]);
+            let m = mon_of_main_a(env, waddr, &w.mem[..], client, 0);
             env.callw(0x021C_AC94, &mut [Arg::V(obj), Arg::V(m)], w);
-            let m = mon_of_main_a(env, waddr, &w.mem[..]);
+            let m = mon_of_main_a(env, waddr, &w.mem[..], client, 1);
             env.callw(0x021C_ACA4, &mut [Arg::V(obj), Arg::V(m)], w);
             3
         }
@@ -1948,7 +1960,7 @@ pub fn message_args_b<E: FlowEnv>(
             1
         }
         2 => {
-            let m = mon_of_main_b(env, waddr, &w.mem[..]);
+            let m = mon_of_main_b(env, waddr, &w.mem[..], client);
             env.callw(0x021C_ACD4, &mut [Arg::V(obj), Arg::V(m)], w);
             1
         }
@@ -2042,8 +2054,11 @@ pub fn message_args_c<E: FlowEnv>(
                     env.callw(0x021C_AF58, &mut [Arg::V(obj), Arg::V(m)], w);
                 }
             }
-            for veneer in [0x021C_AF68, 0x021C_AF78, 0x021C_AF88] {
-                let m = mon_of_main_a(env, waddr, &w.mem[..]);
+            for (slot, veneer) in [0x021C_AF68, 0x021C_AF78, 0x021C_AF88]
+                .into_iter()
+                .enumerate()
+            {
+                let m = mon_of_main_a(env, waddr, &w.mem[..], client, slot as u32);
                 env.callw(veneer, &mut [Arg::V(obj), Arg::V(m)], w);
             }
             6
