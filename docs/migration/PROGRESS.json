@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-14T13:44:18Z",
- "commit": "d8f1c81",
+ "generated": "2026-10-14T14:14:21Z",
+ "commit": "497aac8",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -8,19 +8,19 @@
   "U": 0.19,
   "HR": 0.125
  },
- "overall": 0.4067,
- "overall_percent": 41,
+ "overall": 0.4188,
+ "overall_percent": 42,
  "logic": {
-  "ported": 5585,
+  "ported": 5802,
   "in_scope": 10087.4,
-  "ratio": 0.5537,
+  "ratio": 0.5752,
   "ported_by_crate": {
    "black-battle": 2125,
    "black-core": 26,
    "black-field": 1869,
    "black-pokemon": 156,
    "black-script": 1012,
-   "black-storage": 345,
+   "black-storage": 562,
    "black-text": 61
   },
   "labelled_fns_by_scope": {
@@ -1273,6 +1273,10 @@
     "set": "field",
     "fns": 26
    },
+   "crates/black-storage/src/battle_box.rs": {
+    "set": "field",
+    "fns": 10
+   },
    "crates/black-storage/src/battle_examination.rs": {
     "set": "field",
     "fns": 7
@@ -1293,6 +1297,18 @@
     "set": "field",
     "fns": 17
    },
+   "crates/black-storage/src/daycare.rs": {
+    "set": "field",
+    "fns": 13
+   },
+   "crates/black-storage/src/dendou_save.rs": {
+    "set": "field",
+    "fns": 6
+   },
+   "crates/black-storage/src/intrude_save.rs": {
+    "set": "field",
+    "fns": 18
+   },
    "crates/black-storage/src/item.rs": {
     "set": "field",
     "fns": 13
@@ -1305,6 +1321,10 @@
     "set": "party-summary",
     "fns": 15
    },
+   "crates/black-storage/src/mac_log.rs": {
+    "set": "field",
+    "fns": 13
+   },
    "crates/black-storage/src/mail.rs": {
     "set": "field",
     "fns": 26
@@ -1312,6 +1332,10 @@
    "crates/black-storage/src/misc.rs": {
     "set": "field",
     "fns": 47
+   },
+   "crates/black-storage/src/mmdl_save.rs": {
+    "set": "field",
+    "fns": 4
    },
    "crates/black-storage/src/mystatus.rs": {
     "set": "field",
@@ -1321,9 +1345,25 @@
     "set": "field",
     "fns": 26
    },
+   "crates/black-storage/src/perapvoice.rs": {
+    "set": "field",
+    "fns": 11
+   },
    "crates/black-storage/src/playtime.rs": {
     "set": "field",
     "fns": 14
+   },
+   "crates/black-storage/src/pms_save.rs": {
+    "set": "field",
+    "fns": 10
+   },
+   "crates/black-storage/src/poke_records.rs": {
+    "set": "field",
+    "fns": 11
+   },
+   "crates/black-storage/src/record.rs": {
+    "set": "field",
+    "fns": 17
    },
    "crates/black-storage/src/regulation.rs": {
     "set": "field",
@@ -1337,9 +1377,33 @@
     "set": "field",
     "fns": 14
    },
+   "crates/black-storage/src/shortcut.rs": {
+    "set": "field",
+    "fns": 8
+   },
+   "crates/black-storage/src/situation.rs": {
+    "set": "field",
+    "fns": 23
+   },
    "crates/black-storage/src/symbol_save.rs": {
     "set": "field",
     "fns": 10
+   },
+   "crates/black-storage/src/sysinfo.rs": {
+    "set": "field",
+    "fns": 11
+   },
+   "crates/black-storage/src/trcard.rs": {
+    "set": "field",
+    "fns": 16
+   },
+   "crates/black-storage/src/wfbc_save.rs": {
+    "set": "field",
+    "fns": 6
+   },
+   "crates/black-storage/src/zukan_save.rs": {
+    "set": "field",
+    "fns": 40
    },
    "crates/black-text/src/layout.rs": {
     "set": "field",

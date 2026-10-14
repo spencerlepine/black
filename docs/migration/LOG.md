@@ -148,3 +148,7 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14** — Validator R-20261014-1225 (4ea6a37..7829fcb, 48 areas all match): V-0032 (medium, item_use add_pp_ups overflow panic) fixed by the coordinator (wrapping_add + spec boundary 0xFFFFFFFF.., item_use 15/15 71551ccb541ce214).
 
 - **2026-10-14** — Merged B18 (svflow `ptr` arg kind + bare-P lint, 1461 spec args, ~126 call sites, 15 battle areas re-recorded, AI masks 0/1/4/11 fixed; spec diff reviewed as p→ptr only). Spawned B18b and B19 (Opus).
+
+- **2026-10-14** — Merged S5b (497aac8; 16 save blocks / 217 fns). Told F13 to reuse black_storage::daycare (block 50) instead of a second daycare model.
+
+- **2026-10-14 ~14:15Z** — Usage ORANGE 77% → DRAIN (this window: 5 Opus-heavy agents, ~0.6–0.9%/min). Handler modules (abilities/items/moves/effects) green on main after B18.
