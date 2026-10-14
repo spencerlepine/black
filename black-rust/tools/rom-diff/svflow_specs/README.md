@@ -811,3 +811,20 @@ so the B18 `ptr` rule has nothing to flag.
   stub of the chain answers a closed `pick:` of non-negative floats (`nth:` picks the call), since a negative index reads stack garbage.
 * The task manager arena plants eight tasks at fixed offsets and draws the slot / wait words from their addresses, so the tasks' procs
   (FAKE callee 0x02EE0011) and frees run on real records in closure mode.
+
+## F11-spec additions (black-field calender / field_light / weather / weather_task)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-field/{calender,field_light,weather,weather_task}.spec` (headers), on top of the F5b / F6b ones: closure stubs (checked
+with every specced function of the area treated as ported: no fault, stray write or unstubbed callee); every out-of-area stub is
+`force`, also between the four areas; `--strict-callees` (plain and with the ports) and `--order-check` clean; instruction coverage
+(own body, plain / closure) 287/287, 1031/1031, 403/403, 1031/1031 in both modes.
+
+* In-area functions that are not specced (the 31 particle / sprite-resource functions of weather_task.c, D3) stay plain stubs of their
+  in-area callers; the closure does not descend into them.
+* Callbacks through object fields (the weather's state callbacks, the stepper callback) are FAKE addresses 0x02EE0011 / 0x02EE0021
+  with `force` stubs at 0x02EE0010 / 0x02EE0020; a call through a ROM function table (weather.c's change procs 0x021DDE6C) lands on the
+  in-area stubs of the table targets, with the index fixed to the table.
+* ARM9 FX vector / matrix routines are stubs whose `out:` buffers feed the `in:` words of the next stub (Z22), so a chain
+  (rotation matrix -> matrix x vector -> normalise) is compared end to end; FX_SinCosTable_ is read as ROM data by the original and
+  computed by the port.

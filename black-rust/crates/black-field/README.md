@@ -1576,3 +1576,97 @@ Mutation spot check (`check-fn.sh --fn`, each reverted; `/tmp/blk/f14/mutate.py`
 `== DONE`, start when `wait == 0`, active-slot count, NaN bound `>`, angle unwrap `> 0x8000`, smoothstep 3.0, periodic `<= old`, curve
 table order, FX_Mul rounding 0x800, move weight 0x1000, party-list mode index 12, bag action 11, pause flag mask, arc end `> 15`,
 parameter byte +0xD, item next action 2, party field 0xA9).
+
+## F11: `calender` (14/14), `field_light` (29/29), `weather` (16/16), `weather_task` (60/60): specs + ports
+
+Four new spec areas under `tools/rom-diff/specs/black-field/` (set `field`), one per original file, all ported and verified with
+`tools/check-fn.sh black-field AREA --per-function`. Closure stubs (a block lists the stubs of its callees and of the callees of
+all its in-area descendants; with every specced function of the area treated as ported all blocks run without a fault, stray
+write or unstubbed callee); every out-of-area stub is `force`, also between the four areas; `svflow.py AREA --all
+--strict-callees` (plain and with the ports) and `--order-check` are clean.
+
+| area | original | range | fns | coverage (plain / closure) | spec hash (`--all`, plain) | area hash (ported) |
+|---|---|---|---|---|---|---|
+| `calender` | `calender.c` (ov10, F1 row 10.24) minus the 5 script-command functions of black-script `scrcmd_misc10c` | `0x02164778..0x02164B6C` | 14 | 287/287 / 287/287 | 2bb209ad72d7b289 | c615ccf18e0a0fcf |
+| `field_light` | `field_light.c` (ov21, row 21.15) | `0x021A03D0..0x021A0CF4` | 29 | 1031/1031 / 1031/1031 | ab4eb5cc0b1202f9 | 8b1d03dc29face7d |
+| `weather` | `weather.c` (ov21, row 21.18, first part) | `0x021A19E8..0x021A1DB4` | 16 | 403/403 / 403/403 | dfb386e7153def5c | 24d34336b195ae6e |
+| `weather_task` | `weather_task.c` (ov21, row 21.18, second part) minus the particle system | `0x021A1DB4..0x021A2D88` | 60 (+31 render-only, not specced) | 1031/1031 / 1031/1031 | 1087d08b2c1c3600 | 3db71471bf72578f |
+
+File bounds: `Heap_AllocDebug` `__FILE__` strings "calender.c" (0x021729B0, in 021647A0), "field_light.c" (0x021DDE38, 021A03D0),
+"weather.c" (0x021DDE74, 021A19E8), "weather_task.c" (0x021DDE80, 021A1DB4 / 021A28CC). F1 row 21.18 is two files (16 + 91
+functions). Function lists: bl/blx targets of the whole field set, odd code pointers, the Ghidra index and a Thumb walk from every
+entry (most weather_task API entries are called only from the weather overlays 0x18..0x1C, outside the field set). The season and
+the time zones are not in these files: ARM9 main `FUN_020113D8` (season) and `FUN_02011400(season, zone)` (the hour of a time zone,
+a ROM table) are callees (`force` stubs).
+
+### Calendar, light and weather (from the code)
+
+* CALENDAR (calender.c): the special-day byte of a zone on today's date (`calender::today`): ARC 97 member 1 holds 0x44 `{zone,
+  offset}` records, member 0 the bytes at `offset + day of the year` (month lengths ROM 0x02171C20, February always 29 days); a zone
+  without a record answers zonedata `FUN_02013C10(zone)`. The date is the RTC record's month / day (`FUN_021690D0` / `FUN_021690E0`).
+  The CALENDAR EVENT (`event_new` / `event_proc`) fades out, plays BGM 0x483, runs proc 0xD8 and fades back.
+* LIGHT (field_light.c): up to 16 keyframes (ARC 0x3D) of 4 directional lights + colours, material, fog and clear colours, each at
+  `hour(season, zone) * 3600 + minutes * 60`; mode 0 follows the clock (60-frame cross-fade to the next keyframe), mode 1 runs a
+  fade-to-colour request of the weather (out, then optionally back). Colours ramp per RGB555 channel (signed division), directions
+  rotate about the cross product by `acos(dot) * f / n` (FX_SinCosTable_ computed: `field_light::fx_sin`, `fieldmap::fx_cos`).
+* WEATHER (weather.c): the current weather 0..14 (ROM table 0x021D8868 of `{task data, overlay 0x18..0x1C}`, `weather::WEATHERS`);
+  a change stops the task, swaps the overlay and starts it with the new data, or (rain-like weathers 1 / 4 / 5 among each other)
+  cross-fades between the two tasks. A weather asked for during a change is kept and requested afterwards.
+* TASK (weather_task.c): states 1..12 (load, start, fade in, run, fade out, end; status table ROM 0x021D88E8 =
+  {0, 1, 1, 1, 1, 2, 2, 1, 3, 4, 4, 5, 5, 0}), the weather's callbacks (data +0x2C..+0x44) are run through `callback`; the API of
+  the weather overlays: light table / fades, fog on / off / fades (with a deferred second fog fade), zone fog, 3D-background setters,
+  a value STEPPER with a callback, the weather SE (waits while the BGM system is busy).
+
+### Spec conventions (these four areas)
+
+* All blocks `nowork`; objects are `arg buf` arenas with their pointer fields fixed into the same arena (TASK: the WEATHER's
+  background array at +0x790, the weather data at +0x7A0); allocations are `ptr:argK` answers into a trailing arena the function
+  never reads as a register.
+* The weather callbacks and the stepper callback are FAKE code addresses 0x02EE0011 / 0x02EE0021 with stubs at 0x02EE0010 /
+  0x02EE0020; the change-proc table call of `021A1AF4` lands on the in-area stubs 021A1C68 / 021A1D04.
+* The FX library (`0207CB68` cross, `0207CAA4` dot, `0207D184` acos, `0207B65C` rotation matrix, `0207BC08` matrix x vector,
+  `0207CCA4` / `0207CDB8` normalise) and the G3 upload (`02048CA4` / `02048CDC` light vector / colour, `0206AA8C` / `0206AAB0`
+  material, `0207DD24` clear colour, field_fog `021A01C4`) are `force` stubs; the ports reach them through `FieldEnv::call` (D3).
+  Stack locals reach them as `in:` / `out:` buffers (the ports pass `CArg::InBuf` / `OutBuf`).
+* Keyframe times and clock values are drawn from a small shared set (0 / 3600 / 86400 and neighbours) so the time-window branches
+  of `021A0458` / `021A07B4` meet; LIGHT counts 0..16, keyframe index 0..15, interpolator frames 0..4; weathers 0..14; task states
+  0..13 (the ROM status table has 14 entries).
+
+Not ported (`weather_task::RENDER_ONLY`, D3: U-phase / G8, never specced): the particle system of weather_task.c (pool of 32 x 0x38
+at TASK + 0x74 and its sprites, positions and camera scroll: 021A21BC, 021A21C8, 021A21E0, 021A2254, 021A2424, 021A244C, 021A2564,
+021A2630, 021A2638, 021A2640, 021A2654, 021A26C4, 021A274C, 021A277C, 021A27B8, 021A27F8, 021A2BB8, 021A2BC4, 021A2BD4, 021A2C10,
+021A2C24, 021A2C28, 021A2D30), the particles' sprite resources (021A2978, 021A2994, 021A29A8, 021A29F4) and the 3D-background
+resources (021A2860, 021A28A0, 021A2A18, 021A2A68). The ported functions reach them through `FieldEnv::call` by address.
+
+ROM tables embedded (tests compare them with the ROM): `calender::MONTH_DAYS` (0x02171C20), `weather::WEATHERS` (0x021D8868) and the
+change-proc table 0x021DDE6C, `weather_task::STATUS` (0x021D88E8), `field_light::fx_sin` against FX_SinCosTable_ (0x020A1B38).
+
+| C | Rust |
+|---|------|
+| `FUN_021647A0` / `021647D8` / `0216481C` / `02164844` / `021648CC` | `calender::{new, delete, today, special_day, day_of_year}` |
+| `FUN_02164A2C` / `02164B38` / `021649C8` | `calender::{event_proc, event_new, cmd467_end}` |
+| `FUN_021A03D0` / `021A0458` / `021A0568` / `021A066C` | `field_light::{new, update, upload_if_dirty, upload}` |
+| `FUN_021A0590` / `021A05D8` / `021A0618` / `021A063C` | `field_light::{change_table, restore_table, fade_request, fade_request_once}` |
+| `FUN_021A0980` / `021A0A50` / `021A0B4C` / `021A0C74` | `field_light::{crossfade, fade_to_colour, light_at, request_step}` |
+| `FUN_021A19E8` / `021A1AF4` / `021A1B74` / `021A1C34` | `weather::{new, update, set, request}` |
+| `FUN_021A1C68` / `021A1D04` / `021A1D78` | `weather::{change_plain, change_crossfade, crossfade_pair}` |
+| `FUN_021A1DB4` / `021A1E08` / `021A1FEC` / `021A2050` / `021A20C8` | `weather_task::{new, frame, start, stop, end}` |
+| `FUN_021A2AB8` / `021A2B8C` / `021A2C30` / `021A2C6C` / `021A2C98` | `weather_task::{stepper_step, stepper_tick, sound_start, sound_stop, sound_resume}` |
+
+UNVERIFIED (unreachable for the differential tests): `calender::day_of_year` with a month above 13 (the original reads past its
+13-byte stack copy), `weather::update` with a change proc >= 2, weathers >= 15 (`weather::WEATHERS`), `weather_task::status` with a
+state >= 14 (the originals read past their ROM tables; the ports panic). Deliberate deviations: none in behaviour; unused arguments
+of the original are dropped from the Rust signatures (the doc comments say which).
+
+Script-command hooks now backed by these ports: black-script `scrcmd_misc10b` command 310 (`0x02166F1C`) calls `0x021A1BDC` /
+`0x021A1BE4` (`weather::request_thunk` / `request_quiet`); `script_sys` `0x021591B4` (the init-proc runner) reaches `0x021649C8`
+(`calender::cmd467_end`); fieldmap (`0x021A03D0` / `0x021A0448` / `0x021A0458`, `0x021A19E8` / `0x021A1AAC` / `0x021A1AF4` /
+`0x021A1B50` / `0x021A1B74` / `0x021A1BDC` / `0x021A1C34`) and encount (`0x021A1BF4`, the current weather) call ported functions.
+
+Mutation spot check (`check-fn.sh --fn`, reverted; `/tmp/blk/f11/mutate.py`): 23 of 24 caught (day of year `d - 1`, zone key 32-bit
+compare, `NO_RECORD` test, event flag byte, calendar step-2 fall-through, keyframe wrap `tp > now`, RGB555 blue shift, green ramp
+mask, rotation index `>> 4`, way-back `!= 0xFFFF`, keyframe window `prev <= now`, clear-colour alpha, cross-fade pairs, request of
+the current weather, cross-fade start kind, set of weather 0, stop `st <= 5`, stepper end test, stepper count `>=`, fog `n / 2`
+signed, particles in state 7, reset keeps `+0x18`, SE resume state 2). The survivor is equivalent: `t += 86400` in `021A0458`'s wrap
+branch (the wrap never steps, so `t` is not used). Two survivors of the first run were closed with spec inputs (keyframe index 0 and
+clock values equal to the keyframe times, 1500 inputs; weather 0 with current weather 0).
