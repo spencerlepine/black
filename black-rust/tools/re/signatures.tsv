@@ -279,3 +279,5 @@
 02082a48	void MIi_CpuFill16(unsigned short v, void *dst, unsigned int size)
 02088864	void RTC_GetDate(void *date)
 0208890c	void RTC_GetTime(void *time)
+02017f90	unsigned int PokeStatusOf(void *pp)
+02019d00	unsigned int ItemDriveForm(unsigned int item)

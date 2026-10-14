@@ -109,3 +109,5 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [x] V-0027 — F — PAR — black-script: zero divisor panics in 3 ports (V-0027 scrcmd_misc21 021d2d7c `event_shake` frames=W+0x10, V-0028 scrcmd_c03center 021b5… — (19e0fd0)
 - [x] V-0030 — F — PAR — harness: black-field encount.spec:314 / enc_pokeset.spec:224 — F5a-spec2 replaced the uniform `ret=lt:0` stub of 020056ec (RNG next(ma… — (a962959)
 - [x] P7 — P — PAR — Eggs, breeding, egg moves, daycare.
+- [x] B17 — B — PAR — Rewire the ai1 ports to real pointer values (~150 sites) so the B16 integration runs the Rust AI instead of a stand-in.
+- [x] S4 — S — PAR — Item use effects outside battle (potions, evolution stones, TMs, repels). — (db30f09)
