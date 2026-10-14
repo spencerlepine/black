@@ -37,10 +37,10 @@ Undecompiled callees go in `hooks` as traits (§4 porting pattern); pointers sta
 | `scrcmd_fld_battle` | `scrcmd_fld_battle.c`: overlay 21 0x021B5700-0x021B5A17 (row 21.49; 6 fns, 2 ids) | `tools/rom-diff/specs/black-script/scrcmd_fld_battle.spec` | `tools/check-fn.sh black-script scrcmd_fld_battle` | **6/6 verified, area hash 57f0c1c0129ef8c5** (F8e; F8-spec4 spec, 340/340) |
 | `scrcmd_c03center` | `scrcmd_c03center.c`: overlay 21 0x021B5A18-0x021B66B7 (row 21.50; 28 fns, 22 ids; no X1 networking) | `tools/rom-diff/specs/black-script/scrcmd_c03center.spec` | `tools/check-fn.sh black-script scrcmd_c03center` | **28/28 verified, area hash 8157cfade5f75a06 (F8e-spec2)** (F8e; F8-spec4 spec, 1328/1328) |
 | `scrcmd_pokemon_fld` | `scrcmd_pokemon_fld.c`: overlay 21 0x021B66B8-0x021B73FF (row 21.51; 48 fns, 14 ids; cmd 494 Dream World, X2) | `tools/rom-diff/specs/black-script/scrcmd_pokemon_fld.spec` | `tools/check-fn.sh black-script scrcmd_pokemon_fld` | **47/48 verified, area hash 8c205c16ea477657 (F8e-spec2)** (F8e; F8-spec4 spec, 1370/1370); the cmd 494 handler (Dream World, X2) specced only |
-| `scrcmd_misc21` | overlay 21 rows 21.91 (0x021CF7DC-0x021D013F) and 21.97 (0x021D1670-0x021D30B7), no `__FILE__`; 92 fns, 36 ids | `tools/rom-diff/specs/black-script/scrcmd_misc21.spec` | `tools/check-fn.sh black-script scrcmd_misc21` | **81/81 logic fns verified, area hash 6b64908e0fc06b7a (F8e-spec2)** (F8e; F8-spec4 spec, 3054/3054; cmd 414 + 10 render / UI-flow fns behind `Misc21Hooks`) |
+| `scrcmd_misc21` | overlay 21 rows 21.91 (0x021CF7DC-0x021D013F) and 21.97 (0x021D1670-0x021D30B7), no `__FILE__`; 93 fns, 36 ids | `tools/rom-diff/specs/black-script/scrcmd_misc21.spec` | `tools/check-fn.sh black-script scrcmd_misc21` | **82/82 logic fns verified, area hash ba152914330f0113 (F8h)** (F8e + F8h cmd 414; F8-spec4 spec; 10 render / UI-flow fns left out, the drawing callees of cmd 414 behind `Misc21Hooks`) |
 | `scrcmd_c03center` | `scrcmd_c03center.c`: overlay 21 0x021B5A18-0x021B66B7 (row 21.50; 28 fns, 22 ids; no X1 networking) | `tools/rom-diff/specs/black-script/scrcmd_c03center.spec` | `tools/check-fn.sh black-script scrcmd_c03center` | **28/28 verified, area hash 646fc2fc83d971a1** (F8e; F8-spec4 spec, 1328/1328) |
 | `scrcmd_pokemon_fld` | `scrcmd_pokemon_fld.c`: overlay 21 0x021B66B8-0x021B73FF (row 21.51; 48 fns, 14 ids; cmd 494 Dream World, X2) | `tools/rom-diff/specs/black-script/scrcmd_pokemon_fld.spec` | `tools/check-fn.sh black-script scrcmd_pokemon_fld` | **47/48 verified, area hash 1cea69f763249193** (F8e; F8-spec4 spec, 1370/1370); the cmd 494 handler (Dream World, X2) specced only |
-| `scrcmd_misc21` | overlay 21 rows 21.91 (0x021CF7DC-0x021D013F) and 21.97 (0x021D1670-0x021D30B7), no `__FILE__`; 92 fns, 36 ids | `tools/rom-diff/specs/black-script/scrcmd_misc21.spec` | `tools/check-fn.sh black-script scrcmd_misc21` | **81/81 logic fns verified, area hash e256694ae70bcfb3** (F8e; F8-spec4 spec, 3054/3054; cmd 414 + 10 render / UI-flow fns behind `Misc21Hooks`) |
+| `scrcmd_misc21` | overlay 21 rows 21.91 (0x021CF7DC-0x021D013F) and 21.97 (0x021D1670-0x021D30B7), no `__FILE__`; 93 fns, 36 ids | `tools/rom-diff/specs/black-script/scrcmd_misc21.spec` | `tools/check-fn.sh black-script scrcmd_misc21` | **82/82 logic fns verified, area hash ba152914330f0113 (F8h)** (F8e + F8h cmd 414; F8-spec4 spec; 10 render / UI-flow fns left out, the drawing callees of cmd 414 behind `Misc21Hooks`) |
 | `scrcmd_misc10b` | overlay 10 rows 10.27 (the command handlers in "symbol_map.c" 0x021664CC-0x02166F9B) and 10.34 (0x0216AC40-0x0216B503, unanchored); 35 fns, 13 ids | `tools/rom-diff/specs/black-script/scrcmd_misc10b.spec` | `tools/check-fn.sh black-script scrcmd_misc10b` | **35/35 verified, area hash 34d2818b7ecc87ab** (F8f; F8-spec5 spec, 1552/1552 plain and closure) |
 | `scrcmd_misc10c` | overlay 10: `calender.c` handlers (0x02164778-0x02164A2B), cmd 505 (0x0216A3F8), row 10.36 (0x0216B86C-0x0216BF9B, unanchored), 0x0216CC30-0x0216CC57 (`namein_setup.c` tail), 0x0216F8B8-0x0216F917 (`trcard_sys.c` tail); 37 fns, 17 ids | `tools/rom-diff/specs/black-script/scrcmd_misc10c.spec` | `tools/check-fn.sh black-script scrcmd_misc10c` | **37/37 verified, area hash df00ac6834ba487a** (F8f; F8-spec5 spec, 924/925: 1 dead) |
 | `scrcmd_bsubway` | `bsubway_scr.c`: overlay 21 0x021C9934-0x021CBFAF (row 21.84); 58 fns, 4 ids (cmd 346 = ~170 sub-commands) | `tools/rom-diff/specs/black-script/scrcmd_bsubway.spec` | `tools/check-fn.sh black-script scrcmd_bsubway` | **58/58 verified, area hash aaacb2f645357986** (F8f; F8-spec5 spec, 3848/3884 plain, 3844/3884 closure: 28 dead, 8 + 4 bounded, see F8-spec5) |
@@ -300,8 +300,8 @@ init procs of mask bits 10 / 12 / 13 to `scrcmd_fld::init_proc`.
   = 0x021B66B8-0x021B73FF (F1's rows 21.47..21.51 otherwise hold). Rows 21.91 / 21.97 allocate nothing and have no file name
   (`scrcmd_misc21`).
 * **Logic only (D3)**: the shop UI (36 functions: windows, list menu, sprites, the main loop 0x021B35A4 that calls the specced
-  purchase check 0x021B3370 / payment 0x021B3568) and 11 render / UI-flow functions of row 21.97 (3D models of cmd 551 and of
-  the event 0x021D1C24, its 15-state UI event 0x021D1C8C, the text window of cmd 414) are left out; each spec header lists them.
+  purchase check 0x021B3370 / payment 0x021B3568) and 10 render / UI-flow functions of row 21.97 (3D models of cmd 551 and of
+  the event 0x021D1C24, its 15-state UI event 0x021D1C8C, the BMP window and 3D model helpers) are left out; each spec header lists them.
 * **Scope**: `scrcmd_c03center.c` (C03 = Castelia City) has no comm / C-Gear code: move tutors, trades, record queries, a turn
   tween. Cmd 494 (`scrcmd_pokemon_fld`) is the Dream World delivery (pdw_postman.c, X2 / D9): logic specced, port only if X2 is
   re-decided. The 20-record save block 0x02009470 of row 21.91 (cmds 472..483, 479, 582) sits right before `wifilist.c` and may
@@ -352,7 +352,7 @@ init procs of mask bits 10 / 12 / 13 to `scrcmd_fld::init_proc`.
 ## F8 areas (F8-spec5: the last script-command handlers)
 
 * **What was left** (F8-spec4's count): 94 of the 609 command ids were in no F8 area (+ the 10 null table slots 137, 143..145,
-  153, 154, 156, 157, 435; cmd 414 is `scrcmd_misc21`'s render-only handler and 494 `scrcmd_pokemon_fld`'s Dream World one).
+  153, 154, 156, 157, 435; 494 is `scrcmd_pokemon_fld`'s Dream World handler).
   F8-spec5 specs **57** of them in four areas and excludes **37** (below); with this every non-null command handler is specced
   or excluded with a reason.
 * **Areas** (bounds from the `__FILE__` strings the handlers' neighbours pass to `Heap_AllocDebug` and from the callers of
@@ -510,10 +510,11 @@ command table (0x0217062C in overlay 10, 609 slots, count word 0x021705D8) and a
 The "624 slots / 614 non-null" of F1-SPLIT count the 15 init-proc words at 0x021705F0 as table slots; the real table has 609.
 
 * 609 slots = 9 null (137, 143..145, 153, 154, 156, 157, 435) + 600 non-null.
-* 600 non-null = **560 ported** + **39 excluded (D9)** + **1 pending**.
+* 600 non-null = **561 ported** + **39 excluded (D9)** + **0 pending**.
 * Excluded (39): X2 Musicals 93, 359..366, 495 (10); X1 `scrcmd_network.c` 313, 315..318, 499..504, 604..606 (14); X1
   Entralink (overlay 18) 367..369, 371..375 (8); X1 `scrcmd_palpark.c` 448, 449, 496..498 (5); 382 (overlay 48 gimmick, parked
   under F10); 494 (Dream World, X2).
-* Pending (in scope, specced, not ported): **414**, handler 0x021D29F0 (Thumb), overlay 21, 0xEC bytes, `scrcmd_misc21`: draws
-  / clears a text window (BMP window render only; port as a `Misc21Hooks` call). Needs a port job on that area.
+* Pending: none. Cmd 414 (0x021D29F0, overlay 21, 0xEC bytes, `scrcmd_misc21`) was ported in F8h: it reads the operand and either draws
+  the text window (message data, window, string, print, release) or clears it; every drawing callee is its own `Misc21Hooks`
+  method, the spec block was added to `scrcmd_misc21.spec`.
 * No id is undocumented.

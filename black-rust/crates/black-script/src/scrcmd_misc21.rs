@@ -84,6 +84,7 @@ pub const PORTED: &[u32] = &[
     0x021D_2750,
     0x021D_297C,
     0x021D_29A8,
+    0x021D_29F0,
     0x021D_2ADC,
     0x021D_2B18,
     0x021D_2B54,
@@ -110,6 +111,7 @@ pub const COMMANDS: &[(u16, u32)] = &[
     (350, 0x021D_1AB0),
     (412, 0x021D_1B2C),
     (413, 0x021D_1B8C),
+    (414, 0x021D_29F0),
     (472, 0x021C_FEA0),
     (473, 0x021C_FF28),
     (474, 0x021C_FF78),
@@ -640,6 +642,33 @@ pub trait Misc21Hooks: CoreHooks {
     fn fun_021d25f4(&mut self, w: u32, a: u32, b: u32, c: u32, d: u32, e: u32);
     /// C: `FUN_021D26AC(W)` (render, D3): free the model.
     fn fun_021d26ac(&mut self, w: u32);
+    // ---- command 414: the text window (render / UI calls, D3; they are only named, never ported)
+    /// C: `FUN_02045B38(type, narc, msg, heap)`: load a message data set.
+    fn fun_02045b38(&mut self, a: u32, b: u32, c: u32, heap: u32) -> u32;
+    /// C: `FUN_02045180(a, b, c, d, e, f, g)`: add a window (the last three are stack arguments).
+    fn fun_02045180(&mut self, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32;
+    /// C: `FUN_02045770(window)`: the window's bitmap.
+    fn fun_02045770(&mut self, w: u32) -> u32;
+    /// C: `FUN_02043B5C(bitmap, color)`: fill a bitmap.
+    fn fun_02043b5c(&mut self, bmp: u32, color: u32);
+    /// C: `FUN_02045334(window)`.
+    fn fun_02045334(&mut self, w: u32);
+    /// C: `FUN_02045374(window)`.
+    fn fun_02045374(&mut self, w: u32);
+    /// C: `FUN_0201F73C(window, a, b, c)` (overlay-independent main code).
+    fn fun_0201f73c(&mut self, w: u32, a: u32, b: u32, c: u32);
+    /// C: `FUN_02045CAC(msgdata, msg, strbuf)`: read a message into a string buffer.
+    fn fun_02045cac(&mut self, msgdata: u32, msg: u32, strbuf: u32);
+    /// C: `FUN_021904AC(x)`: the text color / font value.
+    fn fun_021904ac(&mut self, x: u32) -> u32;
+    /// C: `FUN_0201C7A4(bitmap, a, b, strbuf, color)`: print a string (the last is a stack argument).
+    fn fun_0201c7a4(&mut self, bmp: u32, a: u32, b: u32, strbuf: u32, color: u32);
+    /// C: `FUN_02041B6C(x)`.
+    fn fun_02041b6c(&mut self, x: u32);
+    /// C: `FUN_02045C04(msgdata)`: free the message data.
+    fn fun_02045c04(&mut self, msgdata: u32);
+    /// C: `FUN_02041300(a, b, c, d, e, f, g)` (the last three are stack arguments).
+    fn fun_02041300(&mut self, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32);
     /// C: `FUN_021F37B8(gamesys)` (overlay at 0x021F3xxx): an event (or null).
     fn fun_021f37b8(&mut self, gamesys: u32) -> u32;
     /// C: `FUN_021F3970(gamesys, &pos, &vec, a, b)` (overlay at 0x021F3xxx): an event (or null).
@@ -1396,6 +1425,43 @@ pub fn obj_anim_apply<H: Misc21Hooks>(h: &mut H, anime: u32, mmdl: u32, vec: u32
     if let Some(&(_, dir)) = ROT_DIRS.iter().find(|&&(a, _)| a == angle) {
         h.fun_0216d60c(mmdl, dir);
     }
+}
+
+/// C: `sub_021d29f0`: command 414: SW = `FUN_0215A5F4(ctx)`, R = `FUN_02158F58(SW)`; heap = `FUN_02188C84(R[4])`, x = `FUN_02188C54(
+/// R[4])`; the operand (`FUN_02011330(vm)`) nonzero draws the text window: message data `FUN_02045B38(0, 2, 0x16, heap)`, a window
+/// `FUN_02045180(2, 1, 1, 0x1E, 0xA, 0xE, 0x40)` filled with 0xF, a string (`FUN_020457B0(0xB4, heap)` read with message 3) printed
+/// with `FUN_021904AC(x)`, then the window / string / message data are released; zero clears the window `FUN_02041300(2, 0, 0, 0,
+/// 0x20, 0xC, 0x11)`; both end with `FUN_02041B6C(2)`; 0. Every drawing call goes through its own [`Misc21Hooks`] method (render, D3).
+pub fn cmd_414<H: Misc21Hooks>(h: &mut H, vm: u32, ctx: u32) -> u32 {
+    let sw = h.fun_0215a5f4(ctx);
+    let r = h.fun_02158f58(sw);
+    let fm = h.r32(r + 4);
+    let heap = h.fun_02188c84(fm);
+    let fm = h.r32(r + 4);
+    let x = h.fun_02188c54(fm);
+    if h.fun_02011330(vm) != 0 {
+        let msg = h.fun_02045b38(0, 2, 0x16, heap);
+        let win = h.fun_02045180(2, 1, 1, 0x1E, 0xA, 0xE, 0x40);
+        let bmp = h.fun_02045770(win);
+        h.fun_02043b5c(bmp, 0xF);
+        h.fun_02045334(win);
+        h.fun_02045374(win);
+        h.fun_0201f73c(win, 0, 1, 0xD);
+        let buf = h.fun_020457b0(0xB4, heap);
+        h.fun_02045cac(msg, 3, buf);
+        let bmp = h.fun_02045770(win);
+        let color = h.fun_021904ac(x);
+        h.fun_0201c7a4(bmp, 0, 0, buf, color);
+        h.fun_02045334(win);
+        h.fun_02041b6c(2);
+        h.fun_02045808(buf);
+        h.fun_02045c04(msg);
+        h.fun_020452e8(win);
+    } else {
+        h.fun_02041300(2, 0, 0, 0, 0x20, 0xC, 0x11);
+        h.fun_02041b6c(2);
+    }
+    0
 }
 
 /// C: `sub_021d1a04`: command 347: k; W = [`obj_anim_create`]`(fm, k, the player position (FUN_021A3038), field heap)` goes into
@@ -2296,6 +2362,7 @@ pub fn dispatch<H: Misc21Hooks>(h: &mut H, handler: u32, vm: u32, ctx: u32) -> O
         0x021D_1AB0 => cmd_350(h, vm, ctx),
         0x021D_1B2C => cmd_412(h, vm, ctx),
         0x021D_1B8C => cmd_413(h, vm, ctx),
+        0x021D_29F0 => cmd_414(h, vm, ctx),
         0x021C_FEA0 => cmd_472(h, vm, ctx),
         0x021C_FF28 => cmd_473(h, vm, ctx),
         0x021C_FF78 => cmd_474(h, vm, ctx),

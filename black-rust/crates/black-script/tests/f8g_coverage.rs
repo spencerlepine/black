@@ -69,12 +69,7 @@ const EXCLUDED: &[(u16, u32, &str)] = &[
 ];
 
 /// In-scope ids that are specced but not ported: (command id, handler address, size in bytes, reason).
-const PENDING: &[(u16, u32, u32, &str)] = &[(
-    414,
-    0x021D_29F1,
-    0xEC,
-    "overlay 21 scrcmd_misc21: draws / clears a text window (BMP window render only, behind Misc21Hooks); specced in scrcmd_misc21.spec",
-)];
+const PENDING: &[(u16, u32, u32, &str)] = &[];
 
 /// The null table slots (no handler).
 const NULL_SLOTS: &[u16] = &[137, 143, 144, 145, 153, 154, 156, 157, 435];
@@ -160,5 +155,5 @@ fn every_rom_command_is_ported_or_documented() {
     assert_eq!(ne, EXCLUDED.len());
     assert_eq!(npend, PENDING.len());
     assert_eq!(nonnull, np + ne + npend);
-    assert_eq!((nonnull, np, ne, npend), (600, 560, 39, 1));
+    assert_eq!((nonnull, np, ne, npend), (600, 561, 39, 0));
 }

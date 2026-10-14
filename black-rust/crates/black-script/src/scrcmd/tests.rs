@@ -3110,6 +3110,36 @@ impl Misc21Hooks for Null {
     fn fun_021690e0(&mut self, _gamedata: u32) -> u32 {
         0
     }
+    fn fun_02045b38(&mut self, _a: u32, _b: u32, _c: u32, _heap: u32) -> u32 {
+        0
+    }
+    fn fun_02045180(
+        &mut self,
+        _a: u32,
+        _b: u32,
+        _c: u32,
+        _d: u32,
+        _e: u32,
+        _f: u32,
+        _g: u32,
+    ) -> u32 {
+        0
+    }
+    fn fun_02045770(&mut self, _w: u32) -> u32 {
+        0
+    }
+    fn fun_02043b5c(&mut self, _bmp: u32, _color: u32) {}
+    fn fun_02045334(&mut self, _w: u32) {}
+    fn fun_02045374(&mut self, _w: u32) {}
+    fn fun_0201f73c(&mut self, _w: u32, _a: u32, _b: u32, _c: u32) {}
+    fn fun_02045cac(&mut self, _msgdata: u32, _msg: u32, _strbuf: u32) {}
+    fn fun_021904ac(&mut self, _x: u32) -> u32 {
+        0
+    }
+    fn fun_0201c7a4(&mut self, _bmp: u32, _a: u32, _b: u32, _strbuf: u32, _color: u32) {}
+    fn fun_02041b6c(&mut self, _x: u32) {}
+    fn fun_02045c04(&mut self, _msgdata: u32) {}
+    fn fun_02041300(&mut self, _a: u32, _b: u32, _c: u32, _d: u32, _e: u32, _f: u32, _g: u32) {}
     fn fun_021d25a4(&mut self, _w: u32) {}
     fn fun_021d25e8(&mut self, _w: u32) {}
     fn fun_021d25f4(&mut self, _w: u32, _a: u32, _b: u32, _c: u32, _d: u32, _e: u32) {}
@@ -4110,7 +4140,7 @@ impl Misc21bHooks for Null {
 fn table_is_consistent() {
     let c = commands();
     // F8a..F8d: core 49, work 86, talk 33, screen 29, fld 80, obj 55, proc 17, sodateya 15, misc10 29; F8e: shop 1,
-    // proc_fld 20, encount 14, fld_battle 2, c03center 22, pokemon_fld 13 (494 is X2), misc21 35; F8f: misc10b 13,
+    // proc_fld 20, encount 14, fld_battle 2, c03center 22, pokemon_fld 13 (494 is X2), misc21 36; F8f: misc10b 13,
     // misc10c 17, bsubway 4, misc21b 23; script_sys 3
     assert_eq!(
         c.len(),
@@ -4128,7 +4158,7 @@ fn table_is_consistent() {
             + 2
             + 22
             + 13
-            + 35
+            + 36
             + 13
             + 17
             + 4
@@ -4143,10 +4173,10 @@ fn table_is_consistent() {
         assert_eq!(a & 1, 0);
     }
     assert_eq!(handler(93), None);
-    // command 359 (scrcmd_musical.c, X2) and 494 (Dream World, X2) are specced only; 414 is render only
+    // command 359 (scrcmd_musical.c, X2) and 494 (Dream World, X2) are specced only
     assert_eq!(handler(359), None);
     assert_eq!(handler(494), None);
-    assert_eq!(handler(414), None);
+    assert_eq!(handler(414), Some(0x021D_29F0));
     assert_eq!(handler(329), Some(0x021B_2FD8));
     assert_eq!(handler(600), Some(0x021D_3090));
     assert_eq!(

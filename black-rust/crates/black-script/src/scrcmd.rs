@@ -26,7 +26,7 @@
 //! | [`crate::scrcmd_fld_battle`] | `scrcmd_fld_battle.c` overlay 21 0x021B5700-0x021B5A17 (row 21.49) | 2 ids (441, 442) | 6/6 fns ported and verified (F8e) |
 //! | [`crate::scrcmd_c03center`] | `scrcmd_c03center.c` overlay 21 0x021B5A18-0x021B66B7 (row 21.50; no X1 networking) | 22 ids (256, 261..263, 265, 285..288, 307, 446, 447, 462, 463, 484..487, 566..568, 578) | 28/28 fns ported and verified (F8e) |
 //! | [`crate::scrcmd_pokemon_fld`] | `scrcmd_pokemon_fld.c` overlay 21 0x021B66B8-0x021B73FF (row 21.51; cmd 494 = Dream World, X2) | 14 ids (308, 459..461, 470, 471, 494, 526, 527, 564, 565, 581, 585, 586; 494 not dispatched) | 47/48 fns ported and verified (F8e; the cmd 494 handler, X2, specced only) |
-//! | [`crate::scrcmd_misc21`] | overlay 21 0x021CF7DC-0x021D013F (row 21.91), 0x021D1670-0x021D30B7 (row 21.97), no `__FILE__` | 36 ids (233, 309, 347..350, 412..414, 472..476, 479, 481..483, 521..525, 551, 553, 569..571, 573..575, 582, 597..600) | 81/81 logic fns ported and verified (F8e; cmd 414 and 10 render / UI fns behind `Misc21Hooks`) |
+//! | [`crate::scrcmd_misc21`] | overlay 21 0x021CF7DC-0x021D013F (row 21.91), 0x021D1670-0x021D30B7 (row 21.97), no `__FILE__` | 36 ids (233, 309, 347..350, 412..414, 472..476, 479, 481..483, 521..525, 551, 553, 569..571, 573..575, 582, 597..600) | 82/82 logic fns ported and verified (F8e + F8h cmd 414; 10 render / UI fns left out, the drawing callees behind `Misc21Hooks`) |
 //! | [`crate::scrcmd_misc10b`] | overlay 10 rows 10.27 (handlers in "symbol_map.c") and 10.34 (0x0216AC40-0x0216B504, unanchored) | 13 ids (310, 425, 427, 477, 478, 480, 493, 554..558, 560) | 35/35 fns ported and verified (F8f) |
 //! | [`crate::scrcmd_misc10c`] | overlay 10: `calender.c` handlers, cmd 505, row 10.36 (0x0216B86C-0x0216BF9C), `namein_setup.c` / `trcard_sys.c` tails | 17 ids (445, 458, 467..469, 505, 534, 544..548, 552, 572, 590..592) | 37/37 fns ported and verified (F8f) |
 //! | [`crate::scrcmd_bsubway`] | `bsubway_scr.c` overlay 21 0x021C9934-0x021CBFB0 (row 21.84) | 4 ids (343..346; 346 has ~170 sub-commands) | 58/58 fns ported and verified (F8f) |
@@ -35,8 +35,8 @@
 //! Command ids in no F8 area (F8-spec5; 37, all out of scope or outside the field set): X2 Musicals (`scrcmd_musical.c`): 93,
 //! 360..366, 495; X1 `scrcmd_network.c`: 313, 315..318, 499..504, 604..606; X1 overlay-18 intrude (Entralink): 367..369,
 //! 371..375; X1 `scrcmd_palpark.c` (Poke Transfer, beacon, Wi-Fi save): 448, 449, 496..498; 382 (handler 0x021F4650 in
-//! overlay 48, outside the `field` set: F10). Cmd 414 (`scrcmd_misc21`, render only) and 494 (`scrcmd_pokemon_fld`, Dream
-//! World, X2) are specced but not ported; the 10 null slots 137, 143..145, 153, 154, 156, 157, 435 have no handler.
+//! overlay 48, outside the `field` set: F10). Cmd 494 (`scrcmd_pokemon_fld`, Dream
+//! World, X2) is specced but not ported; the 10 null slots 137, 143..145, 153, 154, 156, 157, 435 have no handler.
 //!
 //! # Dispatch
 //!

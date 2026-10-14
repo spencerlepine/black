@@ -4,12 +4,12 @@
 # Grammar: svflow_specs/README.md (generic mode).  Run: tools/check-fn.sh black-script scrcmd_misc21 --per-function
 #
 # Command ids of this area (id  handler; table 0x0217062C, index = id):
-#  233 021cfa88  309 021cfa58  347 021d1a04  348 021d1a54  349 021d1a74  350 021d1ab0  412 021d1b2c  413 021d1b8c
+#  233 021cfa88  309 021cfa58  347 021d1a04  348 021d1a54  349 021d1a74  350 021d1ab0  412 021d1b2c  413 021d1b8c  414 021d29f0
 #  472 021cfea0  473 021cff28  474 021cff78  475 021cffdc  476 021d0084  479 021d00b8  481 021cfef0  482 021d0014
 #  483 021d004c  521 021d1670  522 021d16d8  523 021d179c  524 021d213c  525 021d2468  551 021d2524  553 021d2710
 #  569 021cf7dc  570 021d2adc  571 021d2b18  573 021d2b54  574 021d2edc  575 021d2f44  582 021d0114  597 021d2f6c
 #  598 021d3018  599 021d3068  600 021d3090
-# 81 functions specced (35 command ids).
+# 82 functions specced (36 command ids).
 #  * 21.91: 569 counts distinct other-trainer OT ids in party / boxes / daycare (GMEVENT 0x021CF845, 2 boxes per frame, at most
 #    0x32); 472..483 / 476 / 479 / 582 work on the 20-record save block 02009470 (0200973C record, 02009634 fields; the block sits
 #    just before wifilist.c in ARM9 and may be comm-fed: role UNVERIFIED, logic specced); 0x021CFAC0..0x021CFC4C keep a 20-slot
@@ -21,7 +21,7 @@
 #    A / B (render parts left out); 0x021D2750 grotto / hidden spot check; 570 / 571 record counters; 573 a numbered reward (RTC,
 #    0x021DD774 rows); 0x021D2D50 / 0x021D2D7C the camera shake event of cmd 328; 574 / 575 / 597..600 call the overlay at
 #    0x021F3xxx (outside the field set).  Roles UNVERIFIED (named by address).
-# Not specced (11, render / UI flow, D3):
+# Not specced (10, render / UI flow, D3):
 #   021d1c8c GMEVENT of 0x021D1C24: UI flow (15-state message / 3D model / fade / SE sequence)
 #   021d1f78 3D model + anime resource setup (render)
 #   021d201c 3D model resource free (render)
@@ -32,7 +32,6 @@
 #   021d25e8 BMP window clear thunk (render)
 #   021d25f4 3D model setup of cmd 551 (render)
 #   021d26ac 3D model free of cmd 551 (render)
-#   021d29f0 cmd 414: draws / clears a text window (render only)
 # Fragments (not functions): 0x021D0000 (inside cmd 475), 0x021D2312 / 0x021D2B3C (mid-function `bl`s reached by data words).
 #
 # Read from the disassembly of the raw OVY_21.sbin (rizin `-a arm -b 16 -m 0x02187F00`; rizin on field.elf mis-disassembles
@@ -1174,6 +1173,40 @@ fn 021d29a8 ret=u32 inputs=200
   stub 021a0f30 force ret=none args=v,v
   stub 021a0f94 force ret=pick:0/0xE/1 args=v
   stub 021a0fa8 force ret=none args=v
+
+# cmd 414: R = 02158F58(SW); h = 02188C84(R[4]); x = 02188C54(R[4]); operand (02011330) != 0: text window drawn (message data
+# 02045B38(0, 2, 0x16, h), window 02045180(2, 1, 1, 0x1E, 0xA, 0xE, 0x40), fill 0xF, string 020457B0(0xB4, h) read with message 3
+# via 02045CAC, printed 0201C7A4(bitmap, 0, 0, str, 021904AC(x)), then released); == 0: window cleared 02041300(2, 0, 0, 0, 0x20,
+# 0xC, 0x11); both 02041B6C(2); 0.  Every drawing callee is a force stub (render / UI, D3).
+fn 021d29f0 ret=u32 inputs=200
+  nowork
+  arg buf 0x800
+  arg buf 0x800
+  fix arg0 0x14 u32 addrof arg0 0x500
+  fix arg0 0x1C u32 addrof arg0 0x40
+  fix arg0 0xE u8 range 0 2
+  fix arg1 0x20 u32 addrof arg1 0x100
+  stub 02188c84 force ret=u32 args=v
+  stub 02188c54 force ret=u32 args=v
+  stub 02011330 force ret=u16 args=v seq
+  stub 0215a5f4 force ret=u32 args=v
+  stub 02158f58 force ret=ptr:arg1:0x300:0x10 args=v
+  stub 02045b38 force ret=u32 args=v,v,v,v
+  stub 02045180 force ret=u32 args=v,v,v,v,v,v,v
+  stub 02045770 force ret=u32 args=v
+  stub 02043b5c force ret=none args=v,v
+  stub 02045334 force ret=none args=v
+  stub 02045374 force ret=none args=v
+  stub 0201f73c force ret=none args=v,v,v,v
+  stub 020457b0 force ret=u32 args=v,v
+  stub 02045cac force ret=none args=v,v,v
+  stub 021904ac force ret=u32 args=v
+  stub 0201c7a4 force ret=none args=v,v,v,v,v
+  stub 02041b6c force ret=none args=v
+  stub 02045808 force ret=none args=v
+  stub 02045c04 force ret=none args=v
+  stub 020452e8 force ret=u32 args=v
+  stub 02041300 force ret=none args=v,v,v,v,v,v,v
 
 # cmd 570: a, b; 02008DAC(02008C58(SAVE), a, b); 0.
 fn 021d2adc ret=u32 inputs=200

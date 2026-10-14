@@ -73,6 +73,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021D2750, "d40d96ca6fcebb64"),
     (0x021D297C, "7fe06c653924ac92"),
     (0x021D29A8, "ff74b5361b245b77"),
+    (0x021D29F0, "1a56ab7e657aeeac"),
     (0x021D2ADC, "4906f05f68d06a2c"),
     (0x021D2B18, "10eeb491c16f38ed"),
     (0x021D2B54, "ce8f4c77e9c0492a"),
@@ -795,6 +796,86 @@ impl Misc21Hooks for Rom<'_> {
     }
     fn fun_021690e0(&mut self, gamedata: u32) -> u32 {
         self.stubs.call(0x021690e0, &mut [Arg::V(gamedata)])
+    }
+    fn fun_02045b38(&mut self, a: u32, b: u32, c: u32, heap: u32) -> u32 {
+        self.stubs.call(
+            0x02045b38,
+            &mut [Arg::V(a), Arg::V(b), Arg::V(c), Arg::V(heap)],
+        )
+    }
+    fn fun_02045180(&mut self, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
+        self.stubs.call(
+            0x02045180,
+            &mut [
+                Arg::V(a),
+                Arg::V(b),
+                Arg::V(c),
+                Arg::V(d),
+                Arg::V(e),
+                Arg::V(f),
+                Arg::V(g),
+            ],
+        )
+    }
+    fn fun_02045770(&mut self, w: u32) -> u32 {
+        self.stubs.call(0x02045770, &mut [Arg::V(w)])
+    }
+    fn fun_02043b5c(&mut self, bmp: u32, color: u32) {
+        self.stubs
+            .call(0x02043b5c, &mut [Arg::V(bmp), Arg::V(color)]);
+    }
+    fn fun_02045334(&mut self, w: u32) {
+        self.stubs.call(0x02045334, &mut [Arg::V(w)]);
+    }
+    fn fun_02045374(&mut self, w: u32) {
+        self.stubs.call(0x02045374, &mut [Arg::V(w)]);
+    }
+    fn fun_0201f73c(&mut self, w: u32, a: u32, b: u32, c: u32) {
+        self.stubs.call(
+            0x0201f73c,
+            &mut [Arg::V(w), Arg::V(a), Arg::V(b), Arg::V(c)],
+        );
+    }
+    fn fun_02045cac(&mut self, msgdata: u32, msg: u32, strbuf: u32) {
+        self.stubs.call(
+            0x02045cac,
+            &mut [Arg::V(msgdata), Arg::V(msg), Arg::V(strbuf)],
+        );
+    }
+    fn fun_021904ac(&mut self, x: u32) -> u32 {
+        self.stubs.call(0x021904ac, &mut [Arg::V(x)])
+    }
+    fn fun_0201c7a4(&mut self, bmp: u32, a: u32, b: u32, strbuf: u32, color: u32) {
+        self.stubs.call(
+            0x0201c7a4,
+            &mut [
+                Arg::V(bmp),
+                Arg::V(a),
+                Arg::V(b),
+                Arg::V(strbuf),
+                Arg::V(color),
+            ],
+        );
+    }
+    fn fun_02041b6c(&mut self, x: u32) {
+        self.stubs.call(0x02041b6c, &mut [Arg::V(x)]);
+    }
+    fn fun_02045c04(&mut self, msgdata: u32) {
+        self.stubs.call(0x02045c04, &mut [Arg::V(msgdata)]);
+    }
+    fn fun_02041300(&mut self, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) {
+        self.stubs.call(
+            0x02041300,
+            &mut [
+                Arg::V(a),
+                Arg::V(b),
+                Arg::V(c),
+                Arg::V(d),
+                Arg::V(e),
+                Arg::V(f),
+                Arg::V(g),
+            ],
+        );
     }
     fn fun_021d25a4(&mut self, w: u32) {
         self.stubs.call(0x021d25a4, &mut [Arg::V(w)]);
