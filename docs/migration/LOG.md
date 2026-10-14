@@ -166,3 +166,7 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14 17:25Z** — Resumed by the one-shot cron: usage GREEN (session 2%, weekly 38%) → RUN; USAGE-CHECK cron ba633253. Cap 3: resumed B18b (same agent), validator (Opus, 7829fcb..e5f4db7), F6b (Opus).
 
 - **2026-10-14** — Validator R-20261014-1725 (7829fcb..e5f4db7): all areas match, B18 audited strictly stronger, 23 porter specs MATCH at 1000 inputs, 4-battle diff equal; V-0033 (low, B19 UNDECLARED_PASS_THROUGH hides r1/r2 of 021cb174/021cb1a4) = B19b. Spawned F14.
+
+- **2026-10-14** — Merged B18b (e86606a + d708ead; coordinator committed + started the rebase, the worker resolved the core2 conflict with B19 and fixed 14 lint sites in S5b specs). Full verification of main (all svflow, handlers, battle diff, every fn area) running; B19b held until it finishes (CPU).
+
+- **2026-10-14** — Full verification of main after B18b: gate, 22 svflow areas, 4 handler modules, 4-battle Unicorn diff and every fn area (145 MATCH, 0 fail), check-force/symbols green.
