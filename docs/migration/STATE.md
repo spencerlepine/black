@@ -6,23 +6,23 @@
 <!-- progress-table:start -->
 | bucket | done | of | ratio | weight | contributes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| logic (ported fns / in-scope fns per SCOPE.tsv) | 4971 | 10087.4 | 49.3% | 0.560 | 27.6% |
+| logic (ported fns / in-scope fns per SCOPE.tsv) | 4983 | 10087.4 | 49.4% | 0.560 | 27.7% |
 | phase A (items) | 13 | 16 | 81.2% | 0.075 | 6.1% |
 | phase G (items) | 4 | 9 | 44.4% | 0.050 | 2.2% |
 | phase U (items) | 0.5 | 23 | 2.2% | 0.190 | 0.4% |
 | phases H+R (items) | 0 | 8 | 0.0% | 0.125 | 0.0% |
 | **overall** | | | | | **36%** |
 
-Ported by crate: black-battle 2125, black-field 1712, black-script 868, black-pokemon 97, black-storage 85, black-text 61, black-core 26.
+Ported by crate: black-battle 2125, black-field 1712, black-script 868, black-pokemon 109, black-storage 85, black-text 61, black-core 26.
 UI cases: U1-title 0.07, U1-title-anim 0.12.
 
-_2026-10-14T07:16:17Z, commit 4ea6a37, `python3 -I tools/progress.py`._
+_2026-10-14T08:34:52Z, commit 155d709, `python3 -I tools/progress.py`._
 <!-- progress-table:end -->
 
 - **Milestones so far:** battle handlers complete; btl_server_flow 644; battle_server.s 207/207; btl_client 228/231; battle AI ai1 161/161; B16 first full headless battle through the ports. Pokémon: poke_tool/create/personal/growth/waza/evolution/icon. Storage: party/bag/box. Field: map matrix/fieldmap, player 304/306, fldmmdl 253/253 + acmd 242/242, trainer_eye 38/38, encounter 151/151, eventdata 184/185; script VM + ~700 scrcmd handlers. Text: strbuf/wordset/layout/speed. Assets A0–A12 mostly; Bevy shell G1/G2/G4/G5. Harness: Z19/Z20/Z22/Z23, check-force/symbols/docsize, progress.py, ui-diff with scripted DeSmuME references.
-- **Running (since ~07:15Z):** B17 (Opus, worktree-agent-a8aa8754c8d18669b: ai1 pointer rewire so B16 runs the Rust AI), P6 (Sonnet, worktree-agent-a16130f061fa8dd20: nature/gender/shiny/PID/IV), F8f (Opus, worktree-agent-af6a1ab96ccfa7a1e: port the 4 F8-spec5 areas, 169 fns), validator run on a9c4242..4ea6a37 (Sonnet). P3 (Sonnet, worktree-agent-aef61f2651669ca53: EXP curves/level-up/EXP gain) since ~07:45Z. Worktrees under `.claude/worktrees/`.
-- **Next:** merge the three workers as they report; then B18 (bare-`P` harness audit; run alone in battle areas), F4b-port2, P7, S4, S5, F5b, F2b, F3b, F6b, A10d, U0b (overworld savestate script).
-- **Blocked:** none.
-- **Usage guard:** RUN (GREEN 40% at 07:10Z; USAGE-CHECK cron 8360cac0, 7,27,47 * * * *).
+- **Running:** B17 (Opus, worktree-agent-a8aa8754c8d18669b: ai1 pointer rewire + the B16 flake), F8f (Opus, worktree-agent-af6a1ab96ccfa7a1e: 169 scrcmd fns), V-0027 (Opus, worktree-agent-a95006206251bbd99: zero-divisor fix in 3 script ports + spec widening), P7 (Sonnet, worktree-agent-a680479667f83fdbe: eggs/breeding), S4 (Sonnet, worktree-agent-aff24e334ca5a5720: field item use). Worktrees under `.claude/worktrees/`.
+- **Next:** merge as workers report; then V-0030 (encount RNG stub widening), B18 (bare-`P` audit; alone in battle areas, after B17), F4b-port2, S5, F5b, F2b, F3b, F6b, A10d, U0b; REUSE=1 decompile.sh for the 12 new P3/P6 prototypes.
+- **Blocked:** none. Known flake: `b16_single_battle` under the full parallel black-battle suite (OPEN.md; with B17).
+- **Usage guard:** RUN (GREEN 31% at ~08:30Z; burn ~0.4%/min with 5 agents; USAGE-CHECK cron 8360cac0).
 - **Disk:** 39 GB free (the human cleared space 2026-10-14); 5 slots usable.
 - **RE tooling:** Ghidra headless + rizin + rea (MCP) via `tools/re/` (`ENV.md` "RE workflow"); `tools/doctor.sh` green on macOS. Battle and field sets fully decompiled.

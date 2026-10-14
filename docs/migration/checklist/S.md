@@ -2,5 +2,5 @@
 
 Part of the master checklist (moved out of `MIGRATION-AGENT.md` section 6 on 2026-10-13). Status markers and rules: [§5](../../MIGRATION-AGENT.md). Format: `- [status] ID — TAG — description — deps: … — notes`. A done-note longer than ~400 chars is cut here and kept in full in `../log/<ID>.md`. Finished items are moved out by `tools/archive-checklist.py` (stub in `DONE.md`, full line in `archive/`).
 
-- [ ] S4 — PAR — Item use effects outside battle (potions, evolution stones, TMs, repels). — deps: S3, P2, P4, P5
+- [~] S4 (worktree-agent-aff24e334ca5a5720, 2026-10-14) — PAR — Item use effects outside battle (potions, evolution stones, TMs, repels). — deps: S3, P2, P4, P5
 - [ ] S5 — SEQ — Save data model + persistence (native file / browser localStorage-IndexedDB). Own format (serde), not the DS save layout. — deps: S1, S2, S3 — scope (T1): one data model per save block (`save_control.c` = `unk_02006D3C`; blocks config/mystatus/playtime/mail/regulation/battle_rec/symbol_save/bsubway/battle_examination in `unk_02007F7C`–`unk_0200E4CC`, ~265 fns). DS save plumbing (`savedata.c`/`backup_system.c`/`flash_access.c` 0x020316C8–0x02033BA4, CARD SDK) is replaced, not ported; D9 blocks (wifilist, mystery_data, musical, gds_profile, net_save) stay out.

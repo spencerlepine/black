@@ -104,3 +104,5 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [x] F8a — F — (95db562; Opus, ~1.5 h, 450k tokens) **scrcmd_core 53/53 (3467bfc999c8890b), scrcmd_work 130/130 (d7e9a9ae52796e75)**; `scrcmd::{commands, h… — (95db562)
 - [x] F8b — F — (cf78da5; Opus, ~1.5 h, 450k tokens) **scrcmd_talk 70/70 (f52686b3e04f16d2), scrcmd_screen 36/36 (a8af20a1036b361b)**; dispatch 200 ids + ca… — (cf78da5)
 - [x] F9 — F — PAR — Text engine (black-text): string buffers, control codes, variable/word insertion, word wrap, text speed.
+- [x] P3 — P — PAR — EXP curves, level-up, EXP gain formula. — (155d709)
+- [x] P6 — P — PAR — Nature, gender, shininess, ability slot, PID/IV generation. — (eac2678)
