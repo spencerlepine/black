@@ -160,3 +160,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14** — Merged B19 (f8164d9): first whole-battle differential against the original (4 battles trace-equal; 3 port bugs + 1 integration bug fixed; B16 outcome corrected to the original's). F13 verified on main (gate, daycare/egg/hatch/ov63_event, check-force/symbols).
 
 - **2026-10-14** — Merged F5b (4 field areas, 80/80; README union conflict with F13 resolved). F5 done.
+
+- **2026-10-14 ~15:10Z** — Usage RED 94% → WRAP UP NOW: B18b stopped (staged partial work kept in its worktree; it was mid mutation test, see checklist). USAGE-CHECK cron deleted; PAUSED until 17:25Z (resume cron 9ed16f89). This window: 14 items merged (incl. B19 whole-battle differential, S5b, F13, F5b, B18); 41% → 43%.
