@@ -1319,5 +1319,5 @@ Deliberate deviations: none in behaviour.
 Mutation spot check (`check-fn.sh --fn`, reverted; `/tmp/blk/out-F4bp2/mut.py`): 9 of 10 caught (`spin_watch` `<` -> `<=`,
 `rand_walk_move` mode-2 hit bit 0 -> 1, `may_move` type 0xC -> 0xD, `sight_dir` `>` -> `>=`, `rroute_reverse` 4 - (leg + 1) -> 3 -
 (leg + 1), `steps_busy` `<` -> `<=`, `partner_due` mask 0x1808 -> 0x1800, `wall_step` hand switch not stored, `fx_tile` bias dropped).
-The survivor (`ev_look_spin` short wait for types 0xF..0x11 instead of 0xF / 0x10) is a spec gap: the `0219B75C` block draws event
-types 0xF / 0x10 / 5 / 0 only.
+The survivor (`ev_look_spin` short wait for types 0xF..0x11 instead of 0xF / 0x10) was a spec gap; F4b-spec4 widened the
+`0219B75C` event-type picks to 0xF / 0x10 / 5 / 0 / 0x11 / 0xE / 0x12 and it is now killed (mvproc3c 6820c2c1611ddc38).

@@ -7,7 +7,7 @@
 | bucket | done | of | ratio | weight | contributes |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | logic (ported fns / in-scope fns per SCOPE.tsv) | 5582 | 10087.4 | 55.3% | 0.560 | 31.0% |
-| phase A (items) | 13 | 16 | 81.2% | 0.075 | 6.1% |
+| phase A (items) | 13.5 | 16 | 84.4% | 0.075 | 6.3% |
 | phase G (items) | 4 | 9 | 44.4% | 0.050 | 2.2% |
 | phase U (items) | 0.5 | 23 | 2.2% | 0.190 | 0.4% |
 | phases H+R (items) | 0 | 8 | 0.0% | 0.125 | 0.0% |
@@ -16,12 +16,12 @@
 Ported by crate: black-battle 2125, black-field 1869, black-script 1011, black-storage 345, black-pokemon 148, black-text 61, black-core 26.
 UI cases: U1-title 0.07, U1-title-anim 0.12.
 
-_2026-10-14T10:54:17Z, commit cc8c58b, `python3 -I tools/progress.py`._
+_2026-10-14T12:46:14Z, commit 412636c, `python3 -I tools/progress.py`._
 <!-- progress-table:end -->
 
 - **Milestones so far:** battle handlers complete; btl_server_flow 644; battle_server.s 207/207; btl_client 228/231; battle AI ai1 161/161; B16 first full headless battle through the ports. Pokémon: poke_tool/create/personal/growth/waza/evolution/icon. Storage: party/bag/box. Field: map matrix/fieldmap, player 304/306, fldmmdl 253/253 + acmd 242/242, trainer_eye 38/38, encounter 151/151, eventdata 184/185; script VM + ~700 scrcmd handlers. Text: strbuf/wordset/layout/speed. Assets A0–A12 mostly; Bevy shell G1/G2/G4/G5. Harness: Z19/Z20/Z22/Z23, check-force/symbols/docsize, progress.py, ui-diff with scripted DeSmuME references.
-- **Running (since ~12:30Z):** validator (Opus) on 4ea6a37..7829fcb; B18 (Opus, worktree-agent-a6c560338857d4623: bare-`P` harness rule + call sites, AI-mask flow gaps); P7b (Sonnet, worktree-agent-a9de61f900a5d5df2: egg hatching); S5b (Opus, worktree-agent-a142c72c690aef250: remaining save blocks); F4b-spec4 + F8f-spec2 (Opus, worktree-agent-a29768caf05e5c907: spec widenings).
-- **Next:** merge as workers report; then F5b, F2b, F3b, F6b, F13 (daycare), A10d, U0b, F14, F11.
+- **Running (since ~12:30Z):** validator (Opus) on 4ea6a37..7829fcb; B18 (Opus, worktree-agent-a6c560338857d4623: bare-`P` harness rule + call sites, AI-mask flow gaps); P7b (Sonnet, worktree-agent-a9de61f900a5d5df2: egg hatching); S5b (Opus, worktree-agent-a142c72c690aef250: remaining save blocks); A10d (Sonnet, worktree-agent-a7ad2312ab2ee3bf5: battle UI/menu/effect sprite converters).
+- **Next:** merge as workers report; then F8g (scrcmd coverage audit), F5b, F2b, F3b, F6b, F13 (daycare), A10d, U0b, F14, F11.
 - **Blocked:** none. B16 flake: B17 fixed `ro_snap` keying; 3/3 full black-battle suites green on main after merge (root cause not proven, OPEN.md).
 - **Usage guard:** RUN (GREEN 0% session / 26% weekly at 12:25Z; USAGE-CHECK cron b177a4a3). Last window: 5 agents burned ~84% in ~3 h.
 - **Disk:** 39 GB free (the human cleared space 2026-10-14); 5 slots usable.
