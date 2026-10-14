@@ -776,7 +776,7 @@ fn client45(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>])
         0x021D_34B0 => {
             let mut b = Bufs::new(args);
             let (mut st, a) = (b.get(env, lent, 1, 4), b.get(env, lent, 2, 0x40));
-            let r = client5::cmd_play_se(env, &mut st, &a);
+            let r = client5::cmd_play_se(env, vals(args)[0], &mut st, &a);
             Bufs::new(args).put(env, lent, 1, &st);
             r
         }

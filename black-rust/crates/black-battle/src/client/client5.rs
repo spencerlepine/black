@@ -124,8 +124,9 @@ fn view_pos<E: FlowEnv>(env: &mut E, c: &[u8], id: u32) -> u32 {
     env.callr(VIEW_POS, &mut [Arg::V(rd32(c, ofs::SERVER)), Arg::V(id)], c)
 }
 
-fn is_quiet<E: FlowEnv>(env: &mut E) -> bool {
-    env.call(IS_QUIET, &mut [Arg::P]) != 0
+/// `021cd9e0(c)` (client1, `force` stub): the client plays no animations.
+fn is_quiet<E: FlowEnv>(env: &mut E, c: &[u8]) -> bool {
+    env.call(IS_QUIET, &mut [Arg::PHost(c.as_ptr() as usize)]) != 0
 }
 
 fn fx_busy<E: FlowEnv>(env: &mut E) -> bool {
@@ -321,7 +322,7 @@ pub fn cmd_ability_change<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], a
     let s = view_slot(env, c, k);
     match rd32(state, 0) {
         0 => {
-            if is_quiet(&mut Lend::r(env, c)) {
+            if is_quiet(&mut Lend::r(env, c), c) {
                 let mon = mon_of(env, c, k);
                 env.callr(0x021D_66D0, &mut [Arg::V(mon), Arg::V(arg(args, 1))], c);
                 return 1;
@@ -380,7 +381,7 @@ pub fn cmd_ability_swap<E: FlowEnv>(
     };
     match rd32(state, 0) {
         0 => {
-            if is_quiet(&mut Lend::r(env, c))
+            if is_quiet(&mut Lend::r(env, c), c)
                 || env.callr(0x021B_9A24, &mut [Arg::V(a), Arg::V(b)], c) != 0
             {
                 set_both(env);
@@ -451,7 +452,7 @@ pub fn cmd_illusion_break<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], a
             let k = arg(args, 0) & 0xFF;
             let s = view_slot(env, c, k);
             let mon = mon_of(env, c, k);
-            let quiet = env.callr(IS_QUIET, &mut [Arg::P], c);
+            let quiet = env.callr(IS_QUIET, &mut [Arg::PHost(c.as_ptr() as usize)], c);
             env.callr(0x021D_6C2C, &mut [Arg::V(mon)], c);
             env.callr(
                 0x021E_A868,
@@ -472,10 +473,10 @@ pub fn cmd_illusion_break<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], a
 }
 
 /// C: `FUN_overlay_d_93__021d34b0`: command 0x4C (sound effect): state 0: quiet -> 1; else `021f7998(a0)`. Other states:
-/// `021f7eb4()` done -> 1.
-pub fn cmd_play_se<E: FlowEnv>(env: &mut E, state: &mut [u8], args: &[u8]) -> u32 {
+/// `021f7eb4()` done -> 1. `c_addr` is the address of the client object (passed to `021cd9e0`).
+pub fn cmd_play_se<E: FlowEnv>(env: &mut E, c_addr: u32, state: &mut [u8], args: &[u8]) -> u32 {
     if rd32(state, 0) == 0 {
-        if is_quiet(env) {
+        if env.call(IS_QUIET, &mut [Arg::PAt(c_addr)]) != 0 {
             return 1;
         }
         env.call(0x021F_7998, &mut [Arg::V(arg(args, 0))]);
@@ -493,7 +494,7 @@ pub fn cmd_position_anim<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], ar
     let view = rd32(c, ofs::VIEW);
     let p = view_pos(env, c, arg(args, 0) & 0xFF);
     if rd32(state, 0) == 0 {
-        if is_quiet(&mut Lend::r(env, c)) {
+        if is_quiet(&mut Lend::r(env, c), c) {
             return 1;
         }
         if env.callr(0x021B_8590, &mut [Arg::V(rd32(c, ofs::SERVER))], c) == 0
@@ -518,7 +519,7 @@ pub fn cmd_position_anim<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], ar
 pub fn cmd_pair_anim<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: &[u8]) -> u32 {
     let view = rd32(c, ofs::VIEW);
     if rd32(state, 0) == 0 {
-        if is_quiet(&mut Lend::r(env, c)) {
+        if is_quiet(&mut Lend::r(env, c), c) {
             return 1;
         }
         let p = view_pos(env, c, arg(args, 0) & 0xFF);
@@ -580,7 +581,7 @@ pub fn cmd_ability_window_open<E: FlowEnv>(
     let s = view_slot(env, c, arg(args, 0) & 0xFF);
     match rd32(state, 0) {
         0 => {
-            if is_quiet(&mut Lend::r(env, c)) {
+            if is_quiet(&mut Lend::r(env, c), c) {
                 return 1;
             }
             env.callr(0x021E_A768, &mut [Arg::V(view), Arg::V(s), Arg::V(1)], c);

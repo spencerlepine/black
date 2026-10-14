@@ -18,15 +18,36 @@ pub struct TestEnv {
     stub: fnd::StubEnv,
     /// BattleMon-API stubs (`env bpp` in the spec); same mock the BattleMon tests use.
     pub bpp: MockEnv,
+    /// B18: `(host address, length, emulator address)` of every image of the input (work, `buf` /
+    /// `bpp` arguments, regions, globals), so a pass-through pointer into one of them
+    /// ([`Arg::PHost`] / [`Arg::PBuf`]) reaches a `ptr` stub as the address the original passes.
+    layout: Vec<(usize, usize, u32)>,
+}
+
+/// B18: the emulator address of host address `h` inside one of the input's images; any other
+/// address is a buffer local to the port (a stack address: `canon_ptr` logs it as `PTR_LOCAL`,
+/// as it does for the original's locals). One past the end of an image maps to its end.
+fn emu_addr(layout: &[(usize, usize, u32)], h: usize) -> u32 {
+    if let Some(&(s, _, e)) = layout.iter().find(|&&(s, n, _)| h >= s && h < s + n) {
+        return e + (h - s) as u32;
+    }
+    if let Some(&(_, n, e)) = layout.iter().find(|&&(s, n, _)| h == s + n) {
+        return e + n as u32;
+    }
+    fnd::STACK_ZERO.start
 }
 
 impl FlowEnv for TestEnv {
     fn call(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u32 {
+        let layout = &self.layout;
         let mut conv: Vec<fnd::Arg<'_>> = args
             .iter_mut()
             .map(|a| match a {
                 Arg::V(v) => fnd::Arg::V(*v),
-                Arg::P | Arg::PBuf(_) | Arg::PHost(_) | Arg::PAt(_) => fnd::Arg::P,
+                Arg::P => fnd::Arg::P,
+                Arg::PAt(v) => fnd::Arg::Ptr(*v),
+                Arg::PHost(h) => fnd::Arg::Ptr(emu_addr(layout, *h)),
+                Arg::PBuf(b) => fnd::Arg::Ptr(emu_addr(layout, b.as_ptr() as usize)),
                 Arg::In(b) => fnd::Arg::In(b),
                 Arg::Out(b) => fnd::Arg::Out(b),
             })
@@ -39,11 +60,15 @@ impl TestEnv {
     /// A `ret=u64` stub (B14-spec, e.g. OS_GetTick 0x020870D0): forwards to [`fnd::StubEnv::call64`], `r1 << 32 | r0`
     /// (Z21: the AI ports reach it through `ai::AiEnv::call64`).
     pub fn call64(&mut self, addr: u32, args: &mut [Arg<'_>]) -> u64 {
+        let layout = &self.layout;
         let mut conv: Vec<fnd::Arg<'_>> = args
             .iter_mut()
             .map(|a| match a {
                 Arg::V(v) => fnd::Arg::V(*v),
-                Arg::P | Arg::PBuf(_) | Arg::PHost(_) | Arg::PAt(_) => fnd::Arg::P,
+                Arg::P => fnd::Arg::P,
+                Arg::PAt(v) => fnd::Arg::Ptr(*v),
+                Arg::PHost(h) => fnd::Arg::Ptr(emu_addr(layout, *h)),
+                Arg::PBuf(b) => fnd::Arg::Ptr(emu_addr(layout, b.as_ptr() as usize)),
                 Arg::In(b) => fnd::Arg::In(b),
                 Arg::Out(b) => fnd::Arg::Out(b),
             })
@@ -140,8 +165,40 @@ pub fn run_area_suite(
             env: TestEnv {
                 stub: std::mem::take(&mut fc.env),
                 bpp: std::mem::take(&mut fc.ext.env),
+                layout: Vec::new(),
             },
         };
+        let mut layout = Vec::new();
+        if !nowork {
+            layout.push((
+                c.work.mem.as_ptr() as usize,
+                c.work.mem.len(),
+                fnd::WORK_ADDR,
+            ));
+        }
+        let images = c
+            .bufs
+            .iter()
+            .enumerate()
+            .map(|(i, b)| (b, fnd::buf_addr(i)));
+        let images = images.chain(
+            c.regions
+                .iter()
+                .enumerate()
+                .map(|(k, b)| (b, fnd::region_addr(k))),
+        );
+        let images = images.chain(
+            c.globals
+                .iter()
+                .enumerate()
+                .map(|(k, b)| (b, fc.global_addr(k))),
+        );
+        for (b, e) in images {
+            if !b.is_empty() {
+                layout.push((b.as_ptr() as usize, b.len(), e));
+            }
+        }
+        c.env.layout = layout;
         let res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| call(addr, &mut c)));
         // a `noreturn` stub unwinds out of the port: hand the state back before resuming
         let Case {
@@ -204,11 +261,134 @@ mod tests {
             env: TestEnv {
                 stub: fnd::StubEnv::default(),
                 bpp: MockEnv::default(),
+                layout: Vec::new(),
             },
         };
         assert_eq!(c.word(0), 0x02E0_0000);
         assert_eq!(c.word(1), 5);
         assert!((2..10).all(|i| c.word(i) == 0));
+    }
+
+    /// B18: every battle svflow spec (tools/rom-diff/svflow_specs/*.spec).
+    const BATTLE_SPECS: &[(&str, &str)] = &[
+        (
+            "adapter",
+            include_str!("../../../../tools/rom-diff/svflow_specs/adapter.spec"),
+        ),
+        (
+            "ai1",
+            include_str!("../../../../tools/rom-diff/svflow_specs/ai1.spec"),
+        ),
+        (
+            "api",
+            include_str!("../../../../tools/rom-diff/svflow_specs/api.spec"),
+        ),
+        (
+            "client1",
+            include_str!("../../../../tools/rom-diff/svflow_specs/client1.spec"),
+        ),
+        (
+            "client2",
+            include_str!("../../../../tools/rom-diff/svflow_specs/client2.spec"),
+        ),
+        (
+            "client3",
+            include_str!("../../../../tools/rom-diff/svflow_specs/client3.spec"),
+        ),
+        (
+            "client4",
+            include_str!("../../../../tools/rom-diff/svflow_specs/client4.spec"),
+        ),
+        (
+            "client5",
+            include_str!("../../../../tools/rom-diff/svflow_specs/client5.spec"),
+        ),
+        (
+            "cmd_queue",
+            include_str!("../../../../tools/rom-diff/svflow_specs/cmd_queue.spec"),
+        ),
+        (
+            "core1",
+            include_str!("../../../../tools/rom-diff/svflow_specs/core1.spec"),
+        ),
+        (
+            "core2",
+            include_str!("../../../../tools/rom-diff/svflow_specs/core2.spec"),
+        ),
+        (
+            "core3",
+            include_str!("../../../../tools/rom-diff/svflow_specs/core3.spec"),
+        ),
+        (
+            "core4",
+            include_str!("../../../../tools/rom-diff/svflow_specs/core4.spec"),
+        ),
+        (
+            "core5",
+            include_str!("../../../../tools/rom-diff/svflow_specs/core5.spec"),
+        ),
+        (
+            "core6",
+            include_str!("../../../../tools/rom-diff/svflow_specs/core6.spec"),
+        ),
+        (
+            "events",
+            include_str!("../../../../tools/rom-diff/svflow_specs/events.spec"),
+        ),
+        (
+            "handex",
+            include_str!("../../../../tools/rom-diff/svflow_specs/handex.spec"),
+        ),
+        (
+            "hem",
+            include_str!("../../../../tools/rom-diff/svflow_specs/hem.spec"),
+        ),
+        (
+            "selftest",
+            include_str!("../../../../tools/rom-diff/svflow_specs/selftest.spec"),
+        ),
+        (
+            "server1",
+            include_str!("../../../../tools/rom-diff/svflow_specs/server1.spec"),
+        ),
+        (
+            "server2",
+            include_str!("../../../../tools/rom-diff/svflow_specs/server2.spec"),
+        ),
+        (
+            "server3",
+            include_str!("../../../../tools/rom-diff/svflow_specs/server3.spec"),
+        ),
+        (
+            "server_side",
+            include_str!("../../../../tools/rom-diff/svflow_specs/server_side.spec"),
+        ),
+    ];
+
+    /// B18: no stub of a battle svflow spec passes a `buf` / `bpp` argument of its callee as a
+    /// bare `p` (the same lint `svflow.py` runs when it loads a battle area and in `--selftest`).
+    #[test]
+    fn battle_specs_pass_buffers_as_ptr() {
+        let dir = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../tools/rom-diff/svflow_specs"
+        );
+        let mut files: Vec<String> = std::fs::read_dir(dir)
+            .unwrap()
+            .filter_map(|e| {
+                let n = e.unwrap().file_name().into_string().unwrap();
+                n.strip_suffix(".spec").map(str::to_string)
+            })
+            .collect();
+        files.sort();
+        let listed: Vec<&str> = BATTLE_SPECS.iter().map(|s| s.0).collect();
+        assert_eq!(files, listed, "BATTLE_SPECS must list every svflow spec");
+        let bad = fnd::bare_p_lint(BATTLE_SPECS);
+        assert!(
+            bad.is_empty(),
+            "bare `p` for buf/bpp arguments:\n{}",
+            bad.join("\n")
+        );
     }
 
     #[test]

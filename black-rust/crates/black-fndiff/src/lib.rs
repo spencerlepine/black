@@ -23,8 +23,11 @@ mod run;
 mod spec;
 mod stub;
 
-pub use run::{run_suite, Case, Ext, Suite, STACK_TOP, STACK_ZERO, UNSET_WORD};
-pub use stub::{Arg, Halt, StubEnv};
+pub use run::{
+    buf_addr, region_addr, run_suite, Case, Ext, Suite, STACK_TOP, STACK_ZERO, UNSET_WORD,
+    WORK_ADDR,
+};
+pub use stub::{bare_p_lint, canon_ptr, Arg, Halt, StubEnv, PTR_LOCAL};
 
 pub(crate) const FNV_OFFSET: u64 = 14695981039346656037;
 pub(crate) const FNV_PRIME: u64 = 1099511628211;

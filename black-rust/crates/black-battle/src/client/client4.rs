@@ -201,8 +201,8 @@ fn mon_of<E: FlowEnv>(env: &mut E, c: &[u8], id: u32) -> u32 {
 }
 
 /// `021cd9e0(c)` (client1, `force` stub): the client plays no animations.
-fn is_quiet<E: FlowEnv>(env: &mut E) -> bool {
-    env.call(0x021C_D9E0, &mut [Arg::P]) != 0
+fn is_quiet<E: FlowEnv>(env: &mut E, c: &[u8]) -> bool {
+    env.call(0x021C_D9E0, &mut [Arg::PHost(c.as_ptr() as usize)]) != 0
 }
 
 /// `021b8590(server)`: battle animations are on.
@@ -296,9 +296,21 @@ pub fn req_switch_prompt<E: FlowEnv>(
                 set_state(state, 4);
                 return 0;
             }
+            // (c, 0, 1, &c[0x184] party view block, &c[0x190])
+            let (ca, blk, extra) = (
+                c.as_ptr() as usize,
+                c[0x184..].as_ptr() as usize,
+                c[0x190..].as_ptr() as usize,
+            );
             env.callh(
                 0x021D_0B10,
-                &mut [Arg::P, Arg::V(0), Arg::V(1), Arg::P, Arg::P],
+                &mut [
+                    Arg::PHost(ca),
+                    Arg::V(0),
+                    Arg::V(1),
+                    Arg::PHost(blk),
+                    Arg::PHost(extra),
+                ],
                 c,
             );
             env.callh(
@@ -1093,6 +1105,7 @@ pub fn play_commands<E: FlowEnv>(
                 let f = rd32(c, ofs::CMD_HANDLER);
                 let st = c[ofs::CMD_STATE..].as_ptr() as usize;
                 let args = c[ofs::CMD_ARGS..].as_ptr() as usize;
+                let ca = c.as_ptr() as usize;
                 let lent = Lent {
                     bytes: vec![&mut *c, &mut *queue],
                     ..Lent::default()
@@ -1100,7 +1113,7 @@ pub fn play_commands<E: FlowEnv>(
                 if env.call_lent(
                     lent,
                     f & !1,
-                    &mut [Arg::P, Arg::PHost(st), Arg::PHost(args)],
+                    &mut [Arg::PHost(ca), Arg::PHost(st), Arg::PHost(args)],
                 ) == 0
                 {
                     return 0;
@@ -1231,7 +1244,7 @@ pub fn cmd_send_out<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: &
         }
         2 => {
             if view_call(env, c, 0x021E_A4C4, &[]) != 0 {
-                env.callr(0x021C_DECC, &mut [Arg::P], c);
+                env.callr(0x021C_DECC, &mut [Arg::PHost(c.as_ptr() as usize)], c);
                 return 1;
             }
             0
@@ -1283,7 +1296,7 @@ fn message_relay<E: FlowEnv>(
 ) -> u32 {
     match rd32(state, 0) {
         0 => {
-            if is_quiet(&mut Lend::r(env, c)) {
+            if is_quiet(&mut Lend::r(env, c), c) {
                 return 1;
             }
             env.callr(
@@ -1334,7 +1347,7 @@ pub fn cmd_message_alt_se<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], a
 pub fn cmd_message_6f4<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: &[u8]) -> u32 {
     match rd32(state, 0) {
         0 => {
-            if is_quiet(&mut Lend::r(env, c)) {
+            if is_quiet(&mut Lend::r(env, c), c) {
                 return 1;
             }
             view_call(
@@ -1372,7 +1385,7 @@ pub fn move_anim_param<E: FlowEnv>(env: &mut E, c: &[u8], mv: u32, id: u32) -> u
 pub fn cmd_move_anim<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: &[u8]) -> u32 {
     match rd32(state, 0) {
         0 => {
-            if is_quiet(&mut Lend::r(env, c)) || !anims_on(env, c) {
+            if is_quiet(&mut Lend::r(env, c), c) || !anims_on(env, c) {
                 return 1;
             }
             let a0 = arg(args, 0) & 0xFF;
@@ -1517,7 +1530,7 @@ pub fn cmd_fx_81d0<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: &[
 pub fn cmd_hit_anim<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: &[u8]) -> u32 {
     match rd32(state, 0) {
         0 => {
-            if !is_quiet(&mut Lend::r(env, c)) {
+            if !is_quiet(&mut Lend::r(env, c), c) {
                 let s = view_slot(env, c, arg(args, 0) & 0xFF);
                 let e = env.callr(0x0201_BD28, &mut [Arg::V(1), Arg::V(0x1B)], c);
                 view_call(env, c, 0x021E_A0A0, &[s, s, 1, e, 0, 0]);
@@ -1528,7 +1541,7 @@ pub fn cmd_hit_anim<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: &
         1 => {
             if view_call(env, c, 0x021E_A0E4, &[]) != 0 {
                 let s = view_slot(env, c, arg(args, 0) & 0xFF);
-                if !is_quiet(&mut Lend::r(env, c)) {
+                if !is_quiet(&mut Lend::r(env, c), c) {
                     env.callr(0x0200_61E4, &mut [Arg::V(0x564)], c);
                 }
                 view_call(env, c, 0x021E_A0F4, &[1, s, 1]);
@@ -1591,7 +1604,7 @@ fn position_anim<E: FlowEnv>(
     let p = view_pos(env, c, s);
     match rd32(state, 0) {
         0 => {
-            if is_quiet(&mut Lend::r(env, c)) || !anims_on(env, c) {
+            if is_quiet(&mut Lend::r(env, c), c) || !anims_on(env, c) {
                 return 1;
             }
             view_call(env, c, start, &[p]);
@@ -1648,7 +1661,7 @@ pub fn cmd_field_effect<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], arg
                 ],
                 c,
             );
-            if is_quiet(&mut Lend::r(env, c)) {
+            if is_quiet(&mut Lend::r(env, c), c) {
                 return 1;
             }
             if k < 5 {
@@ -1722,7 +1735,7 @@ pub fn cmd_slot_anim_838<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], ar
     let s = view_slot(env, c, arg(args, 0) & 0xFF);
     match rd32(state, 0) {
         0 => {
-            if is_quiet(&mut Lend::r(env, c)) || !anims_on(env, c) {
+            if is_quiet(&mut Lend::r(env, c), c) || !anims_on(env, c) {
                 return 1;
             }
             view_call(env, c, 0x021E_A838, &[s]);
@@ -1838,7 +1851,7 @@ pub fn cmd_fx_7ea4<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: &[
     match rd32(state, 0) {
         0 => {
             let p = view_pos(env, c, arg(args, 0) & 0xFF);
-            if is_quiet(&mut Lend::r(env, c)) {
+            if is_quiet(&mut Lend::r(env, c), c) {
                 env.callr(0x021F_88BC, &mut [Arg::V(1)], c);
             }
             env.callr(0x021F_7EA4, &mut [Arg::V(p)], c);
@@ -1849,7 +1862,7 @@ pub fn cmd_fx_7ea4<E: FlowEnv>(env: &mut E, c: &[u8], state: &mut [u8], args: &[
             if fx_busy(&mut Lend::r(env, c)) {
                 return 0;
             }
-            if is_quiet(&mut Lend::r(env, c)) {
+            if is_quiet(&mut Lend::r(env, c), c) {
                 env.callr(0x021F_88BC, &mut [Arg::V(0)], c);
             }
             1
@@ -1890,7 +1903,7 @@ pub fn cmd_effectiveness_anim<E: FlowEnv>(
 ) -> u32 {
     match rd32(state, 0) {
         0 => {
-            if is_quiet(&mut Lend::r(env, c)) {
+            if is_quiet(&mut Lend::r(env, c), c) {
                 return 1;
             }
             let s = view_slot(env, c, arg(args, 0) & 0xFF);

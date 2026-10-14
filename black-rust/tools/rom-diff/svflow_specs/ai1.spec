@@ -72,7 +72,7 @@ fn 02187f00 ret=u32
   fix arg0 0x14 u32 addrof arg0 0x200
   global 0218a7c0 4                               # Z21: the global AI table word 0218a41c sets
   fix global0 0 u32 alt const 0 || addrof arg5 0xE0
-  stub 0218a41c ret=u32 args=v,p
+  stub 0218a41c ret=u32 args=v,ptr
   stub 0201121c force ret=ptr:arg6:0:1 args=v,p
   stub 0201126c force ret=none args=p,v
   stub 0201c328 force ret=none args=v,v
@@ -80,8 +80,8 @@ fn 02187f00 ret=u32
   stub 02020f14 force ret=u32 args=v
   stub 02030734 force ret=seqptr:arg5:0:0xE0 args=v,v,v,v,v   # Z21: AI object at arg5+0, table at arg5+0xE0
   stub 020490f4 force ret=u32 args=v,v
-  stub 021b8588 force ret=u32 args=p
-  stub 021b86b8 force ret=u32 args=p
+  stub 021b8588 force ret=u32 args=ptr
+  stub 021b86b8 force ret=u32 args=ptr
 
 fn 02187fb0 ret=u32
   nowork
@@ -111,16 +111,16 @@ fn 02187fb0 ret=u32
   fix arg2 4 u8 alt range 1 2 || any rep=4,1
   global 0218a7c0 4
   fix global0 0 u32 addrof arg2
-  stub 0218814c ret=u32 args=p,p,p
-  stub 02188284 ret=u32 args=p,p,p
-  stub 021885bc ret=u32 args=p,p
-  stub 0218a2fc ret=u32 args=p
-  stub 0218a310 ret=u32 args=p
-  stub 0218a324 ret=u32 args=p
-  stub 0218a378 ret=u32 args=p,v,v
-  stub 0218a384 ret=u32 args=p,v,v
-  stub 0218a494 ret=u32 args=p,p
-  stub 0218a528 ret=u32 args=p,p
+  stub 0218814c ret=u32 args=ptr,ptr,ptr
+  stub 02188284 ret=u32 args=ptr,ptr,ptr
+  stub 021885bc ret=u32 args=ptr,ptr
+  stub 0218a2fc ret=u32 args=ptr
+  stub 0218a310 ret=u32 args=ptr
+  stub 0218a324 ret=u32 args=ptr
+  stub 0218a378 ret=u32 args=ptr,v,v
+  stub 0218a384 ret=u32 args=ptr,v,v
+  stub 0218a494 ret=u32 args=ptr,ptr
+  stub 0218a528 ret=u32 args=ptr,ptr
   stub 0201127c force ret=none args=p,v
   stub 02011290 force ret=none args=p
   stub 02011298 force seq ret=pick:0/1 args=p
@@ -133,9 +133,9 @@ fn 02187fb0 ret=u32
   stub 020870d0 force ret=ticks:100   # Z21: a clock advancing 100 per read (the 500-tick budget of 021885bc)
   stub 021b8ce8 force ret=pick:0/1 args=p,v,v
   stub 021b8de4 force ret=u8 args=p,v
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021b9a6c force ret=pick:0/1 args=v,v
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
   stub 021d5584 force ret=pick:0/1 args=p,v
   stub 021d5b68 force ret=nth:pick:0/1/2;pick:0/1/2;pick:0/2 args=v   # Z21: the 3rd candidate of 02187fb0 lives (none -> garbage index)
@@ -156,7 +156,7 @@ fn 02188080 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a458 ret=u32 args=p
+  stub 0218a458 ret=u32 args=ptr
   stub 02011264 force ret=none args=p
   stub 02011324 force ret=ptr:arg1:0:1 args=p
   stub 0201c3c0 force ret=none
@@ -245,13 +245,13 @@ fn 0218814c ret=u32
   fix arg2 4 u8 alt range 1 2 || any rep=4,1
   global 0218a7c0 4
   fix global0 0 u32 addrof arg2
-  stub 021885bc ret=u32 args=p,p
-  stub 0218a2fc ret=u32 args=p
-  stub 0218a310 ret=u32 args=p
-  stub 0218a324 ret=u32 args=p
-  stub 0218a384 ret=u32 args=p,v,v
-  stub 0218a494 ret=u32 args=p,p
-  stub 0218a528 ret=u32 args=p,p
+  stub 021885bc ret=u32 args=ptr,ptr
+  stub 0218a2fc ret=u32 args=ptr
+  stub 0218a310 ret=u32 args=ptr
+  stub 0218a324 ret=u32 args=ptr
+  stub 0218a384 ret=u32 args=ptr,v,v
+  stub 0218a494 ret=u32 args=ptr,ptr
+  stub 0218a528 ret=u32 args=ptr,ptr
   stub 0201127c force ret=none args=p,v
   stub 02011290 force ret=none args=p
   stub 02011298 force seq ret=pick:0/1 args=p
@@ -260,9 +260,9 @@ fn 0218814c ret=u32
   stub 0203f0a8 force seq ret=u32
   stub 02049250 force ret=u32 args=v,v,v
   stub 020870d0 force ret=ticks:100   # Z21: a clock advancing 100 per read (the 500-tick budget of 021885bc)
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021b9a6c force ret=pick:0/1 args=v,v
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
   stub 021d5584 force ret=pick:0/1 args=p,v
   stub 021d67a8 force ret=pick+u16:0/1/2/3/0xB6/0xC5/0xCB args=p
@@ -295,14 +295,14 @@ fn 02188284 ret=u32
   fix arg2 4 u8 alt range 1 2 || any rep=4,1
   global 0218a7c0 4
   fix global0 0 u32 addrof arg2
-  stub 021885bc ret=u32 args=p,p
-  stub 0218a2fc ret=u32 args=p
-  stub 0218a310 ret=u32 args=p
-  stub 0218a324 ret=u32 args=p
-  stub 0218a378 ret=u32 args=p,v,v
-  stub 0218a384 ret=u32 args=p,v,v
-  stub 0218a494 ret=u32 args=p,p
-  stub 0218a528 ret=u32 args=p,p
+  stub 021885bc ret=u32 args=ptr,ptr
+  stub 0218a2fc ret=u32 args=ptr
+  stub 0218a310 ret=u32 args=ptr
+  stub 0218a324 ret=u32 args=ptr
+  stub 0218a378 ret=u32 args=ptr,v,v
+  stub 0218a384 ret=u32 args=ptr,v,v
+  stub 0218a494 ret=u32 args=ptr,ptr
+  stub 0218a528 ret=u32 args=ptr,ptr
   stub 0201127c force ret=none args=p,v
   stub 02011290 force ret=none args=p
   stub 02011298 force seq ret=pick:0/1 args=p
@@ -314,9 +314,9 @@ fn 02188284 ret=u32
   stub 020870d0 force ret=ticks:100   # Z21: a clock advancing 100 per read (the 500-tick budget of 021885bc)
   stub 021b8ce8 force ret=pick:0/1 args=p,v,v
   stub 021b8de4 force ret=u8 args=p,v
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021b9a6c force ret=pick:0/1 args=v,v
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
   stub 021d5584 force ret=pick:0/1 args=p,v
   stub 021d5b68 force ret=pick:0/1/2 args=v
@@ -350,9 +350,9 @@ fn 021885bc ret=u32
   fix arg2 4 u8 alt range 1 2 || any rep=4,1
   global 0218a7c0 4                               # Z21: the global AI table (0218a494 / 0218a528)
   fix global0 0 u32 addrof arg2
-  stub 0218a384 ret=u32 args=p,v,v
-  stub 0218a494 ret=u32 args=p,p
-  stub 0218a528 ret=u32 args=p,p
+  stub 0218a384 ret=u32 args=ptr,v,v
+  stub 0218a494 ret=u32 args=ptr,ptr
+  stub 0218a528 ret=u32 args=ptr,ptr
   stub 0201127c force ret=none args=p,v
   stub 02011290 force ret=none args=p
   stub 02011298 force seq ret=pick:0/1 args=p
@@ -361,7 +361,7 @@ fn 021885bc ret=u32
   stub 02049250 force ret=u32 args=v,v,v
   stub 020870d0 force ret=ticks:100   # Z21: a clock advancing 100 per read (the 500-tick budget of 021885bc)
   stub 021b9a6c force ret=pick:0/1 args=v,v
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
   stub 021d5584 force ret=pick:0/1 args=p,v
 
@@ -380,8 +380,8 @@ fn 0218871c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218875c ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218875c ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/0x40/0x7F/0x80/0xFF/0x100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 0203f0a8 force seq ret=u32
@@ -401,8 +401,8 @@ fn 0218872c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218875c ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218875c ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/0x40/0x7F/0x80/0xFF/0x100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 0203f0a8 force seq ret=u32
@@ -422,8 +422,8 @@ fn 0218873c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218875c ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218875c ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/0x40/0x7F/0x80/0xFF/0x100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 0203f0a8 force seq ret=u32
@@ -443,8 +443,8 @@ fn 0218874c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218875c ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218875c ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/0x40/0x7F/0x80/0xFF/0x100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 0203f0a8 force seq ret=u32
@@ -465,7 +465,7 @@ fn 0218875c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/0x40/0x7F/0x80/0xFF/0x100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 0203f0a8 force seq ret=u32
@@ -502,14 +502,14 @@ fn 021887b4 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 021887f4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 021887f4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/25/50/99/100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5c44 force ret=pick+u32:0/0x63/0x64/0x65/0x800/0x1000/0x19000/0x32000/0x32800/0x64000/0xFFFFF000 args=p
 
 fn 021887c4 ret=u32
@@ -527,14 +527,14 @@ fn 021887c4 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 021887f4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 021887f4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/25/50/99/100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5c44 force ret=pick+u32:0/0x63/0x64/0x65/0x800/0x1000/0x19000/0x32000/0x32800/0x64000/0xFFFFF000 args=p
 
 fn 021887d4 ret=u32
@@ -552,14 +552,14 @@ fn 021887d4 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 021887f4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 021887f4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/25/50/99/100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5c44 force ret=pick+u32:0/0x63/0x64/0x65/0x800/0x1000/0x19000/0x32000/0x32800/0x64000/0xFFFFF000 args=p
 
 fn 021887e4 ret=u32
@@ -577,14 +577,14 @@ fn 021887e4 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 021887f4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 021887f4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/25/50/99/100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5c44 force ret=pick+u32:0/0x63/0x64/0x65/0x800/0x1000/0x19000/0x32000/0x32800/0x64000/0xFFFFF000 args=p
 
 fn 021887f4 ret=u32
@@ -603,13 +603,13 @@ fn 021887f4 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/25/50/99/100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5c44 force ret=pick+u32:0/0x63/0x64/0x65/0x800/0x1000/0x19000/0x32000/0x32800/0x64000/0xFFFFF000 args=p
 
 fn 0218883c ret=u32
@@ -627,14 +627,14 @@ fn 0218883c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218885c ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218885c ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d62a8 force ret=pick+u32:0/1/0x40 args=p
 
 fn 0218884c ret=u32
@@ -652,14 +652,14 @@ fn 0218884c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218885c ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218885c ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d62a8 force ret=pick+u32:0/1/0x40 args=p
 
 fn 0218885c ret=u32
@@ -678,13 +678,13 @@ fn 0218885c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d62a8 force ret=pick+u32:0/1/0x40 args=p
 
 fn 0218889c ret=u32
@@ -702,14 +702,14 @@ fn 0218889c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 021888bc ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 021888bc ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d62c4 force ret=pick:0/1/2 args=p,v
 
 fn 021888ac ret=u32
@@ -727,14 +727,14 @@ fn 021888ac ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 021888bc ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 021888bc ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d62c4 force ret=pick:0/1/2 args=p,v
 
 fn 021888bc ret=u32
@@ -753,13 +753,13 @@ fn 021888bc ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d62c4 force ret=pick:0/1/2 args=p,v
 
 fn 02188904 ret=u32
@@ -777,14 +777,14 @@ fn 02188904 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188924 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 02188924 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d62c4 force ret=pick:0/1/2 args=p,v
   stub 021d6314 force ret=u32 args=p,v
   stub 021e8a78 force ret=pick:0/1/2 args=v
@@ -804,14 +804,14 @@ fn 02188914 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188924 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 02188924 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d62c4 force ret=pick:0/1/2 args=p,v
   stub 021d6314 force ret=u32 args=p,v
   stub 021e8a78 force ret=pick:0/1/2 args=v
@@ -832,13 +832,13 @@ fn 02188924 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d62c4 force ret=pick:0/1/2 args=p,v
   stub 021d6314 force ret=u32 args=p,v
   stub 021e8a78 force ret=pick:0/1/2 args=v
@@ -858,14 +858,14 @@ fn 02188980 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 021889a0 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 021889a0 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5bdc force ret=pick:0/1/2/0xFFFFFFFF args=p,v   # Z23: closed, 021d5bdc returns only 0/1
 
 fn 02188990 ret=u32
@@ -883,14 +883,14 @@ fn 02188990 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 021889a0 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 021889a0 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5bdc force ret=pick:0/1/2/0xFFFFFFFF args=p,v   # Z23: closed, 021d5bdc returns only 0/1
 
 fn 021889a0 ret=u32
@@ -909,13 +909,13 @@ fn 021889a0 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5bdc force ret=pick:0/1/2/0xFFFFFFFF args=p,v   # Z23: closed, 021d5bdc returns only 0/1
 
 fn 021889e8 ret=u32
@@ -933,9 +933,9 @@ fn 021889e8 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188a08 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
+  stub 02188a08 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
@@ -956,9 +956,9 @@ fn 021889f8 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188a08 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
+  stub 02188a08 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
@@ -980,8 +980,8 @@ fn 02188a08 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
@@ -1002,8 +1002,8 @@ fn 02188a54 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188ab4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02188ab4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/7/0x80000000/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -1022,8 +1022,8 @@ fn 02188a64 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188ab4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02188ab4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/7/0x80000000/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -1042,8 +1042,8 @@ fn 02188a74 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188ab4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02188ab4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/7/0x80000000/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -1062,8 +1062,8 @@ fn 02188a84 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188ab4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02188ab4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/7/0x80000000/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -1082,8 +1082,8 @@ fn 02188a94 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188ab4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02188ab4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/7/0x80000000/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -1102,8 +1102,8 @@ fn 02188aa4 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188ab4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02188ab4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/7/0x80000000/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -1123,7 +1123,7 @@ fn 02188ab4 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/7/0x80000000/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -1142,8 +1142,8 @@ fn 02188ad8 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188af8 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02188af8 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -1162,8 +1162,8 @@ fn 02188ae8 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188af8 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02188af8 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -1183,7 +1183,7 @@ fn 02188af8 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -1242,11 +1242,11 @@ fn 02188bb0 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201134c force seq ret=nth:u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
 
 fn 02188c1c ret=u32
@@ -1264,11 +1264,11 @@ fn 02188c1c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201134c force seq ret=nth:u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
 
 fn 02188c88 ret=u32
@@ -1303,13 +1303,13 @@ fn 02188ca0 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4/5/6/7/8/9 args=p   # Z21: per-operand bounds
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d57fc force ret=u16 args=v
   stub 021e8cfc force ret=pick+u8:0/1/2/3 args=v
   stub 021e8d04 force ret=pick+u8:0/1/2/3 args=v
@@ -1349,7 +1349,7 @@ fn 02188d5c ret=u32
   stub 0201134c force seq ret=u32 args=p
   stub 021c7e14 force ret=pick+u16:0/1/2/5/6/7/100 args=p,v,v,v,v,v
   stub 021d5440 force ret=u8 args=p
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
 
 fn 02188e00 ret=u32
@@ -1367,11 +1367,11 @@ fn 02188e00 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d67a8 force ret=pick+u16:0/1/2/3/0xB6/0xC5/0xCB args=p
 
 fn 02188e24 ret=u32
@@ -1389,7 +1389,7 @@ fn 02188e24 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4/5/6/7/8;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021c81c8 force ret=pick+u32:0/1/2/100 args=p,v,v
@@ -1409,15 +1409,15 @@ fn 02188e90 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a308 ret=u32 args=p,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a308 ret=u32 args=ptr,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
   stub 021b8de4 force ret=u8 args=p,v
   stub 021b99b8 force ret=pick:1/2/3 args=p,v
   stub 021b9af8 force ret=u32 args=v,v
-  stub 021b9b94 force ret=pick:0/1/2/3/4 args=p
-  stub 021b9c00 force ret=u32 args=p,v
+  stub 021b9b94 force ret=pick:0/1/2/3/4 args=ptr
+  stub 021b9c00 force ret=u32 args=ptr,v
   stub 021d5b7c force ret=pick:0/1/2 args=v
 
 fn 02188f08 ret=u32
@@ -1451,7 +1451,7 @@ fn 02188f14 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
 
 fn 02188f2c ret=u32
@@ -1469,14 +1469,14 @@ fn 02188f2c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 range 0 3
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a220 ret=u32 args=p,v,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a220 ret=u32 args=ptr,v,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 02019c90 force ret=nth:pick+u32:0/5;pick+u32:0/6;pick+u32:7 args=v,v,v
   stub 0203f0a8 force seq ret=u32
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5444 force ret=u16 args=p
   stub 021d59b4 force ret=pick+u32:0/5/0x17/0x2A/0x47/0x48 args=v,v
   stub 021d62c4 force ret=pick:0/1/2 args=p,v
@@ -1513,7 +1513,7 @@ fn 02188f58 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4/5/6;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021c7dac force ret=pick+u32:0/1/2/3/4/5/6/0xFFFFFFFF args=p,v,v,v
@@ -1534,18 +1534,18 @@ fn 02188fac ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188fcc ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a308 ret=u32 args=p,v
+  stub 02188fcc ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a308 ret=u32 args=ptr,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
   stub 021b8de4 force ret=u8 args=p,v
   stub 021b99b8 force ret=pick:1/2/3 args=p,v
   stub 021b9af8 force ret=u32 args=v,v
-  stub 021b9b94 force ret=pick:0/1/2/3/4 args=p
-  stub 021b9c00 force ret=u32 args=p,v
+  stub 021b9b94 force ret=pick:0/1/2/3/4 args=ptr
+  stub 021b9c00 force ret=u32 args=ptr,v
   stub 021d5b68 force ret=pick:0/1/2 args=v
   stub 021d62a8 force ret=pick+u32:0/1/0x40 args=p
 
@@ -1564,18 +1564,18 @@ fn 02188fbc ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02188fcc ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a308 ret=u32 args=p,v
+  stub 02188fcc ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a308 ret=u32 args=ptr,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
   stub 021b8de4 force ret=u8 args=p,v
   stub 021b99b8 force ret=pick:1/2/3 args=p,v
   stub 021b9af8 force ret=u32 args=v,v
-  stub 021b9b94 force ret=pick:0/1/2/3/4 args=p
-  stub 021b9c00 force ret=u32 args=p,v
+  stub 021b9b94 force ret=pick:0/1/2/3/4 args=ptr
+  stub 021b9c00 force ret=u32 args=ptr,v
   stub 021d5b68 force ret=pick:0/1/2 args=v
   stub 021d62a8 force ret=pick+u32:0/1/0x40 args=p
 
@@ -1595,17 +1595,17 @@ fn 02188fcc ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a308 ret=u32 args=p,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a308 ret=u32 args=ptr,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
   stub 021b8de4 force ret=u8 args=p,v
   stub 021b99b8 force ret=pick:1/2/3 args=p,v
   stub 021b9af8 force ret=u32 args=v,v
-  stub 021b9b94 force ret=pick:0/1/2/3/4 args=p
-  stub 021b9c00 force ret=u32 args=p,v
+  stub 021b9b94 force ret=pick:0/1/2/3/4 args=ptr
+  stub 021b9c00 force ret=u32 args=ptr,v
   stub 021d5b68 force ret=pick:0/1/2 args=v
   stub 021d62a8 force ret=pick+u32:0/1/0x40 args=p
 
@@ -1641,9 +1641,9 @@ fn 0218906c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218908c ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 0218908c ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/0x1B/0xFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
@@ -1663,9 +1663,9 @@ fn 0218907c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218908c ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 0218908c ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/0x1B/0xFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
@@ -1686,8 +1686,8 @@ fn 0218908c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/0x1B/0xFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
@@ -1707,14 +1707,14 @@ fn 021890c0 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189100 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 02189100 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
 
 fn 021890d0 ret=u32
@@ -1732,14 +1732,14 @@ fn 021890d0 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189100 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 02189100 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
 
 fn 021890e0 ret=u32
@@ -1757,14 +1757,14 @@ fn 021890e0 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189100 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 02189100 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
 
 fn 021890f0 ret=u32
@@ -1782,14 +1782,14 @@ fn 021890f0 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189100 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 02189100 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
 
 fn 02189100 ret=u32
@@ -1808,13 +1808,13 @@ fn 02189100 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
 
 fn 02189150 ret=u32
@@ -1832,8 +1832,8 @@ fn 02189150 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189170 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02189170 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=u32 args=p
   stub 020113b0 force ret=none args=p,v
   stub 021c7e14 force ret=pick+u16:0/1/2/5/6/7/100 args=p,v,v,v,v,v
@@ -1855,8 +1855,8 @@ fn 02189160 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189170 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02189170 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=u32 args=p
   stub 020113b0 force ret=none args=p,v
   stub 021c7e14 force ret=pick+u16:0/1/2/5/6/7/100 args=p,v,v,v,v,v
@@ -1879,7 +1879,7 @@ fn 02189170 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=u32 args=p
   stub 020113b0 force ret=none args=p,v
   stub 021c7e14 force ret=pick+u16:0/1/2/5/6/7/100 args=p,v,v,v,v,v
@@ -1901,15 +1901,15 @@ fn 021891d4 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 021891f4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 021891f4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/2/3;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
   stub 021d5b68 force ret=pick:0/1/2 args=v
 
@@ -1928,15 +1928,15 @@ fn 021891e4 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 021891f4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 021891f4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/2/3;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
   stub 021d5b68 force ret=pick:0/1/2 args=v
 
@@ -1956,14 +1956,14 @@ fn 021891f4 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/2/3;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
   stub 021d5b68 force ret=pick:0/1/2 args=v
 
@@ -1982,15 +1982,15 @@ fn 021892d8 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 021892f8 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 021892f8 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/2/3/0x1B/0xFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
 
 fn 021892e8 ret=u32
@@ -2008,15 +2008,15 @@ fn 021892e8 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 021892f8 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 021892f8 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/2/3/0x1B/0xFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
 
 fn 021892f8 ret=u32
@@ -2035,14 +2035,14 @@ fn 021892f8 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/2/3/0x1B/0xFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
 
 fn 021893ac ret=u32
@@ -2124,11 +2124,11 @@ fn 021893dc ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5b40 force ret=pick+u16:0/1/2/3/0x17/0xFFFF args=p
 
 fn 02189400 ret=u32
@@ -2146,15 +2146,15 @@ fn 02189400 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
-  stub 0218a3f4 ret=u32 args=p,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
+  stub 0218a3f4 ret=u32 args=ptr,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 02020f20 force ret=u32 args=v,v
   stub 02021014 force ret=u32 args=p,v
   stub 020307b0 force ret=none args=p
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5b40 force ret=pick+u16:0/1/2/3/0x17/0xFFFF args=p
 
 fn 02189434 ret=u32
@@ -2172,11 +2172,11 @@ fn 02189434 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
 
 fn 0218945c ret=u32
@@ -2194,11 +2194,11 @@ fn 0218945c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5bdc force ret=pick:0/1/2/0xFFFFFFFF args=p,v   # Z23: closed, 021d5bdc returns only 0/1
 
 fn 0218948c ret=u32
@@ -2216,11 +2216,11 @@ fn 0218948c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d69ac force ret=u8 args=p,v
 
 fn 021894b4 ret=u32
@@ -2270,11 +2270,11 @@ fn 021894d4 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d6740 force ret=u16 args=p
 
 fn 021894f8 ret=u32
@@ -2308,7 +2308,7 @@ fn 02189500 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
 
 fn 02189524 ret=u32
@@ -2326,7 +2326,7 @@ fn 02189524 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
 
 fn 02189548 ret=u32
@@ -2344,11 +2344,11 @@ fn 02189548 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d679c force ret=u16 args=p
   stub 021d67a8 force ret=pick+u16:0/1/2/3/0xB6/0xC5/0xCB args=p
 
@@ -2402,7 +2402,7 @@ fn 021895c4 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick:0/1/2;u32 args=p   # Z23: operand a closed (3-word table index)
   stub 020113b0 force ret=none args=p,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
@@ -2422,8 +2422,8 @@ fn 02189620 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189640 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02189640 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=u32 args=p
   stub 020113b0 force ret=none args=p,v
   stub 021d62c4 force ret=pick:0/1/2 args=p,v
@@ -2443,8 +2443,8 @@ fn 02189630 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189640 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02189640 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=u32 args=p
   stub 020113b0 force ret=none args=p,v
   stub 021d62c4 force ret=pick:0/1/2 args=p,v
@@ -2465,7 +2465,7 @@ fn 02189640 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=u32 args=p
   stub 020113b0 force ret=none args=p,v
   stub 021d62c4 force ret=pick:0/1/2 args=p,v
@@ -2485,7 +2485,7 @@ fn 02189668 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=u32 args=p
   stub 020113b0 force ret=none args=p,v
 
@@ -2504,11 +2504,11 @@ fn 02189694 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/2/3/0x100 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d57fc force ret=u16 args=v
   stub 021e8cfc force ret=pick+u8:0/1/2/3 args=v
   stub 021e8d04 force ret=pick+u8:0/1/2/3 args=v
@@ -2528,14 +2528,14 @@ fn 021896e0 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 range 0 3
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a220 ret=u32 args=p,v,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a220 ret=u32 args=ptr,v,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/5/7/0x17/0x2A/0x47 args=p   # Z21: per-operand bounds
   stub 02019c90 force ret=nth:pick+u32:0/5;pick+u32:0/6;pick+u32:7 args=v,v,v
   stub 0203f0a8 force seq ret=u32
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5444 force ret=u16 args=p
   stub 021d59b4 force ret=pick+u32:0/5/0x17/0x2A/0x47/0x48 args=v,v
   stub 021d62c4 force ret=pick:0/1/2 args=p,v
@@ -2556,12 +2556,12 @@ fn 02189718 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5bdc force ret=pick:0/1/2/0xFFFFFFFF args=p,v   # Z23: closed, 021d5bdc returns only 0/1
 
 fn 02189758 ret=u32
@@ -2579,12 +2579,12 @@ fn 02189758 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;pick+u32:0/1/2/3/0x17/0xFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5b40 force ret=pick+u16:0/1/2/3/0x17/0xFFFF args=p
 
 fn 0218979c ret=u32
@@ -2602,7 +2602,7 @@ fn 0218979c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=u32 args=p
   stub 020113b0 force ret=none args=p,v
   stub 021ef948 force ret=pick+u32:0/1/2 args=v
@@ -2622,7 +2622,7 @@ fn 021897cc ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
+  stub 0218a160 ret=u8 args=ptr,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
   stub 021c82d0 force ret=pick:0/1/2 args=v,v,v
@@ -2642,19 +2642,19 @@ fn 02189800 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
-  stub 0218a308 ret=u32 args=p,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
+  stub 0218a308 ret=u32 args=ptr,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
   stub 021b8de4 force ret=u8 args=p,v
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021b99b8 force ret=pick:1/2/3 args=p,v
   stub 021b9af8 force ret=u32 args=v,v
-  stub 021b9b94 force ret=pick:0/1/2/3/4 args=p
-  stub 021b9c00 force ret=u32 args=p,v
+  stub 021b9b94 force ret=pick:0/1/2/3/4 args=ptr
+  stub 021b9c00 force ret=u32 args=ptr,v
   stub 021d5b68 force ret=pick:0/1/2 args=v
   stub 021d5c44 force ret=pick+u32:0/0x63/0x64/0x65/0x800/0x1000/0x19000/0x32000/0x32800/0x64000/0xFFFFF000 args=p
 
@@ -2673,20 +2673,20 @@ fn 0218989c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
-  stub 0218a308 ret=u32 args=p,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
+  stub 0218a308 ret=u32 args=ptr,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
   stub 021b8de4 force ret=u8 args=p,v
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021b99b8 force ret=pick:1/2/3 args=p,v
   stub 021b9af8 force ret=u32 args=v,v
-  stub 021b9b94 force ret=pick:0/1/2/3/4 args=p
-  stub 021b9c00 force ret=u32 args=p,v
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021b9b94 force ret=pick:0/1/2/3/4 args=ptr
+  stub 021b9c00 force ret=u32 args=ptr,v
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d554c force ret=pick+u8:0/1/2 args=p,v
   stub 021d5b68 force ret=pick:0/1/2 args=v
 
@@ -2705,15 +2705,15 @@ fn 02189978 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
-  stub 0218a3f4 ret=u32 args=p,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
+  stub 0218a3f4 ret=u32 args=ptr,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 02020f20 force ret=u32 args=v,v
   stub 02021014 force ret=u32 args=p,v
   stub 020307b0 force ret=none args=p
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5b40 force ret=pick+u16:0/1/2/3/0x17/0xFFFF args=p
   stub 021d62c4 force ret=pick:0/1/2 args=p,v
 
@@ -2749,13 +2749,13 @@ fn 021899dc ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d5478 force ret=pick:0/1/2/3/4 args=p   # Z23: closed, 021d5478 returns 0..4
 
 fn 02189a2c ret=u32
@@ -2773,7 +2773,7 @@ fn 02189a2c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
 
 fn 02189a44 ret=u32
@@ -2791,7 +2791,7 @@ fn 02189a44 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 0201bd28 force ret=pick+u16:0/1/2/3/0x1B/0xFFFF args=v,v
   stub 021d67a8 force ret=pick+u16:0/1/2/3/0xB6/0xC5/0xCB args=p
 
@@ -2810,11 +2810,11 @@ fn 02189a6c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021c81d0 force ret=u16 args=p,v,v
 
 fn 02189a9c ret=u32
@@ -2832,11 +2832,11 @@ fn 02189a9c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5ba4 force ret=u16 args=p
 
 fn 02189ac0 ret=u32
@@ -2854,18 +2854,18 @@ fn 02189ac0 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a308 ret=u32 args=p,v
-  stub 0218a390 ret=u32 args=p,v,v,v
+  stub 0218a308 ret=u32 args=ptr,v
+  stub 0218a390 ret=u32 args=ptr,v,v,v
   stub 0201134c force seq ret=u32 args=p
   stub 020113b0 force ret=none args=p,v
   stub 021b8de4 force ret=u8 args=p,v
   stub 021b99b8 force ret=pick:1/2/3 args=p,v
   stub 021b9af8 force ret=u32 args=v,v
-  stub 021b9b94 force ret=pick:0/1/2/3/4 args=p
-  stub 021b9c00 force ret=u32 args=p,v
+  stub 021b9b94 force ret=pick:0/1/2/3/4 args=ptr
+  stub 021b9c00 force ret=u32 args=ptr,v
   stub 021c7e14 force ret=pick+u16:0/1/2/5/6/7/100 args=p,v,v,v,v,v
   stub 021d5440 force ret=u8 args=p
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
   stub 021d5b68 force ret=pick:0/1/2 args=v
 
@@ -2888,7 +2888,7 @@ fn 02189b78 ret=u32
   stub 020113b0 force ret=none args=p,v
   stub 021c7dac force ret=pick+u32:0/1/2/3/4/5/6/0xFFFFFFFF args=p,v,v,v
   stub 021d5440 force ret=u8 args=p
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
 
 fn 02189bfc ret=u32
@@ -2906,16 +2906,16 @@ fn 02189bfc ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
-  stub 0218a390 ret=u32 args=p,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
+  stub 0218a390 ret=u32 args=ptr,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021c7e14 force ret=pick+u16:0/1/2/5/6/7/100 args=p,v,v,v,v,v
   stub 021d5440 force ret=u8 args=p
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
   stub 021d67a8 force ret=pick+u16:0/1/2/3/0xB6/0xC5/0xCB args=p
 
@@ -2934,11 +2934,11 @@ fn 02189c8c ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
 
 fn 02189cec ret=u32
@@ -2956,11 +2956,11 @@ fn 02189cec ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
 
 fn 02189d30 ret=u32
@@ -3026,16 +3026,16 @@ fn 02189d48 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a308 ret=u32 args=p,v
+  stub 0218a308 ret=u32 args=ptr,v
   stub 0201134c force seq ret=u32 args=p
   stub 021b8de4 force ret=u8 args=p,v
   stub 021b99b8 force ret=pick:1/2/3 args=p,v
   stub 021b9af8 force ret=u32 args=v,v
-  stub 021b9c00 force ret=u32 args=p,v
-  stub 021b9c98 force ret=pick+i32:0xFFFFFFFF/0/1/2/3 args=p,v
+  stub 021b9c00 force ret=u32 args=ptr,v
+  stub 021b9c98 force ret=pick+i32:0xFFFFFFFF/0/1/2/3 args=ptr,v
   stub 021c7e14 force ret=pick+u16:0/1/2/5/6/7/100 args=p,v,v,v,v,v
   stub 021d5440 force ret=u8 args=p
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
   stub 021d5b7c force ret=pick:0/1/2 args=v
 
@@ -3054,14 +3054,14 @@ fn 02189e70 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189e90 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 02189e90 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5b68 force ret=pick:0/1/2 args=v
 
 fn 02189e80 ret=u32
@@ -3079,14 +3079,14 @@ fn 02189e80 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189e90 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 02189e90 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5b68 force ret=pick:0/1/2 args=v
 
 fn 02189e90 ret=u32
@@ -3105,13 +3105,13 @@ fn 02189e90 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5b68 force ret=pick:0/1/2 args=v
 
 fn 02189ed0 ret=u32
@@ -3129,11 +3129,11 @@ fn 02189ed0 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
 
 fn 02189ef8 ret=u32
@@ -3151,12 +3151,12 @@ fn 02189ef8 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d6d7c force ret=pick:0/1/2 args=p
 
 fn 02189f34 ret=u32
@@ -3174,11 +3174,11 @@ fn 02189f34 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4 args=p   # Z21: per-operand bounds
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5444 force ret=u16 args=p
 
 fn 02189f58 ret=u32
@@ -3196,8 +3196,8 @@ fn 02189f58 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189f98 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02189f98 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/0x40/0x7F/0x80/0xFF/0x100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -3216,8 +3216,8 @@ fn 02189f68 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189f98 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02189f98 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/0x40/0x7F/0x80/0xFF/0x100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -3236,8 +3236,8 @@ fn 02189f78 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189f98 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02189f98 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/0x40/0x7F/0x80/0xFF/0x100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -3256,8 +3256,8 @@ fn 02189f88 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 02189f98 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 02189f98 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/0x40/0x7F/0x80/0xFF/0x100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -3277,7 +3277,7 @@ fn 02189f98 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/0x40/0x7F/0x80/0xFF/0x100/0xFFFFFFFF;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
 
@@ -3296,8 +3296,8 @@ fn 02189fc0 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 021895ac ret=u32 args=p,p
-  stub 0218a378 ret=u32 args=p,v,v
+  stub 021895ac ret=u32 args=ptr,ptr
+  stub 0218a378 ret=u32 args=ptr,v,v
   stub 02011290 force ret=none args=p
   stub 0201134c force seq ret=nth:pick+u32:0/0/1;pick:0/1/2/3/0xFFFFFFFF;pick:0x100/0x140;u32 args=p   # Z21: per-operand bounds; Z23: thr / t closed (script jump table), mode weighted
   stub 020113b0 force ret=none args=p,v
@@ -3318,7 +3318,7 @@ fn 0218a034 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a160 ret=u8 args=p,v
+  stub 0218a160 ret=u8 args=ptr,v
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
@@ -3339,14 +3339,14 @@ fn 0218a074 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0a4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a0a4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
 
 fn 0218a084 ret=u32
@@ -3364,14 +3364,14 @@ fn 0218a084 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0a4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a0a4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
 
 fn 0218a094 ret=u32
@@ -3389,14 +3389,14 @@ fn 0218a094 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0a4 ret=u32 args=p,p,v
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a0a4 ret=u32 args=ptr,ptr,v
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
 
 fn 0218a0a4 ret=u32
@@ -3415,13 +3415,13 @@ fn 0218a0a4 ret=u32
   fix arg1 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg1 0x98 u32 alt range 0 3 || any
   fix arg1 0xCC u32 alt range 0 255 || any
-  stub 0218a0f4 ret=pick:0/1 args=p,v,v,v,v
-  stub 0218a160 ret=u8 args=p,v
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a0f4 ret=pick:0/1 args=ptr,v,v,v,v
+  stub 0218a160 ret=u8 args=ptr,v
+  stub 0218a2fc ret=u32 args=ptr
   stub 0201134c force seq ret=nth:pick+u32:0/1/2/3/4;u32 args=p   # Z21: per-operand bounds
   stub 020113b0 force ret=none args=p,v
   stub 021b8c38 force ret=pick:0/1/2/3/4/5 args=v,v   # Z23: closed, 021b8c38 = 2 * rank + side: 0..5
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d59b4 force ret=pick+u32:0/1/2/5/6/7/8/0x17/0x2A/0x47/0x48/100/0xFFFFFFFF args=v,v
 
 fn 0218a0f4 ret=u32
@@ -3449,10 +3449,10 @@ fn 0218a220 ret=u32
   arg u8 range 0 5
   fix arg0 0x98 u32 range 0 3        # Z21: battle kind 0..3 (other kinds: front_pos returns the AI address, which 0218a220 adds to ai+0x7C)
   fix arg0 0x4C u16 alt range 0 3 || any rep=24,2
-  stub 0218a2fc ret=u32 args=p
+  stub 0218a2fc ret=u32 args=ptr
   stub 02019c90 force ret=nth:pick+u32:0/5;pick+u32:0/6;pick+u32:7 args=v,v,v
   stub 0203f0a8 force seq ret=u32
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d5444 force ret=u16 args=p
   stub 021d59b4 force ret=pick+u32:0/5/0x17/0x2A/0x47/0x48 args=v,v
   stub 021d62c4 force ret=pick:0/1/2 args=p,v
@@ -3461,13 +3461,13 @@ fn 0218a220 ret=u32
 fn 0218a2fc ret=u32
   nowork
   arg buf 0x100
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
 
 fn 0218a308 ret=u32
   nowork
   arg buf 0x100
   arg u8 range 0 4
-  stub 021b9c00 force ret=u32 args=p,v
+  stub 021b9c00 force ret=u32 args=ptr,v
 
 fn 0218a310 ret=u32
   nowork
@@ -3485,8 +3485,8 @@ fn 0218a324 ret=u32
   fix arg0 0x4C u16 alt range 0 3 || any rep=24,2
   fix arg0 0x98 u32 alt range 0 3 || any
   fix arg0 0xCC u32 alt range 0 255 || any
-  stub 0218a2fc ret=u32 args=p
-  stub 021b98ac force ret=nullable:8:u32 args=p,v
+  stub 0218a2fc ret=u32 args=ptr
+  stub 021b98ac force ret=nullable:8:u32 args=ptr,v
   stub 021d67a8 force ret=pick+u16:0/1/2/3/0xB6/0xC5/0xCB args=p
 
 fn 0218a378 ret=u32
@@ -3511,7 +3511,7 @@ fn 0218a390 ret=u32
   arg u32 any
   stub 021c7e14 force ret=pick+u16:0/1/2/5/6/7/100 args=p,v,v,v,v,v
   stub 021d5440 force ret=u8 args=p
-  stub 021d5448 force ret=pick:0/1/2/3/4 args=p
+  stub 021d5448 force ret=pick:0/1/2/3/4 args=ptr
   stub 021d54c0 force ret=pick+u16:0/1/2/3/0xB6 args=p,v
 
 fn 0218a3f4 ret=u32

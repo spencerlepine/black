@@ -121,6 +121,9 @@ pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>])
         0x0200_5CA4 | 0x0200_5D28 | 0x0200_5D90 | 0x0200_5DF8 | 0x0200_5E30 | 0x0200_6734
         | 0x0200_6740 => 0,
         0x0200_5E50 => 0,
+        // 020061E4(se): play a sound effect (tail call `020061A4(se, -1)`; void): headless, nothing
+        // (B18: reached by the mask-0x800 battle through client4 021d1eb4)
+        0x0200_61E4 => 0,
         // 020057C4: is the VBlank callback the sound one (0x02005795) -> 1; the battle then skips
         // 020057AC (installing it).
         0x0200_57C4 => 1,

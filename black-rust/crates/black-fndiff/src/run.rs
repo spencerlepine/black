@@ -5,6 +5,8 @@ use crate::stub::{Halt, StubEnv};
 use crate::{fold, Rng, FNV_OFFSET};
 
 const WORK: u32 = 0x02E0_0000;
+/// Emulator address of the legacy `work` image.
+pub const WORK_ADDR: u32 = WORK;
 /// Size of the legacy `work` image (`SvFlowWork`).
 const WORK_SIZE: usize = 0x212C;
 use crate::spec::{BUF_BASE, BUF_STRIDE};
@@ -52,6 +54,8 @@ pub struct Case<X: Ext = ()> {
     pub regions: Vec<Vec<u8>>,
     region_names: Vec<String>,
     pub globals: Vec<Vec<u8>>,
+    /// Emulator addresses of `globals` (the spec's `global ADDR SIZE` lines).
+    global_addrs: Vec<u32>,
     pub env: StubEnv,
     pub ext: X,
 }
@@ -68,6 +72,11 @@ impl<X: Ext> Case<X> {
             .iter()
             .position(|n| n == name)
             .unwrap_or_else(|| panic!("no region {name:?} in this function's spec"))
+    }
+
+    /// Emulator address of `globals[k]` (B18: a test environment maps host pointers back to it).
+    pub fn global_addr(&self, k: usize) -> u32 {
+        self.global_addrs[k]
     }
 
     pub fn region(&self, name: &str) -> &[u8] {
@@ -132,11 +141,13 @@ fn words(b: &[u8]) -> Vec<u32> {
         .collect()
 }
 
-fn buf_addr(i: usize) -> u32 {
+/// Emulator address of pointer argument `i` (a `buf` or custom kind such as `bpp`).
+pub fn buf_addr(i: usize) -> u32 {
     BUF_BASE + i as u32 * BUF_STRIDE
 }
 
-fn region_addr(k: usize) -> u32 {
+/// Emulator address of the `k`-th `region` of a function.
+pub fn region_addr(k: usize) -> u32 {
     REGION_BASE + k as u32 * BUF_STRIDE
 }
 
@@ -207,6 +218,7 @@ fn run_input<X: Ext>(
         regions: Vec::new(),
         region_names: region_names.clone(),
         globals: Vec::new(),
+        global_addrs: fs.globals.iter().map(|g| g.0).collect(),
         env: StubEnv::new(fs.stubs.clone(), salt),
         ext,
     };

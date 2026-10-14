@@ -1087,14 +1087,10 @@ pub fn switch_messages<E: FlowEnv>(
     let main = w.u32_at(OFS_MAIN);
     let id = mon_id(&mut Lend::wc(env, w, cx), mon);
     let client = client_of_id(&mut Lend::wc(env, w, cx), id);
-    let finish = |env: &mut E, cx: &Cx| {
-        env.call(
-            0x021D_8244,
-            &mut [
-                Arg::V(cx.w_addr.wrapping_add(OFS_HELPER_4B8)),
-                Arg::V(client),
-            ],
-        );
+    // B18: the id set lives in the work this frame holds, so the work is lent to `021d8244`
+    let finish = |env: &mut E, w: &mut SvFlowWork, cx: &mut Cx| {
+        let set = cx.w_addr.wrapping_add(OFS_HELPER_4B8);
+        env.callwc(0x021D_8244, &mut [Arg::V(set), Arg::V(client)], w, cx);
         1
     };
     if env.callwc(0x021B_86E4, &mut [Arg::V(main)], w, cx) != 0 {
@@ -1103,7 +1099,7 @@ pub fn switch_messages<E: FlowEnv>(
             cmd_queue::put_cmd_list(&mut Lend::new(env, w), cx.q, 0x5A, 0xC6, &[LIST_END]);
             w.mem[OFS_FLAGS_78A] |= 4;
         }
-        return finish(env, cx);
+        return finish(env, w, cx);
     }
     let ours = env.callwc(0x021B_8FF4, &mut [Arg::V(main)], w, cx);
     let same = env.callwc(0x021B_902C, &mut [Arg::V(client), Arg::V(ours)], w, cx) == 0;
@@ -1115,7 +1111,7 @@ pub fn switch_messages<E: FlowEnv>(
         }
     }
     if w.mem[OFS_FLAGS_78A] & 4 != 0 {
-        return finish(env, cx);
+        return finish(env, w, cx);
     }
     let mut r = 0;
     if b == 0 {
@@ -1138,7 +1134,7 @@ pub fn switch_messages<E: FlowEnv>(
         }
     }
     w.mem[OFS_FLAGS_78A] |= 4;
-    finish(env, cx)
+    finish(env, w, cx)
 }
 
 /// C: `FUN_overlay_d_93__021bd60c`: whether `mon` can be switched out: `local` = 1 and `flag` = 1

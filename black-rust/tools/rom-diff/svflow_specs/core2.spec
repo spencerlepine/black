@@ -597,8 +597,8 @@ fn 021bda00 ret=u32 inputs=300
   arg work
   fix work 0x7c1 u8 alt const 0 || any rep=6,1
   stub 021bdb28 ret=none args=v
-  stub 021bd2b4 force ret=none args=p,p
-  stub 021bd34c force ret=pick:0/1 args=p,p,out:4 seq
+  stub 021bd2b4 force ret=none args=ptr,p
+  stub 021bd34c force ret=pick:0/1 args=ptr,p,out:4 seq
   stub 021d5440 ret=pick:0/1/2/3/4/5 args=v
   stub 021bdb38 ret=none args=v,v
   stub 021bdb48 ret=none args=v,v

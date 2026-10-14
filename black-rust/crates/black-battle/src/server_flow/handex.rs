@@ -540,7 +540,11 @@ pub fn proc_0b<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32) -> u
                     ) != 0
                     {
                         message(env, &w.mem[0x1AE4..0x1AE4 + 0x24]);
-                        env.callwr(0x021C_8810, &mut [Arg::P], w);
+                        env.callwr(
+                            0x021C_8810,
+                            &mut [Arg::PHost(w.mem[0x1AE4..].as_ptr() as usize)],
+                            w,
+                        );
                     }
                 } else {
                     message(&mut Lend::new_ref(env, w), str_at(rec, 0x18));
@@ -567,7 +571,8 @@ pub fn proc_0b<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], v: u32) -> u
 /// address (2910 gets `rec + 0x14` as a value).
 pub fn proc_0c<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], ra: u32) -> u32 {
     let a = mon_or_none(env, w, rec_poke_id(rec));
-    let f = (env.callwr(0x021C_8828, &mut [Arg::P], w) == 0 && rec[0xD] == 0) as u32;
+    let f = (env.callwr(0x021C_8828, &mut [Arg::PAt(ra.wrapping_add(0x14))], w) == 0
+        && rec[0xD] == 0) as u32;
     if !veneer_ab8(
         &mut Lend::new_ref(env, w),
         0x021C_9240,
@@ -1574,14 +1579,16 @@ pub fn proc_27<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], d: &mut [u8]
         &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o)],
         w,
     );
+    // the original passes `work + 0x1F88` as the last argument of 3d8 / 4ac / c091c
+    let f88 = w.mem[0x1F88..].as_ptr() as usize;
     env.callwr(
         0x021B_F3D8,
-        &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o), Arg::P],
+        &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o), Arg::PHost(f88)],
         w,
     );
     env.callwr(
         0x021B_F4AC,
-        &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o), Arg::P],
+        &mut [Arg::P, Arg::In(mr), Arg::V(a), Arg::V(o), Arg::PHost(f88)],
         w,
     );
     env.callwr(
@@ -1609,7 +1616,7 @@ pub fn proc_27<E: FlowEnv>(env: &mut E, w: &SvFlowWork, rec: &[u8], d: &mut [u8]
             Arg::In(mr),
             Arg::V(a),
             Arg::V(o),
-            Arg::P,
+            Arg::PHost(f88),
             Arg::V(1),
         ],
         w,
@@ -1660,7 +1667,7 @@ pub fn proc_29<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, rec: &[u8]) -> u32 {
         &mut [Arg::V(w.u32_at(4)), Arg::V(w.u32_at(8)), Arg::V(id)],
         w,
     );
-    env.callw(0x021B_B930, &mut [Arg::P, Arg::V(pos)], w);
+    env.callw(0x021B_B930, &mut [Arg::PAt(w.u32_at(0)), Arg::V(pos)], w);
     message(&mut Lend::new(env, w), str_at(rec, 0x28));
     w.set_u32_at(0x14, 1);
     1

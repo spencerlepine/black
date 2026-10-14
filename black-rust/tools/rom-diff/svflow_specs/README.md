@@ -73,6 +73,18 @@ fn 021ccaa8 ret=none [mode=arm] [inputs=200]
   then (Z22) `for w in in-words: acc = mix(acc, w)` (the words of every `in:N` argument, in argument order);
   return `ret(mix(acc, addr & 0xFFFF))`; out byte j = `mix(acc, (addr & 0xFFFF) + 0x1000 + j) & 0xFF`;
   log entry `[addr, v-args..., in-words...]`. `salt` is drawn per input.
+* `ptr` (B18): a pass-through pointer whose **value is checked**: logged (after the in-words, so the
+  entry is `[addr, v-args..., in-words..., ptr-words...]`), never mixed into the result. The logged word
+  is `canon_ptr(value)`: the pointer itself, or `PTR_LOCAL` (0x4C4F4341) for any address in the stack
+  window 0x02EF0000..0x02F01000 (a buffer local to some frame; its exact address differs between the
+  original and a port). The Rust side passes `Arg::Ptr(addr)` (black-fndiff) / `Arg::PAt` / `PHost` /
+  `PBuf` (server_flow testkit: host addresses inside the input's images map to their emulator
+  addresses, any other host address is a local buffer); a bare `Arg::P` there panics.
+  **Rule (B18, battle svflow specs):** a stub argument whose callee's own `fn` block (in any
+  `svflow_specs/*.spec`) declares it `buf` or `bpp` must be `ptr`, not `p`: `svflow.py` refuses to load
+  such an area, `svflow.py --selftest` and the black-battle test
+  `server_flow::testkit::tests::battle_specs_pass_buffers_as_ptr` fail on it (`bare_p_lint` in
+  svflow.py = `black_fndiff::bare_p_lint`). Specs of other crates (`specs/<crate>/`) are not linted yet.
 * A stub is **active** only while its address is not in any server_flow module's `PORTED`; once the
   callee is ported, both sides run the real code (ROM / Rust port). (Z20: the black-battle server_flow / client / server
   lists count only for areas on the battle memory set, see "Z20 additions".)

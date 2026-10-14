@@ -211,13 +211,15 @@ recorded table). In `b16_single_battle` (a wild battle: AI mask 0, no scripts) t
 decisions come from the ports `ai_create` / `ai_start` / `ai_think` (`think_single`, the best-slot
 pick) / chosen move / chosen target; the battle is unchanged. `b17_ai_scripts_match_original`
 forces the AI client's script mask (`Env::ai_mask`, answered by `021b9fbc`) so the trainer-AI
-scripts run (the interpreted vm.c step calls the ported command handlers; 22 distinct handlers) and
-checks that 12 masks give the same HP trace and command frames as the original overlay-96 code in
-the interpreter. Masks that stop on gaps outside ai1 (same panic with the original AI): bits 0 / 1 /
-4 (`021c7e14` -> core4 `021c1e74` -> core6 `021c728c` gets a caller-local record buffer, `LOCAL_BUF`),
-bit 11 alone (core2 `021bd708` -> calc `021d8244` touches the flow work its caller holds without
-lending),
-bit 12 (vm.c reads unmapped 0x02309B70), bits 14 / 15 (no script member in archive 0xAB).
+scripts run (the interpreted vm.c step calls the ported command handlers; 32 distinct handlers) and
+checks that 17 masks (every single bit 0-11 and 13, and combinations) give the same HP trace and
+command frames as the original overlay-96 code in the interpreter. B18 closed the gaps of bits 0 / 1 /
+4 (`021c7e14` -> core4 `021c1e74` -> core6 `021c728c`: a flow case gives a caller-local buffer argument
+a temporary heap block, `Src::Local`, so a callee the port passes the pointer on to finds it) and 11
+(core2 `021bd708` now lends the work to `021d8244`; `020061E4` play-SE host model; the wild foe flees,
+so with a forced mask the battle may end with neither side down). Left: bit 12 (its script, ARC 0xAB
+member 12, is 12 bytes and vm.c reads the byte after its end, in the original too: the answer depends
+on the neighbouring heap block), bits 14 / 15 (ARC 0xAB has 14 members, no script for them).
 
 **Coherence (lending).** Ports hold objects as Rust images (the flow work, `S`, client objects,
 the command queue, the 0x021F3B20 globals). A call lends them (`callw` / `callwr` / `callh` /
@@ -232,14 +234,14 @@ the outcome could depend on the allocator; suspected cause of the rare `b16_sing
 under the full parallel suite, "client object … already held by an outer port frame", not proven).
 A lent slice that matches two held blocks (a stale holder) panics. Flow cases store back only the bytes a port changed
 (arguments overlap, e.g. the 0x021F3B20 arrays) and treat regions / buffers inside the work as
-parts of the work. `Arg::{PBuf, PHost, PAt}` (hash-neutral: the stubs see `P`) carry the pointer
-values the ports used to drop. `FlowEnv::peek` lets a port read memory its test model placed
+parts of the work. `Arg::{PBuf, PHost, PAt}` carry the pointer values the ports used to drop; since
+B18 the stubs check them where the callee's spec declares a buffer / BattleMon (`ptr` stub
+arguments, see `tools/rom-diff/svflow_specs/README.md`), elsewhere they see `P`. `FlowEnv::peek` lets a port read memory its test model placed
 inside its own image (`S` slot table, adapter reply blocks).
 
-**Gaps found (see the B16 report for the full list).** High: ~120 call sites still pass a
-pass-through `P` where the callee's spec argument is a buffer / BattleMon (scan:
-server1 31, server2 27, core4 16, client 22, core5 6, handex 5, api 4, core1 3; ai1 0 since B17);
-ports hold records that live in the
+**Gaps found (see the B16 report for the full list).** High (B18 fixed the ~120 call sites that
+passed a bare `P` where the callee's spec argument is a buffer / BattleMon: the harness now rejects
+them); ports hold records that live in the
 flow work as separate slices (D / E at work + 0xD04 / 0xD18, the damage records, the per-turn
 struct) — `SvFlowWork::pull` / `push` sync them in `use_move` / `build_damage` / `build_records`
 only. Medium: read-only work holders whose callees write the work (`021bbb60`, `021bf3d8`,

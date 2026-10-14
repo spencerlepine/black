@@ -18,6 +18,69 @@ pub enum Arg<'a> {
     In(&'a [u8]),
     /// Pointer to bytes the callee writes: the stub fills them.
     Out(&'a mut [u8]),
+    /// A pass-through pointer with its value (B18): the emulator address the original passes (an
+    /// address in [`crate::STACK_ZERO`], e.g. [`crate::STACK_ZERO`]`.start`, for a buffer local to
+    /// the caller). Ignored at a `p` argument; at a `ptr` argument the stub logs [`canon_ptr`] of it.
+    Ptr(u32),
+}
+
+/// B18: [`canon_ptr`] of a pointer into the stack window (a buffer local to some frame of the
+/// function under test, whose exact address differs between the original and the port).
+pub const PTR_LOCAL: u32 = 0x4C4F_4341;
+
+/// B18: the logged form of a `ptr` stub argument: the pointer itself, [`PTR_LOCAL`] for any address
+/// in the stack window [`crate::STACK_ZERO`] (`canon_ptr` in svflow.py).
+pub fn canon_ptr(v: u32) -> u32 {
+    if crate::STACK_ZERO.contains(&v) {
+        PTR_LOCAL
+    } else {
+        v
+    }
+}
+
+/// B18: the `p` stub arguments of `texts` (`(area, spec text)`) whose callee's own `fn` block (in
+/// any of the texts) declares that argument `buf` or a custom pointer kind (`bpp`): such a pointer
+/// must be `ptr` (value checked). Returns the messages, empty when clean (`bare_p_lint` in
+/// svflow.py; same text).
+pub fn bare_p_lint(texts: &[(&str, &str)]) -> Vec<String> {
+    use crate::spec::{parse_spec, ArgSpec};
+    let parsed: Vec<_> = texts.iter().map(|(a, t)| (*a, parse_spec(t))).collect();
+    let mut kinds: Vec<(u32, usize, String)> = Vec::new();
+    for (_, fs) in &parsed {
+        for f in fs {
+            for (i, a) in f.args.iter().enumerate() {
+                let k = match a {
+                    ArgSpec::Buf(_) => "buf",
+                    ArgSpec::Custom(k) if k == "bpp" => "bpp",
+                    _ => continue,
+                };
+                if !kinds.iter().any(|(x, j, _)| *x == f.addr && *j == i) {
+                    kinds.push((f.addr, i, k.to_string()));
+                }
+            }
+        }
+    }
+    let mut out = Vec::new();
+    for (area, fs) in &parsed {
+        for f in fs {
+            for st in &f.stubs {
+                for (i, k) in st.args.iter().enumerate() {
+                    if k != "p" {
+                        continue;
+                    }
+                    if let Some((_, _, kk)) =
+                        kinds.iter().find(|(x, j, _)| *x == st.addr && *j == i)
+                    {
+                        out.push(format!(
+                            "{area} {:08x}: stub {:08x} arg {i} is `p` but {:08x} declares it `{kk}`: use `ptr`",
+                            f.addr, st.addr, st.addr
+                        ));
+                    }
+                }
+            }
+        }
+    }
+    out
 }
 
 /// The unported callees of one function under test; behaviour comes from its spec stub lines.
@@ -97,6 +160,7 @@ impl StubEnv {
         let key = addr & 0xFFFF;
         let mut vals = Vec::new();
         let mut extra = Vec::new();
+        let mut ptrs = Vec::new();
         for (k, a) in st.args.iter().zip(args.iter()) {
             match a {
                 Arg::V(v) => {
@@ -109,7 +173,25 @@ impl StubEnv {
                     // e.g. a u16 stored into a stale stack word)
                     vals.push(if k == "v16" { *v & 0xFFFF } else { *v });
                 }
-                Arg::P => assert_eq!(k, "p", "stub {addr:#010x}: arg kind mismatch"),
+                Arg::P => {
+                    // B18: a `ptr` argument (the callee's spec declares a buffer / BattleMon) needs the pointer
+                    assert!(
+                        k != "ptr",
+                        "stub {addr:#010x}: bare Arg::P for a `ptr` argument (the callee declares a buffer / \
+                         BattleMon): pass the pointer the original passes (B18)"
+                    );
+                    assert_eq!(k, "p", "stub {addr:#010x}: arg kind mismatch");
+                }
+                Arg::Ptr(v) => {
+                    // B18: ignored at a `p` argument, logged (canon_ptr, not mixed) at a `ptr` one
+                    assert!(
+                        k == "p" || k == "ptr",
+                        "stub {addr:#010x}: arg kind mismatch"
+                    );
+                    if k == "ptr" {
+                        ptrs.push(canon_ptr(*v));
+                    }
+                }
                 Arg::In(b) => {
                     assert!(
                         k.strip_prefix("in:").map(|n| num(n) as usize) == Some(b.len()),
@@ -149,6 +231,7 @@ impl StubEnv {
         self.log.push(addr);
         self.log.extend(&vals);
         self.log.extend(&extra);
+        self.log.extend(&ptrs);
         if st.noreturn {
             self.halted = Some(addr);
             std::panic::resume_unwind(Box::new(Halt));
@@ -360,6 +443,81 @@ mod tests {
         let mut e = StubEnv::new(vec![spec("u32", &["v"], false)], 0x1234);
         let a = e.call(0x021B_B798, &mut [Arg::V(0xABCD)]);
         assert_eq!(a, e.call(0x021B_B798, &mut [Arg::V(0xABCD)]));
+    }
+
+    /// B18: a `ptr` argument is logged as [`canon_ptr`] after the scalars and `in:` words and is not
+    /// mixed into the answer; a `p` argument ignores an [`Arg::Ptr`]. Vectors computed with
+    /// tools/rom-diff/svflow.py (`ptr_selftest`, run by `svflow.py --selftest`).
+    #[test]
+    fn ptr_args_are_logged_canonically() {
+        for (v, want) in [
+            (0, 0),
+            (0x02E1_0010, 0x02E1_0010),
+            (0x02EF_0000, PTR_LOCAL),
+            (0x02F0_0FFC, PTR_LOCAL),
+            (0x02F0_1000, 0x02F0_1000),
+            (0x021F_3B20, 0x021F_3B20),
+        ] {
+            assert_eq!(canon_ptr(v), want, "canon_ptr({v:#x})");
+        }
+        let mut e = StubEnv::new(vec![spec("u32", &["ptr", "v", "p", "ptr"], false)], 0x1234);
+        let r1 = e.call(
+            0x021B_B798,
+            &mut [
+                Arg::Ptr(0x02EF_FF00),
+                Arg::V(7),
+                Arg::Ptr(0x02E1_0000),
+                Arg::Ptr(0x02E2_0010),
+            ],
+        );
+        let r2 = e.call(
+            0x021B_B798,
+            &mut [Arg::Ptr(0), Arg::V(7), Arg::P, Arg::Ptr(0x021F_3B20)],
+        );
+        assert_eq!((r1, r2), (0x6858_160F, 0x6858_160F));
+        assert_eq!(
+            e.log,
+            [
+                0x021B_B798,
+                7,
+                PTR_LOCAL,
+                0x02E2_0010,
+                0x021B_B798,
+                7,
+                0,
+                0x021F_3B20
+            ]
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "bare Arg::P for a `ptr` argument")]
+    fn ptr_arg_rejects_a_bare_p() {
+        let mut e = StubEnv::new(vec![spec("u32", &["ptr"], false)], 0x1234);
+        e.call(0x021B_B798, &mut [Arg::P]);
+    }
+
+    /// B18: the same texts and messages as `ptr_selftest` in svflow.py.
+    #[test]
+    fn bare_p_lint_vectors() {
+        let texts = [
+            (
+                "a",
+                "area a\nfn 021c0000 ret=none\n  arg buf 0x40\n  arg u8 any\n  arg bpp\n",
+            ),
+            (
+                "b",
+                "area b\nfn 021c1000 ret=none\n  stub 021c0000 ret=none args=p,v,p\n  stub 021c2000 ret=none args=p\n\
+                 fn 021c1100 ret=none\n  stub 021c0000 ret=none args=ptr,v,ptr\n",
+            ),
+        ];
+        assert_eq!(
+            bare_p_lint(&texts),
+            [
+                "b 021c1000: stub 021c0000 arg 0 is `p` but 021c0000 declares it `buf`: use `ptr`",
+                "b 021c1000: stub 021c0000 arg 2 is `p` but 021c0000 declares it `bpp`: use `ptr`",
+            ]
+        );
     }
 
     #[test]

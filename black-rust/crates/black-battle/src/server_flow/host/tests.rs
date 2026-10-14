@@ -408,7 +408,7 @@ wired!(
 wired!(
     fun_021c8434,
     |h, a| h.fun_021c8434(a[0], a[1]),
-    |e, _w, a| api::bounce_move(e, a[0], a[1])
+    |e, w, a| api::bounce_move(e, w, a[0], a[1])
 );
 wired!(poke_id_at_pos, |h, a| h.poke_id_at_pos(a[0]), |e, w, a| {
     api::poke_id_at_pos(e, w, a[0])
@@ -508,7 +508,7 @@ wired!(
     |e, w, a| {
         // Replays the call on a copy of the environment to learn what the callee writes.
         let mut probe = e.clone();
-        let r = api::mon_pair_bfeac(e, w, a[0], a[1]) != 0;
+        let r = api::mon_pair_bfeac(e, w, a[0], a[1], 0) != 0;
         let ma = api::mon_by_id(&mut probe, w, a[0]);
         let mb = api::mon_by_id(&mut probe, w, a[1]);
         let mut o = [0u8; 4];

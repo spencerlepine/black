@@ -1,15 +1,16 @@
+use crate::server_flow::env::PassPtr;
 use crate::server_flow::testkit::{run_area_suite, Case};
 
 // Written by tools/check-svflow.sh only, after the Rust hashes matched the ROM run.
 // svflow-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
-    (0x021C0F24, "9fe75b074dba66a5"),
+    (0x021C0F24, "e88799055126d934"),
     (0x021C1184, "5a2342a60f79dd94"),
     (0x021C1194, "44e752a7b4435b17"),
     (0x021C1198, "8397da029daef106"),
-    (0x021C11A4, "29bdfeb39c968851"),
-    (0x021C11F0, "b33b6c162e3b023d"),
-    (0x021C14E0, "fa7b2ee165620439"),
+    (0x021C11A4, "5d19f7ce33cf838b"),
+    (0x021C11F0, "1537694511fa2bd4"),
+    (0x021C14E0, "eb89ada34f70560a"),
     (0x021C15AC, "6cdfdb2f0fd50a67"),
     (0x021C15D4, "20ec4174e968d506"),
     (0x021C15E8, "def65b3f487a03b4"),
@@ -20,7 +21,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C1788, "1a37558937a84040"),
     (0x021C17CC, "e6e28083909698fa"),
     (0x021C1828, "6c26f66e5f7d71bb"),
-    (0x021C1880, "4ca97f3e8d39cabb"),
+    (0x021C1880, "da173ea9b8490a82"),
     (0x021C18D4, "f08dab81d60bb243"),
     (0x021C1910, "58bbe6796cbb7759"),
     (0x021C195C, "0d67020102e1b7f7"),
@@ -35,25 +36,25 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C1D60, "5a2bb5732466eba2"),
     (0x021C1DCC, "49fcf3820148ff7a"),
     (0x021C1E14, "a4b2431e2546ecc0"),
-    (0x021C1E74, "e3a59fe783135d29"),
-    (0x021C2048, "f49232de4490f65f"),
+    (0x021C1E74, "cd3a6342d0cbdea5"),
+    (0x021C2048, "1b89d4a76600e26f"),
     (0x021C20BC, "8f855ab43513cfb9"),
-    (0x021C20D0, "898c2de0dd42558b"),
+    (0x021C20D0, "435091a3c61c800e"),
     (0x021C2128, "82f3b357f5724cd4"),
     (0x021C2204, "8b70d9af1f9a4bda"),
     (0x021C2250, "ef08a9387cf452e2"),
     (0x021C2314, "ce68ec4733a066c8"),
-    (0x021C232C, "ebb0d08a6d741911"),
+    (0x021C232C, "da8b14dc41ea6fe9"),
     (0x021C236C, "ff398c0b15178f10"),
-    (0x021C2488, "dfaa99da03c0ce93"),
-    (0x021C25A4, "b86493d3390ecfbf"),
+    (0x021C2488, "369b5a28acbb754a"),
+    (0x021C25A4, "9c017e07a1ff309e"),
     (0x021C264C, "61df927b8bfa6dcf"),
     (0x021C26A8, "84c9bf35a0217787"),
     (0x021C26FC, "be554202b6077dfa"),
-    (0x021C2758, "a72c705965766caa"),
+    (0x021C2758, "6aec2f40a8088d2e"),
     (0x021C27A0, "0606ce2ea76432a2"),
     (0x021C282C, "6e98fb243bbafe47"),
-    (0x021C2910, "437c206e4e98190f"),
+    (0x021C2910, "37f8b38927b9fee3"),
     (0x021C2AB0, "bfbe38be278a842c"),
     (0x021C2AF0, "9e7dd30644e00256"),
     (0x021C2B3C, "2ffc18d1e147897e"),
@@ -69,7 +70,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C2F70, "182ddd5e170b85d0"),
     (0x021C3008, "cc0a75f74fe3d93e"),
     (0x021C312C, "9c738e500cd4fe28"),
-    (0x021C3184, "309f679a6cdf3a7f"),
+    (0x021C3184, "7b2e058bd5530733"),
     (0x021C3274, "e92bfb9bb8c33685"),
     (0x021C334C, "258a45f77fca070a"),
     (0x021C3370, "2e6b0762a9723666"),
@@ -80,7 +81,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C36E8, "be912df58699babc"),
     (0x021C3720, "6aa9196ceb73ef68"),
     (0x021C376C, "4e92a5d74e1427b9"),
-    (0x021C3810, "5aa8846bf122c5f5"),
+    (0x021C3810, "a67dad54bacca5e3"),
     (0x021C39CC, "2c0eabd1ff14c7a8"),
     (0x021C39F4, "2302ecff05a8ce91"),
     (0x021C3A4C, "106ea46cf66949b5"),
@@ -93,16 +94,16 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C3C60, "70b3bbc8967facd2"),
     (0x021C3CCC, "8f4efccf2c8405db"),
     (0x021C3D08, "e2b67516ddd6bdbd"),
-    (0x021C3E0C, "3ab40c9a9d3f8d6e"),
-    (0x021C3FDC, "5906b52c6a7a3402"),
+    (0x021C3E0C, "5cf9b242c02ff0f5"),
+    (0x021C3FDC, "fe9985953bebb896"),
     (0x021C4034, "9c8227496e661204"),
-    (0x021C4104, "da9640aa19a71033"),
+    (0x021C4104, "640d9bf1dbf48712"),
     (0x021C41C0, "08b7c00cdb523cea"),
     (0x021C4218, "3e2f2eca9fe0b248"),
     (0x021C4268, "878f5ddb20b5dc06"),
     (0x021C4304, "5004f0068a13ee29"),
-    (0x021C43F0, "c09c118e2c248aaf"),
-    (0x021C446C, "fc73bea04380c9d5"),
+    (0x021C43F0, "bbe8fcab7aed7f0e"),
+    (0x021C446C, "1cd080a35bdb6a8d"),
     (0x021C4614, "f6a64056b4dfdaa8"),
     (0x021C4744, "e136f92c4b916e5d"),
 ];
@@ -244,7 +245,9 @@ pub(crate) fn call<E: crate::server_flow::env::FlowEnv>(addr: u32, c: &mut Case<
             super::try_damage_effect(&mut c.env, &mut c.work, v[1], v[2], v[3]);
             0
         }
-        0x021C_20D0 => super::apply_amount(&mut c.env, &mut c.work, v[1], v[2], v[3] != 0) as u64,
+        0x021C_20D0 => {
+            super::apply_amount(&mut c.env, &mut c.work, v[1], v[2], PassPtr::At(v[3])) as u64
+        }
         0x021C_2128 => {
             let mut cx = cx!(c, 0, 0);
             super::placeholder_effect(&mut c.env, &mut c.work, &mut cx, v[1]) as u64

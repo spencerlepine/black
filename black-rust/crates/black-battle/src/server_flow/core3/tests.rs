@@ -4,15 +4,15 @@ use crate::server_flow::testkit::{run_area_suite, Case};
 // svflow-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
     (0x021BF324, "fe5cf1365b24d216"),
-    (0x021BF3D8, "f5b7d8c863ca0d2d"),
-    (0x021BF4AC, "be290ba686c7c6c6"),
-    (0x021BF6E8, "38f8030fc58fe310"),
-    (0x021BF78C, "1a426264b7067f9a"),
+    (0x021BF3D8, "c88d1e6b04e30872"),
+    (0x021BF4AC, "b3dbb4c5048cbd02"),
+    (0x021BF6E8, "0cb9c03505aceb60"),
+    (0x021BF78C, "ff991c0372d742cc"),
     (0x021BF83C, "286c033e6385feca"),
     (0x021BF8D4, "1a532d239c842a41"),
     (0x021BF9A4, "e43b0ae7f88f1174"),
     (0x021BFA00, "8d8fec1d58de8d56"),
-    (0x021BFA60, "aa1acebc55663697"),
+    (0x021BFA60, "3110f70a3d88664f"),
     (0x021BFBD0, "66a39dacbb736dbd"),
     (0x021BFC08, "aa731dc2d95c2911"),
     (0x021BFD24, "bf1824e826a559f8"),
@@ -34,14 +34,14 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C07D4, "823eff02ef6653ef"),
     (0x021C0898, "29651c6a52062640"),
     (0x021C08CC, "1efccfec2fd158ca"),
-    (0x021C091C, "934b9863153891ab"),
-    (0x021C0A4C, "b71798db702114e6"),
+    (0x021C091C, "5d46a1fedac64825"),
+    (0x021C0A4C, "f85405981fe48a2c"),
     (0x021C0C34, "7fcae47bda5789e8"),
     (0x021C0C38, "7435523cd055e7dd"),
     (0x021C0CB4, "92390cac44f228d6"),
     (0x021C0CE8, "ae7a29de166e3d4d"),
     (0x021C0D70, "1e0223c9bf3d3c67"),
-    (0x021C0D90, "061c232da5e64731"),
+    (0x021C0D90, "c94d2df89fc61bf6"),
 ];
 // svflow-recorded-end
 

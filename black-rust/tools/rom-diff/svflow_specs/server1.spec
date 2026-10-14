@@ -81,8 +81,8 @@ fn 021b6100 ret=u32
   stub 02008374 ret=u32 args=v
   stub 020083ac ret=pick:0/1 args=v
   stub 021ef958 ret=u32 args=v
-  stub 021b93e0 force ret=none args=p,p,v                # server3
-  stub 021ba82c force ret=none args=p                    # server3 (setup)
+  stub 021b93e0 force ret=none args=ptr,p,v                # server3
+  stub 021ba82c force ret=none args=ptr                    # server3 (setup)
   stub 0203f258 ret=none args=p
   stub 021d7840 ret=none args=p,v
   stub 021cd6ec force ret=none                           # client1
@@ -94,10 +94,10 @@ fn 021b6100 ret=u32
   stub 021d4270 ret=pick:0/1 args=v
   stub 021d4230 ret=pick:0/1 args=v
   stub 021eea30 force ret=none args=v                    # adapter
-  stub 021b66d4 ret=none args=p,p,p                      # in-area (no callees)
-  stub 021b9db8 force ret=none args=p                    # server3
-  stub 021ba094 force ret=none args=p                    # server3
-  stub 021ba1b4 force ret=none args=p,v                  # server3
+  stub 021b66d4 ret=none args=ptr,ptr,p                      # in-area (no callees)
+  stub 021b9db8 force ret=none args=ptr                    # server3
+  stub 021ba094 force ret=none args=ptr                    # server3
+  stub 021ba1b4 force ret=none args=ptr,v                  # server3
 
 # BattleProc main (r3 = M; r0-r2 unused): no main callback M[0x464] -> 1; cb(M) == 0 -> 0; then setup->0x23 == 0:
 # r = ba54c(M) (result), ba6c0 / ba878 / ba2e4(M); r 0/2 -> setup->0x88 = -M[0x438], r 1 -> setup->0x88 = M[0x430] + M[0x434];
@@ -111,20 +111,20 @@ fn 021b6434 ret=u32
   fix arg3 0 u32 addrof arg3 0x480
   fix arg3 0x464 u32 alt const 0 || const 0x02EE0011      # main callback (fake address)
   stub 02ee0010 ret=pick:0/1/1 args=p
-  stub 021b9114 force ret=pick:0/1 args=p                # server3
-  stub 021ba54c force ret=pick:0/1/2/3 args=p            # server3
-  stub 021ba6c0 force ret=none args=p                    # server3
-  stub 021ba878 force ret=none args=p                    # server3
-  stub 021ba2e4 force ret=none args=p                    # server3
-  stub 021b64cc ret=pick:0/1 args=p                      # in-area
-  stub 021b8b9c force ret=pick:0/1 args=p,v              # server2 (64cc)
+  stub 021b9114 force ret=pick:0/1 args=ptr                # server3
+  stub 021ba54c force ret=pick:0/1/2/3 args=ptr            # server3
+  stub 021ba6c0 force ret=none args=ptr                    # server3
+  stub 021ba878 force ret=none args=ptr                    # server3
+  stub 021ba2e4 force ret=none args=ptr                    # server3
+  stub 021b64cc ret=pick:0/1 args=ptr                      # in-area
+  stub 021b8b9c force ret=pick:0/1 args=ptr,v              # server2 (64cc)
   stub 021ee894 ret=pick:0/1 args=p,v                    # BattleRecordReader_IsAtEnd (64cc)
 
 # 1 unless some client id i (0..3) is present (8b9c) and its record reader is not at the end (021ee894(M+0x2C8, i)).
 fn 021b64cc ret=u32
   nowork
   arg buf 0x1000
-  stub 021b8b9c force ret=pick:0/1 args=p,v              # server2
+  stub 021b8b9c force ret=pick:0/1 args=ptr,v              # server2
   stub 021ee894 ret=pick:0/1/1 args=p,v                  # BattleRecordReader_IsAtEnd
 
 # BattleProc exit (r0 proc, r1 &seq, r3 M): seq 0 fade start (02005E30 unless M[0x473] bit5), brightness (0207D55C /
@@ -158,9 +158,9 @@ fn 021b6500 ret=u32 inputs=600
   stub 020307b0 ret=none args=v
   stub 021d4d5c ret=none args=v
   stub 021d7894 ret=none
-  stub 021ba0cc force ret=none args=p                    # server3
-  stub 021b9de8 force ret=none args=p                    # server3
-  stub 021b6804 ret=none args=p,p                        # in-area (no callees)
+  stub 021ba0cc force ret=none args=ptr                    # server3
+  stub 021b9de8 force ret=none args=ptr                    # server3
+  stub 021b6804 ret=none args=ptr,p                        # in-area (no callees)
   stub 021eea54 force ret=none                           # adapter
   stub 021d4254 ret=none
   stub 021d8058 ret=none
@@ -211,16 +211,16 @@ fn 021b6848 ret=none
   fix arg0 0x4a4 u32 alt const 0 || any rep=4,4          # setup->0x24[4] party pointers (0 = none)
   fix arg0 0x4c8 u32 addrof arg0 0x600 rep=4,4           # setup->0x48[4] -> word at 0x600 (6954 reads *p)
   fix arg0 0x600 u32 alt const 0 || any
-  stub 021b68d8 ret=none args=p,p                        # in-area
-  stub 021b8bec force ret=u8 args=p,v,v                  # server2: index of client id in M[0x428..0x42d] (6 = none)
-  stub 021b9114 force ret=pick:0/1 args=p                # server3: setup->0x23 (comm battle flag)
+  stub 021b68d8 ret=none args=ptr,p                        # in-area
+  stub 021b8bec force ret=u8 args=ptr,v,v                  # server2: index of client id in M[0x428..0x42d] (6 = none)
+  stub 021b9114 force ret=pick:0/1 args=ptr                # server3: setup->0x23 (comm battle flag)
   stub 02012ebc ret=u32 args=v
   stub 02007b44 ret=u32 args=v
   stub 02007b20 ret=u32 args=v
   stub 02007c20 ret=none args=v,v
-  stub 021b997c force ret=u8 args=p,v                    # server3
+  stub 021b997c force ret=u8 args=ptr,v                    # server3
   stub 021ba710 force ret=pick:0/1/2/3 args=v,v          # server3: client id -> side slot index (0..3)
-  stub 021ba128 force ret=none args=p,v,v                # server3: register party k (setup party pointer)
+  stub 021ba128 force ret=none args=ptr,v,v                # server3: register party k (setup party pointer)
 
 # Register the parties (r0 M, r1 setup): for the sides of clients 0..3 (ba710(M[0x46C], k)): ba128(M, k,
 # setup->0x24[side]); k = 2 / 3 only when that pointer is non-null.
@@ -231,7 +231,7 @@ fn 021b68d8 ret=none
   fix arg0 0x46c u8 alt range 0 3 || any
   fix arg0 0x4a4 u32 alt const 0 || any rep=4,4
   stub 021ba710 force ret=pick:0/1/2/3 args=v,v          # server3: client id -> side slot index (0..3)
-  stub 021ba128 force ret=none args=p,v,v                # server3: register party k (setup party pointer)
+  stub 021ba128 force ret=none args=ptr,v,v                # server3: register party k (setup party pointer)
 
 # Party k of the own side (r0 M, r1 k): side = ba710(M[0x46C], k), p = setup->0x48[side]; *p != 0 ->
 # 9e7c(M+0x20+0x28k, p) else 9e38(M+0x20+0x28k, M[0x468], setup->0x34[side]).
@@ -243,8 +243,8 @@ fn 021b6954 ret=none
   fix arg0 0x4c8 u32 addrof arg0 0x600 rep=4,4
   fix arg0 0x600 u32 alt const 0 || any
   stub 021ba710 force ret=pick:0/1/2/3 args=v,v
-  stub 021b9e7c force ret=none args=p,v                  # server3
-  stub 021b9e38 force ret=none args=p,v,v                # server3
+  stub 021b9e7c force ret=none args=ptr,v                  # server3
+  stub 021b9e38 force ret=none args=ptr,v,v                # server3
 
 # Battle-mode code for party r1 (r0 M, setup = M[0]): rule (jump table) 0 -> 1, 2 -> 3, 3 -> 1, > 3 -> 1; rule 1:
 # setup->0x22 == 0 -> 2, type 3 -> 1, else party setup->0x24[(r1 + 2) & 3] non-null with 0201AA18 > 0 (signed) -> 1 else 2.
@@ -273,10 +273,10 @@ fn 021b69fc ret=none
   fix arg0 0x4a4 u32 alt const 0 || any rep=4,4          # setup->0x24[4] party pointers (0 = none)
   fix arg0 0x4c8 u32 addrof arg0 0x600 rep=4,4           # setup->0x48[4] -> word at 0x600 (6954 reads *p)
   fix arg0 0x600 u32 alt const 0 || any
-  stub 021b6954 ret=none args=p,v                        # in-area
+  stub 021b6954 ret=none args=ptr,v                        # in-area
   stub 021ba710 force ret=pick:0/1/2/3 args=v,v
-  stub 021b9e7c force ret=none args=p,v                  # server3
-  stub 021b9e38 force ret=none args=p,v,v                # server3
+  stub 021b9e7c force ret=none args=ptr,v                  # server3
+  stub 021b9e38 force ret=none args=ptr,v,v                # server3
 
 # Comm battle only (setup->0x23): record reader init 021ee644(M+0x2C8, setup->0x94, setup->0x98) and attach it to
 # clients M[0x10] / M[0x14] (021cd938).
@@ -316,37 +316,37 @@ fn 021b6aac ret=u32
   fix arg1 0x4a4 u32 alt const 0 || any rep=4,4          # setup->0x24[4] party pointers (0 = none)
   fix arg1 0x4c8 u32 addrof arg1 0x600 rep=4,4           # setup->0x48[4] -> word at 0x600 (6954 reads *p)
   fix arg1 0x600 u32 alt const 0 || any
-  stub 021b6818 ret=pick:0/1 args=p                      # in-area: battle type 3 -> 1
-  stub 021b6848 ret=none args=p,p                        # in-area
-  stub 021b69fc ret=none args=p,p                        # in-area
-  stub 021b6a3c ret=none args=p,p                        # in-area
-  stub 021b6a70 ret=none args=p,p,v                      # in-area
-  stub 021b68d8 ret=none args=p,p                        # in-area
-  stub 021b8bec force ret=u8 args=p,v,v                  # server2: index of client id in M[0x428..0x42d] (6 = none)
-  stub 021b9114 force ret=pick:0/1 args=p                # server3: setup->0x23 (comm battle flag)
+  stub 021b6818 ret=pick:0/1 args=ptr                      # in-area: battle type 3 -> 1
+  stub 021b6848 ret=none args=ptr,p                        # in-area
+  stub 021b69fc ret=none args=ptr,p                        # in-area
+  stub 021b6a3c ret=none args=ptr,p                        # in-area
+  stub 021b6a70 ret=none args=ptr,p,v                      # in-area
+  stub 021b68d8 ret=none args=ptr,p                        # in-area
+  stub 021b8bec force ret=u8 args=ptr,v,v                  # server2: index of client id in M[0x428..0x42d] (6 = none)
+  stub 021b9114 force ret=pick:0/1 args=ptr                # server3: setup->0x23 (comm battle flag)
   stub 02012ebc ret=u32 args=v
   stub 02007b44 ret=u32 args=v
   stub 02007b20 ret=u32 args=v
   stub 02007c20 ret=none args=v,v
-  stub 021b997c force ret=u8 args=p,v                    # server3
+  stub 021b997c force ret=u8 args=ptr,v                    # server3
   stub 021ba710 force ret=pick:0/1/2/3 args=v,v          # server3: client id -> side slot index (0..3)
-  stub 021ba128 force ret=none args=p,v,v                # server3: register party k (setup party pointer)
-  stub 021b6954 ret=none args=p,v                        # in-area
-  stub 021b9e7c force ret=none args=p,v                  # server3
-  stub 021b9e38 force ret=none args=p,v,v                # server3
+  stub 021ba128 force ret=none args=ptr,v,v                # server3: register party k (setup party pointer)
+  stub 021b6954 ret=none args=ptr,v                        # in-area
+  stub 021b9e7c force ret=none args=ptr,v                  # server3
+  stub 021b9e38 force ret=none args=ptr,v,v                # server3
   stub 021ee644 ret=none args=p,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
   stub 021cd938 force ret=none args=v,p                  # client1: attach record reader
   stub 021e8f20 ret=u32 args=p,v,p,v,v                   # view create (M, client, M+0xC8, mode, 0x13)
   stub 021cd95c force ret=none args=v,v                  # client1
-  stub 021b93e0 force ret=none args=p,p,v                # server3: party container init (M+0xC8 / M+0x1B0, M, side)
-  stub 021b9460 force ret=none args=p,p,v                # server3: party container fill
-  stub 021ba9c8 force ret=u32 args=p,p,p,v,v             # server3: btl_server.c create (M, M+0x3F0, M+0x1B0, mode, heap)
-  stub 021cd6f0 force ret=u32 args=p,p,v,v,v,v,v,v,v,p,v # client1: client create (11 words)
+  stub 021b93e0 force ret=none args=ptr,p,v                # server3: party container init (M+0xC8 / M+0x1B0, M, side)
+  stub 021b9460 force ret=none args=ptr,ptr,v                # server3: party container fill
+  stub 021ba9c8 force ret=u32 args=p,ptr,p,v,v             # server3: btl_server.c create (M, M+0x3F0, M+0x1B0, mode, heap)
+  stub 021cd6f0 force ret=u32 args=p,p,v,v,v,v,v,v,v,ptr,v # client1: client create (11 words)
   stub 021cd978 force ret=u32 args=v                     # client1: adapter channel of a client
   stub 021baa94 force ret=none args=v,v,v,v              # server_side: attach client to server slot
   stub 021bab40 force ret=none args=v                    # server_side: server start
-  stub 021b8b9c force ret=pick:0/1/1 args=p,v           # server2: client id present in M[0x428..]
-  stub 021b8b78 force ret=pick:0/1/2 args=p,v           # server2: count of client id in M[0x428..]
+  stub 021b8b9c force ret=pick:0/1/1 args=ptr,v           # server2: client id present in M[0x428..]
+  stub 021b8b78 force ret=pick:0/1/2 args=ptr,v           # server2: count of client id in M[0x428..]
 
 # Exit sub-proc: free the view M[4] (021e9034), clients M[0x10..0x1C] (021cd8e0), party containers 9674(M+0xC8) /
 # 9674(M+0x1B0), servers M[8] / M[0xC] (021bab5c). Returns 1.
@@ -360,7 +360,7 @@ fn 021b6c08 ret=u32
   fix arg1 0x10 u32 alt const 0 || any rep=4,4
   stub 021e9034 ret=none args=v
   stub 021cd8e0 force ret=none args=v                    # client1
-  stub 021b9674 force ret=none args=p                    # server3
+  stub 021b9674 force ret=none args=ptr                    # server3
   stub 021bab5c force ret=none args=v                    # server_side
 
 # Setup sub-proc, local double battle (rule 1, setup->0x22 == 0): as 6aac with M[0x46C] = 0, M[0x46B] = 2,
@@ -377,37 +377,37 @@ fn 021b6c5c ret=u32
   fix arg1 0x4a4 u32 alt const 0 || any rep=4,4          # setup->0x24[4] party pointers (0 = none)
   fix arg1 0x4c8 u32 addrof arg1 0x600 rep=4,4           # setup->0x48[4] -> word at 0x600 (6954 reads *p)
   fix arg1 0x600 u32 alt const 0 || any
-  stub 021b6818 ret=pick:0/1 args=p                      # in-area: battle type 3 -> 1
-  stub 021b6848 ret=none args=p,p                        # in-area
-  stub 021b69fc ret=none args=p,p                        # in-area
-  stub 021b6a3c ret=none args=p,p                        # in-area
-  stub 021b6a70 ret=none args=p,p,v                      # in-area
-  stub 021b68d8 ret=none args=p,p                        # in-area
-  stub 021b8bec force ret=u8 args=p,v,v                  # server2: index of client id in M[0x428..0x42d] (6 = none)
-  stub 021b9114 force ret=pick:0/1 args=p                # server3: setup->0x23 (comm battle flag)
+  stub 021b6818 ret=pick:0/1 args=ptr                      # in-area: battle type 3 -> 1
+  stub 021b6848 ret=none args=ptr,p                        # in-area
+  stub 021b69fc ret=none args=ptr,p                        # in-area
+  stub 021b6a3c ret=none args=ptr,p                        # in-area
+  stub 021b6a70 ret=none args=ptr,p,v                      # in-area
+  stub 021b68d8 ret=none args=ptr,p                        # in-area
+  stub 021b8bec force ret=u8 args=ptr,v,v                  # server2: index of client id in M[0x428..0x42d] (6 = none)
+  stub 021b9114 force ret=pick:0/1 args=ptr                # server3: setup->0x23 (comm battle flag)
   stub 02012ebc ret=u32 args=v
   stub 02007b44 ret=u32 args=v
   stub 02007b20 ret=u32 args=v
   stub 02007c20 ret=none args=v,v
-  stub 021b997c force ret=u8 args=p,v                    # server3
+  stub 021b997c force ret=u8 args=ptr,v                    # server3
   stub 021ba710 force ret=pick:0/1/2/3 args=v,v          # server3: client id -> side slot index (0..3)
-  stub 021ba128 force ret=none args=p,v,v                # server3: register party k (setup party pointer)
-  stub 021b6954 ret=none args=p,v                        # in-area
-  stub 021b9e7c force ret=none args=p,v                  # server3
-  stub 021b9e38 force ret=none args=p,v,v                # server3
+  stub 021ba128 force ret=none args=ptr,v,v                # server3: register party k (setup party pointer)
+  stub 021b6954 ret=none args=ptr,v                        # in-area
+  stub 021b9e7c force ret=none args=ptr,v                  # server3
+  stub 021b9e38 force ret=none args=ptr,v,v                # server3
   stub 021ee644 ret=none args=p,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
   stub 021cd938 force ret=none args=v,p                  # client1: attach record reader
   stub 021e8f20 ret=u32 args=p,v,p,v,v                   # view create (M, client, M+0xC8, mode, 0x13)
   stub 021cd95c force ret=none args=v,v                  # client1
-  stub 021b93e0 force ret=none args=p,p,v                # server3: party container init (M+0xC8 / M+0x1B0, M, side)
-  stub 021b9460 force ret=none args=p,p,v                # server3: party container fill
-  stub 021ba9c8 force ret=u32 args=p,p,p,v,v             # server3: btl_server.c create (M, M+0x3F0, M+0x1B0, mode, heap)
-  stub 021cd6f0 force ret=u32 args=p,p,v,v,v,v,v,v,v,p,v # client1: client create (11 words)
+  stub 021b93e0 force ret=none args=ptr,p,v                # server3: party container init (M+0xC8 / M+0x1B0, M, side)
+  stub 021b9460 force ret=none args=ptr,ptr,v                # server3: party container fill
+  stub 021ba9c8 force ret=u32 args=p,ptr,p,v,v             # server3: btl_server.c create (M, M+0x3F0, M+0x1B0, mode, heap)
+  stub 021cd6f0 force ret=u32 args=p,p,v,v,v,v,v,v,v,ptr,v # client1: client create (11 words)
   stub 021cd978 force ret=u32 args=v                     # client1: adapter channel of a client
   stub 021baa94 force ret=none args=v,v,v,v              # server_side: attach client to server slot
   stub 021bab40 force ret=none args=v                    # server_side: server start
-  stub 021b8b9c force ret=pick:0/1/1 args=p,v           # server2: client id present in M[0x428..]
-  stub 021b8b78 force ret=pick:0/1/2 args=p,v           # server2: count of client id in M[0x428..]
+  stub 021b8b9c force ret=pick:0/1/1 args=ptr,v           # server2: client id present in M[0x428..]
+  stub 021b8b78 force ret=pick:0/1/2 args=ptr,v           # server2: count of client id in M[0x428..]
 
 # Setup sub-proc, local multi battle (rule 1, setup->0x22 != 0): M[0x428..] by setup->0x22 (jump table 0..4: 1-3
 # -> 0x42A/0x42B = 2/3 and M[0x46B] = 4, 4 -> 0x42B = 3, M[0x46B] = 3); per client id present (8b9c) parties 9460; local: 9e38 / 9e7c
@@ -425,37 +425,37 @@ fn 021b6dd0 ret=u32
   fix arg1 0x4a4 u32 alt const 0 || any rep=4,4          # setup->0x24[4] party pointers (0 = none)
   fix arg1 0x4c8 u32 addrof arg1 0x600 rep=4,4           # setup->0x48[4] -> word at 0x600 (6954 reads *p)
   fix arg1 0x600 u32 alt const 0 || any
-  stub 021b6818 ret=pick:0/1 args=p                      # in-area: battle type 3 -> 1
-  stub 021b6848 ret=none args=p,p                        # in-area
-  stub 021b69fc ret=none args=p,p                        # in-area
-  stub 021b6a3c ret=none args=p,p                        # in-area
-  stub 021b6a70 ret=none args=p,p,v                      # in-area
-  stub 021b68d8 ret=none args=p,p                        # in-area
-  stub 021b8bec force ret=u8 args=p,v,v                  # server2: index of client id in M[0x428..0x42d] (6 = none)
-  stub 021b9114 force ret=pick:0/1 args=p                # server3: setup->0x23 (comm battle flag)
+  stub 021b6818 ret=pick:0/1 args=ptr                      # in-area: battle type 3 -> 1
+  stub 021b6848 ret=none args=ptr,p                        # in-area
+  stub 021b69fc ret=none args=ptr,p                        # in-area
+  stub 021b6a3c ret=none args=ptr,p                        # in-area
+  stub 021b6a70 ret=none args=ptr,p,v                      # in-area
+  stub 021b68d8 ret=none args=ptr,p                        # in-area
+  stub 021b8bec force ret=u8 args=ptr,v,v                  # server2: index of client id in M[0x428..0x42d] (6 = none)
+  stub 021b9114 force ret=pick:0/1 args=ptr                # server3: setup->0x23 (comm battle flag)
   stub 02012ebc ret=u32 args=v
   stub 02007b44 ret=u32 args=v
   stub 02007b20 ret=u32 args=v
   stub 02007c20 ret=none args=v,v
-  stub 021b997c force ret=u8 args=p,v                    # server3
+  stub 021b997c force ret=u8 args=ptr,v                    # server3
   stub 021ba710 force ret=pick:0/1/2/3 args=v,v          # server3: client id -> side slot index (0..3)
-  stub 021ba128 force ret=none args=p,v,v                # server3: register party k (setup party pointer)
-  stub 021b6954 ret=none args=p,v                        # in-area
-  stub 021b9e7c force ret=none args=p,v                  # server3
-  stub 021b9e38 force ret=none args=p,v,v                # server3
+  stub 021ba128 force ret=none args=ptr,v,v                # server3: register party k (setup party pointer)
+  stub 021b6954 ret=none args=ptr,v                        # in-area
+  stub 021b9e7c force ret=none args=ptr,v                  # server3
+  stub 021b9e38 force ret=none args=ptr,v,v                # server3
   stub 021ee644 ret=none args=p,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
   stub 021cd938 force ret=none args=v,p                  # client1: attach record reader
   stub 021e8f20 ret=u32 args=p,v,p,v,v                   # view create (M, client, M+0xC8, mode, 0x13)
   stub 021cd95c force ret=none args=v,v                  # client1
-  stub 021b93e0 force ret=none args=p,p,v                # server3: party container init (M+0xC8 / M+0x1B0, M, side)
-  stub 021b9460 force ret=none args=p,p,v                # server3: party container fill
-  stub 021ba9c8 force ret=u32 args=p,p,p,v,v             # server3: btl_server.c create (M, M+0x3F0, M+0x1B0, mode, heap)
-  stub 021cd6f0 force ret=u32 args=p,p,v,v,v,v,v,v,v,p,v # client1: client create (11 words)
+  stub 021b93e0 force ret=none args=ptr,p,v                # server3: party container init (M+0xC8 / M+0x1B0, M, side)
+  stub 021b9460 force ret=none args=ptr,ptr,v                # server3: party container fill
+  stub 021ba9c8 force ret=u32 args=p,ptr,p,v,v             # server3: btl_server.c create (M, M+0x3F0, M+0x1B0, mode, heap)
+  stub 021cd6f0 force ret=u32 args=p,p,v,v,v,v,v,v,v,ptr,v # client1: client create (11 words)
   stub 021cd978 force ret=u32 args=v                     # client1: adapter channel of a client
   stub 021baa94 force ret=none args=v,v,v,v              # server_side: attach client to server slot
   stub 021bab40 force ret=none args=v                    # server_side: server start
-  stub 021b8b9c force ret=pick:0/1/1 args=p,v           # server2: client id present in M[0x428..]
-  stub 021b8b78 force ret=pick:0/1/2 args=p,v           # server2: count of client id in M[0x428..]
+  stub 021b8b9c force ret=pick:0/1/1 args=ptr,v           # server2: client id present in M[0x428..]
+  stub 021b8b78 force ret=pick:0/1/2 args=ptr,v           # server2: count of client id in M[0x428..]
 
 # Setup sub-proc, rule 2 (triple?): as 6aac with M[0x428..0x42D] = 0 1 0 1 0 1 (M[0x46B] = 2, M[0x46E] = 1),
 # clients (0 / 1, 3, 0 / 1) and baa94(.., k, 3).
@@ -471,37 +471,37 @@ fn 021b7050 ret=u32
   fix arg1 0x4a4 u32 alt const 0 || any rep=4,4          # setup->0x24[4] party pointers (0 = none)
   fix arg1 0x4c8 u32 addrof arg1 0x600 rep=4,4           # setup->0x48[4] -> word at 0x600 (6954 reads *p)
   fix arg1 0x600 u32 alt const 0 || any
-  stub 021b6818 ret=pick:0/1 args=p                      # in-area: battle type 3 -> 1
-  stub 021b6848 ret=none args=p,p                        # in-area
-  stub 021b69fc ret=none args=p,p                        # in-area
-  stub 021b6a3c ret=none args=p,p                        # in-area
-  stub 021b6a70 ret=none args=p,p,v                      # in-area
-  stub 021b68d8 ret=none args=p,p                        # in-area
-  stub 021b8bec force ret=u8 args=p,v,v                  # server2: index of client id in M[0x428..0x42d] (6 = none)
-  stub 021b9114 force ret=pick:0/1 args=p                # server3: setup->0x23 (comm battle flag)
+  stub 021b6818 ret=pick:0/1 args=ptr                      # in-area: battle type 3 -> 1
+  stub 021b6848 ret=none args=ptr,p                        # in-area
+  stub 021b69fc ret=none args=ptr,p                        # in-area
+  stub 021b6a3c ret=none args=ptr,p                        # in-area
+  stub 021b6a70 ret=none args=ptr,p,v                      # in-area
+  stub 021b68d8 ret=none args=ptr,p                        # in-area
+  stub 021b8bec force ret=u8 args=ptr,v,v                  # server2: index of client id in M[0x428..0x42d] (6 = none)
+  stub 021b9114 force ret=pick:0/1 args=ptr                # server3: setup->0x23 (comm battle flag)
   stub 02012ebc ret=u32 args=v
   stub 02007b44 ret=u32 args=v
   stub 02007b20 ret=u32 args=v
   stub 02007c20 ret=none args=v,v
-  stub 021b997c force ret=u8 args=p,v                    # server3
+  stub 021b997c force ret=u8 args=ptr,v                    # server3
   stub 021ba710 force ret=pick:0/1/2/3 args=v,v          # server3: client id -> side slot index (0..3)
-  stub 021ba128 force ret=none args=p,v,v                # server3: register party k (setup party pointer)
-  stub 021b6954 ret=none args=p,v                        # in-area
-  stub 021b9e7c force ret=none args=p,v                  # server3
-  stub 021b9e38 force ret=none args=p,v,v                # server3
+  stub 021ba128 force ret=none args=ptr,v,v                # server3: register party k (setup party pointer)
+  stub 021b6954 ret=none args=ptr,v                        # in-area
+  stub 021b9e7c force ret=none args=ptr,v                  # server3
+  stub 021b9e38 force ret=none args=ptr,v,v                # server3
   stub 021ee644 ret=none args=p,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
   stub 021cd938 force ret=none args=v,p                  # client1: attach record reader
   stub 021e8f20 ret=u32 args=p,v,p,v,v                   # view create (M, client, M+0xC8, mode, 0x13)
   stub 021cd95c force ret=none args=v,v                  # client1
-  stub 021b93e0 force ret=none args=p,p,v                # server3: party container init (M+0xC8 / M+0x1B0, M, side)
-  stub 021b9460 force ret=none args=p,p,v                # server3: party container fill
-  stub 021ba9c8 force ret=u32 args=p,p,p,v,v             # server3: btl_server.c create (M, M+0x3F0, M+0x1B0, mode, heap)
-  stub 021cd6f0 force ret=u32 args=p,p,v,v,v,v,v,v,v,p,v # client1: client create (11 words)
+  stub 021b93e0 force ret=none args=ptr,p,v                # server3: party container init (M+0xC8 / M+0x1B0, M, side)
+  stub 021b9460 force ret=none args=ptr,ptr,v                # server3: party container fill
+  stub 021ba9c8 force ret=u32 args=p,ptr,p,v,v             # server3: btl_server.c create (M, M+0x3F0, M+0x1B0, mode, heap)
+  stub 021cd6f0 force ret=u32 args=p,p,v,v,v,v,v,v,v,ptr,v # client1: client create (11 words)
   stub 021cd978 force ret=u32 args=v                     # client1: adapter channel of a client
   stub 021baa94 force ret=none args=v,v,v,v              # server_side: attach client to server slot
   stub 021bab40 force ret=none args=v                    # server_side: server start
-  stub 021b8b9c force ret=pick:0/1/1 args=p,v           # server2: client id present in M[0x428..]
-  stub 021b8b78 force ret=pick:0/1/2 args=p,v           # server2: count of client id in M[0x428..]
+  stub 021b8b9c force ret=pick:0/1/1 args=ptr,v           # server2: client id present in M[0x428..]
+  stub 021b8b78 force ret=pick:0/1/2 args=ptr,v           # server2: count of client id in M[0x428..]
 
 # Setup sub-proc, rule 3 (rotation?): as 7050 but 69fc after the server create, clients (0 / 1, 1, 0 / 1),
 # baa94(.., k, 1).
@@ -517,37 +517,37 @@ fn 021b71d4 ret=u32
   fix arg1 0x4a4 u32 alt const 0 || any rep=4,4          # setup->0x24[4] party pointers (0 = none)
   fix arg1 0x4c8 u32 addrof arg1 0x600 rep=4,4           # setup->0x48[4] -> word at 0x600 (6954 reads *p)
   fix arg1 0x600 u32 alt const 0 || any
-  stub 021b6818 ret=pick:0/1 args=p                      # in-area: battle type 3 -> 1
-  stub 021b6848 ret=none args=p,p                        # in-area
-  stub 021b69fc ret=none args=p,p                        # in-area
-  stub 021b6a3c ret=none args=p,p                        # in-area
-  stub 021b6a70 ret=none args=p,p,v                      # in-area
-  stub 021b68d8 ret=none args=p,p                        # in-area
-  stub 021b8bec force ret=u8 args=p,v,v                  # server2: index of client id in M[0x428..0x42d] (6 = none)
-  stub 021b9114 force ret=pick:0/1 args=p                # server3: setup->0x23 (comm battle flag)
+  stub 021b6818 ret=pick:0/1 args=ptr                      # in-area: battle type 3 -> 1
+  stub 021b6848 ret=none args=ptr,p                        # in-area
+  stub 021b69fc ret=none args=ptr,p                        # in-area
+  stub 021b6a3c ret=none args=ptr,p                        # in-area
+  stub 021b6a70 ret=none args=ptr,p,v                      # in-area
+  stub 021b68d8 ret=none args=ptr,p                        # in-area
+  stub 021b8bec force ret=u8 args=ptr,v,v                  # server2: index of client id in M[0x428..0x42d] (6 = none)
+  stub 021b9114 force ret=pick:0/1 args=ptr                # server3: setup->0x23 (comm battle flag)
   stub 02012ebc ret=u32 args=v
   stub 02007b44 ret=u32 args=v
   stub 02007b20 ret=u32 args=v
   stub 02007c20 ret=none args=v,v
-  stub 021b997c force ret=u8 args=p,v                    # server3
+  stub 021b997c force ret=u8 args=ptr,v                    # server3
   stub 021ba710 force ret=pick:0/1/2/3 args=v,v          # server3: client id -> side slot index (0..3)
-  stub 021ba128 force ret=none args=p,v,v                # server3: register party k (setup party pointer)
-  stub 021b6954 ret=none args=p,v                        # in-area
-  stub 021b9e7c force ret=none args=p,v                  # server3
-  stub 021b9e38 force ret=none args=p,v,v                # server3
+  stub 021ba128 force ret=none args=ptr,v,v                # server3: register party k (setup party pointer)
+  stub 021b6954 ret=none args=ptr,v                        # in-area
+  stub 021b9e7c force ret=none args=ptr,v                  # server3
+  stub 021b9e38 force ret=none args=ptr,v,v                # server3
   stub 021ee644 ret=none args=p,v,v                      # BattleRecordReader_Init(M+0x2C8, setup->0x94, setup->0x98)
   stub 021cd938 force ret=none args=v,p                  # client1: attach record reader
   stub 021e8f20 ret=u32 args=p,v,p,v,v                   # view create (M, client, M+0xC8, mode, 0x13)
   stub 021cd95c force ret=none args=v,v                  # client1
-  stub 021b93e0 force ret=none args=p,p,v                # server3: party container init (M+0xC8 / M+0x1B0, M, side)
-  stub 021b9460 force ret=none args=p,p,v                # server3: party container fill
-  stub 021ba9c8 force ret=u32 args=p,p,p,v,v             # server3: btl_server.c create (M, M+0x3F0, M+0x1B0, mode, heap)
-  stub 021cd6f0 force ret=u32 args=p,p,v,v,v,v,v,v,v,p,v # client1: client create (11 words)
+  stub 021b93e0 force ret=none args=ptr,p,v                # server3: party container init (M+0xC8 / M+0x1B0, M, side)
+  stub 021b9460 force ret=none args=ptr,ptr,v                # server3: party container fill
+  stub 021ba9c8 force ret=u32 args=p,ptr,p,v,v             # server3: btl_server.c create (M, M+0x3F0, M+0x1B0, mode, heap)
+  stub 021cd6f0 force ret=u32 args=p,p,v,v,v,v,v,v,v,ptr,v # client1: client create (11 words)
   stub 021cd978 force ret=u32 args=v                     # client1: adapter channel of a client
   stub 021baa94 force ret=none args=v,v,v,v              # server_side: attach client to server slot
   stub 021bab40 force ret=none args=v                    # server_side: server start
-  stub 021b8b9c force ret=pick:0/1/1 args=p,v           # server2: client id present in M[0x428..]
-  stub 021b8b78 force ret=pick:0/1/2 args=p,v           # server2: count of client id in M[0x428..]
+  stub 021b8b9c force ret=pick:0/1/1 args=ptr,v           # server2: client id present in M[0x428..]
+  stub 021b8b78 force ret=pick:0/1/2 args=ptr,v           # server2: count of client id in M[0x428..]
 
 # Setup sub-proc, comm single: state 0: M[0x46B] = 2, M[0x428] = 0, M[0x429] = 1, M[0x46C] = setup->0x21, M[0x46D] =
 # 8bec(M, id, 0), state 1; states 1..6: table[state](M, M+0x460) (0x021EFD1C: 75a8 7758 7968 7bb0 7cb4 835c, server2), done -> M[0x460]
@@ -559,13 +559,13 @@ fn 021b734c ret=u32
   fix arg0 0 u32 alt range 0 8 || any
   fix arg1 0 u32 addrof arg1 0x480
   fix arg1 0x4a1 u8 alt range 0 3 || any
-  stub 021b8bec force ret=u8 args=p,v,v                  # server2
-  stub 021b75a8 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD1C)
-  stub 021b7758 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD1C)
-  stub 021b7968 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD1C)
-  stub 021b7bb0 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD1C)
-  stub 021b7cb4 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD1C)
-  stub 021b835c force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD1C)
+  stub 021b8bec force ret=u8 args=ptr,v,v                  # server2
+  stub 021b75a8 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD1C)
+  stub 021b7758 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD1C)
+  stub 021b7968 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD1C)
+  stub 021b7bb0 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD1C)
+  stub 021b7cb4 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD1C)
+  stub 021b835c force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD1C)
 
 # Setup sub-proc, comm double: state 0 by setup->0x22: 0 / >= 3 -> M[0x46B] = 2, M[0x428..0x42B] = 0 1 0 1;
 # 2 -> M[0x471] = 2 and, like 1, M[0x46B] = 4, M[0x428..0x42B] = 0 1 2 3; then M[0x46C] = setup->0x21, M[0x46D] = 8bec(..), state 1;
@@ -578,13 +578,13 @@ fn 021b73c4 ret=u32
   fix arg1 0 u32 addrof arg1 0x480
   fix arg1 0x4a1 u8 alt range 0 3 || any
   fix arg1 0x4a2 u8 alt range 0 4 || any
-  stub 021b8bec force ret=u8 args=p,v,v                  # server2
-  stub 021b75a8 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD00)
-  stub 021b7758 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD00)
-  stub 021b7968 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD00)
-  stub 021b7bb0 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD00)
-  stub 021b7e18 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD00)
-  stub 021b835c force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD00)
+  stub 021b8bec force ret=u8 args=ptr,v,v                  # server2
+  stub 021b75a8 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD00)
+  stub 021b7758 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD00)
+  stub 021b7968 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD00)
+  stub 021b7bb0 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD00)
+  stub 021b7e18 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD00)
+  stub 021b835c force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD00)
 
 # Setup sub-proc, comm rule 3: as 734c with M[0x428..0x42D] = 0 1 0 1 0 1, table 0x021EFD38 (.. 81dc ..).
 fn 021b7488 ret=u32
@@ -594,13 +594,13 @@ fn 021b7488 ret=u32
   fix arg0 0 u32 alt range 0 8 || any
   fix arg1 0 u32 addrof arg1 0x480
   fix arg1 0x4a1 u8 alt range 0 3 || any
-  stub 021b8bec force ret=u8 args=p,v,v                  # server2
-  stub 021b75a8 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD38)
-  stub 021b7758 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD38)
-  stub 021b7968 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD38)
-  stub 021b7bb0 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD38)
-  stub 021b81dc force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD38)
-  stub 021b835c force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD38)
+  stub 021b8bec force ret=u8 args=ptr,v,v                  # server2
+  stub 021b75a8 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD38)
+  stub 021b7758 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD38)
+  stub 021b7968 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD38)
+  stub 021b7bb0 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD38)
+  stub 021b81dc force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD38)
+  stub 021b835c force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD38)
 
 # Setup sub-proc, comm rule 2: as 7488, table 0x021EFD54 (.. 8070 ..).
 fn 021b7518 ret=u32
@@ -610,10 +610,10 @@ fn 021b7518 ret=u32
   fix arg0 0 u32 alt range 0 8 || any
   fix arg1 0 u32 addrof arg1 0x480
   fix arg1 0x4a1 u8 alt range 0 3 || any
-  stub 021b8bec force ret=u8 args=p,v,v                  # server2
-  stub 021b75a8 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD54)
-  stub 021b7758 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD54)
-  stub 021b7968 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD54)
-  stub 021b7bb0 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD54)
-  stub 021b8070 force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD54)
-  stub 021b835c force ret=pick:0/1 args=p,p              # server2 sub-proc (table 0x021EFD54)
+  stub 021b8bec force ret=u8 args=ptr,v,v                  # server2
+  stub 021b75a8 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD54)
+  stub 021b7758 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD54)
+  stub 021b7968 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD54)
+  stub 021b7bb0 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD54)
+  stub 021b8070 force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD54)
+  stub 021b835c force ret=pick:0/1 args=ptr,ptr              # server2 sub-proc (table 0x021EFD54)

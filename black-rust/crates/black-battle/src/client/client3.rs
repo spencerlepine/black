@@ -1015,7 +1015,11 @@ fn ai_choose<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u32 {
     }
     let item = env.callh(
         0x021D_3DC4,
-        &mut [Arg::P, Arg::V(mon), Arg::V(rd32(c, OFS_PARTY))],
+        &mut [
+            Arg::PHost(c.as_ptr() as usize),
+            Arg::V(mon),
+            Arg::V(rd32(c, OFS_PARTY)),
+        ],
         c,
     );
     if item != 0 {
@@ -1087,7 +1091,11 @@ fn ai_choose<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u32 {
     }
     if env.callh(
         0x021C_F524,
-        &mut [Arg::P, Arg::V(mon), Arg::PAt(rd32(c, OFS_REC))],
+        &mut [
+            Arg::PHost(c.as_ptr() as usize),
+            Arg::V(mon),
+            Arg::PAt(rd32(c, OFS_REC)),
+        ],
         c,
     ) != 0
     {
@@ -1116,7 +1124,11 @@ fn ai_choose<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u32 {
     // (rec, c, mon)
     env.callh(
         0x021C_F58C,
-        &mut [Arg::PAt(rd32(c, OFS_REC)), Arg::P, Arg::V(rd32(c, OFS_MON))],
+        &mut [
+            Arg::PAt(rd32(c, OFS_REC)),
+            Arg::PHost(c.as_ptr() as usize),
+            Arg::V(rd32(c, OFS_MON)),
+        ],
         c,
     );
     3
@@ -1457,9 +1469,16 @@ pub fn ai_switch_in<E: ClientUi>(
     1
 }
 
-/// C: `sub_021d0e74`: requests 5 / 6 / 4, mode 2: the replay step of request 3 (`021ce1b0`, client2; a table-entry thunk).
-pub fn switch_replay<E: FlowEnv>(env: &mut E) -> u32 {
-    env.call(0x021C_E1B0, &mut [Arg::P, Arg::P])
+/// C: `sub_021d0e74`: requests 5 / 6 / 4, mode 2: the replay step of request 3 (`021ce1b0`, client2; a table-entry thunk
+/// that passes the client object `c` and the state block on).
+pub fn switch_replay<E: FlowEnv>(env: &mut E, c: &[u8], state: &[u8]) -> u32 {
+    env.call(
+        0x021C_E1B0,
+        &mut [
+            Arg::PHost(c.as_ptr() as usize),
+            Arg::PHost(state.as_ptr() as usize),
+        ],
+    )
 }
 
 /// C: `LAB_overlay_d_93__021d0e7c`: requests 5 / 6 / 4, mode 0 (`kind` 2 / 1 / 0; a 7-way jump table on the state). Returns 1
@@ -1551,12 +1570,13 @@ pub fn switch_in_step<E: ClientUi>(
                     Arg::P,
                 ],
             );
-            env.callh(0x021C_E068, &mut [Arg::P], c);
+            env.callh(0x021C_E068, &mut [Arg::PHost(c.as_ptr() as usize)], c);
             set_st(state, 1);
             0
         }
         1 => {
-            if env.callh(0x021C_E08C, &mut [Arg::P], c) != 0 {
+            // r0 is still `c` at the jump-table targets
+            if env.callh(0x021C_E08C, &mut [Arg::PHost(c.as_ptr() as usize)], c) != 0 {
                 env.view(0x021E_9B14, &mut [Arg::V(view(c))]);
                 set_st(state, 2);
             } else if env.view(0x021E_9B20, &mut [Arg::V(view(c))]) != 0 {
@@ -1574,7 +1594,7 @@ pub fn switch_in_step<E: ClientUi>(
             0
         }
         3 => {
-            env.callh(0x021C_E0E0, &mut [Arg::P], c);
+            env.callh(0x021C_E0E0, &mut [Arg::PHost(c.as_ptr() as usize)], c);
             set_st(state, 4);
             0
         }

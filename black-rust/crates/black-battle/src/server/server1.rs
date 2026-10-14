@@ -95,7 +95,7 @@ fn run_slot<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> bool {
     let f = mem.r32(m + M_SLOT);
     if f != 0 {
         let a = mem.r32(m + M_SLOT + 8);
-        if env.call(f & !1, &mut [Arg::P, Arg::V(a)]) != 0 {
+        if env.call(f & !1, &mut [Arg::PAt(m + M_SLOT + 0xC), Arg::V(a)]) != 0 {
             mem.w32(m + M_SLOT, 0);
             mem.w32(m + M_SLOT + 0xC, 0);
         }
@@ -106,7 +106,7 @@ fn run_slot<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> bool {
         return true;
     }
     let a = mem.r32(m + M_SLOT + 8);
-    if env.call(g & !1, &mut [Arg::P, Arg::V(a)]) != 0 {
+    if env.call(g & !1, &mut [Arg::PAt(m + M_SLOT + 0xC), Arg::V(a)]) != 0 {
         mem.w32(m + M_SLOT + 4, 0);
         return true;
     }
@@ -235,8 +235,8 @@ pub fn proc_init<E: FlowEnv>(
             let s = setup(mem, m);
             select_subproc(mem, m + M_SLOT, m, s);
             mem.w32(m + M_460, 0);
-            env.call(0x021B_9DB8, &mut [Arg::P]);
-            env.call(0x021B_A094, &mut [Arg::P]);
+            env.call(0x021B_9DB8, &mut [Arg::PAt(m)]);
+            env.call(0x021B_A094, &mut [Arg::PAt(m)]);
             next(mem, seq);
             0
         }
@@ -250,7 +250,7 @@ pub fn proc_init<E: FlowEnv>(
                 return 1;
             }
             if mem.r32(setup(mem, m)) != 4 {
-                env.call(0x021B_A1B4, &mut [Arg::P, Arg::V(4)]);
+                env.call(0x021B_A1B4, &mut [Arg::PAt(m), Arg::V(4)]);
             }
             1
         }
@@ -273,14 +273,14 @@ pub fn proc_main<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
     if f == 0 {
         return 1;
     }
-    if env.call(f & !1, &mut [Arg::P]) == 0 {
+    if env.call(f & !1, &mut [Arg::PAt(m)]) == 0 {
         return 0;
     }
-    if env.call(0x021B_9114, &mut [Arg::P]) == 0 {
-        let r = env.call(0x021B_A54C, &mut [Arg::P]);
-        env.call(0x021B_A6C0, &mut [Arg::P]);
-        env.call(0x021B_A878, &mut [Arg::P]);
-        env.call(0x021B_A2E4, &mut [Arg::P]);
+    if env.call(0x021B_9114, &mut [Arg::PAt(m)]) == 0 {
+        let r = env.call(0x021B_A54C, &mut [Arg::PAt(m)]);
+        env.call(0x021B_A6C0, &mut [Arg::PAt(m)]);
+        env.call(0x021B_A878, &mut [Arg::PAt(m)]);
+        env.call(0x021B_A2E4, &mut [Arg::PAt(m)]);
         let v = match r {
             0 | 2 => Some(mem.r32(m + 0x438).wrapping_neg()),
             1 => Some(mem.r32(m + 0x430).wrapping_add(mem.r32(m + 0x434))),
@@ -291,7 +291,7 @@ pub fn proc_main<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
             mem.w32(s + 0x88, v);
         }
     } else {
-        let v = readers_at_end(env) as u8;
+        let v = readers_at_end(env, m) as u8;
         let s = setup(mem, m);
         let b = mem.r8(s + 0xC1);
         mem.w8(s + 0xC1, (b & !2) | ((v & 1) << 1));
@@ -301,10 +301,10 @@ pub fn proc_main<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
 
 /// C: `FUN_overlay_d_93__021b64cc`: 1 unless some present client id `i` (server2 8b9c) has a record reader that is not at its
 /// end (`BattleRecordReader_IsAtEnd(M + 0x2C8, i) == 0`).
-pub fn readers_at_end<E: FlowEnv>(env: &mut E) -> u32 {
+pub fn readers_at_end<E: FlowEnv>(env: &mut E, m: u32) -> u32 {
     for i in 0..4 {
-        if env.call(0x021B_8B9C, &mut [Arg::P, Arg::V(i)]) != 0
-            && env.call(0x021E_E894, &mut [Arg::P, Arg::V(i)]) == 0
+        if env.call(0x021B_8B9C, &mut [Arg::PAt(m), Arg::V(i)]) != 0
+            && env.call(0x021E_E894, &mut [Arg::PAt(m + 0x2C8), Arg::V(i)]) == 0
         {
             return 0;
         }
@@ -385,8 +385,8 @@ pub fn proc_exit<E: FlowEnv>(env: &mut E, mem: &mut Mem, proc: u32, seq: u32, m:
                 }
             }
             env.call(0x021D_7894, &mut []);
-            env.call(0x021B_A0CC, &mut [Arg::P]);
-            env.call(0x021B_9DE8, &mut [Arg::P]);
+            env.call(0x021B_A0CC, &mut [Arg::PAt(m)]);
+            env.call(0x021B_9DE8, &mut [Arg::PAt(m)]);
             set_exit_subproc(mem, m + M_SLOT, m);
             next(mem, seq);
             0
@@ -487,10 +487,13 @@ pub fn own_client_init<E: FlowEnv>(
 ) {
     let id = mem.r8(setup_p + 0x21);
     mem.w8(m + M_OWN_ID, id);
-    let pos = env.call(0x021B_8BEC, &mut [Arg::P, Arg::V(u32::from(id)), Arg::V(0)]);
+    let pos = env.call(
+        0x021B_8BEC,
+        &mut [Arg::PAt(m), Arg::V(u32::from(id)), Arg::V(0)],
+    );
     mem.w8(m + M_OWN_POS, pos as u8);
     register_parties(env, mem, m, setup_p);
-    if env.call(0x021B_9114, &mut [Arg::P]) == 0 {
+    if env.call(0x021B_9114, &mut [Arg::PAt(m)]) == 0 {
         let w = mem.r32(setup_p + 0x58);
         let a = env.call(0x0201_2EBC, &mut [Arg::V(w)]);
         let a = env.call(0x0200_7B44, &mut [Arg::V(a)]);
@@ -498,7 +501,7 @@ pub fn own_client_init<E: FlowEnv>(
         let buf = env.call(0x0200_7B20, &mut [Arg::V(h)]);
         mem.w32(m + 0x3E0, buf);
         env.call(0x0200_7C20, &mut [Arg::V(buf), Arg::V(a)]);
-        let v = env.call(0x021B_997C, &mut [Arg::P, Arg::V(0)]);
+        let v = env.call(0x021B_997C, &mut [Arg::PAt(m), Arg::V(0)]);
         let s = setup(mem, m);
         mem.w8(s + 0x44, v as u8);
         return;
@@ -526,17 +529,17 @@ pub fn register_parties<E: FlowEnv>(env: &mut E, mem: &Mem, m: u32, setup_p: u32
     let party = |k: u32| mem.r32(setup_p.wrapping_add(k.wrapping_mul(4)) + 0x24);
     let a = side(env, 0);
     let b = side(env, 1);
-    env.call(0x021B_A128, &mut [Arg::P, Arg::V(0), Arg::V(party(a))]);
-    env.call(0x021B_A128, &mut [Arg::P, Arg::V(1), Arg::V(party(b))]);
+    env.call(0x021B_A128, &mut [Arg::PAt(m), Arg::V(0), Arg::V(party(a))]);
+    env.call(0x021B_A128, &mut [Arg::PAt(m), Arg::V(1), Arg::V(party(b))]);
     let c = side(env, 2);
     let d = side(env, 3);
     let p = party(c);
     if p != 0 {
-        env.call(0x021B_A128, &mut [Arg::P, Arg::V(2), Arg::V(p)]);
+        env.call(0x021B_A128, &mut [Arg::PAt(m), Arg::V(2), Arg::V(p)]);
     }
     let p = party(d);
     if p != 0 {
-        env.call(0x021B_A128, &mut [Arg::P, Arg::V(3), Arg::V(p)]);
+        env.call(0x021B_A128, &mut [Arg::PAt(m), Arg::V(3), Arg::V(p)]);
     }
 }
 
@@ -821,28 +824,41 @@ pub fn subproc_local_multi<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u3
         _ => {}
     }
     own_client_init(env, mem, m, s, 0x42B);
-    env.call(0x021B_93E0, &mut [Arg::P, Arg::P, Arg::V(0)]);
-    env.call(0x021B_93E0, &mut [Arg::P, Arg::P, Arg::V(1)]);
-    let present = |env: &mut E, i: u32| env.call(0x021B_8B9C, &mut [Arg::P, Arg::V(i)]) != 0;
+    // the two party containers M + 0xC8 / M + 0x1B0, the player records M + 0x20 + 0x28 k
+    env.call(
+        0x021B_93E0,
+        &mut [Arg::PAt(m + 0xC8), Arg::PAt(m), Arg::V(0)],
+    );
+    env.call(
+        0x021B_93E0,
+        &mut [Arg::PAt(m + 0x1B0), Arg::PAt(m), Arg::V(1)],
+    );
+    let present = |env: &mut E, i: u32| env.call(0x021B_8B9C, &mut [Arg::PAt(m), Arg::V(i)]) != 0;
     for i in 0..4 {
         if present(env, i) {
-            env.call(0x021B_9460, &mut [Arg::P, Arg::P, Arg::V(i)]);
-            env.call(0x021B_9460, &mut [Arg::P, Arg::P, Arg::V(i)]);
+            env.call(
+                0x021B_9460,
+                &mut [Arg::PAt(m + 0xC8), Arg::PAt(m), Arg::V(i)],
+            );
+            env.call(
+                0x021B_9460,
+                &mut [Arg::PAt(m + 0x1B0), Arg::PAt(m), Arg::V(i)],
+            );
         }
     }
     if mem.r8(s + 0x23) == 0 {
         let h = heap(mem, m);
         let w = mem.r32(m + M_C0);
-        env.call(0x021B_9E38, &mut [Arg::P, Arg::V(h), Arg::V(w)]);
+        env.call(0x021B_9E38, &mut [Arg::PAt(m + 0x20), Arg::V(h), Arg::V(w)]);
         let p = mem.r32(s + 0x4C);
-        env.call(0x021B_9E7C, &mut [Arg::P, Arg::V(p)]);
+        env.call(0x021B_9E7C, &mut [Arg::PAt(m + 0x48), Arg::V(p)]);
         if present(env, 2) {
             let p = mem.r32(s + 0x50);
-            env.call(0x021B_9E7C, &mut [Arg::P, Arg::V(p)]);
+            env.call(0x021B_9E7C, &mut [Arg::PAt(m + 0x70), Arg::V(p)]);
         }
         if present(env, 3) {
             let p = mem.r32(s + 0x54);
-            env.call(0x021B_9E7C, &mut [Arg::P, Arg::V(p)]);
+            env.call(0x021B_9E7C, &mut [Arg::PAt(m + 0x98), Arg::V(p)]);
         }
     } else {
         for i in 0..4 {
@@ -853,7 +869,7 @@ pub fn subproc_local_multi<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u3
     }
     server_create(env, mem, m, mode);
     mem.w8(m + M_IS_SERVER, 1);
-    let count = |env: &mut E, i: u32| env.call(0x021B_8B78, &mut [Arg::P, Arg::V(i)]) & 0xFF;
+    let count = |env: &mut E, i: u32| env.call(0x021B_8B78, &mut [Arg::PAt(m), Arg::V(i)]) & 0xFF;
     for i in 0..4 {
         if present(env, i) {
             let n = count(env, i);
@@ -941,7 +957,7 @@ fn comm_subproc<E: FlowEnv>(
         let id = mem.r8(s + 0x21);
         mem.w8(m + M_OWN_ID, id);
         let id = u32::from(mem.r8(m + M_OWN_ID));
-        let pos = env.call(0x021B_8BEC, &mut [Arg::P, Arg::V(id), Arg::V(0)]);
+        let pos = env.call(0x021B_8BEC, &mut [Arg::PAt(m), Arg::V(id), Arg::V(0)]);
         mem.w8(m + M_OWN_POS, pos as u8);
         next(mem, state);
         return 0;
@@ -950,7 +966,7 @@ fn comm_subproc<E: FlowEnv>(
         return 1;
     }
     let f = rom_word(table + 4 * st);
-    if env.call(f & !1, &mut [Arg::P, Arg::P]) != 0 {
+    if env.call(f & !1, &mut [Arg::PAt(m), Arg::PAt(m + M_460)]) != 0 {
         mem.w32(m + M_460, 0);
         next(mem, state);
     }

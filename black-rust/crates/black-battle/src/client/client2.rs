@@ -221,7 +221,8 @@ pub fn req1_step<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u3
                 }
             }
             store_active_hp(env, c);
-            if env.call_held(c, 0x021C_D9E0, &mut [Arg::P]) != 0 {
+            let ca = c.as_ptr() as usize;
+            if env.call_held(c, 0x021C_D9E0, &mut [Arg::PHost(ca)]) != 0 {
                 let n = env.call(0x021D_3FA8, &mut [Arg::PBuf(&mut c[0x18..0x28])]) & 0xFFFF;
                 env.view(0x021E_AEA8, &mut [Arg::V(view(c)), Arg::V(n)]);
             }
@@ -460,7 +461,8 @@ pub fn set_callback(c: &mut [u8], cb: u32) {
 pub fn run_callback<E: FlowEnv>(env: &mut E, c: &mut [u8]) -> u32 {
     let cb = rd32(c, OFS_CB);
     let state = c[OFS_CB_STATE..].as_ptr() as usize;
-    env.call_held(c, cb & !1, &mut [Arg::P, Arg::PHost(state)])
+    let ca = c.as_ptr() as usize;
+    env.call_held(c, cb & !1, &mut [Arg::PHost(ca), Arg::PHost(state)])
 }
 
 /// C: `sub_021ce170`: request 3, mode 0 (the action selection). State 0: callback [`select_start`], [`fade_start`], state 1.
@@ -588,7 +590,7 @@ pub fn select_start<E: FlowEnv>(env: &mut E, c: &mut [u8]) -> u32 {
     env.callh(
         0x021D_0B10,
         &mut [
-            Arg::P,
+            Arg::PHost(c.as_ptr() as usize),
             Arg::V(0),
             Arg::V(c[OFS_COUNT] as u32),
             Arg::PHost(blk),
@@ -643,9 +645,15 @@ pub fn select_finish<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state:
                 rec_skip(env, c, rec.wrapping_sub(c_addr) as usize);
                 let mon = rd32(c, OFS_MON);
                 if mon_answered(&mut Lend::h(env, c), mon, rec) == 0 {
+                    // the original's third argument is a 0x10-byte stack buffer it never reads back
+                    let mut scratch = [0u8; 0x10];
                     let r = env.callh(
                         0x021C_F81C,
-                        &mut [Arg::P, Arg::V(rd32(c, OFS_MON)), Arg::P],
+                        &mut [
+                            Arg::PHost(c.as_ptr() as usize),
+                            Arg::V(rd32(c, OFS_MON)),
+                            Arg::PBuf(&mut scratch),
+                        ],
                         c,
                     );
                     if r < 4 {
@@ -1111,7 +1119,12 @@ pub fn fight_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &m
             let mv = (rec_word(c) >> 7) & 0xFFFF;
             if env.callh(
                 0x021C_F5B0,
-                &mut [Arg::P, Arg::V(mon), Arg::V(mv), Arg::V(msg_buf(c_addr))],
+                &mut [
+                    Arg::PHost(c.as_ptr() as usize),
+                    Arg::V(mon),
+                    Arg::V(mv),
+                    Arg::V(msg_buf(c_addr)),
+                ],
                 c,
             ) != 0
             {
@@ -1197,7 +1210,12 @@ pub fn fight_table<E: FlowEnv>(env: &mut E, c: &[u8], out: &mut [u8]) {
                 let mv = env.callr(0x021D_54C0, &mut [Arg::V(mon), Arg::V(j & 0xFF)], c);
                 env.callr(
                     0x021C_F5B0,
-                    &mut [Arg::P, Arg::V(mon), Arg::V(mv), Arg::V(0)],
+                    &mut [
+                        Arg::PHost(c.as_ptr() as usize),
+                        Arg::V(mon),
+                        Arg::V(mv),
+                        Arg::V(0),
+                    ],
                     c,
                 ) == 0
             };
@@ -1249,7 +1267,7 @@ pub fn party_page<E: ClientUi>(env: &mut E, c: &mut [u8], state: &mut [u8]) -> u
             let r = env.callh(
                 0x021C_F8D4,
                 &mut [
-                    Arg::P,
+                    Arg::PHost(c.as_ptr() as usize),
                     Arg::V(rd32(c, OFS_MON)),
                     Arg::Out(&mut a),
                     Arg::Out(&mut b),
@@ -1426,7 +1444,11 @@ pub fn run_menu<E: ClientUi>(env: &mut E, c: &mut [u8], c_addr: u32, state: &mut
                 let (mut a, mut b) = ([0u8; 2], [0u8; 2]);
                 let r = env.callh(
                     0x021C_F918,
-                    &mut [Arg::P, Arg::Out(&mut a), Arg::Out(&mut b)],
+                    &mut [
+                        Arg::PHost(c.as_ptr() as usize),
+                        Arg::Out(&mut a),
+                        Arg::Out(&mut b),
+                    ],
                     c,
                 );
                 if r == 4 {
@@ -1709,7 +1731,12 @@ pub fn struggle_if_stuck<E: FlowEnv>(env: &mut E, c: &mut [u8], mon: u32, rec: u
         let mv = env.callh(0x021D_54C0, &mut [Arg::V(mon), Arg::V(j & 0xFF)], c);
         if env.callh(
             0x021C_F5B0,
-            &mut [Arg::P, Arg::V(mon), Arg::V(mv), Arg::V(0)],
+            &mut [
+                Arg::PHost(c.as_ptr() as usize),
+                Arg::V(mon),
+                Arg::V(mv),
+                Arg::V(0),
+            ],
             c,
         ) == 0
             && env.callh(0x021D_5584, &mut [Arg::V(mon), Arg::V(j & 0xFF)], c) != 0

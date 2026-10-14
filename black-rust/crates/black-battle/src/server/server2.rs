@@ -210,7 +210,7 @@ pub fn check_overlay_231<E: FlowEnv>(env: &mut E, mem: &Mem, m: u32) -> u32 {
     if r == 0 {
         return 0;
     }
-    u32::from(env.call(0x021B_A1A8, &mut [Arg::P, Arg::V(0x200)]) == 0)
+    u32::from(env.call(0x021B_A1A8, &mut [Arg::PAt(m), Arg::V(0x200)]) == 0)
 }
 
 /// C: `FUN_overlay_d_93__021b8630`: the setup word `+0x70` for battle types 0 / 1, else 0.
@@ -737,9 +737,11 @@ pub fn multi_not_type01(mem: &Mem, m: u32) -> u32 {
 
 /// C: `FUN_overlay_d_93__021b8f5c`: `021b969c(M + 0xC8, M, id, 0)`, then returns `021b985c(M + 0xC8, id)` (server3).
 pub fn pokecon_refresh<E: FlowEnv>(env: &mut E, m: u32, id: u32) -> u32 {
-    let _ = m;
-    env.call(0x021B_969C, &mut [Arg::P, Arg::P, Arg::V(id), Arg::V(0)]);
-    env.call(0x021B_985C, &mut [Arg::P, Arg::V(id)])
+    env.call(
+        0x021B_969C,
+        &mut [Arg::PAt(m + 0xC8), Arg::PAt(m), Arg::V(id), Arg::V(0)],
+    );
+    env.call(0x021B_985C, &mut [Arg::PAt(m + 0xC8), Arg::V(id)])
 }
 
 /// C: `FUN_overlay_d_93__021b8f7c`: in a multi battle (86c8): the partner `k = (id + 2) & 3`; if present (8b9c),
@@ -752,8 +754,11 @@ pub fn partner_pokecon_refresh<E: FlowEnv>(env: &mut E, mem: &Mem, m: u32, id: u
     if client_present(mem, m, k) == 0 {
         return 0;
     }
-    env.call(0x021B_969C, &mut [Arg::P, Arg::P, Arg::V(k), Arg::V(0)]);
-    env.call(0x021B_985C, &mut [Arg::P, Arg::V(k)])
+    env.call(
+        0x021B_969C,
+        &mut [Arg::PAt(m + 0xC8), Arg::PAt(m), Arg::V(k), Arg::V(0)],
+    );
+    env.call(0x021B_985C, &mut [Arg::PAt(m + 0xC8), Arg::V(k)])
 }
 
 /// C: `FUN_overlay_d_93__021b8fc0`: 1 if a multi battle (86c8) and bit 1 of client id `id` is set (the second pair), else 0.
@@ -883,7 +888,7 @@ pub fn step_handshake<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, seq: u32) 
             mem.w16(r + 0x1A, v);
             let v = mem.r16(s + 0x76);
             mem.w16(r + 0x1C, v);
-            let (lo, hi) = if env.call(0x021B_A1A8, &mut [Arg::P, Arg::V(0x1000)]) != 0 {
+            let (lo, hi) = if env.call(0x021B_A1A8, &mut [Arg::PAt(m), Arg::V(0x1000)]) != 0 {
                 (mem.r32(m + M_43C) as u8, (mem.r8(m + M_FLAGS) >> 2) & 1)
             } else {
                 (2, 1)
@@ -1016,22 +1021,35 @@ pub fn step_party_sync<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, seq: u32)
             return 0;
         }
         10 => {
-            env.call(0x021B_93E0, &mut [Arg::P, Arg::P, Arg::V(0)]);
+            // the party containers M + 0xC8 / M + 0x1B0
+            env.call(
+                0x021B_93E0,
+                &mut [Arg::PAt(m + 0xC8), Arg::PAt(m), Arg::V(0)],
+            );
             for i in 0..4 {
                 if client_present(mem, m, i) != 0 {
                     let r = env.call(0x021D_47A4, &mut [Arg::V(i)]);
-                    env.call(0x021B_A128, &mut [Arg::P, Arg::V(i), Arg::V(r)]);
+                    env.call(0x021B_A128, &mut [Arg::PAt(m), Arg::V(i), Arg::V(r)]);
                     let r = env.call(0x021D_47A4, &mut [Arg::V(i)]);
-                    env.call(0x021B_A648, &mut [Arg::P, Arg::V(i), Arg::V(r)]);
-                    env.call(0x021B_9460, &mut [Arg::P, Arg::P, Arg::V(i)]);
+                    env.call(0x021B_A648, &mut [Arg::PAt(m), Arg::V(i), Arg::V(r)]);
+                    env.call(
+                        0x021B_9460,
+                        &mut [Arg::PAt(m + 0xC8), Arg::PAt(m), Arg::V(i)],
+                    );
                 }
             }
         }
         11 => {
-            env.call(0x021B_93E0, &mut [Arg::P, Arg::P, Arg::V(1)]);
+            env.call(
+                0x021B_93E0,
+                &mut [Arg::PAt(m + 0x1B0), Arg::PAt(m), Arg::V(1)],
+            );
             for i in 0..4 {
                 if client_present(mem, m, i) != 0 {
-                    env.call(0x021B_9460, &mut [Arg::P, Arg::P, Arg::V(i)]);
+                    env.call(
+                        0x021B_9460,
+                        &mut [Arg::PAt(m + 0x1B0), Arg::PAt(m), Arg::V(i)],
+                    );
                 }
             }
         }
@@ -1086,12 +1104,12 @@ pub fn step_record_exchange<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, seq:
                 if r != 0 {
                     let rec = m + 0x20 + i.wrapping_mul(0x28);
                     let heap = u32::from(mem.r16(m + M_HEAP));
-                    env.call(0x021B_9E38, &mut [Arg::P, Arg::V(heap), Arg::V(r)]);
+                    env.call(0x021B_9E38, &mut [Arg::PAt(rec), Arg::V(heap), Arg::V(r)]);
                     if i != u32::from(mem.r8(m + M_OWN_ID)) && (mem.r8(s + 0xC1) >> 2) & 1 != 0 {
                         rebuild_name(env, mem, m, rec);
                     }
                     let p = mem.r32(rec);
-                    env.call(0x021B_A670, &mut [Arg::P, Arg::V(i & 0xFF), Arg::V(p)]);
+                    env.call(0x021B_A670, &mut [Arg::PAt(m), Arg::V(i & 0xFF), Arg::V(p)]);
                 }
                 i = i.wrapping_add(1);
             }
@@ -1143,7 +1161,9 @@ fn record_receive<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, seq: u32) -> u
         return 0;
     }
     let r = env.call(0x021D_49CC, &mut []);
-    env.call(0x021B_9EF0, &mut [Arg::P, Arg::V(r)]);
+    // the player record M + 0x20 + 0x28 * M[0x472]
+    let rec = m + 0x20 + 0x28 * u32::from(mem.r8(m + 0x472));
+    env.call(0x021B_9EF0, &mut [Arg::PAt(rec), Arg::V(r)]);
     env.call(0x021D_49E0, &mut []);
     let n = mem.r8(m + 0x470).wrapping_add(1);
     mem.w8(m + 0x470, n);
@@ -1223,7 +1243,7 @@ pub fn step_data_exchange<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, seq: u
             }
             for i in 0..4u32 {
                 if client_present(mem, m, i) != 0
-                    && env.call(0x021B_9F70, &mut [Arg::P, Arg::V(i)]) == 0
+                    && env.call(0x021B_9F70, &mut [Arg::PAt(m), Arg::V(i)]) == 0
                 {
                     let src = env.call(0x021D_4648, &mut [Arg::V(i)]);
                     if src != 0 {
@@ -1235,7 +1255,7 @@ pub fn step_data_exchange<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, seq: u
                         copy(mem, src, dst, n as usize);
                     }
                 }
-                env.call(0x021B_A698, &mut [Arg::P, Arg::V(i)]);
+                env.call(0x021B_A698, &mut [Arg::PAt(m), Arg::V(i)]);
             }
             env.call(0x021D_4674, &mut []);
         }
@@ -1250,7 +1270,13 @@ fn server_create<E: FlowEnv>(env: &mut E, mem: &Mem, m: u32, mode: u32) -> u32 {
     let heap = u32::from(mem.r16(m + M_HEAP));
     env.call(
         0x021B_A9C8,
-        &mut [Arg::P, Arg::P, Arg::P, Arg::V(mode), Arg::V(heap)],
+        &mut [
+            Arg::PAt(m),
+            Arg::PAt(m + 0x3F0),
+            Arg::PAt(m + 0x1B0),
+            Arg::V(mode),
+            Arg::V(heap),
+        ],
     )
 }
 
@@ -1272,8 +1298,8 @@ fn client_create<E: FlowEnv>(
     let c = env.call(
         0x021C_D6F0,
         &mut [
-            Arg::P,
-            Arg::P,
+            Arg::PAt(m),
+            Arg::PAt(m + 0xC8),
             Arg::V(b20),
             Arg::V(w1c),
             Arg::V(id),
@@ -1281,7 +1307,7 @@ fn client_create<E: FlowEnv>(
             Arg::V(a6),
             Arg::V(mode),
             Arg::V(0),
-            Arg::P,
+            Arg::PAt(m + 0x3F0),
             Arg::V(heap),
         ],
     );
@@ -1328,7 +1354,7 @@ fn client_console<E: FlowEnv>(
     for i in 0..4 {
         if client_present(mem, m, i) != 0 {
             let k = if by_party {
-                env.call(0x021B_6994, &mut [Arg::P, Arg::V(i)])
+                env.call(0x021B_6994, &mut [Arg::PAt(m), Arg::V(i)])
             } else {
                 1
             };
@@ -1344,7 +1370,7 @@ fn client_console<E: FlowEnv>(
 /// The common prologue of the create steps: `(own id, 6818(setup))` then the comm-error check (true = abort with 1).
 fn create_prologue<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> (u32, u32, bool) {
     let id = u32::from(mem.r8(m + M_OWN_ID));
-    let mode = env.call(0x021B_6818, &mut [Arg::P]);
+    let mode = env.call(0x021B_6818, &mut [Arg::PAt(setup(mem, m))]);
     (id, mode, comm_error(env, mem, m))
 }
 
@@ -1375,7 +1401,7 @@ pub fn step_create_pair<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
 /// `021baacc(.., i, k)`. Client console: own client (`k`), server create, `021bab10(M[0xC], i, 6994(M, i))`, `021cd960`.
 pub fn step_create_multi<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32) -> u32 {
     let id = u32::from(mem.r8(m + M_OWN_ID));
-    let mode = env.call(0x021B_6818, &mut [Arg::P]);
+    let mode = env.call(0x021B_6818, &mut [Arg::PAt(setup(mem, m))]);
     let s = setup(mem, m);
     let k = if mem.r8(s + 0x22) != 0 { 1 } else { 2 };
     if comm_error(env, mem, m) {
@@ -1463,7 +1489,7 @@ pub fn step_view<E: FlowEnv>(env: &mut E, mem: &mut Mem, m: u32, seq: u32) -> u3
     if mem.r32(seq) != 0 {
         return 1;
     }
-    let mode = env.call(0x021B_6818, &mut [Arg::P]);
+    let mode = env.call(0x021B_6818, &mut [Arg::PAt(setup(mem, m))]);
     let own = |mem: &Mem| mem.r32(m + M_CLIENTS + 4 * u32::from(mem.r8(m + M_OWN_ID)));
     let c = own(mem);
     let view = env.call(

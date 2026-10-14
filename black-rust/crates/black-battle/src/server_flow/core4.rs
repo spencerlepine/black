@@ -17,7 +17,7 @@
 //! slice here; where a stub receives the pointer value itself the caller passes the address.
 
 use super::cmd_queue;
-use super::env::{Arg, FlowEnv, Lend};
+use super::env::{Arg, FlowEnv, Lend, PassPtr};
 use super::SvFlowWork;
 
 /// Functions of this area that are ported and checked by `tests::svflow_match_rom`.
@@ -888,13 +888,14 @@ pub fn run_5be4_4f64<E: FlowEnv>(env: &mut E, mon: u32) {
 }
 
 /// C: `FUN_overlay_d_93__021c20d0`: applies `-amount` to mon `mon` (0 = nothing): `5b74`, state
-/// update 2, the HANDEX record `hem` (when given), `195c`, the `4f64` chain; returns 1 when applied.
+/// update 2, the HANDEX record `hem` (when not null: `99a0(work, hem)`, `8810(hem)`), `195c`, the
+/// `4f64` chain; returns 1 when applied.
 pub fn apply_amount<E: FlowEnv>(
     env: &mut E,
     w: &mut SvFlowWork,
     mon: u32,
     amount: u32,
-    hem: bool,
+    hem: PassPtr,
 ) -> u32 {
     if amount == 0 {
         return 0;
@@ -910,9 +911,9 @@ pub fn apply_amount<E: FlowEnv>(
         w,
     );
     mon_set5fc0(&mut Lend::new(env, w), mon, 2);
-    if hem {
-        env.callw(0x021C_99A0, &mut [Arg::P, Arg::P], w);
-        env.callw(0x021C_8810, &mut [Arg::P], w);
+    if !hem.is_null() {
+        env.callw(0x021C_99A0, &mut [Arg::P, hem.arg()], w);
+        env.callw(0x021C_8810, &mut [hem.arg()], w);
     }
     record_bracket_199c(env, w, mon, 1);
     if env.callw(0x021C_4F64, &mut [Arg::P, Arg::V(mon)], w) != 0 {
@@ -943,11 +944,12 @@ pub fn try_damage_effect<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, mon: u32, 
     if found == 0 {
         return;
     }
-    env.callw(0x021C_8838, &mut [Arg::P, Arg::V(2), Arg::V(0x17A)], w);
+    let hem = PassPtr::Host(w.mem[OFS_HEM_1AE4 as usize..].as_ptr() as usize);
+    env.callw(0x021C_8838, &mut [hem.arg(), Arg::V(2), Arg::V(0x17A)], w);
     let id = mon_id(&mut Lend::new(env, w), mon);
-    env.callw(0x021C_8860, &mut [Arg::P, Arg::V(id)], w);
+    env.callw(0x021C_8860, &mut [hem.arg(), Arg::V(id)], w);
     if u32::from_le_bytes(out) != 0 || effect_applies(&mut Lend::new(env, w), mon) != 0 {
-        apply_amount(env, w, mon, found, true);
+        apply_amount(env, w, mon, found, hem);
     }
 }
 
@@ -1383,17 +1385,19 @@ pub fn failure_message<E: FlowEnv>(
     }
     if r6 == 0 {
         if r8 != 0 {
-            env.callwc(0x021C_99A0, &mut [Arg::P, Arg::P], w, cx);
+            // r1 still holds `r8` (the original reloads it for the test)
+            env.callwc(0x021C_99A0, &mut [Arg::P, Arg::PAt(r8)], w, cx);
         }
     } else {
+        let hem = cx.w_addr.wrapping_add(OFS_HEM_1AE4);
         env.callwc(
             0x021C_2AA0,
-            &mut [Arg::V(reason), Arg::V(r5), Arg::V(mon), Arg::P],
+            &mut [Arg::V(reason), Arg::V(r5), Arg::V(mon), Arg::PAt(hem)],
             w,
             cx,
         );
-        env.callwc(0x021C_99A0, &mut [Arg::P, Arg::P], w, cx);
-        env.callwc(0x021C_8810, &mut [Arg::P], w, cx);
+        env.callwc(0x021C_99A0, &mut [Arg::P, Arg::PAt(hem)], w, cx);
+        env.callwc(0x021C_8810, &mut [Arg::PAt(hem)], w, cx);
     }
     if reason == 3
         && env.callwc(0x021D_5444, &mut [Arg::V(mon)], w, cx) == 0x1EC
@@ -1503,7 +1507,7 @@ pub fn effect_round<E: FlowEnv>(
     r7: u32,
 ) -> u32 {
     let hem = cx.w_addr.wrapping_add(OFS_HEM_1AE4);
-    env.callwc(0x021C_8810, &mut [Arg::P], w, cx);
+    env.callwc(0x021C_8810, &mut [Arg::PAt(hem)], w, cx);
     let mut r5 = r5;
     if r5 == 0xFFFF {
         r5 = msg_264c(&mut Lend::wc(env, w, cx), mon_a, mon_b, hem);
@@ -1516,12 +1520,12 @@ pub fn effect_round<E: FlowEnv>(
     let mut slot = r6.to_le_bytes();
     msg_26fc(&mut Lend::wc(env, w, cx), mon_a, mon_b, r5, &mut slot);
     let r6 = u32::from_le_bytes(slot);
-    let busy = env.callwc(0x021C_8828, &mut [Arg::P], w, cx);
+    let busy = env.callwc(0x021C_8828, &mut [Arg::PAt(hem)], w, cx);
     let ok = check_then_fail(env, w, cx, mon_b, mon_a, r5, r6, r7, (busy == 0) as u32);
     if ok != 0 {
         if busy != 0 {
-            env.callwc(0x021C_99A0, &mut [Arg::P, Arg::P], w, cx);
-            env.callwc(0x021C_8810, &mut [Arg::P], w, cx);
+            env.callwc(0x021C_99A0, &mut [Arg::P, Arg::PAt(hem)], w, cx);
+            env.callwc(0x021C_8810, &mut [Arg::PAt(hem)], w, cx);
         }
         return 1;
     }
@@ -2414,18 +2418,36 @@ pub fn apply_target_effects<E: FlowEnv>(
         &mut cx.g[cx.gb..],
     );
     env.callwc(0x021C_5D88, &mut [Arg::P, Arg::V(b), Arg::V(0x317)], w, cx);
+    // the original passes its stack words: `&s0` (an argument slot), `&b` (a local copy) and `&s1`;
+    // `b` is read back from the local afterwards
+    let mut s0w = s0.to_le_bytes();
+    let mut bw = b.to_le_bytes();
+    let mut s1w = s1.to_le_bytes();
     env.callwc(
         0x021C_5840,
-        &mut [Arg::P, Arg::V(1), Arg::P, Arg::P, Arg::V(0)],
+        &mut [
+            Arg::P,
+            Arg::V(1),
+            Arg::PBuf(&mut s0w),
+            Arg::PBuf(&mut bw),
+            Arg::V(0),
+        ],
         w,
         cx,
     );
     env.callwc(
         0x021C_59C4,
-        &mut [Arg::P, Arg::V(1), Arg::P, Arg::P, Arg::V(0)],
+        &mut [
+            Arg::P,
+            Arg::V(1),
+            Arg::PBuf(&mut bw),
+            Arg::PBuf(&mut s1w),
+            Arg::V(0),
+        ],
         w,
         cx,
     );
+    let b = u32::from_le_bytes(bw);
     let mut slot = val.to_le_bytes();
     if env.callwc(0x021D_6D9C, &mut [Arg::V(b), Arg::Out(&mut slot)], w, cx) != 0 {
         cmds_28_52(&mut Lend::new(env, w), cx, b);
@@ -2777,7 +2799,8 @@ pub fn single_mon_effect<E: FlowEnv>(
             cx,
         );
         if r8 != 0 {
-            env.callwc(0x021C_99A0, &mut [Arg::P, Arg::P], w, cx);
+            // r1 still holds `r8` (the original reloads it for the test)
+            env.callwc(0x021C_99A0, &mut [Arg::P, Arg::PAt(r8)], w, cx);
         }
         env.callwc(
             0x021B_D9D4,

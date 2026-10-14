@@ -377,7 +377,7 @@ fn 021d3c44 ret=u32
   arg buf 0x40
   fix arg0 0x1A6 u8 range 0 3
   fix arg2 0 u32 alt range 0 3 || range 0x100 0x103 || any
-  stub 021cd9f4 ret=none args=p,v
+  stub 021cd9f4 ret=none args=ptr,v
   stub 021b9b10 force ret=none args=v,v
 
 # x = 021b9aec(pokecon, u8 args[0]); 021b9d10(server, x, u8 args[0]); returns 1
@@ -519,7 +519,7 @@ fn 021d324c ret=u32
   arg buf 0x40
   fix arg1 0 u32 alt range 0 3 || any
   stub 021b8d8c force ret=u32 args=v,v,v
-  stub 021cd9e0 force ret=pick:0/0/1 args=p
+  stub 021cd9e0 force ret=pick:0/0/1 args=ptr
   stub 021b9934 force ret=u32 args=v,v
   stub 021d66d0 ret=none args=v,v
   stub 021ea768 ret=none args=v,v,v
@@ -542,7 +542,7 @@ fn 021d32e0 ret=u32 inputs=400
   fix global0 4 u32 alt range 0 9 || any
   stub 021b8d8c force ret=u32 args=v,v,v
   stub 021b9934 force ret=u32 args=v,v
-  stub 021cd9e0 force ret=pick:0/0/1 args=p
+  stub 021cd9e0 force ret=pick:0/0/1 args=ptr
   stub 021d66d0 ret=none args=v,v
   stub 021b9a24 force ret=pick:0/0/1 args=v,v
   stub 021ea768 ret=none args=v,v,v
@@ -560,7 +560,7 @@ fn 021d344c ret=u32
   fix arg1 0 u32 alt range 0 2 || any
   stub 021b8d8c force ret=u32 args=v,v,v
   stub 021b9934 force ret=u32 args=v,v
-  stub 021cd9e0 force ret=pick:0/1 args=p
+  stub 021cd9e0 force ret=pick:0/1 args=ptr
   stub 021d6c2c ret=none args=v
   stub 021ea868 ret=none args=v,v,v
   stub 021ea878 ret=pick:0/1 args=v
@@ -572,7 +572,7 @@ fn 021d34b0 ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021cd9e0 force ret=pick:0/0/1 args=p
+  stub 021cd9e0 force ret=pick:0/0/1 args=ptr
   stub 021f7998 ret=none args=v
   stub 021f7eb4 ret=pick:0/1 args=
 
@@ -585,7 +585,7 @@ fn 021d34e8 ret=u32
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
   stub 021b8e70 force ret=u32 args=v,v
-  stub 021cd9e0 force ret=pick:0/0/1 args=p
+  stub 021cd9e0 force ret=pick:0/0/1 args=ptr
   stub 021b8590 force ret=pick:0/1 args=v
   stub 021d3558 ret=pick:0/1 args=v
   stub 021ea3b8 ret=none args=v,v,v
@@ -599,7 +599,7 @@ fn 021d3568 ret=u32
   arg buf 0x10
   arg buf 0x40
   fix arg1 0 u32 alt range 0 1 || any
-  stub 021cd9e0 force ret=pick:0/0/1 args=p
+  stub 021cd9e0 force ret=pick:0/0/1 args=ptr
   stub 021b8e70 force ret=u32 args=v,v
   stub 021ea3e8 ret=none args=v,v,v,v
   stub 021ea3f8 ret=pick:0/1 args=v
@@ -628,7 +628,7 @@ fn 021d3630 ret=u32
   arg buf 0x40
   fix arg1 0 u32 alt range 0 2 || any
   stub 021b8d8c force ret=u32 args=v,v,v
-  stub 021cd9e0 force ret=pick:0/0/1 args=p
+  stub 021cd9e0 force ret=pick:0/0/1 args=ptr
   stub 021ea768 ret=none args=v,v,v
   stub 021ea778 ret=pick:0/1 args=v,v
 

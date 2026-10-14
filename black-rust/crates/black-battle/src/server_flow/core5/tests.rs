@@ -4,25 +4,25 @@ use crate::server_flow::testkit::{run_area_suite, Case};
 // Written by tools/check-svflow.sh only, after the Rust hashes matched the ROM run.
 // svflow-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
-    (0x021C4838, "d0bdc94aedac1386"),
+    (0x021C4838, "5a639eeee687f1fc"),
     (0x021C4910, "5303d6f27e1364ba"),
-    (0x021C493C, "1d975797d5ce5f11"),
-    (0x021C4A64, "7407233c92541c49"),
+    (0x021C493C, "4b57a3d610d3ff44"),
+    (0x021C4A64, "b7b0c2ff69b0e083"),
     (0x021C4B3C, "f5ca5e20f4110a13"),
     (0x021C4B9C, "8bea30f19c798298"),
     (0x021C4BAC, "4bf79666edac27d1"),
     (0x021C4C24, "ee3e0ba34ab2c68d"),
     (0x021C4C40, "12bf456725eca877"),
     (0x021C4C50, "3649b64c9867924f"),
-    (0x021C4D1C, "278513ab56386f22"),
+    (0x021C4D1C, "aa92ef509daff922"),
     (0x021C4E38, "99e493dda6d6d2fa"),
-    (0x021C4EA4, "d27289ae21129014"),
-    (0x021C4F64, "b127bd4c0ccae528"),
+    (0x021C4EA4, "cb944b48f158d452"),
+    (0x021C4F64, "874b63f14e956690"),
     (0x021C5098, "9bef5f193839011e"),
-    (0x021C5108, "a5309ccc02b41980"),
+    (0x021C5108, "37bab40eceff0e4a"),
     (0x021C51D0, "cbcc786b5e8b49ef"),
-    (0x021C5200, "aeb7d81af49284dd"),
-    (0x021C5308, "309de17d002364e6"),
+    (0x021C5200, "06f36cbc817f2669"),
+    (0x021C5308, "b14f9d830eb5434a"),
     (0x021C5350, "36f13433f4360b8f"),
     (0x021C5418, "3c56e5cb584cc632"),
     (0x021C5474, "f6e77b393403afa3"),
@@ -67,7 +67,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C6350, "058ce8b874ad5b59"),
     (0x021C6394, "cf3768749a348a2a"),
     (0x021C63D0, "a60ed4056d33e119"),
-    (0x021C6458, "e7be92c8a1e24c6a"),
+    (0x021C6458, "d7291b5ab09644ef"),
     (0x021C64B4, "ec9e8f20d5622251"),
     (0x021C6564, "d08745a15caac139"),
 ];
@@ -97,7 +97,8 @@ pub(crate) fn call<E: crate::server_flow::env::FlowEnv>(addr: u32, c: &mut Case<
         }
         0x021C_4E38 => super::message_26e8(&mut c.env, c.vals[1], c.vals[2], c.vals[3]) as u64,
         0x021C_4EA4 => {
-            super::hem_damage_messages(&mut c.env, c.vals[1], c.vals[2], c.vals[3] as i32);
+            let hem = c.work.mem[0x1AE4..].as_ptr() as usize;
+            super::hem_damage_messages(&mut c.env, hem, c.vals[1], c.vals[2], c.vals[3] as i32);
             0
         }
         0x021C_5108 => {

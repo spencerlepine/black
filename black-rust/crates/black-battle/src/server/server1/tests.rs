@@ -4,30 +4,30 @@ use crate::server_flow::testkit::{run_area_suite, Case};
 // Written by tools/check-svflow.sh only, after the Rust hashes matched the ROM run.
 // svflow-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
-    (0x021B6100, "d3f77870467a28df"),
-    (0x021B6434, "977301d3eae445f3"),
-    (0x021B64CC, "b77f77422aa25d9d"),
-    (0x021B6500, "000320b2bb5cd82a"),
+    (0x021B6100, "bc910736b4eef840"),
+    (0x021B6434, "9d92e2f848021649"),
+    (0x021B64CC, "121e8aba95c3330d"),
+    (0x021B6500, "de3692994cfc64df"),
     (0x021B66D4, "09763e7c9abcd8ed"),
     (0x021B6804, "956abe7a31829290"),
     (0x021B6818, "9a0b47e048505380"),
-    (0x021B6848, "6e17b1f0ead1eb0a"),
-    (0x021B68D8, "4cdbdfb5e8482cfd"),
-    (0x021B6954, "19b7d083d7d478f2"),
+    (0x021B6848, "5a91d362c65383d4"),
+    (0x021B68D8, "47d2d2feb0896539"),
+    (0x021B6954, "094d202c5eeadc1d"),
     (0x021B6994, "979a864419942127"),
-    (0x021B69FC, "1fdee3280ee3ae13"),
+    (0x021B69FC, "3af84d440759be26"),
     (0x021B6A3C, "64946c0fb790970e"),
     (0x021B6A70, "2580bbceff6fbcc4"),
-    (0x021B6AAC, "8fcd6723997f84f8"),
-    (0x021B6C08, "d5c3cc02ad386b98"),
-    (0x021B6C5C, "7da03fee458e3753"),
-    (0x021B6DD0, "c279dbd50d2c34a0"),
-    (0x021B7050, "4156f6a3ac776774"),
-    (0x021B71D4, "6cb24b060ffb4b1e"),
-    (0x021B734C, "c1e1e166181c5fa4"),
-    (0x021B73C4, "f58c8ad626ad5462"),
-    (0x021B7488, "9ff7d95649750d59"),
-    (0x021B7518, "974ede421c4eb419"),
+    (0x021B6AAC, "c9626dcb5945d0c1"),
+    (0x021B6C08, "92f0fa0be8b73cc8"),
+    (0x021B6C5C, "170ae6dcfb36a039"),
+    (0x021B6DD0, "db8b87fae35f6db8"),
+    (0x021B7050, "7ec2766acb765855"),
+    (0x021B71D4, "54deb204deffeab4"),
+    (0x021B734C, "a3fa642628fe05f0"),
+    (0x021B73C4, "18816a9b98e5b330"),
+    (0x021B7488, "b35b7424848fa87e"),
+    (0x021B7518, "18283ea7bd3acb17"),
 ];
 // svflow-recorded-end
 
@@ -49,7 +49,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
     let r: u32 = match addr {
         0x021B_6100 => super::proc_init(env, mem, v(0), v(1), v(2), v(3)),
         0x021B_6434 => super::proc_main(env, mem, v(3)),
-        0x021B_64CC => super::readers_at_end(env),
+        0x021B_64CC => super::readers_at_end(env, v(0)),
         0x021B_6500 => super::proc_exit(env, mem, v(0), v(1), v(3)),
         0x021B_66D4 => {
             super::select_subproc(mem, v(0), v(1), v(2));

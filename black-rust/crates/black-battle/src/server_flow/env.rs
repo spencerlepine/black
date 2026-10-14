@@ -5,8 +5,8 @@
 //! callee in its own module:
 //!
 //! ```ignore
-//! fn fun_021ccc0c<E: FlowEnv>(env: &mut E, q: u32, cmd: u32) {
-//!     env.call(0x021C_CC0C, &mut [Arg::P, Arg::V(cmd), Arg::V(0), Arg::P]);
+//! fn fun_021ccc0c<E: FlowEnv>(env: &mut E, q: u32, cmd: u32, out: u32) {
+//!     env.call(0x021C_CC0C, &mut [Arg::PAt(q), Arg::V(cmd), Arg::V(0), Arg::PAt(out)]);
 //! }
 //! ```
 //!
@@ -14,6 +14,15 @@
 //! `testkit::TestEnv`, whose behaviour (log, return value, output bytes) comes from the stub
 //! lines of `tools/rom-diff/svflow_specs/<area>.spec`, the same lines the Unicorn driver
 //! (`tools/rom-diff/svflow.py`) uses.
+//!
+//! # Pass-through pointers (B18)
+//!
+//! A pointer the callee's own spec declares as a buffer or BattleMon (`arg buf` / `arg bpp`) is a
+//! `ptr` stub argument: the stub logs its value (an address in the stack window as `PTR_LOCAL`),
+//! so the port must pass the pointer the original passes: [`Arg::PAt`] (an address), [`Arg::PHost`]
+//! / [`Arg::PBuf`] (a byte of an image the port holds; the test environment maps it back to the
+//! emulator address, any other host address counts as a local buffer). A bare [`Arg::P`] there
+//! panics. `P` stays for pointers the callee's spec does not declare as a buffer.
 //!
 //! # Lending (B16)
 //!
@@ -51,6 +60,30 @@ pub enum Arg<'a> {
     /// A pass-through pointer whose value the caller knows (B16): the stubs treat it exactly like
     /// [`Arg::P`]; the battle integration uses the address.
     PAt(u32),
+}
+
+/// A pointer a port only passes through (B18), kept as a value so it can be handed down: the
+/// original's address ([`Arg::PAt`]; 0 = null) or the host address of a byte in an image the caller
+/// holds ([`Arg::PHost`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PassPtr {
+    At(u32),
+    Host(usize),
+}
+
+impl PassPtr {
+    /// The argument that passes this pointer.
+    pub fn arg(self) -> Arg<'static> {
+        match self {
+            PassPtr::At(v) => Arg::PAt(v),
+            PassPtr::Host(h) => Arg::PHost(h),
+        }
+    }
+
+    /// The original's null pointer.
+    pub fn is_null(self) -> bool {
+        self == PassPtr::At(0)
+    }
 }
 
 /// Objects the caller holds while it calls out (B16): the callee must see (and may change) these

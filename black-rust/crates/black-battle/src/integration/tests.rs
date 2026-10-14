@@ -255,8 +255,11 @@ fn run_battle(
             .all(|&(_, hp)| hp == 0)
     };
     let (player_down, foe_down) = (side_down(false), side_down(true));
+    // B18: with a forced script mask the battle may also end with neither side down (bit 11: the
+    // wild foe flees; the original does the same, `b17_ai_scripts_match_original` compares them)
+    let fled = ai_mask.is_some() && !player_down && !foe_down;
     assert!(
-        player_down != foe_down,
+        player_down != foe_down || fled,
         "B16: exactly one side must end fainted ({last:?})"
     );
     if log {
@@ -336,14 +339,15 @@ fn b16_single_battle() {
 /// B17: the same battle with trainer-AI scripts (the AI client's mask forced): the ai1 ports
 /// (every command handler the scripts reach, called by the interpreted vm.c step) produce the same
 /// battle — HP trace and every command frame — as the original overlay-96 code in the Thumb
-/// interpreter. Masks: the script bits whose battles run end to end in the integration (bits 0, 1,
-/// 4 and 11 alone reach integration gaps outside ai1, bit 12 an unmapped script read; see the
-/// black-battle README "B16 integration").
+/// interpreter. Masks: every script bit whose battle runs end to end in the integration (B18 added
+/// bits 0, 1, 4 and 11; bit 12's 12-byte script makes vm.c read past its end in the original too,
+/// bits 14 / 15 have no script in archive 0xAB; see the black-battle README "B16 integration").
 #[test]
 fn b17_ai_scripts_match_original() {
     let Some(rom) = rom() else { return };
     let masks = [
-        0x4, 0x8, 0x20, 0x40, 0x80, 0x100, 0x200, 0x400, 0x2000, 0x2C, 0x7EC, 0x27EC,
+        0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x100, 0x200, 0x400, 0x800, 0x2000, 0x2C,
+        0x7EC, 0x27EC, 0x2FFF,
     ];
     let mut handlers = std::collections::BTreeSet::<u32>::new();
     for mask in masks {

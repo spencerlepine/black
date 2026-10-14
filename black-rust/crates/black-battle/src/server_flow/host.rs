@@ -416,6 +416,7 @@ impl<E: FlowEnv, U: Unported, W: WazaHooks> FlowHost for FlowWorkHost<E, U, W> {
     fn fun_021c8434(&mut self, poke_id: u32, attacker: u32) {
         api::bounce_move(
             &mut LendRef::new_ref(&mut self.env, &self.work),
+            &self.work,
             poke_id,
             attacker,
         )

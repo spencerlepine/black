@@ -29,7 +29,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021D05C4, "d11039f01b7a120c"),
     (0x021D0644, "3a1ca967e7741d1c"),
     (0x021D06C8, "3c2261906756d07a"),
-    (0x021D0770, "d0c3c2f112f56ae7"),
+    (0x021D0770, "6514a78c8a256ef4"),
     (0x021D0980, "9ebff6aa88c7ee1a"),
     (0x021D09E0, "8c14ae1c5b1475ba"),
     (0x021D0B10, "4f1a7c9aeaa1766f"),
@@ -40,8 +40,8 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021D0D38, "7348b01a87fa6bc7"),
     (0x021D0D44, "85c362142fb5a62b"),
     (0x021D0D50, "7d3ea84c50e749fd"),
-    (0x021D0E74, "e01a0b624c684801"),
-    (0x021D0E7C, "cc62bafe81d6d1a6"),
+    (0x021D0E74, "bcdab210b0b93e8b"),
+    (0x021D0E7C, "0a4e435d69ab30f0"),
     (0x021D102C, "ba1496dbdc015a6c"),
     (0x021D1058, "9301a77f65df6042"),
 ];
@@ -54,7 +54,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x021C_FAC4 => return super::not_ability_17(env, vals[1]) as u64,
         0x021C_FB8C => return super::flag8_test(env, vals[1]) as u64,
         0x021C_FDCC => return super::counter_test(env, vals[1]) as u64,
-        0x021D_0E74 => return super::switch_replay(env) as u64,
+        0x021D_0E74 => return super::switch_replay(env, &bufs[0], &bufs[1]) as u64,
         0x021D_0980 => {
             let has_out = vals[1] != 0;
             let out = if has_out {

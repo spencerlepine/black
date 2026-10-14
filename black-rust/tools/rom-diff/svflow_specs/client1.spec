@@ -82,14 +82,14 @@ fn 021cd984 ret=none
   stub 021ee674 ret=none args=v
   stub 021eebdc ret=none args=v force
   stub 021d3f64 ret=none args=p,v
-  stub 021cda0c ret=none args=p,v
+  stub 021cda0c ret=none args=ptr,v
 
 # cursor reset, step = main step (021cda19)
 fn 021cd9b0 ret=none
   nowork
   arg buf 0x1C0
   stub 021d3f88 ret=none args=p
-  stub 021cda0c ret=none args=p,v
+  stub 021cda0c ret=none args=ptr,v
 
 # mode == 2
 fn 021cd9c8 ret=bool
@@ -187,7 +187,7 @@ fn 021cd6f0 ret=ofs:arg11
   stub 021ba08c force ret=u32 args=v
   stub 021d8230 ret=none args=p
   stub 021d3f04 ret=none args=p
-  stub 021d3d9c force ret=none args=p
+  stub 021d3d9c force ret=none args=ptr
   stub 021b9fbc force ret=u32 args=v,v
   stub 021ba820 force ret=u32 args=v
   stub 02187f00 force ret=u32 args=v,v,v,v,v
@@ -199,8 +199,8 @@ fn 021cd97c ret=u32
   nowork
   arg buf 0x1C0
   fix arg0 0x28 u32 oneof 0x021CDA19 0x021CDC0D
-  stub 021cda18 force ret=pick:0/1 args=p,v
-  stub 021cdc0c force ret=pick:0/1 args=p,v
+  stub 021cda18 force ret=pick:0/1 args=ptr,v
+  stub 021cdc0c force ret=pick:0/1 args=ptr,v
 
 # the main step (`.byte` block, 8-way jump table on the phase c[0x1A8]; table data 021cda3e-021cda4e): 021d3fdc(c, cursor) first.
 # 0: code = 021eebe8(adapter); replay (mode 2) with flag bit 4 or 5 and no code -> 0; 021cdd34 (result clear); code 9: the
@@ -220,11 +220,11 @@ fn 021cda18 ret=u32
   stub 021d3fdc ret=none args=p,p
   stub 021eebe8 force ret=pick:0/0/9/1/2/3/7 args=v
   stub 021eec20 force ret=none args=v,outp:0:0x1B8:1
-  stub 021cdd50 force ret=pick:0/0x021CDDDD/0x021CDF59 args=p,v,outm:4:1/0/0/0
+  stub 021cdd50 force ret=pick:0/0x021CDDDD/0x021CDF59 args=ptr,v,outm:4:1/0/0/0
   stub 021d3fac ret=pick:0/1 args=p
   stub 021d3fc4 ret=none args=p
-  stub 021cdddc force ret=pick:0/1 args=p,p
-  stub 021cdf58 force ret=pick:0/1 args=p,p
+  stub 021cdddc force ret=pick:0/1 args=ptr,ptr
+  stub 021cdf58 force ret=pick:0/1 args=ptr,ptr
   stub 021d3f4c ret=pick:0/1 args=p
   stub 021eec4c force ret=pick:0/1 args=v,v,v
   stub 021d3f60 ret=pick:0/1/2 args=p
@@ -249,9 +249,9 @@ fn 021cdc0c ret=u32 inputs=600
   stub 021d3fdc ret=none args=p,p
   stub 021d3f98 ret=pick:0/1 args=p
   stub 021eebe8 force ret=pick:0/0/1/2/3 args=v
-  stub 021cdd50 force ret=pick:0/0x021CDDDD/0x021CDF59 args=p,v,v
-  stub 021cdddc force ret=pick:0/1 args=p,p
-  stub 021cdf58 force ret=pick:0/1 args=p,p
+  stub 021cdd50 force ret=pick:0/0x021CDDDD/0x021CDF59 args=ptr,v,v
+  stub 021cdddc force ret=pick:0/1 args=ptr,ptr
+  stub 021cdf58 force ret=pick:0/1 args=ptr,ptr
   stub 02005ca4 ret=none args=v,v
   stub 021eae24 ret=none args=v
   stub 02005df8 ret=none args=v

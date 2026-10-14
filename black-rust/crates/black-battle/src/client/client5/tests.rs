@@ -6,14 +6,14 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021D2FD8, "94716790c9bde4c0"),
     (0x021D3138, "2701e24386cbc840"),
     (0x021D31A0, "2cdfc036f4635527"),
-    (0x021D324C, "d91a177f0a4c34dc"),
-    (0x021D32E0, "8d92c241dd6f8937"),
-    (0x021D344C, "09fd388c1083af11"),
-    (0x021D34B0, "39cd0dd648890f8b"),
-    (0x021D34E8, "d67e4af04bc859f6"),
-    (0x021D3568, "8233ec0c7206271a"),
+    (0x021D324C, "6623fdf3c2556aca"),
+    (0x021D32E0, "21bdc55db8d5400d"),
+    (0x021D344C, "f6d38b67deb2565d"),
+    (0x021D34B0, "cd061e7c050f37db"),
+    (0x021D34E8, "872cab5c9b5b3605"),
+    (0x021D3568, "ec35b9ff918729d5"),
     (0x021D35C8, "5308d83e90c189f6"),
-    (0x021D3630, "43bc912e71f09213"),
+    (0x021D3630, "c704f49ccf666dc2"),
     (0x021D3688, "1422c349a8d677cf"),
     (0x021D36CC, "0a2578c16dfebf20"),
     (0x021D36EC, "138b5727c9dff55c"),
@@ -106,7 +106,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
         0x021D_34B0 => {
             let (_, rest) = b.split_at_mut(1);
             let (s, a) = rest.split_at_mut(1);
-            m::cmd_play_se(env, &mut *s[0], &*a[0]) as u64
+            m::cmd_play_se(env, v[0], &mut *s[0], &*a[0]) as u64
         }
         0x021D_34E8 => h3!(m::cmd_position_anim),
         0x021D_3568 => h3!(m::cmd_pair_anim),

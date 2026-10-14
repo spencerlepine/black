@@ -1272,7 +1272,7 @@ pub fn run_actions<E: FlowEnv>(
             collect_list(env, w, s, 0x4CE);
             env.call_l(
                 0x021C_6158,
-                &mut [Arg::P, Arg::P],
+                &mut [Arg::P, Arg::PHost(w.mem[0x4CE..].as_ptr() as usize)],
                 Lent::of(Some(&mut *w), None, vec![&mut *s]),
             );
             w.set_u32_at(0x14, 2);
@@ -1362,8 +1362,15 @@ pub fn turn_start<E: FlowEnv>(
 
 /// C: `FUN_overlay_d_93__021bbd2c`: like [`turn_start`] for a resumed turn: the first time only
 /// resets the list in `s` and the flags (work + 0x77C = 1, + 0x77D = 0) and asks `021bc220`
-/// (returns 3 with state 3 when it says so); then runs the actions.
-pub fn turn_resume<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, s: &mut [u8], q: &mut [u8]) -> u32 {
+/// (returns 3 with state 3 when it says so; `021bc220(work, arg)` gets the caller's pointer `arg`
+/// passed through); then runs the actions.
+pub fn turn_resume<E: FlowEnv>(
+    env: &mut E,
+    w: &mut SvFlowWork,
+    s: &mut [u8],
+    q: &mut [u8],
+    arg: u32,
+) -> u32 {
     w.set_u32_at(0x14, 0);
     q[..8].fill(0);
     if w.u8_at(OFS_FLAG_77C) == 0 {
@@ -1377,7 +1384,7 @@ pub fn turn_resume<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, s: &mut [u8], q:
         w.set_u8_at(OFS_FLAG_77C, 1);
         if env.call_l(
             0x021B_C220,
-            &mut [Arg::P, Arg::P],
+            &mut [Arg::P, Arg::PAt(arg)],
             Lent::of(Some(&mut *w), None, vec![&mut *s, &mut *q]),
         ) != 0
         {
@@ -1544,7 +1551,7 @@ pub fn build_and_run<E: FlowEnv>(
     }
     env.call_l(
         0x021C_6158,
-        &mut [Arg::P, Arg::P],
+        &mut [Arg::P, Arg::PHost(w.mem[0x4CE..].as_ptr() as usize)],
         Lent::of(Some(&mut *w), None, vec![&mut *s, &mut *q]),
     );
     2

@@ -10,6 +10,7 @@ tools/rom-diff/svflow_specs/README.md.
   svflow.py AREA --order-check    (Z19) exit 1 if an input's hash changes when the inputs run in reverse order
                                   after junk in r0-r12 / flags / the stack window (combine with --all / --fn)
   svflow.py --selftest            (Z19) reset probes (r3, r4, r12, stack, flags) + order check of server1 021b6848
+                                  + (B18) `ptr` parity vectors and the bare-`p` lint over the battle specs
                                   + (Z23) `pick+W:` parity vectors
 
 Generic mode (any crate; tools/check-fn.sh passes these):
@@ -288,6 +289,9 @@ def load_spec(area):
     text = open(SPEC_PATH.get(area) or os.path.join(SPECS, area + ".spec")).read()
     if "NEEDS-HAND" in text and not os.environ.get("SVFLOW_ALLOW_DRAFT"):
         sys.exit("svflow: %s.spec still has NEEDS-HAND lines (genspec.py draft); resolve them first" % area)
+    if not SPEC_PATH.get(area) and battle_bare_p(area):  # B18: battle svflow areas only (other crates: see README)
+        sys.exit("svflow: %s.spec passes a buf/bpp argument as a bare `p` (B18):\n  %s"
+                 % (area, "\n  ".join(battle_bare_p(area))))
     return parse_spec(text)[1]
 
 
@@ -496,17 +500,93 @@ def ticks_ret(st, ctx):
     return (v & M, (v >> 32) & M)
 
 
+PTR_LOCAL = 0x4C4F4341  # B18: canon_ptr of a pointer into the caller's stack frame (a local buffer)
+
+
+def canon_ptr(v):
+    """B18: the logged form of a `ptr` stub argument: the pointer itself, except that any address in the stack window
+    (a buffer local to some frame of the function under test; its exact address differs between the original and a
+    port) is PTR_LOCAL. Mirrored by `black_fndiff::canon_ptr`."""
+    v &= M
+    return PTR_LOCAL if STACK_LO <= v < STACK_HI else v
+
+
+def bare_p_lint(texts):
+    """B18: `p` stub arguments where the callee's own `fn` block (in any of the given specs) declares that argument
+    `buf` or `bpp`: such a pointer must be `ptr` (value checked), or a port could pass any pointer (or none) and still
+    match. texts = [(area, spec text)]; returns the messages (empty = clean). Mirrored by `black_fndiff::bare_p_lint`."""
+    kinds, parsed = {}, []
+    for area, text in texts:
+        funcs = parse_spec(text)[1]
+        parsed.append((area, funcs))
+        for f in funcs:
+            for i, a in enumerate(f.args):
+                if a.kind in ("buf", "bpp"):
+                    kinds.setdefault(f.addr, {}).setdefault(i, a.kind)
+    out = []
+    for area, funcs in parsed:
+        for f in funcs:
+            for st in f.stubs:
+                for i, k in enumerate(st.args):
+                    kk = kinds.get(st.addr, {}).get(i)
+                    if k == "p" and kk:
+                        out.append("%s %08x: stub %08x arg %d is `p` but %08x declares it `%s`: use `ptr`"
+                                   % (area, f.addr, st.addr, i, st.addr, kk))
+    return out
+
+
+BARE_P = {}  # B18: area -> bare_p_lint messages of the battle svflow specs (computed once)
+
+
+def battle_bare_p(area):
+    """B18: bare_p_lint over every battle svflow spec (svflow_specs/*.spec), the messages of one area."""
+    if not BARE_P:
+        BARE_P[None] = []
+        texts = [(fn[:-5], open(os.path.join(SPECS, fn)).read()) for fn in sorted(os.listdir(SPECS)) if fn.endswith(".spec")]
+        for m in bare_p_lint(texts):
+            BARE_P.setdefault(m.split()[0], []).append(m)
+    return BARE_P.get(area, [])
+
+
+def ptr_selftest():
+    """B18 parity vectors of `ptr` stub arguments and of bare_p_lint (the same numbers / messages as
+    `ptr_args_are_logged_canonically` and `bare_p_lint_vectors` in crates/black-fndiff/src/stub.rs)."""
+    bad = []
+    for v, want in ((0, 0), (0x02E10010, 0x02E10010), (STACK_LO, PTR_LOCAL), (STACK_HI - 4, PTR_LOCAL), (STACK_HI, STACK_HI),
+                    (0x021F3B20, 0x021F3B20)):
+        if canon_ptr(v) != want:
+            bad.append("canon_ptr(%#x) = %#x != %#x" % (v, canon_ptr(v), want))
+    ctx = Ctx()
+    ctx.salt = 0x1234
+    f = make_stub(Stub(0x021BB798, "u32", ["ptr", "v", "p", "ptr"], False), ctx)
+    r1 = f(None, 0x02EFFF00, 7, 0x02E10000, 0x02E20010, 0)
+    r2 = f(None, 0, 7, 0x02E30000, 0x021F3B20, 0)
+    want = [0x021BB798, 7, PTR_LOCAL, 0x02E20010, 0x021BB798, 7, 0, 0x021F3B20]
+    if ctx.log != want or r1 != r2 or r1 != 0x6858160F:
+        bad.append("ptr stub: log %s ret %#x/%#x" % ([hex(x) for x in ctx.log], r1, r2))
+    texts = [("a", "area a\nfn 021c0000 ret=none\n  arg buf 0x40\n  arg u8 any\n  arg bpp\n"),
+             ("b", "area b\nfn 021c1000 ret=none\n  stub 021c0000 ret=none args=p,v,p\n  stub 021c2000 ret=none args=p\n"
+                   "fn 021c1100 ret=none\n  stub 021c0000 ret=none args=ptr,v,ptr\n")]
+    want = ["b 021c1000: stub 021c0000 arg 0 is `p` but 021c0000 declares it `buf`: use `ptr`",
+            "b 021c1000: stub 021c0000 arg 2 is `p` but 021c0000 declares it `bpp`: use `ptr`"]
+    if bare_p_lint(texts) != want:
+        bad.append("bare_p_lint: %s" % bare_p_lint(texts))
+    return bad
+
+
 def make_stub(st, ctx):
     key = st.addr & 0xFFFF
 
     def f(em, a0, a1, a2, a3, sp):
         raw = [a0, a1, a2, a3] + [em.r32(sp + 4 * (i - 4)) for i in range(4, len(st.args))]
-        vals, extra, outs, outps, keeps, outws, outvs = [], [], [], [], [], [], []
+        vals, extra, outs, outps, keeps, outws, outvs, ptrs = [], [], [], [], [], [], [], []
         for i, k in enumerate(st.args):
             if k == "v":
                 vals.append(raw[i])
             elif k == "v16":  # B10-spec4: scalar of which only the low halfword is logged / mixed (the callee ignores the rest)
                 vals.append(raw[i] & 0xFFFF)
+            elif k == "ptr":  # B18: a pass-through pointer whose value is checked (logged as canon_ptr, not mixed)
+                ptrs.append(canon_ptr(raw[i]))
             elif k.startswith("in:"):
                 n = int(k[3:], 0)
                 # B10-specs: N need not be a multiple of 4; the last word is zero-padded
@@ -540,7 +620,7 @@ def make_stub(st, ctx):
                 ptr = raw[i] if t[0] == "outk" else em.r32((raw[i] + int(t[1], 0)) & M)
                 n, m = t[-2], t[-1]
                 keeps.append((ptr, int(n, 0), [int(x, 0) & 0xFF for x in m.split("/")], 0x100 * (i + 1)))
-        ctx.log += [st.addr] + vals + extra
+        ctx.log += [st.addr] + vals + extra + ptrs
         if st.noreturn:
             ctx.halted = st.addr
             em.uc.emu_stop()
@@ -1004,6 +1084,9 @@ def selftest():
     if e.call(a, 5, 0, 0, 7, stack_args=(9,))[0] != 21:
         fails.append("arguments r0/r3/stack word 0 not passed")
     fails += pick_any_selftest()  # Z23: `pick+W:` parity vectors (mirrored in black-fndiff stub.rs)
+    fails += ptr_selftest()  # B18: `ptr` stub arguments + bare_p_lint vectors (mirrored in black-fndiff stub.rs)
+    battle_bare_p("")  # B18: the lint over every battle svflow spec (fills BARE_P)
+    fails += [m for a in sorted(k for k in BARE_P if k) for m in BARE_P[a]]
     checks = [("server1", 0x021B6848)] + [("selftest", f.addr) for f in load_spec("selftest")]
     for area, addr in checks:
         spec = {f.addr: f for f in load_spec(area)}
@@ -1015,7 +1098,7 @@ def selftest():
     if fails:
         print("selftest FAILED:\n  " + "\n  ".join(fails))
         return 1
-    print("selftest ok (%d reset probes, pick+ parity vectors, %d order checks)" % (len(probes) + 1, len(checks)))
+    print("selftest ok (%d reset probes, pick+ and ptr parity vectors, bare-p lint, %d order checks)" % (len(probes) + 1, len(checks)))
     return 0
 
 

@@ -115,8 +115,8 @@ fn 021eeb2c ret=bool
   arg u32 any
   fix arg0 0xC u8 alt const 0 || range 0 15 || any    # high nibble 0 = local adapter, else the comm layer is used
   fix arg0 0xE u8 alt const 1 || const 3 || const 4 || any
-  stub 021eeb84 ret=pick:0/1 args=p,v,v,v
-  stub 021eeba4 ret=pick:0/1 args=p
+  stub 021eeb84 ret=pick:0/1 args=ptr,v,v,v
+  stub 021eeba4 ret=pick:0/1 args=ptr
   stub 021d4b58 ret=pick:0/1 args=v,p,v,v
   stub 021d4b98 ret=pick:0/1 args=
   stub 021d4bd4 ret=u16 args=v,out:4
@@ -314,11 +314,11 @@ fn 021eee24 ret=none
   stub 021ba064 force ret=u32 args=v,v
   stub 0201f02c ret=none args=v,v,v
   stub 021ba080 force ret=u32 args=v
-  stub 021eee80 ret=none args=v,v,p
+  stub 021eee80 ret=none args=v,v,ptr
   stub 021b8bd0 force ret=pick:0/1 args=v,v
-  stub 021eeec8 ret=none args=v,v,p
+  stub 021eeec8 ret=none args=v,v,ptr
   stub 02045cac ret=none args=v,v,v
-  stub 021eefe0 ret=none args=v,p,v
+  stub 021eefe0 ret=none args=v,ptr,v
   stub 0201f250 ret=none args=v,v,v
   stub 02045a98 ret=pick:0xFFFF args=
   stub 0201d5c4 ret=pick:0xF000 args=
@@ -370,9 +370,9 @@ fn 021eee80 ret=none
   stub 0201f02c ret=none args=v,v,v
   stub 021ba080 force ret=u32 args=v
   stub 021b8bd0 force ret=pick:0/1 args=v,v
-  stub 021eeec8 ret=none args=v,v,p
+  stub 021eeec8 ret=none args=v,v,ptr
   stub 02045cac ret=none args=v,v,v
-  stub 021eefe0 ret=none args=v,p,v
+  stub 021eefe0 ret=none args=v,ptr,v
   stub 0201f250 ret=none args=v,v,v
   stub 02045a98 ret=pick:0xFFFF args=
   stub 0201d5c4 ret=pick:0xF000 args=
@@ -424,7 +424,7 @@ fn 021eeec8 ret=none
   stub 0201f02c ret=none args=v,v,v
   stub 021ba080 force ret=u32 args=v
   stub 02045cac ret=none args=v,v,v
-  stub 021eefe0 ret=none args=v,p,v
+  stub 021eefe0 ret=none args=v,ptr,v
   stub 0201f250 ret=none args=v,v,v
   stub 02045a98 ret=pick:0xFFFF args=
   stub 0201d5c4 ret=pick:0xF000 args=
@@ -475,12 +475,12 @@ fn 021eeef4 ret=none
   stub 021ba064 force ret=u32 args=v,v
   stub 0201f02c ret=none args=v,v,v
   stub 021ba080 force ret=u32 args=v
-  stub 021ef460 ret=none args=v,v,p
-  stub 021ef508 ret=none args=v,v,p
-  stub 021ef3a4 ret=none args=v,v,p
-  stub 021ef594 ret=none args=v,v,p
-  stub 021ef204 ret=none args=v,v,p
-  stub 021ef1cc ret=none args=v,v,p
+  stub 021ef460 ret=none args=v,v,ptr
+  stub 021ef508 ret=none args=v,v,ptr
+  stub 021ef3a4 ret=none args=v,v,ptr
+  stub 021ef594 ret=none args=v,v,ptr
+  stub 021ef204 ret=none args=v,v,ptr
+  stub 021ef1cc ret=none args=v,v,ptr
   stub 02045a98 ret=pick:0xFFFF args=
   stub 0201d5c4 ret=pick:0xF000 args=
   stub 0201d5cc ret=pick:0/1/1/1 args=p
@@ -502,10 +502,10 @@ fn 021eeef4 ret=none
   stub 0201f020 ret=none args=v,v,v
   stub 02045cac ret=none args=v,v,v
   stub 021eef98 ret=pick:0/1/2/2/3 args=v
-  stub 021ef280 ret=none args=v,v,p
+  stub 021ef280 ret=none args=v,v,ptr
   stub 021b8d08 force ret=u32 args=v
   stub 021b8ce8 force ret=pick:0/1 args=v,v,v
-  stub 021eefe0 ret=none args=v,p,v
+  stub 021eefe0 ret=none args=v,ptr,v
   stub 0201f250 ret=none args=v,v,v
   stub 021b8ff4 force ret=pick:0/1/2/3 args=v
 
@@ -646,11 +646,11 @@ fn 021ef1cc ret=none inputs=400
   stub 0201f020 ret=none args=v,v,v
   stub 02045cac ret=none args=v,v,v
   stub 021eef98 ret=pick:0/1/2/2/3 args=v
-  stub 021ef280 ret=none args=v,v,p
-  stub 021ef204 ret=none args=v,v,p
+  stub 021ef280 ret=none args=v,v,ptr
+  stub 021ef204 ret=none args=v,v,ptr
   stub 021b8d08 force ret=u32 args=v
   stub 021b8ce8 force ret=pick:0/1 args=v,v,v
-  stub 021eefe0 ret=none args=v,p,v
+  stub 021eefe0 ret=none args=v,ptr,v
   stub 0201f250 ret=none args=v,v,v
 
 # message id + variant offset (0 / 1 / 2 by the side), expand, show
@@ -704,7 +704,7 @@ fn 021ef204 ret=none
   stub 021b8d08 force ret=u32 args=v
   stub 021b8ce8 force ret=pick:0/1 args=v,v,v
   stub 02045cac ret=none args=v,v,v
-  stub 021eefe0 ret=none args=v,p,v
+  stub 021eefe0 ret=none args=v,ptr,v
   stub 0201f250 ret=none args=v,v,v
 
 # like ef204 for two mons (variant 0 / 1 / 2 each)
@@ -758,7 +758,7 @@ fn 021ef280 ret=none
   stub 021b8d08 force ret=u32 args=v
   stub 021b8ce8 force ret=pick:0/1 args=v,v,v
   stub 02045cac ret=none args=v,v,v
-  stub 021eefe0 ret=none args=v,p,v
+  stub 021eefe0 ret=none args=v,ptr,v
   stub 0201f250 ret=none args=v,v,v
 
 # mon message with a count (handler for 0x3AA)
@@ -884,7 +884,7 @@ fn 021ef594 ret=none
   stub 0201f020 ret=none args=v,v,v
   stub 021b8ff4 force ret=pick:0/1/2/3 args=v
   stub 02045cac ret=none args=v,v,v
-  stub 021eefe0 ret=none args=v,p,v
+  stub 021eefe0 ret=none args=v,ptr,v
   stub 0201f250 ret=none args=v,v,v
 
 # mon message by id * 3 + side
@@ -975,9 +975,9 @@ fn 021ef6a8 ret=none
   stub 0201ef34 ret=none args=v,v,v
   stub 0201ef40 ret=none args=v,v,v
   stub 0201f020 ret=none args=v,v,v
-  stub 021ef6b0 ret=none args=v,v,p
+  stub 021ef6b0 ret=none args=v,v,ptr
   stub 02045cac ret=none args=v,v,v
-  stub 021eefe0 ret=none args=v,p,v
+  stub 021eefe0 ret=none args=v,ptr,v
   stub 0201f250 ret=none args=v,v,v
 
 # message with the flag ctx+0x5A set while expanding
@@ -1029,7 +1029,7 @@ fn 021ef6b0 ret=none
   stub 0201ef40 ret=none args=v,v,v
   stub 0201f020 ret=none args=v,v,v
   stub 02045cac ret=none args=v,v,v
-  stub 021eefe0 ret=none args=v,p,v
+  stub 021eefe0 ret=none args=v,ptr,v
   stub 0201f250 ret=none args=v,v,v
 
 # thunk to ef6f0
@@ -1080,9 +1080,9 @@ fn 021ef6e8 ret=none
   stub 0201ef34 ret=none args=v,v,v
   stub 0201ef40 ret=none args=v,v,v
   stub 0201f020 ret=none args=v,v,v
-  stub 021ef6f0 ret=none args=v,v,p
+  stub 021ef6f0 ret=none args=v,v,ptr
   stub 02045cac ret=none args=v,v,v
-  stub 021eefe0 ret=none args=v,p,v
+  stub 021eefe0 ret=none args=v,ptr,v
   stub 0201f250 ret=none args=v,v,v
 
 # message (ctx handle 0x28), expand, show
@@ -1134,5 +1134,5 @@ fn 021ef6f0 ret=none
   stub 0201ef40 ret=none args=v,v,v
   stub 0201f020 ret=none args=v,v,v
   stub 02045cac ret=none args=v,v,v
-  stub 021eefe0 ret=none args=v,p,v
+  stub 021eefe0 ret=none args=v,ptr,v
   stub 0201f250 ret=none args=v,v,v

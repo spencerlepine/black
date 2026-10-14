@@ -40,7 +40,7 @@ fn server1_call(e: &mut Env, addr: u32, v: &[u32]) -> Option<u32> {
     Some(match addr {
         0x021B_6100 => server1::proc_init(e, mem, v[0], v[1], v[2], v[3]),
         0x021B_6434 => server1::proc_main(e, mem, v[3]),
-        0x021B_64CC => server1::readers_at_end(e),
+        0x021B_64CC => server1::readers_at_end(e, v[0]),
         0x021B_6500 => server1::proc_exit(e, mem, v[0], v[1], v[3]),
         0x021B_66D4 => {
             server1::select_subproc(mem, v[0], v[1], v[2]);

@@ -314,8 +314,9 @@ pub fn message_26e8<E: FlowEnv>(env: &mut E, mon: u32, a: u32, b: u32) -> u32 {
 /// C: `FUN_overlay_d_93__021c4ea4`: sets up the hem record (`work + 0x1AE4`) by `kind` (3 and 4 push
 /// the message 399 / 0x18C through `8838` / `8860`, anything else resets it with `8810`); then, for
 /// `damage > 0` when `20bc(work, mon, damage)` agrees, runs the 0x290 / 0x255 message commands
-/// (`70e4`) and `20d0`.
-pub fn hem_damage_messages<E: FlowEnv>(env: &mut E, mon: u32, kind: u32, damage: i32) {
+/// (`70e4`) and `20d0`. `hem` is the host address of the hem record (`work + 0x1AE4`, held by the
+/// caller), passed through to the HANDEX helpers.
+pub fn hem_damage_messages<E: FlowEnv>(env: &mut E, hem: usize, mon: u32, kind: u32, damage: i32) {
     let id = mon_id(env, mon);
     let msg = match kind {
         3 => Some(399),
@@ -324,11 +325,11 @@ pub fn hem_damage_messages<E: FlowEnv>(env: &mut E, mon: u32, kind: u32, damage:
     };
     match msg {
         Some(m) => {
-            env.call(0x021C_8838, &mut [Arg::P, Arg::V(2), Arg::V(m)]);
-            env.call(0x021C_8860, &mut [Arg::P, Arg::V(id)]);
+            env.call(0x021C_8838, &mut [Arg::PHost(hem), Arg::V(2), Arg::V(m)]);
+            env.call(0x021C_8860, &mut [Arg::PHost(hem), Arg::V(id)]);
         }
         None => {
-            env.call(0x021C_8810, &mut [Arg::P]);
+            env.call(0x021C_8810, &mut [Arg::PHost(hem)]);
         }
     }
     if damage > 0
@@ -337,8 +338,8 @@ pub fn hem_damage_messages<E: FlowEnv>(env: &mut E, mon: u32, kind: u32, damage:
             &mut [Arg::P, Arg::V(mon), Arg::V(damage as u32)],
         ) != 0
     {
-        env.call(0x021C_99A0, &mut [Arg::P, Arg::P]);
-        env.call(0x021C_8810, &mut [Arg::P]);
+        env.call(0x021C_99A0, &mut [Arg::P, Arg::PHost(hem)]);
+        env.call(0x021C_8810, &mut [Arg::PHost(hem)]);
         let text = env.call(0x021C_8010, &mut [Arg::P, Arg::V(id)]);
         env.call(
             0x021C_70E4,
@@ -792,7 +793,8 @@ pub fn walk_list2<E: FlowEnv>(env: &mut E, w: &mut SvFlowWork, cx: &mut Cx, list
             let b = env.callwc(0x021D_7BD4, &mut [Arg::V(mon), Arg::V(mode)], w, cx);
             let r = message_26e8(&mut Lend::wc(env, w, cx), mon, mode, b);
             if r != 0 {
-                hem_damage_messages(&mut Lend::wc(env, w, cx), mon, mode, r as i32);
+                let hem = w.mem[0x1AE4..].as_ptr() as usize;
+                hem_damage_messages(&mut Lend::wc(env, w, cx), hem, mon, mode, r as i32);
                 fired = true;
             }
             bracket_close(w, old);
@@ -1171,7 +1173,12 @@ pub fn bracketed_effect<E: FlowEnv>(
         if let Some(m) = msg {
             put_slot_message(&mut Lend::new(env, w), cx, mon, m);
         }
-        env.callwc(0x021C_8810, &mut [Arg::P], w, cx);
+        env.callwc(
+            0x021C_8810,
+            &mut [Arg::PHost(w.mem[0x1AE4..].as_ptr() as usize)],
+            w,
+            cx,
+        );
         env.callwc(
             0x021C_4B2C,
             &mut [

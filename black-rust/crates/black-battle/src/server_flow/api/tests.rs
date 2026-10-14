@@ -10,14 +10,14 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C7CE8, "35d9f88f40ca0559"),
     (0x021C7CF4, "b37143d193e00aec"),
     (0x021C7D00, "66f74a99c9c02293"),
-    (0x021C7D54, "9a5c8f996b574f82"),
+    (0x021C7D54, "7435a1b000af5fce"),
     (0x021C7DAC, "51995f6b9e00e592"),
     (0x021C7E14, "f388d8a7daaabab6"),
     (0x021C7EC4, "6b408e356eaea2d5"),
     (0x021C7ED8, "88ad6595a5cd2f15"),
-    (0x021C7EEC, "fb5b0f6e322eedcf"),
-    (0x021C7F04, "ad9278a3e582e5d2"),
-    (0x021C7F24, "41f11f39cdc352c6"),
+    (0x021C7EEC, "db8aa00e6af2262b"),
+    (0x021C7F04, "cd3cec92c968a361"),
+    (0x021C7F24, "7cebf0c29bc2f3f7"),
     (0x021C7F4C, "fbb516c5fb9d84fa"),
     (0x021C7F68, "91f08ed764f59198"),
     (0x021C7FCC, "e2d1b920bac0fdad"),
@@ -39,7 +39,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C8180, "e67b5d77eeef04ab"),
     (0x021C818C, "4961b2e22b4c29b1"),
     (0x021C81C8, "3d658e720f1630aa"),
-    (0x021C81D0, "2696158d9f5dbd94"),
+    (0x021C81D0, "89d4a8cdd5576b34"),
     (0x021C8234, "0dd51aa44d5331e4"),
     (0x021C824C, "2610bf53043a52c8"),
     (0x021C8288, "4cc62dba5749dcc4"),
@@ -57,9 +57,9 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C83D4, "703d84480dd1074d"),
     (0x021C83DC, "9eb570cbafc91d6d"),
     (0x021C83E8, "f09731e64dc8791e"),
-    (0x021C8408, "12df4ca9287bf0ba"),
-    (0x021C8434, "5d33c8c734b5a7a6"),
-    (0x021C846C, "47eadc0cdd3c7014"),
+    (0x021C8408, "1a5efc896ce27933"),
+    (0x021C8434, "6558784ff8075dd8"),
+    (0x021C846C, "9442853c3ebe9021"),
     (0x021C8494, "3367b8c88fb40e2f"),
     (0x021C84AC, "e4dcd871facefd7b"),
     (0x021C84D0, "7da583e9c1d9acd6"),
@@ -68,10 +68,10 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021C84E8, "8378b3c9c37fc993"),
     (0x021C84F4, "75ad627fa25e642a"),
     (0x021C8534, "7805502148f405ba"),
-    (0x021C8588, "46a3c2dde1ebde13"),
-    (0x021C859C, "7d7f398ea60d1c63"),
+    (0x021C8588, "6295d6a1c5d5b93a"),
+    (0x021C859C, "61e4dc13da693636"),
     (0x021C85B8, "977c06c10ac0f2a8"),
-    (0x021C85D4, "0b5c4ff6a244199a"),
+    (0x021C85D4, "c1131dce6ba2ed7e"),
 ];
 // svflow-recorded-end
 
@@ -147,10 +147,10 @@ pub(crate) fn call<E: crate::server_flow::env::FlowEnv>(addr: u32, c: &mut Case<
             0
         }
         0x021C_8434 => {
-            super::bounce_move(e, v[1], v[2]);
+            super::bounce_move(e, w, v[1], v[2]);
             0
         }
-        0x021C_846C => super::mon_pair_bfeac(e, w, v[1], v[2]) as u64,
+        0x021C_846C => super::mon_pair_bfeac(e, w, v[1], v[2], v[3]) as u64,
         0x021C_8494 => {
             super::mon_bff60(e, w, v[1]);
             0

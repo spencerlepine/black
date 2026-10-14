@@ -231,5 +231,23 @@ class PortedPerSet(unittest.TestCase):
         self.assertFalse({a for a in field if not lo <= a < hi} - flow_ovl & cp)
 
 
+class PtrArgs(unittest.TestCase):
+    """B18: `ptr` stub arguments (logged as canon_ptr, not mixed) and the bare-`p` lint; the same vectors as
+    `ptr_args_are_logged_canonically` / `bare_p_lint_vectors` in crates/black-fndiff/src/stub.rs."""
+
+    def test_vectors(self):
+        self.assertEqual(S.ptr_selftest(), [])
+
+    def test_battle_specs_are_clean(self):
+        S.BARE_P.clear()
+        S.battle_bare_p("")
+        self.assertEqual([m for a, ms in S.BARE_P.items() if a for m in ms], [])
+
+    def test_bare_p_is_rejected_when_the_callee_declares_a_buffer(self):
+        t = [("x", "area x\nfn 021c0000 ret=none\n  arg bpp\nfn 021c0100 ret=none\n  stub 021c0000 ret=none args=p\n")]
+        self.assertEqual(len(S.bare_p_lint(t)), 1)
+        self.assertEqual(S.bare_p_lint([(a, s.replace("args=p", "args=ptr")) for a, s in t]), [])
+
+
 if __name__ == "__main__":
     unittest.main()

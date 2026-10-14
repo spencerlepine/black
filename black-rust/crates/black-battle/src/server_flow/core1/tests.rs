@@ -3,18 +3,18 @@ use crate::server_flow::testkit::{run_area_suite, Case};
 // Written by tools/check-svflow.sh only, after the Rust hashes matched the ROM run.
 // svflow-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
-    (0x021BB968, "5f04c9d615c87551"),
-    (0x021BB9D8, "7a4e3c99a965426a"),
+    (0x021BB968, "ced73076feb0e580"),
+    (0x021BB9D8, "c651fdc78135119f"),
     (0x021BBB48, "72d83e32191173ff"),
     (0x021BBB60, "499046381e7b3ab0"),
     (0x021BBC34, "52d5adaabdbf9830"),
-    (0x021BBC44, "5b32711c06c85d99"),
-    (0x021BBCD4, "e305baf668d81c41"),
+    (0x021BBC44, "df60fb0d5b843504"),
+    (0x021BBCD4, "cd6da3418b04da3b"),
     (0x021BBD20, "46a3fb0fcd764069"),
-    (0x021BBD2C, "092ec450ffc8b01a"),
+    (0x021BBD2C, "7c2307887f7785c8"),
     (0x021BBD80, "96d450a6b72fb6be"),
-    (0x021BBD8C, "e86a84e30b5fd3f4"),
-    (0x021BBFA8, "b8c56ba19338d407"),
+    (0x021BBD8C, "1df510dcb69b0f30"),
+    (0x021BBFA8, "063c52fc0807d084"),
     (0x021BC0E8, "cbaffc4d3e5dfc34"),
     (0x021BC220, "01d8292d20078c28"),
     (0x021BC2B0, "c8099f3ee28d1386"),
@@ -182,7 +182,7 @@ pub(crate) fn call<E: crate::server_flow::env::FlowEnv>(addr: u32, c: &mut Case<
         }
         0x021B_BD2C => {
             let (s, q) = c.regions.split_at_mut(1);
-            super::turn_resume(&mut c.env, &mut c.work, &mut s[0], &mut q[0]) as u64
+            super::turn_resume(&mut c.env, &mut c.work, &mut s[0], &mut q[0], c.vals[1]) as u64
         }
         0x021B_BD8C => {
             let (s, q) = c.regions.split_at_mut(1);

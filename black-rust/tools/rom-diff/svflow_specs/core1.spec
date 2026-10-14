@@ -50,7 +50,7 @@ fn 021bb968 ret=u32
   stub 021bbb18 ret=none args=p
   stub 021b8588 force ret=pick:0/1/2/3 args=v
   stub 021bbb28 ret=none args=p,v,v,v
-  stub 021c7c18 force ret=none args=p
+  stub 021c7c18 force ret=none args=ptr
   stub 021c8588 force ret=none args=p
   stub 021d8230 ret=none args=p
   stub 021c5474 force ret=none args=p
@@ -65,7 +65,7 @@ fn 021bb9d8 ret=none
   stub 021bbb18 ret=none args=p
   stub 021b8588 force ret=pick:0/1/2/3 args=v
   stub 021bbb28 ret=none args=p,v,v,v
-  stub 021c7c18 force ret=none args=p
+  stub 021c7c18 force ret=none args=ptr
   stub 021c8588 force ret=none args=p
   stub 021bbb38 ret=none args=
   stub 021c5474 force ret=none args=p
@@ -123,18 +123,18 @@ fn 021bbc44 ret=u32
   stub 021d6ee8 ret=none args=
   stub 021d74e4 ret=none args=
   stub 021bbcd4 ret=none args=p
-  stub 021bc610 force ret=pick:0/1/2/3/4/5/6 args=p,p,p,v
+  stub 021bc610 force ret=pick:0/1/2/3/4/5/6 args=p,ptr,p,v
   stub 021bbfa8 force ret=u8 args=p,v
-  stub 021bd2b4 force ret=none args=p,p
-  stub 021bd34c force ret=pick:0/1 args=p,p,out:4 seq
+  stub 021bd2b4 force ret=none args=ptr,p
+  stub 021bd34c force ret=pick:0/1 args=ptr,p,out:4 seq
   stub 021d5bdc ret=pick:0/1 args=v,v
   stub 021c6110 force ret=none args=p,v,v
 
 # iterate the 021bd2b4/021bd34c list; for each entry whose BattleMon passes 021d5bdc call 021c6110
 fn 021bbcd4 ret=none
   arg work
-  stub 021bd2b4 force ret=none args=p,p
-  stub 021bd34c force ret=pick:0/1 args=p,p,out:4 seq
+  stub 021bd2b4 force ret=none args=ptr,p
+  stub 021bd34c force ret=pick:0/1 args=ptr,p,out:4 seq
   stub 021d5bdc ret=pick:0/1 args=v,v
   stub 021c6110 force ret=none args=p,v,v
 
@@ -151,7 +151,7 @@ fn 021bbd2c ret=u32
   fix work 0xC u32 addrof region:Q
   fix work 0x77c u8 alt const 0 || any
   stub 021d74e4 ret=none args=
-  stub 021bc220 force ret=pick:0/1 args=p,p
+  stub 021bc220 force ret=pick:0/1 args=p,ptr
   stub 021bbfa8 force ret=u8 args=p,v
 
 # action-list builder / executor (the big one)
@@ -174,7 +174,7 @@ fn 021bbd8c ret=u32 inputs=400
   fix work 0x77c u8 alt const 0 || any
   stub 021d74e4 ret=none args=
   stub 021bbf88 ret=pick:0/1 args=p,v
-  stub 021bc610 force ret=pick:0/1/2/3/4/5/6 args=p,p,p,v
+  stub 021bc610 force ret=pick:0/1/2/3/4/5/6 args=p,ptr,p,v
   stub 021d5b68 ret=pick:0/1 args=v
   stub 021bdc98 force ret=none args=p,v,v
   stub 021bd9d4 force ret=none args=p,v,v,v,v
@@ -186,7 +186,7 @@ fn 021bbd8c ret=u32 inputs=400
   stub 021bbf98 ret=pick:0/1 args=p,v
   stub 021c4614 force ret=none args=p
   stub 021bc2b0 ret=pick:0/1 args=p
-  stub 021c6158 force ret=none args=p,p
+  stub 021c6158 force ret=none args=p,ptr
   stub 021bc540 ret=pick:0/1/2/3/4 args=p,v,out:4
   stub 021b8b9c force ret=pick:0/1 args=v,v
   stub 021b9aec force ret=u32 args=v,v
@@ -231,7 +231,7 @@ fn 021bbfa8 ret=u8 inputs=400
   stub 021bc0d8 ret=pick:0/1 args=p,v
   stub 021c8534 force ret=pick:0/1 args=p
   stub 021bc4dc ret=pick:0/1 args=p,p
-  stub 021c6158 force ret=none args=p,p
+  stub 021c6158 force ret=none args=p,ptr
   stub 021c859c force ret=none args=p
   stub 021d5b68 ret=pick:0/1 args=v
   stub 021c85b8 force ret=none args=p

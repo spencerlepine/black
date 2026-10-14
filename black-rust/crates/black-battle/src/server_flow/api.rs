@@ -258,7 +258,7 @@ pub fn client_value_997c<E: FlowEnv>(env: &mut E, w: &SvFlowWork, poke_id: u32) 
 /// `021bb85c(work[0], client(poke_id))` returns (`waddr`: see the module doc).
 pub fn client_byte9<E: FlowEnv>(env: &mut E, w: &SvFlowWork, waddr: u32, poke_id: u32) -> u8 {
     let client = client_of(&mut Lend::new_ref(env, w), poke_id);
-    let rec = env.callwr(0x021B_B85C, &mut [Arg::P, Arg::V(client)], w);
+    let rec = env.callwr(0x021B_B85C, &mut [Arg::PAt(w.u32_at(0)), Arg::V(client)], w);
     w.u8_at(rec.wrapping_sub(waddr) as usize + 9)
 }
 
@@ -669,24 +669,28 @@ pub fn server_bb914<E: FlowEnv>(env: &mut E, w: &SvFlowWork, poke_id: u32) {
     let mode = env.callwr(0x021B_86B8, &mut [Arg::V(main_of(w))], w);
     let client = client_of(&mut Lend::new_ref(env, w), poke_id);
     if mode <= 1 && client == env.callwr(0x021B_8FF4, &mut [Arg::V(main_of(w))], w) {
-        env.callwr(0x021B_B914, &mut [Arg::P], w);
+        env.callwr(0x021B_B914, &mut [Arg::PAt(w.u32_at(0))], w);
     }
 }
 
 /// C: `FUN_overlay_d_93__021c8434(work, a, b)`: core2 `021be52c(work[0x4B0], a, b, i)` with `i`
 /// = the overlay-95 veneer `845c(work + 0x1AB8, b)` (Magic Bounce).
-pub fn bounce_move<E: FlowEnv>(env: &mut E, a: u32, b: u32) {
-    let i = env.call(0x021C_845C, &mut [Arg::P, Arg::V(b)]);
-    env.call(0x021B_E52C, &mut [Arg::P, Arg::V(a), Arg::V(b), Arg::V(i)]);
+pub fn bounce_move<E: FlowEnv>(env: &mut E, w: &SvFlowWork, a: u32, b: u32) {
+    let i = env.callwr(0x021C_845C, &mut [Arg::P, Arg::V(b)], w);
+    env.callwr(
+        0x021B_E52C,
+        &mut [Arg::PAt(w.u32_at(0x4B0)), Arg::V(a), Arg::V(b), Arg::V(i)],
+        w,
+    );
 }
 
 /// C: `FUN_021c846c`: core3 `021bfeac(work, mon(a), mon(b), out)` (`out` passed through).
-pub fn mon_pair_bfeac<E: FlowEnv>(env: &mut E, w: &SvFlowWork, a: u32, b: u32) -> u32 {
+pub fn mon_pair_bfeac<E: FlowEnv>(env: &mut E, w: &SvFlowWork, a: u32, b: u32, out: u32) -> u32 {
     let ma = mon_of(env, w, a);
     let mb = mon_of(env, w, b);
     env.callwr(
         0x021B_FEAC,
-        &mut [Arg::P, Arg::V(ma), Arg::V(mb), Arg::P],
+        &mut [Arg::P, Arg::V(ma), Arg::V(mb), Arg::PAt(out)],
         w,
     )
 }

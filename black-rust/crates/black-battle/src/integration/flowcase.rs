@@ -110,9 +110,6 @@ pub fn parse(text: &str) -> HashMap<u32, FnSpec> {
 /// address, which their `call` tables use to turn work pointers into offsets).
 pub const WORK_ADDR: u32 = 0x02E0_0000;
 
-/// Address given to a buffer argument that is the caller's local (not in the address space).
-const LOCAL_BUF: u32 = 0x02EF_0000;
-
 /// The area of a flow address, with its spec text and `call` table.
 fn area(addr: u32) -> Option<(&'static str, &'static str)> {
     Some(match addr {
@@ -273,8 +270,6 @@ fn run(name: &str, addr: u32, case: &mut Case<&mut Env>) -> u64 {
 
 /// Where a case image came from, to store it back.
 enum Src {
-    /// The argument slice `i` of the call (an `Out` / `PBuf` / `In`).
-    Arg(usize),
     /// An address in the object table.
     Addr(u32),
     /// A battle Pokemon.
@@ -286,6 +281,10 @@ enum Src {
     WorkPart(u32, Vec<u8>),
     /// Nothing (a dummy image).
     None,
+    /// The bytes of argument slice `i` (a caller-local buffer: `In` / `Out` / `PBuf` / `PHost`),
+    /// copied into a temporary heap block at `.1` for the call so that a callee the port passes
+    /// the pointer on to finds it (B18: 021c7e14 -> 021c1e74 -> 021c728c); initial bytes `.2`.
+    Local(usize, u32, Vec<u8>),
 }
 
 pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>]) -> Option<u32> {
@@ -410,9 +409,15 @@ pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>])
                     srcs.push(Src::None);
                 }
                 None => {
-                    vals.push(LOCAL_BUF + 0x1000 * i as u32);
-                    bufs.push(Bufs::new(args).get(env, lent, i, *n as usize));
-                    srcs.push(Src::Arg(i));
+                    let b = Bufs::new(args).get(env, lent, i, *n as usize);
+                    let la = env
+                        .objs
+                        .borrow_mut()
+                        .alloc(*n, "caller-local buffer (flow case)");
+                    env.write_bytes(lent, la, &b);
+                    vals.push(la);
+                    srcs.push(Src::Local(i, la, b.clone()));
+                    bufs.push(b);
                 }
             },
         }
@@ -488,7 +493,7 @@ pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>])
     }
     // work parts (not held): aliases only, for `PHost` pointers into them
     for (k, s) in srcs.iter().enumerate() {
-        if let Src::WorkPart(a, _) = s {
+        if let Src::WorkPart(a, _) | Src::Local(_, a, _) = s {
             env.aliases
                 .push((bufs[k].as_ptr() as usize, bufs[k].len(), *a));
         }
@@ -615,7 +620,17 @@ pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>])
                 }
                 env.write_bytes(lent, *a, &out);
             }
-            Src::Arg(i) => Bufs::new(args).put(env, lent, *i, &bufs[k]),
+            Src::Local(i, la, init) => {
+                // the bytes the port changed win; a callee's changes to the block are kept
+                let mut out = env.read_vec(lent, *la, init.len());
+                for j in 0..out.len().min(bufs[k].len()) {
+                    if bufs[k][j] != init[j] {
+                        out[j] = bufs[k][j];
+                    }
+                }
+                Bufs::new(args).put(env, lent, *i, &out);
+                env.objs.borrow_mut().free(*la);
+            }
             Src::Mon(m) => {
                 let b = env.mons.get_mut(m).unwrap();
                 b.raw

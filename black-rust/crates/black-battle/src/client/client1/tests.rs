@@ -4,7 +4,7 @@ use crate::server_flow::testkit::{run_area_suite, Case};
 // svflow-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
     (0x021CD6EC, "9280e7dec0439b85"),
-    (0x021CD6F0, "fcb727adb86cfb8e"),
+    (0x021CD6F0, "75ed27222f7989d8"),
     (0x021CD8E0, "c89c8d6fe83e23a8"),
     (0x021CD914, "27c9785c3334a69e"),
     (0x021CD924, "87be406bd080e685"),
@@ -12,7 +12,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021CD95C, "1b5ae7c4d1d9d851"),
     (0x021CD960, "15362e1a0ec6f736"),
     (0x021CD978, "ccb2ef3c895bb18e"),
-    (0x021CD97C, "cab10420fe56c95b"),
+    (0x021CD97C, "44e8f0fbc4b1853c"),
     (0x021CD984, "03e5c05e2d70a78e"),
     (0x021CD9B0, "3d7b4da0490f5f4f"),
     (0x021CD9C8, "6871017aac935429"),
@@ -20,8 +20,8 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021CD9E0, "14b516d20fc91736"),
     (0x021CD9F4, "db9988908c6de10a"),
     (0x021CDA0C, "f6a7f241a173baf7"),
-    (0x021CDA18, "f73be3d3530a0c9e"),
-    (0x021CDC0C, "d85c2fe6c488f072"),
+    (0x021CDA18, "0aec006a487fc10f"),
+    (0x021CDC0C, "74ca89d846e82e6e"),
     (0x021CDD34, "331f18650f7f4e7a"),
     (0x021CDD50, "e99a26d9a0ae6e59"),
     (0x021CDD94, "11eced3ff4a7e976"),
