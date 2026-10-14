@@ -136,21 +136,29 @@ pub fn decode_frame(data: &[u8]) -> Result<Vec<Cmd>, String> {
     }
 }
 
-/// B16: one wild battle end to end — a level-5 Snivy (the player, scripted: move slot 0 every turn)
+/// What one battle run produced: the HP trace (by poke id, one entry per change), the command
+/// frames the server sent, and the overlay-96 functions called from outside the overlay.
+pub struct Outcome {
+    pub hp_log: Vec<Vec<(u8, u16)>>,
+    pub frames: Vec<Vec<u8>>,
+    pub ai_calls: std::collections::BTreeMap<u32, u32>,
+}
+
+/// One wild battle end to end — a level-5 Snivy (the player, scripted: move slot 0 every turn)
 /// against a level-5 Patrat (the AI) — through the ported server, flow, client and handler code
 /// (`proc_init`, `proc_main` until it reports the end, `proc_exit`). Checks: HP never exceeds the
 /// maximum (it is unsigned: never negative), one side ends fainted, every command frame decodes.
-#[test]
-fn b16_single_battle() {
-    let Some(rom) = super::rom::Rom::load() else {
-        assert!(
-            std::env::var("REQUIRE_ROM").as_deref() != Ok("1"),
-            "B16: ROM build / files missing"
-        );
-        eprintln!("B16: ROM build or files missing, skipped");
-        return;
-    };
-    let mut env = Env::new(std::rc::Rc::new(rom));
+/// `ai_mask` forces the AI client's script mask, `ai_interp` runs overlay 96 as original Thumb
+/// code (B17); `log` prints the outcome.
+fn run_battle(
+    rom: std::rc::Rc<super::rom::Rom>,
+    ai_mask: Option<u32>,
+    ai_interp: bool,
+    log: bool,
+) -> Outcome {
+    let mut env = Env::new(rom);
+    env.ai_mask = ai_mask;
+    env.ai_interp = ai_interp;
     let arc = env.arc.clone();
     // a level-5 Snivy (495) against a level-5 Patrat (504)
     let player = make_party(&mut env, &[make_pokemon(&arc, 495, 5, 0x1234_5678)]);
@@ -173,7 +181,9 @@ fn b16_single_battle() {
             frames += 1;
             assert!(frames < 1000, "proc_init does not finish");
         }
-        eprintln!("B16: proc_init done after {frames} frames");
+        if log {
+            eprintln!("B16: proc_init done after {frames} frames");
+        }
         let m = env.r32(proc + 0x14);
         let mut main_frames = 0;
         loop {
@@ -202,7 +212,9 @@ fn b16_single_battle() {
             main_frames += 1;
             assert!(main_frames < 2_000, "the battle does not end");
         }
-        eprintln!("B16: battle main loop ended after {main_frames} frames");
+        if log {
+            eprintln!("B16: battle main loop ended after {main_frames} frames");
+        }
         let mut exit_frames = 0;
         loop {
             let mut mem = env.mem();
@@ -212,18 +224,30 @@ fn b16_single_battle() {
             exit_frames += 1;
             assert!(exit_frames < 100, "proc_exit does not finish");
         }
-        eprintln!("B16: proc_exit done after {exit_frames} frames");
+        if log {
+            eprintln!("B16: proc_exit done after {exit_frames} frames");
+        }
     }));
-    for (n, k) in &env.notes {
-        eprintln!("B16 note x{k}: {n}");
+    if log || run.is_err() {
+        for (n, k) in &env.notes {
+            eprintln!("B16 note x{k}: {n}");
+        }
     }
     if let Err(e) = run {
         eprintln!("B16 stack at the panic: {}", env.backtrace());
         std::panic::resume_unwind(e);
     }
     // ---- the outcome ----
-    eprintln!("B16: player moves chosen: {:?}", env.choices);
-    eprintln!("B16: HP by poke id over the battle: {hp_log:?}");
+    let ai: Vec<String> = env
+        .ai_calls
+        .iter()
+        .map(|(a, n)| format!("{a:08x}x{n}"))
+        .collect();
+    if log {
+        eprintln!("B16: AI ports called: {}", ai.join(" "));
+        eprintln!("B16: player moves chosen: {:?}", env.choices);
+        eprintln!("B16: HP by poke id over the battle: {hp_log:?}");
+    }
     let last = hp_log.last().expect("no HP record");
     let side_down = |side: bool| {
         last.iter()
@@ -235,14 +259,16 @@ fn b16_single_battle() {
         player_down != foe_down,
         "B16: exactly one side must end fainted ({last:?})"
     );
-    eprintln!(
-        "B16: winner: {}",
-        if foe_down {
-            "player (Snivy)"
-        } else {
-            "foe (Patrat)"
-        }
-    );
+    if log {
+        eprintln!(
+            "B16: winner: {}",
+            if foe_down {
+                "player (Snivy)"
+            } else {
+                "foe (Patrat)"
+            }
+        );
+    }
     // ---- the command stream ----
     assert!(!env.cmd_frames.is_empty(), "B16: no command frames");
     let mut total = 0;
@@ -250,7 +276,7 @@ fn b16_single_battle() {
         let cmds = decode_frame(f)
             .unwrap_or_else(|e| panic!("B16: command frame {k} is malformed: {e} ({f:02x?})"));
         total += cmds.len();
-        if k < 6 || k + 2 >= env.cmd_frames.len() {
+        if log && (k < 6 || k + 2 >= env.cmd_frames.len()) {
             let ids: Vec<String> = cmds
                 .iter()
                 .map(|(id, a)| format!("{id:#04x}{:x?}", &a[..3]))
@@ -258,8 +284,96 @@ fn b16_single_battle() {
             eprintln!("B16 frame {k} ({} bytes): {}", f.len(), ids.join(" "));
         }
     }
+    if log {
+        eprintln!(
+            "B16: {} command frames, {total} commands, all well-formed",
+            env.cmd_frames.len()
+        );
+    }
+    Outcome {
+        hp_log,
+        frames: env.cmd_frames.clone(),
+        ai_calls: env.ai_calls.clone(),
+    }
+}
+
+/// The ROM, or `None` (skip) when it is missing and `REQUIRE_ROM` is not 1.
+fn rom() -> Option<std::rc::Rc<super::rom::Rom>> {
+    match super::rom::Rom::load() {
+        Some(r) => Some(std::rc::Rc::new(r)),
+        None => {
+            assert!(
+                std::env::var("REQUIRE_ROM").as_deref() != Ok("1"),
+                "B16: ROM build / files missing"
+            );
+            eprintln!("B16: ROM build or files missing, skipped");
+            None
+        }
+    }
+}
+
+/// B16: the battle above with the setup's AI (a wild battle: no AI scripts). B17: the opponent's
+/// decisions come from the ai1 ports (create / start / think / chosen move / chosen target; no
+/// overlay-96 code runs in the interpreter).
+#[test]
+fn b16_single_battle() {
+    let Some(rom) = rom() else { return };
+    let out = run_battle(rom, None, false, true);
+    for f in [
+        0x0218_7F00,
+        0x0218_80BC,
+        0x0218_7FB0,
+        0x0218_8134,
+        0x0218_8140,
+    ] {
+        assert!(
+            out.ai_calls.contains_key(&f),
+            "B17: AI entry point {f:#x} not run as a port"
+        );
+    }
+}
+
+/// B17: the same battle with trainer-AI scripts (the AI client's mask forced): the ai1 ports
+/// (every command handler the scripts reach, called by the interpreted vm.c step) produce the same
+/// battle — HP trace and every command frame — as the original overlay-96 code in the Thumb
+/// interpreter. Masks: the script bits whose battles run end to end in the integration (bits 0, 1,
+/// 4 and 11 alone reach integration gaps outside ai1, bit 12 an unmapped script read; see the
+/// black-battle README "B16 integration").
+#[test]
+fn b17_ai_scripts_match_original() {
+    let Some(rom) = rom() else { return };
+    let masks = [
+        0x4, 0x8, 0x20, 0x40, 0x80, 0x100, 0x200, 0x400, 0x2000, 0x2C, 0x7EC, 0x27EC,
+    ];
+    let mut handlers = std::collections::BTreeSet::<u32>::new();
+    for mask in masks {
+        let port = run_battle(rom.clone(), Some(mask), false, false);
+        let orig = run_battle(rom.clone(), Some(mask), true, false);
+        assert_eq!(
+            port.hp_log, orig.hp_log,
+            "B17: AI mask {mask:#x}: HP trace differs"
+        );
+        assert_eq!(
+            port.frames, orig.frames,
+            "B17: AI mask {mask:#x}: command frames differ"
+        );
+        handlers.extend(
+            port.ai_calls
+                .keys()
+                .filter(|&&a| crate::ai::CMD_TABLE.contains(&(a | 1))),
+        );
+        eprintln!(
+            "B17: AI mask {mask:#x}: {} frames, HP trace {:?}",
+            port.frames.len(),
+            port.hp_log.last()
+        );
+    }
     eprintln!(
-        "B16: {} command frames, {total} commands, all well-formed",
-        env.cmd_frames.len()
+        "B17: {} distinct command handlers ran as ports",
+        handlers.len()
+    );
+    assert!(
+        handlers.len() >= 20,
+        "B17: the scripts reached too few handlers"
     );
 }

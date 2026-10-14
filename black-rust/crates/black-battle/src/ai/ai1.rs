@@ -205,14 +205,14 @@ fn call<E: FlowEnv>(env: &mut E, addr: u32, args: &[u32]) -> u32 {
     env.call(addr, &mut a)
 }
 
-/// Env wrapper: BattleMon accessor `addr(bpp)` (the stub ignores the pointer value).
-fn bp<E: FlowEnv>(env: &mut E, addr: u32) -> u32 {
-    env.call(addr, &mut [Arg::P])
+/// Env wrapper: BattleMon accessor `addr(bpp)` (a pass-through pointer: the stub ignores its value).
+fn bp<E: FlowEnv>(env: &mut E, addr: u32, bpp: u32) -> u32 {
+    env.call(addr, &mut [Arg::PAt(bpp)])
 }
 
 /// Env wrapper: BattleMon accessor `addr(bpp, x)`.
-fn bpv<E: FlowEnv>(env: &mut E, addr: u32, x: u32) -> u32 {
-    env.call(addr, &mut [Arg::P, Arg::V(x)])
+fn bpv<E: FlowEnv>(env: &mut E, addr: u32, bpp: u32, x: u32) -> u32 {
+    env.call(addr, &mut [Arg::PAt(bpp), Arg::V(x)])
 }
 
 /// Env wrapper: `021d59b4(bpp, id)` (BattleMon value by id; both registers are logged, Z21).
@@ -221,18 +221,18 @@ fn mon_value<E: FlowEnv>(env: &mut E, bpp: u32, id: u32) -> u32 {
 }
 
 /// Env wrapper: `021d5448(bpp)`, the number of moves (0..4).
-fn move_count<E: FlowEnv>(env: &mut E, _bpp: u32) -> u32 {
-    bp(env, 0x021D_5448)
+fn move_count<E: FlowEnv>(env: &mut E, bpp: u32) -> u32 {
+    bp(env, 0x021D_5448, bpp)
 }
 
 /// Env wrapper: `021d54c0(bpp, slot)`, the move id in a slot.
-fn move_at<E: FlowEnv>(env: &mut E, _bpp: u32, slot: u32) -> u32 {
-    bpv(env, 0x021D_54C0, slot & 0xFF)
+fn move_at<E: FlowEnv>(env: &mut E, bpp: u32, slot: u32) -> u32 {
+    bpv(env, 0x021D_54C0, bpp, slot & 0xFF)
 }
 
 /// Env wrapper: `021d5440(bpp)`, the BattleMon's mon id.
-fn mon_id<E: FlowEnv>(env: &mut E, _bpp: u32) -> u32 {
-    bp(env, 0x021D_5440)
+fn mon_id<E: FlowEnv>(env: &mut E, bpp: u32) -> u32 {
+    bp(env, 0x021D_5440, bpp)
 }
 
 /// Env wrapper: `021d5b68(bpp)`, nonzero when fainted (UNVERIFIED).
@@ -244,7 +244,7 @@ fn fainted<E: FlowEnv>(env: &mut E, bpp: u32) -> u32 {
 #[allow(clippy::too_many_arguments)]
 fn score7e14<E: FlowEnv>(
     env: &mut E,
-    _flow: u32,
+    flow: u32,
     a: u32,
     b: u32,
     waza: u32,
@@ -254,7 +254,7 @@ fn score7e14<E: FlowEnv>(
     env.call(
         0x021C_7E14,
         &mut [
-            Arg::P,
+            Arg::PAt(flow),
             Arg::V(a),
             Arg::V(b),
             Arg::V(waza),
@@ -265,10 +265,10 @@ fn score7e14<E: FlowEnv>(
 }
 
 /// Env wrapper: `021c7dac(flow, atk_id, def_id, waza)` (type-effectiveness class; UNVERIFIED).
-fn eff7dac<E: FlowEnv>(env: &mut E, _flow: u32, a: u32, b: u32, waza: u32) -> u32 {
+fn eff7dac<E: FlowEnv>(env: &mut E, flow: u32, a: u32, b: u32, waza: u32) -> u32 {
     env.call(
         0x021C_7DAC,
-        &mut [Arg::P, Arg::V(a), Arg::V(b), Arg::V(waza)],
+        &mut [Arg::PAt(flow), Arg::V(a), Arg::V(b), Arg::V(waza)],
     )
 }
 
@@ -287,28 +287,28 @@ fn rand_below(r: u32, n: u32) -> u32 {
 }
 
 /// Env wrapper: `0201134c(vm)`, the next u32 script operand.
-fn op<E: FlowEnv>(env: &mut E) -> u32 {
-    env.call(0x0201_134C, &mut [Arg::P])
+fn op<E: FlowEnv>(env: &mut E, vm: u32) -> u32 {
+    env.call(0x0201_134C, &mut [Arg::PAt(vm)])
 }
 
 /// `020113b0(vm, vm[0x14] + off)`: set the script PC (a taken branch).
 fn jump<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, off: u32) {
     let t = m.r32(vm + VM_BASE).wrapping_add(off);
-    env.call(0x0201_13B0, &mut [Arg::P, Arg::V(t)]);
+    env.call(0x0201_13B0, &mut [Arg::PAt(vm), Arg::V(t)]);
 }
 
 /// The party / client helpers of the main module: `021b8de4(M, pos)` client of a position, `021b9af8(setup, cl)` party,
-/// `021b99b8(M, cl)` first party index (UNVERIFIED roles).
+/// `021b99b8(M, cl)` first party index (UNVERIFIED roles); M = `ai[0xB0]`.
 fn party_of<E: FlowEnv>(env: &mut E, m: &Mem, ai: u32, pos: u32) -> (u32, u32) {
-    let cl = env.call(0x021B_8DE4, &mut [Arg::P, Arg::V(pos)]);
+    let cl = env.call(0x021B_8DE4, &mut [Arg::PAt(m.r32(ai + MAIN)), Arg::V(pos)]);
     let party = call(env, 0x021B_9AF8, &[m.r32(ai + SETUP), cl]);
-    let first = env.call(0x021B_99B8, &mut [Arg::P, Arg::V(cl)]);
+    let first = env.call(0x021B_99B8, &mut [Arg::PAt(m.r32(ai + MAIN)), Arg::V(cl)]);
     (party, first)
 }
 
 /// Env wrapper: `021b9b94(party)`, party size.
-fn party_len<E: FlowEnv>(env: &mut E) -> u32 {
-    bp(env, 0x021B_9B94)
+fn party_len<E: FlowEnv>(env: &mut E, party: u32) -> u32 {
+    bp(env, 0x021B_9B94, party)
 }
 
 fn status(m: &Mem, ai: u32) -> u32 {
@@ -374,13 +374,13 @@ pub fn pos_of<E: FlowEnv>(env: &mut E, m: &Mem, ai: u32, slot: u32) -> u32 {
 }
 
 /// C: `FUN_overlay_d_96__0218a2fc`: BattleMon at a position, `021b98ac(ai[0xB8], pos)` (tail call).
-pub fn mon_at<E: FlowEnv>(env: &mut E, _m: &Mem, _ai: u32, pos: u32) -> u32 {
-    env.call(0x021B_98AC, &mut [Arg::P, Arg::V(pos)])
+pub fn mon_at<E: FlowEnv>(env: &mut E, m: &Mem, ai: u32, pos: u32) -> u32 {
+    env.call(0x021B_98AC, &mut [Arg::PAt(m.r32(ai + SETUP)), Arg::V(pos)])
 }
 
 /// C: `FUN_overlay_d_96__0218a308`: party member `i`, `021b9c00(party, i)` (tail call).
-pub fn party_mon<E: FlowEnv>(env: &mut E, _party: u32, i: u32) -> u32 {
-    env.call(0x021B_9C00, &mut [Arg::P, Arg::V(i)])
+pub fn party_mon<E: FlowEnv>(env: &mut E, party: u32, i: u32) -> u32 {
+    env.call(0x021B_9C00, &mut [Arg::PAt(party), Arg::V(i)])
 }
 
 /// C: `FUN_overlay_d_96__0218a310`: copy the 4 base scores `ai[0x14..]` to the slot scores `ai[0x04..]`; returns `ai`
@@ -397,17 +397,17 @@ pub fn reset_scores(m: &mut Mem, ai: u32) -> u32 {
 /// `ai[0x4C + 8 * pos]` (first free entry, unless already there); returns the last `021d67a8` result.
 /// (ai1.spec bounds `ai[0x95]` to a position 0..5; Z21.)
 pub fn note_last_move<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    mon_at(env, m, ai, m.r8(ai + ITER_POS));
+    let bpp = mon_at(env, m, ai, m.r8(ai + ITER_POS));
     let mut last = 0;
     for i in 0..4 {
         let e = ai + 0x4C + 8 * m.r8(ai + ITER_POS) + 2 * i;
         let w = m.r16(e);
-        last = bp(env, 0x021D_67A8);
+        last = bp(env, 0x021D_67A8, bpp);
         if w == last {
             return last;
         }
         if w == 0 {
-            last = bp(env, 0x021D_67A8);
+            last = bp(env, 0x021D_67A8, bpp);
             let e = ai + 0x4C + 8 * m.r8(ai + ITER_POS) + 2 * i;
             m.w16(e, last);
             return last;
@@ -447,9 +447,8 @@ pub fn best_score<E: FlowEnv>(env: &mut E, m: &Mem, ai: u32, atk: u32, def: u32,
 /// `02021014` read, `020307b0` free); returns the read value.
 pub fn table_lookup<E: FlowEnv>(env: &mut E, m: &Mem, ai: u32, a: u32, b: u32) -> u32 {
     let t = call(env, 0x0202_0F20, &[m.r32(ai + 0xA8), a]);
-    let x = env.call(0x0202_1014, &mut [Arg::P, Arg::V(b)]);
-    env.call(0x0203_07B0, &mut [Arg::P]);
-    let _ = t;
+    let x = env.call(0x0202_1014, &mut [Arg::PAt(t), Arg::V(b)]);
+    env.call(0x0203_07B0, &mut [Arg::PAt(t)]);
     x
 }
 
@@ -475,12 +474,12 @@ pub fn table_free<E: FlowEnv>(env: &mut E, m: &mut Mem) -> u32 {
     for i in 0..4 {
         let e = m.r32(AI_TABLE_PTR) + 4 * i + 8;
         if m.r32(e) != 0 {
-            env.call(0x0203_07B0, &mut [Arg::P]);
+            env.call(0x0203_07B0, &mut [Arg::PAt(m.r32(e))]);
             let e = m.r32(AI_TABLE_PTR) + 4 * i + 8;
             m.w32(e, 0);
         }
     }
-    env.call(0x0203_07B0, &mut [Arg::P]);
+    env.call(0x0203_07B0, &mut [Arg::PAt(m.r32(AI_TABLE_PTR))]);
     m.w32(AI_TABLE_PTR, 0);
     0
 }
@@ -537,7 +536,8 @@ pub fn script_release<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
                 return c;
             }
             m.w8(g + i, 0xFF);
-            env.call(0x0203_07B0, &mut [Arg::P]);
+            let entry = m.r32(m.r32(AI_TABLE_PTR) + 4 * i + 8);
+            env.call(0x0203_07B0, &mut [Arg::PAt(entry)]);
             let e = m.r32(AI_TABLE_PTR) + 4 * i;
             m.w32(e + 8, 0);
             return e;
@@ -553,7 +553,7 @@ pub fn script_release<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 /// (garbage); the port panics there.
 pub fn mon_trait<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32, slot: u32, pos: u32) -> u32 {
     let bpp = mon_at(env, m, ai, pos);
-    if bpv(env, 0x021D_62C4, 0x10) != 0 {
+    if bpv(env, 0x021D_62C4, bpp, 0x10) != 0 {
         return 0;
     }
     if slot != 0 && slot != 2 {
@@ -569,7 +569,7 @@ pub fn mon_trait<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32, slot: u32, pos: 
     if x == 0x17 || x == 0x2A || x == 0x47 {
         return x;
     }
-    let sp = bp(env, 0x021D_5444);
+    let sp = bp(env, 0x021D_5444, bpp);
     let form = mon_value(env, bpp, 0x13);
     let mut list = [0u32; 3];
     let mut n = 0;
@@ -611,9 +611,9 @@ pub fn ai_create<E: FlowEnv>(
     m.w32(ai + MAIN, main);
     m.w32(ai + FLOW, flow);
     m.w32(ai + SETUP, setup);
-    let k = env.call(0x021B_8588, &mut [Arg::P]);
+    let k = env.call(0x021B_8588, &mut [Arg::PAt(main)]);
     m.w32(ai + KIND, k);
-    let x = env.call(0x021B_86B8, &mut [Arg::P]);
+    let x = env.call(0x021B_86B8, &mut [Arg::PAt(main)]);
     m.w32(ai + 0x9C, x);
     let _ = INIT_RECORD;
     let vm = env.call(0x0201_121C, &mut [Arg::V(heap), Arg::PAt(0x0218_A574)]);
@@ -627,13 +627,12 @@ pub fn ai_create<E: FlowEnv>(
 
 /// C: `FUN_overlay_d_96__02188080` (`ai_delete`): free the AI object's handles, the object and its VM, the waza cache
 /// (`0201c3c0` when `0201c408()` == 1) and the global table; returns 0.
-pub fn ai_delete<E: FlowEnv>(env: &mut E, m: &mut Mem, _vm: u32) -> u32 {
-    let ai = env.call(0x0201_1324, &mut [Arg::P]);
-    let _ = (m.r32(ai + 0xA4), m.r32(ai + 0xA8));
-    env.call(0x0204_9238, &mut [Arg::P]);
-    env.call(0x0204_9238, &mut [Arg::P]);
-    env.call(0x0203_07B0, &mut [Arg::P]);
-    env.call(0x0201_1264, &mut [Arg::P]);
+pub fn ai_delete<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32) -> u32 {
+    let ai = env.call(0x0201_1324, &mut [Arg::PAt(vm)]);
+    env.call(0x0204_9238, &mut [Arg::PAt(m.r32(ai + 0xA4))]);
+    env.call(0x0204_9238, &mut [Arg::PAt(m.r32(ai + 0xA8))]);
+    env.call(0x0203_07B0, &mut [Arg::PAt(ai)]);
+    env.call(0x0201_1264, &mut [Arg::PAt(vm)]);
     if call(env, 0x0201_C408, &[]) == 1 {
         call(env, 0x0201_C3C0, &[]);
     }
@@ -643,8 +642,8 @@ pub fn ai_delete<E: FlowEnv>(env: &mut E, m: &mut Mem, _vm: u32) -> u32 {
 /// C: `FUN_overlay_d_96__021880bc` (`ai_start`): reset the per-turn state of the AI object (of `vm`) for the own position
 /// `pos`: base scores 0 / 100 by `usable[i]`, priorities `100 - rand >> 28`, random word `ai[0xCC] = rand >> 24`; returns
 /// that word.
-pub fn ai_start<E: FlowEnv>(env: &mut E, m: &mut Mem, _vm: u32, usable: u32, pos: u32) -> u32 {
-    let ai = env.call(0x0201_1324, &mut [Arg::P]);
+pub fn ai_start<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, usable: u32, pos: u32) -> u32 {
+    let ai = env.call(0x0201_1324, &mut [Arg::PAt(vm)]);
     m.w8(ai, 0);
     m.w16(ai + 2, 0);
     m.w8(ai + 1, 0);
@@ -667,14 +666,14 @@ pub fn ai_start<E: FlowEnv>(env: &mut E, m: &mut Mem, _vm: u32, usable: u32, pos
 }
 
 /// C: `FUN_overlay_d_96__02188134`: the chosen move slot `ai[0x46]` of the AI object of `vm`.
-pub fn chosen_move<E: FlowEnv>(env: &mut E, m: &Mem) -> u32 {
-    let ai = env.call(0x0201_1324, &mut [Arg::P]);
+pub fn chosen_move<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32) -> u32 {
+    let ai = env.call(0x0201_1324, &mut [Arg::PAt(vm)]);
     m.r8(ai + 0x46)
 }
 
 /// C: `FUN_overlay_d_96__02188140`: the chosen target position `ai[0x47]` of the AI object of `vm`.
-pub fn chosen_target<E: FlowEnv>(env: &mut E, m: &Mem) -> u32 {
-    let ai = env.call(0x0201_1324, &mut [Arg::P]);
+pub fn chosen_target<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32) -> u32 {
+    let ai = env.call(0x0201_1324, &mut [Arg::PAt(vm)]);
     m.r8(ai + 0x47)
 }
 
@@ -795,9 +794,16 @@ pub fn think_multi<E: AiEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 
             let i = m.r8(ai + ITER_POS);
             m.w8(ai + 0x30 + i, slot);
             m.w16(ai + 0x24 + 2 * i, best);
-            let a = env.call(0x021B_8DE4, &mut [Arg::P, Arg::V(m.r8(ai + OWN_POS))]);
-            let b = env.call(0x021B_8DE4, &mut [Arg::P, Arg::V(m.r8(ai + ITER_POS))]);
-            if env.call(0x021B_8CE8, &mut [Arg::P, Arg::V(a), Arg::V(b)]) == 0 {
+            let main = m.r32(ai + MAIN);
+            let a = env.call(
+                0x021B_8DE4,
+                &mut [Arg::PAt(main), Arg::V(m.r8(ai + OWN_POS))],
+            );
+            let b = env.call(
+                0x021B_8DE4,
+                &mut [Arg::PAt(main), Arg::V(m.r8(ai + ITER_POS))],
+            );
+            if env.call(0x021B_8CE8, &mut [Arg::PAt(main), Arg::V(a), Arg::V(b)]) == 0 {
                 let e = ai + 0x24 + 2 * m.r8(ai + ITER_POS);
                 if (m.r16(e) as u16 as i16) < 100 {
                     m.w16(e, 0xFFFF);
@@ -848,18 +854,18 @@ pub fn think_multi<E: AiEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 
 /// script (`0218a494`, `0201127c`), phase 1 steps the VM (`02011298`) until the script ends (bit 0 of `ai[0x44]`) or
 /// 500 ticks pass (sets bit 4); unusable / non-adjacent moves score 0. Returns the phase `ai[0]`.
 /// The OS tick is read through [`AiEnv::call64`] (the test env answers the spec's `ticks:100` clock; Z21).
-pub fn run_moves<E: AiEnv>(env: &mut E, m: &mut Mem, _vm: u32, ai: u32) -> u32 {
+pub fn run_moves<E: AiEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
     while m.r8(ai) != 2 && m.r8(ai + FLAGS) & 0x10 == 0 {
         let ph = m.r8(ai);
         if ph == 0 {
-            if bpv(env, 0x021D_5584, m.r8(ai + 1)) == 0 {
+            if bpv(env, 0x021D_5584, m.r32(ai + SELF_MON), m.r8(ai + 1)) == 0 {
                 m.w16(ai + 2, 0);
             } else {
                 let w = move_at(env, m.r32(ai + SELF_MON), m.r8(ai + 1));
                 m.w16(ai + 2, w);
                 let x = script_acquire(env, m, ai);
                 m.w32(ai + 0xAC, x);
-                env.call(0x0201_127C, &mut [Arg::P, Arg::V(x)]);
+                env.call(0x0201_127C, &mut [Arg::PAt(vm), Arg::V(x)]);
             }
             let p = m.r8(ai) + 1;
             m.w8(ai, p);
@@ -874,7 +880,7 @@ pub fn run_moves<E: AiEnv>(env: &mut E, m: &mut Mem, _vm: u32, ai: u32) -> u32 {
             && waza_flag(env, ai, m.r16(ai + 2), 0xB) == 0
         {
             m.w16(ai + 2, 0);
-            env.call(0x0201_1290, &mut [Arg::P]);
+            env.call(0x0201_1290, &mut [Arg::PAt(vm)]);
             script_release(env, m, ai);
             m.w32(ai + 0xAC, 0);
         }
@@ -883,7 +889,7 @@ pub fn run_moves<E: AiEnv>(env: &mut E, m: &mut Mem, _vm: u32, ai: u32) -> u32 {
             let f = m.r8(ai + FLAGS) | 1;
             m.w8(ai + FLAGS, f);
         } else {
-            env.call(0x0201_1298, &mut [Arg::P]);
+            env.call(0x0201_1298, &mut [Arg::PAt(vm)]);
             if m.r8(ai + FLAGS) & 1 != 0 {
                 let f = m.r8(ai + FLAGS) & 0xEF;
                 m.w8(ai + FLAGS, f);
@@ -920,7 +926,7 @@ pub fn run_moves<E: AiEnv>(env: &mut E, m: &mut Mem, _vm: u32, ai: u32) -> u32 {
 /// opposite position), double / triple ([`think_multi`]), otherwise a random opposing position that is not fainted
 /// (target 0 when the think yields nothing).
 pub fn ai_think<E: AiEnv>(env: &mut E, m: &mut Mem, vm: u32) -> u32 {
-    let ai = env.call(0x0201_1324, &mut [Arg::P]);
+    let ai = env.call(0x0201_1324, &mut [Arg::PAt(vm)]);
     let k = m.r32(ai + KIND);
     if k == 0 {
         let p = m.r8(ai + OWN_POS) ^ 1;
@@ -959,8 +965,8 @@ pub fn ai_think<E: AiEnv>(env: &mut E, m: &mut Mem, vm: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__0218875c`: `if (rand >> 24) <kind> a: goto b` (random-chance branch).
 pub fn cmd_if_rand<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, kind: u32) -> u32 {
-    let a = op(env);
-    let b = op(env);
+    let a = op(env, vm);
+    let b = op(env, vm);
     let r = rand(env) >> 24;
     branch_if(env, m, vm, kind, r, a, b)
 }
@@ -993,8 +999,8 @@ wrapper!(
     cmd_03 => if_rand_h(3));
 
 /// C: `FUN_overlay_d_96__0218878c`: command 4, add the operand to the current slot's score (clamped at 0).
-pub fn cmd_add_score<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let v = op(env);
+pub fn cmd_add_score<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let v = op(env, vm);
     let p = ai + 4 + 4 * m.r8(ai + 1);
     let w = m.r32(p).wrapping_add(v);
     m.w32(p, w);
@@ -1007,13 +1013,12 @@ pub fn cmd_add_score<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__021887f4`: `if hp_ratio(slot) >> 12 <kind> a: goto b` (`021d5c44`, fixed point).
 pub fn if_hp<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let s = op(env);
-    let a = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let a = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let bpp = mon_at(env, m, ai, pos);
-    let hp = bp(env, 0x021D_5C44);
-    let _ = bpp;
+    let hp = bp(env, 0x021D_5C44, bpp);
     branch_if(env, m, vm, kind, ((hp as i32) >> 12) as u32, a, b)
 }
 
@@ -1032,11 +1037,11 @@ wrapper!(
 
 /// C: `FUN_overlay_d_96__0218885c`: `if status(slot) != 0 <kind>: goto b` (`021d62a8`; kind 2 / 3 = has / has not).
 pub fn if_status<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let s = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
-    mon_at(env, m, ai, pos);
-    let x = bp(env, 0x021D_62A8);
+    let bpp = mon_at(env, m, ai, pos);
+    let x = bp(env, 0x021D_62A8, bpp);
     branch_if(env, m, vm, kind, x, 0, b)
 }
 
@@ -1049,12 +1054,12 @@ wrapper!(
 
 /// C: `FUN_overlay_d_96__021888bc`: `if cond(slot, a) <kind> 1: goto b` (`021d62c4`, a condition flag).
 pub fn if_cond<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let s = op(env);
-    let a = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let a = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
-    mon_at(env, m, ai, pos);
-    let x = bpv(env, 0x021D_62C4, a);
+    let bpp = mon_at(env, m, ai, pos);
+    let x = bpv(env, 0x021D_62C4, bpp, a);
     branch_if(env, m, vm, kind, x, 1, b)
 }
 
@@ -1067,13 +1072,13 @@ wrapper!(
 
 /// C: `FUN_overlay_d_96__02188924`: `if (cond(slot, 5) && 021e8a78(021d6314(bpp, 5))) <kind> 1: goto b`.
 pub fn if_cond5<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let s = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
-    mon_at(env, m, ai, pos);
+    let bpp = mon_at(env, m, ai, pos);
     let mut r = 0;
-    if bpv(env, 0x021D_62C4, 5) != 0 {
-        let x = bpv(env, 0x021D_6314, 5);
+    if bpv(env, 0x021D_62C4, bpp, 5) != 0 {
+        let x = bpv(env, 0x021D_6314, bpp, 5);
         if call(env, 0x021E_8A78, &[x]) != 0 {
             r = 1;
         }
@@ -1090,12 +1095,12 @@ wrapper!(
 
 /// C: `FUN_overlay_d_96__021889a0`: `if 021d5bdc(slot, a) <kind> 1: goto b`.
 pub fn if_5bdc<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let s = op(env);
-    let a = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let a = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
-    mon_at(env, m, ai, pos);
-    let x = bpv(env, 0x021D_5BDC, a);
+    let bpp = mon_at(env, m, ai, pos);
+    let x = bpv(env, 0x021D_5BDC, bpp, a);
     branch_if(env, m, vm, kind, x, 1, b)
 }
 
@@ -1108,9 +1113,9 @@ wrapper!(
 
 /// C: `FUN_overlay_d_96__02188a08`: `if (021c82d0(flow, pos(slot), a) != 0) <kind> 1: goto b` (side condition).
 pub fn if_side<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let s = op(env);
-    let a = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let a = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let r = u32::from(call(env, 0x021C_82D0, &[m.r32(ai + FLOW), pos, a]) != 0);
     branch_if(env, m, vm, kind, r, 1, b)
@@ -1125,8 +1130,8 @@ wrapper!(
 
 /// C: `FUN_overlay_d_96__02188ab4`: `if ai[0x38] <kind> a: goto b` (compare the last result).
 pub fn if_result<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let a = op(env);
-    let b = op(env);
+    let a = op(env, vm);
+    let b = op(env, vm);
     branch_if(env, m, vm, kind, m.r32(ai + RESULT), a, b)
 }
 
@@ -1151,8 +1156,8 @@ wrapper!(
 
 /// C: `FUN_overlay_d_96__02188af8`: `if move(ai[2]) <kind> a: goto b` (compare the current move id).
 pub fn if_move<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let a = op(env);
-    let b = op(env);
+    let a = op(env, vm);
+    let b = op(env, vm);
     branch_if(env, m, vm, kind, m.r16(ai + 2), a, b)
 }
 
@@ -1170,9 +1175,9 @@ fn list_word(m: &Mem, tbl: u32, i: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__02188b1c`: command 27, `if ai[0x38] in list(a): goto b` (script list ended by -1).
 pub fn cmd_if_result_in<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
-    let a = op(env);
+    let a = op(env, vm);
     let tbl = m.r32(vm + VM_BASE).wrapping_add(a);
-    let b = op(env);
+    let b = op(env, vm);
     let x = m.r32(ai + RESULT);
     let mut i = 0;
     loop {
@@ -1191,9 +1196,9 @@ pub fn cmd_if_result_in<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) 
 
 /// C: `FUN_overlay_d_96__02188b64`: command 28, `if ai[0x38] not in list(a): goto b`.
 pub fn cmd_if_result_not_in<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
-    let a = op(env);
+    let a = op(env, vm);
     let tbl = m.r32(vm + VM_BASE).wrapping_add(a);
-    let b = op(env);
+    let b = op(env, vm);
     let x = m.r32(ai + RESULT);
     let mut i = 0;
     loop {
@@ -1231,7 +1236,7 @@ fn first_with_param3<E: FlowEnv>(env: &mut E, m: &Mem, ai: u32) -> (u32, u32) {
 
 /// C: `FUN_overlay_d_96__02188bb0`: command 29, branch if the mon has a move with nonzero param 3 (a damaging move?).
 pub fn cmd_if_has_damaging<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let b = op(env);
+    let b = op(env, vm);
     let (i, n) = first_with_param3(env, m, ai);
     if (i as i32) < n as i32 {
         jump(env, m, vm, b);
@@ -1241,7 +1246,7 @@ pub fn cmd_if_has_damaging<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -
 
 /// C: `FUN_overlay_d_96__02188c1c`: command 30, branch if the mon has no move with nonzero param 3.
 pub fn cmd_if_no_damaging<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let b = op(env);
+    let b = op(env, vm);
     let (i, n) = first_with_param3(env, m, ai);
     if i == n {
         jump(env, m, vm, b);
@@ -1251,7 +1256,7 @@ pub fn cmd_if_no_damaging<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) ->
 
 /// C: `FUN_overlay_d_96__02188c88`: command 31, `ai[0x38] = 021c8138(flow)` (turn count?).
 pub fn cmd_get_8138<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let x = env.call(0x021C_8138, &mut [Arg::P]);
+    let x = env.call(0x021C_8138, &mut [Arg::PAt(m.r32(ai + FLOW))]);
     m.w32(ai + RESULT, x);
     status(m, ai)
 }
@@ -1263,8 +1268,8 @@ fn mon_types<E: FlowEnv>(env: &mut E, bpp: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__02188ca0`: command 32, `ai[0x38]` = a type (`021e8cfc` first / `021e8d04` second of the packed
 /// `021d57fc` types) of self (0..3), the current move param 0 (4) or the mons in front (5..8); other selectors keep it.
-pub fn cmd_get_type<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let sel = op(env);
+pub fn cmd_get_type<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let sel = op(env, vm);
     let t1 = mon_types(env, m.r32(ai + SELF_MON));
     let t2 = mon_types(env, m.r32(ai + TARGET_MON));
     let front = |env: &mut E, m: &Mem, slot: u32| -> u32 {
@@ -1309,8 +1314,8 @@ pub fn cmd_move_1d8<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__02188d5c`: command 34, compare the current move's score against the mon's other moves:
 /// `ai[0x38]` = 0 (scores 0), 1 (another move scores higher), 2 (best).
-pub fn cmd_cmp_scores<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let x = op(env);
+pub fn cmd_cmp_scores<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let x = op(env, vm);
     let ia = mon_id(env, m.r32(ai + SELF_MON));
     let ib = mon_id(env, m.r32(ai + TARGET_MON));
     let base = score7e14(env, m.r32(ai + FLOW), ia, ib, m.r16(ai + 2), 1, x);
@@ -1333,11 +1338,11 @@ pub fn cmd_cmp_scores<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 }
 
 /// C: `FUN_overlay_d_96__02188e00`: command 35, `ai[0x38]` = last move of the mon at a slot (`021d67a8`).
-pub fn cmd_last_move<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let s = op(env);
+pub fn cmd_last_move<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let s = op(env, vm);
     let pos = pos_of(env, m, ai, s);
-    mon_at(env, m, ai, pos);
-    let x = bp(env, 0x021D_67A8);
+    let bpp = mon_at(env, m, ai, pos);
+    let x = bp(env, 0x021D_67A8, bpp);
     m.w32(ai + RESULT, x);
     status(m, ai)
 }
@@ -1345,15 +1350,23 @@ pub fn cmd_last_move<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 /// C: `FUN_overlay_d_96__02188e24`: command 38, compare a `021c81c8(flow, self, 1)` value with the target's under kind
 /// `k` (0 -> `>`, 1 -> `<`, 2 -> `==`, others as given): speed order? (`021c81c8` is a thunk: its target gets r0..r2.)
 pub fn cmd_cmp_speed<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let k = op(env);
-    let b = op(env);
+    let k = op(env, vm);
+    let b = op(env, vm);
     let a = env.call(
         0x021C_81C8,
-        &mut [Arg::P, Arg::V(m.r32(ai + SELF_MON)), Arg::V(1)],
+        &mut [
+            Arg::PAt(m.r32(ai + FLOW)),
+            Arg::V(m.r32(ai + SELF_MON)),
+            Arg::V(1),
+        ],
     );
     let c = env.call(
         0x021C_81C8,
-        &mut [Arg::P, Arg::V(m.r32(ai + TARGET_MON)), Arg::V(1)],
+        &mut [
+            Arg::PAt(m.r32(ai + FLOW)),
+            Arg::V(m.r32(ai + TARGET_MON)),
+            Arg::V(1),
+        ],
     );
     let k = match k {
         0 => 1,
@@ -1372,12 +1385,12 @@ fn mon_5b7c<E: FlowEnv>(env: &mut E, bpp: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__02188e90`: command 39, `ai[0x38]` = number of party members (from the client's first index) with
 /// `021d5b7c` set.
-pub fn cmd_count_party_5b7c<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let s = op(env);
+pub fn cmd_count_party_5b7c<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let s = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let (party, mut i) = party_of(env, m, ai, pos);
     m.w32(ai + RESULT, 0);
-    while (i as i32) < party_len(env) as i32 {
+    while (i as i32) < party_len(env, party) as i32 {
         let mon = party_mon(env, party, i & 0xFF);
         if mon_5b7c(env, mon) != 0 {
             let r = m.r32(ai + RESULT) + 1;
@@ -1403,8 +1416,8 @@ pub fn cmd_move_effect<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 }
 
 /// C: `FUN_overlay_d_96__02188f2c`: command 42, `ai[0x38]` = [`mon_trait`] of a slot.
-pub fn cmd_trait<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let s = op(env);
+pub fn cmd_trait<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let s = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let x = mon_trait(env, m, ai, s, pos);
     m.w32(ai + RESULT, x);
@@ -1418,8 +1431,8 @@ pub fn cmd_status(m: &Mem, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__02188f58`: command 44, `if eff(current move) == a: goto b` (`021c7dac`).
 pub fn cmd_if_effectiveness<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let a = op(env);
-    let b = op(env);
+    let a = op(env, vm);
+    let b = op(env, vm);
     let ia = mon_id(env, m.r32(ai + SELF_MON));
     let ib = mon_id(env, m.r32(ai + TARGET_MON));
     let x = eff7dac(env, m.r32(ai + FLOW), ia, ib, m.r16(ai + 2));
@@ -1430,18 +1443,18 @@ pub fn cmd_if_effectiveness<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) 
 /// C: `FUN_overlay_d_96__02188fcc`: `if any living party member has status <kind>: goto b` (stops at the first branch);
 /// returns the last branch result or party size (what the original leaves in `r0`).
 pub fn if_party_status<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let s = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let (party, mut i) = party_of(env, m, ai, pos);
     loop {
-        let n = party_len(env);
+        let n = party_len(env, party);
         if (i as i32) >= n as i32 {
             return n;
         }
         let mon = party_mon(env, party, i & 0xFF);
         if fainted(env, mon) == 0 {
-            let x = bp(env, 0x021D_62A8);
+            let x = bp(env, 0x021D_62A8, mon);
             let r = branch_if(env, m, vm, kind, x, 0, b);
             if r != 0 {
                 return r;
@@ -1467,8 +1480,8 @@ pub fn cmd_get_f884<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__0218908c`: `if effect(current move) <kind> a: goto b` (move param 0x1C).
 pub fn if_move_effect<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let a = op(env);
-    let b = op(env);
+    let a = op(env, vm);
+    let b = op(env, vm);
     let x = waza_param(env, ai, m.r16(ai + 2), 0x1C);
     branch_if(env, m, vm, kind, x, a, b)
 }
@@ -1482,10 +1495,10 @@ wrapper!(
 
 /// C: `FUN_overlay_d_96__02189100`: `if value(slot, id) <kind> a: goto b` (`021d59b4`).
 pub fn if_value<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let s = op(env);
-    let id = op(env);
-    let a = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let id = op(env, vm);
+    let a = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let bpp = mon_at(env, m, ai, pos);
     let x = mon_value(env, bpp, id);
@@ -1507,8 +1520,8 @@ wrapper!(
 
 /// C: `FUN_overlay_d_96__02189170`: `if value(target, 0xD) <kind> score(current move): goto b` (first operand unused).
 pub fn if_hp_vs_damage<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    op(env);
-    let b = op(env);
+    op(env, vm);
+    let b = op(env, vm);
     let x = mon_value(env, m.r32(ai + TARGET_MON), 0xD);
     let ia = mon_id(env, m.r32(ai + SELF_MON));
     let ib = mon_id(env, m.r32(ai + TARGET_MON));
@@ -1526,9 +1539,9 @@ wrapper!(
 /// C: `FUN_overlay_d_96__021891f4`: `if knows_move(slot, w) <kind> 1: goto b`: slot 0 looks in the remembered moves of the
 /// iterated mon, 1 in the own moves, 3 in the moves of the living mon in front.
 pub fn if_knows_move<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let s = op(env);
-    let w = op(env) & 0xFFFF;
-    let b = op(env);
+    let s = op(env, vm);
+    let w = op(env, vm) & 0xFFFF;
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let mut found = 0;
     match s {
@@ -1580,9 +1593,9 @@ wrapper!(
 /// C: `FUN_overlay_d_96__021892f8`: `if knows_effect(slot, e) <kind> 1: goto b` (move param 0x1C == e): slot 0 in the
 /// remembered moves (nonzero entries), 1 in the own moves.
 pub fn if_knows_effect<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let s = op(env);
-    let e = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let e = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let mut found = 0;
     match s {
@@ -1633,49 +1646,49 @@ pub fn cmd_set_abort(m: &mut Mem, ai: u32) -> u32 {
 }
 
 /// `bpp` of the slot read from the script (`0218a2fc(ai, 0218a160(ai, op))`).
-fn slot_mon<E: FlowEnv>(env: &mut E, m: &Mem, ai: u32) -> u32 {
-    let s = op(env);
+fn slot_mon<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
+    let s = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     mon_at(env, m, ai, pos)
 }
 
 /// C: `FUN_overlay_d_96__021893dc`: command 64, `ai[0x38]` = ability of a slot (`021d5b40`).
-pub fn cmd_ability<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    slot_mon(env, m, ai);
-    let x = bp(env, 0x021D_5B40);
+pub fn cmd_ability<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let bpp = slot_mon(env, m, vm, ai);
+    let x = bp(env, 0x021D_5B40, bpp);
     m.w32(ai + RESULT, x);
     status(m, ai)
 }
 
 /// C: `FUN_overlay_d_96__02189400`: command 65, `ai[0x38]` = [`table_lookup`]`(ability, 1)`.
-pub fn cmd_ability_lookup<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    slot_mon(env, m, ai);
-    let x = bp(env, 0x021D_5B40);
+pub fn cmd_ability_lookup<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let bpp = slot_mon(env, m, vm, ai);
+    let x = bp(env, 0x021D_5B40, bpp);
     let r = table_lookup(env, m, ai, x & 0xFFFF, 1);
     m.w32(ai + RESULT, r);
     status(m, ai)
 }
 
 /// C: `FUN_overlay_d_96__02189434`: command 66, `ai[0x38]` = value 0x12 of a slot.
-pub fn cmd_value12<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let bpp = slot_mon(env, m, ai);
+pub fn cmd_value12<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let bpp = slot_mon(env, m, vm, ai);
     let x = mon_value(env, bpp, 0x12);
     m.w32(ai + RESULT, x);
     status(m, ai)
 }
 
 /// C: `FUN_overlay_d_96__0218945c`: command 67, `ai[0x38] = 021d5bdc(slot, 0) == 0`.
-pub fn cmd_5bdc0_zero<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    slot_mon(env, m, ai);
-    let r = u32::from(bpv(env, 0x021D_5BDC, 0) == 0);
+pub fn cmd_5bdc0_zero<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let bpp = slot_mon(env, m, vm, ai);
+    let r = u32::from(bpv(env, 0x021D_5BDC, bpp, 0) == 0);
     m.w32(ai + RESULT, r);
     status(m, ai)
 }
 
 /// C: `FUN_overlay_d_96__0218948c`: command 68, `ai[0x38] = 021d69ac(slot, 0)`.
-pub fn cmd_69ac<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    slot_mon(env, m, ai);
-    let x = bpv(env, 0x021D_69AC, 0);
+pub fn cmd_69ac<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let bpp = slot_mon(env, m, vm, ai);
+    let x = bpv(env, 0x021D_69AC, bpp, 0);
     m.w32(ai + RESULT, x);
     status(m, ai)
 }
@@ -1695,9 +1708,9 @@ pub fn cmd_result_from_9c(m: &mut Mem, ai: u32) -> u32 {
 }
 
 /// C: `FUN_overlay_d_96__021894d4`: command 71, `ai[0x38] = 021d6740(slot)` (held item?).
-pub fn cmd_6740<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    slot_mon(env, m, ai);
-    let x = bp(env, 0x021D_6740);
+pub fn cmd_6740<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let bpp = slot_mon(env, m, vm, ai);
+    let x = bp(env, 0x021D_6740, bpp);
     m.w32(ai + RESULT, x);
     status(m, ai)
 }
@@ -1728,13 +1741,13 @@ pub fn cmd_result_effect<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__02189548`: command 75, `ai[0x38] = 021d679c(slot)` when its last move is 0xB6 / 0xC5 / 0xCB,
 /// else 0.
-pub fn cmd_protect_count<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    slot_mon(env, m, ai);
-    let r = if bp(env, 0x021D_67A8) == 0xB6
-        || bp(env, 0x021D_67A8) == 0xC5
-        || bp(env, 0x021D_67A8) == 0xCB
+pub fn cmd_protect_count<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let bpp = slot_mon(env, m, vm, ai);
+    let r = if bp(env, 0x021D_67A8, bpp) == 0xB6
+        || bp(env, 0x021D_67A8, bpp) == 0xC5
+        || bp(env, 0x021D_67A8, bpp) == 0xCB
     {
-        bp(env, 0x021D_679C)
+        bp(env, 0x021D_679C, bpp)
     } else {
         0
     };
@@ -1744,16 +1757,16 @@ pub fn cmd_protect_count<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__02189590`: command 76, `goto a`.
 pub fn cmd_goto<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let a = op(env);
+    let a = op(env, vm);
     jump(env, m, vm, a);
     status(m, ai)
 }
 
 /// C: `FUN_overlay_d_96__021895ac`: command 77, end the script: `ai[0x44] |= 1`, stop the VM (`02011290`); returns 1.
-pub fn cmd_end<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
+pub fn cmd_end<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
     let f = m.r8(ai + FLAGS) | 1;
     m.w8(ai + FLAGS, f);
-    env.call(0x0201_1290, &mut [Arg::P]);
+    env.call(0x0201_1290, &mut [Arg::PAt(vm)]);
     1
 }
 
@@ -1761,8 +1774,8 @@ pub fn cmd_end<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 /// ([`INIT_RECORD`] words 3..5, copied to the stack), value 0xF of both mons.
 /// For `a >= 3` the original reads past its stack copy (the port panics); ai1.spec bounds the operand to 0..2 (Z21).
 pub fn cmd_cmp_value_f<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let a = op(env);
-    let b = op(env);
+    let a = op(env, vm);
+    let b = op(env, vm);
     let tbl = [INIT_RECORD[3], INIT_RECORD[4], INIT_RECORD[5]];
     let x = mon_value(env, m.r32(ai + SELF_MON), 0xF);
     let y = mon_value(env, m.r32(ai + TARGET_MON), 0xF);
@@ -1772,9 +1785,8 @@ pub fn cmd_cmp_value_f<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u3
 
 /// C: `FUN_overlay_d_96__02189640`: `if cond(target, 0xB) <kind> 1: goto b`.
 pub fn if_target_cond_b<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let b = op(env);
-    let x = bpv(env, 0x021D_62C4, 0xB);
-    let _ = m.r32(ai + TARGET_MON);
+    let b = op(env, vm);
+    let x = bpv(env, 0x021D_62C4, m.r32(ai + TARGET_MON), 0xB);
     branch_if(env, m, vm, kind, x, 1, b)
 }
 
@@ -1787,7 +1799,7 @@ wrapper!(
 
 /// C: `FUN_overlay_d_96__02189668`: command 81, `if own and iterated positions are on the same side: goto b`.
 pub fn cmd_if_same_side<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let b = op(env);
+    let b = op(env, vm);
     branch_if(
         env,
         m,
@@ -1801,9 +1813,9 @@ pub fn cmd_if_same_side<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u
 }
 
 /// C: `FUN_overlay_d_96__02189694`: command 82, `ai[0x38]` = the mon at a slot has type `t`.
-pub fn cmd_has_type<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let s = op(env);
-    let t = op(env) & 0xFF;
+pub fn cmd_has_type<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let s = op(env, vm);
+    let t = op(env, vm) & 0xFF;
     let pos = pos_of(env, m, ai, s);
     let bpp = mon_at(env, m, ai, pos);
     let ty = mon_types(env, bpp);
@@ -1813,9 +1825,9 @@ pub fn cmd_has_type<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 }
 
 /// C: `FUN_overlay_d_96__021896e0`: command 83, `ai[0x38] = mon_trait(slot) == t`.
-pub fn cmd_trait_is<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let s = op(env);
-    let t = op(env);
+pub fn cmd_trait_is<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let s = op(env, vm);
+    let t = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let r = u32::from(mon_trait(env, m, ai, s, pos) == t);
     m.w32(ai + RESULT, r);
@@ -1824,11 +1836,11 @@ pub fn cmd_trait_is<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__02189718`: command 84, `if 021d5bdc(slot, 0xD) != 0: goto b`.
 pub fn cmd_if_5bdc_d<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let s = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
-    mon_at(env, m, ai, pos);
-    if bpv(env, 0x021D_5BDC, 0xD) != 0 {
+    let bpp = mon_at(env, m, ai, pos);
+    if bpv(env, 0x021D_5BDC, bpp, 0xD) != 0 {
         jump(env, m, vm, b);
     }
     status(m, ai)
@@ -1836,12 +1848,12 @@ pub fn cmd_if_5bdc_d<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 
 
 /// C: `FUN_overlay_d_96__02189758`: command 85, `if ability(slot) == a: goto b`.
 pub fn cmd_if_ability<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let s = op(env);
-    let a = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let a = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
-    mon_at(env, m, ai, pos);
-    if a == bp(env, 0x021D_5B40) {
+    let bpp = mon_at(env, m, ai, pos);
+    if a == bp(env, 0x021D_5B40, bpp) {
         jump(env, m, vm, b);
     }
     status(m, ai)
@@ -1849,17 +1861,17 @@ pub fn cmd_if_ability<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32
 
 /// C: `FUN_overlay_d_96__0218979c`: command 86, `if 021ef948(a) == 1: goto b`.
 pub fn cmd_if_f948<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let a = op(env);
-    let b = op(env);
+    let a = op(env, vm);
+    let b = op(env, vm);
     let x = call(env, 0x021E_F948, &[a]);
     branch_if(env, m, vm, 2, x, 1, b);
     status(m, ai)
 }
 
 /// C: `FUN_overlay_d_96__021897cc`: command 87, `ai[0x38] = 021c82d0(flow, pos(slot), a)`.
-pub fn cmd_side<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let s = op(env);
-    let a = op(env);
+pub fn cmd_side<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let s = op(env, vm);
+    let a = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let x = call(env, 0x021C_82D0, &[m.r32(ai + FLOW), pos, a]);
     m.w32(ai + RESULT, x);
@@ -1869,15 +1881,15 @@ pub fn cmd_side<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 /// C: `FUN_overlay_d_96__02189800`: command 88, for each living party member: `if hp(mon at slot) < 100: goto b`
 /// (stops at the first branch; the HP read is always of the slot's mon).
 pub fn cmd_if_party_hp<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let s = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let (party, mut i) = party_of(env, m, ai, pos);
-    while (i as i32) < party_len(env) as i32 {
+    while (i as i32) < party_len(env, party) as i32 {
         let mon = party_mon(env, party, i & 0xFF);
         if fainted(env, mon) == 0 {
-            mon_at(env, m, ai, pos);
-            let hp = bp(env, 0x021D_5C44);
+            let bpp = mon_at(env, m, ai, pos);
+            let hp = bp(env, 0x021D_5C44, bpp);
             if branch_if(env, m, vm, 0, hp, 100, b) != 0 {
                 break;
             }
@@ -1890,19 +1902,19 @@ pub fn cmd_if_party_hp<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u3
 /// C: `FUN_overlay_d_96__0218989c`: command 89, for each living party member: `if pp(mon at slot, j) == 0` for some `j`:
 /// goto b (`021d554c`; stops at the first branch).
 pub fn cmd_if_party_no_pp<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let s = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let (party, mut i) = party_of(env, m, ai, pos);
-    while (i as i32) < party_len(env) as i32 {
+    while (i as i32) < party_len(env, party) as i32 {
         let mon = party_mon(env, party, i & 0xFF);
         if fainted(env, mon) == 0 {
             let mut j = 0u32;
             let me = mon_at(env, m, ai, pos);
             if move_count(env, me) as i32 > 0 {
                 loop {
-                    mon_at(env, m, ai, pos);
-                    let x = bpv(env, 0x021D_554C, j & 0xFF);
+                    let bpp = mon_at(env, m, ai, pos);
+                    let x = bpv(env, 0x021D_554C, bpp, j & 0xFF);
                     if branch_if(env, m, vm, 3, x, 0, b) != 0 {
                         break;
                     }
@@ -1925,14 +1937,14 @@ pub fn cmd_if_party_no_pp<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) ->
 
 /// C: `FUN_overlay_d_96__02189978`: command 90, `ai[0x38]` = [`table_lookup`]`(ability, 0xA)` unless `cond(slot, 0x13)`
 /// (else 0).
-pub fn cmd_ability_lookup_a<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let s = op(env);
+pub fn cmd_ability_lookup_a<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let s = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     m.w32(ai + RESULT, 0);
-    mon_at(env, m, ai, pos);
-    if bpv(env, 0x021D_62C4, 0x13) == 0 {
-        mon_at(env, m, ai, pos);
-        let x = bp(env, 0x021D_5B40);
+    let bpp = mon_at(env, m, ai, pos);
+    if bpv(env, 0x021D_62C4, bpp, 0x13) == 0 {
+        let bpp = mon_at(env, m, ai, pos);
+        let x = bp(env, 0x021D_5B40, bpp);
         let r = table_lookup(env, m, ai, x & 0xFFFF, 0xA);
         m.w32(ai + RESULT, r);
     }
@@ -1941,18 +1953,18 @@ pub fn cmd_ability_lookup_a<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u3
 
 /// C: `FUN_overlay_d_96__021899c4`: command 91, `ai[0x38] = 021d5584(self, slot)` (the current slot is usable?).
 pub fn cmd_slot_usable<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let x = bpv(env, 0x021D_5584, m.r8(ai + 1));
+    let x = bpv(env, 0x021D_5584, m.r32(ai + SELF_MON), m.r8(ai + 1));
     m.w32(ai + RESULT, x);
     status(m, ai)
 }
 
 /// C: `FUN_overlay_d_96__021899dc`: command 92, `if 021d5478(slot) >= move count && move count > 1: goto b`.
 pub fn cmd_if_5478<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let s = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let bpp = mon_at(env, m, ai, pos);
-    let a = bp(env, 0x021D_5478);
+    let a = bp(env, 0x021D_5478, bpp);
     if a >= move_count(env, bpp) && move_count(env, bpp) > 1 {
         jump(env, m, vm, b);
     }
@@ -1968,24 +1980,27 @@ pub fn cmd_move_param2<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__02189a44`: command 94, `ai[0x38]` = param 2 of the target's last move (0 for none).
 pub fn cmd_target_last_param2<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let w = bp(env, 0x021D_67A8);
+    let w = bp(env, 0x021D_67A8, m.r32(ai + TARGET_MON));
     let r = if w != 0 { waza_param(env, ai, w, 2) } else { 0 };
     m.w32(ai + RESULT, r);
     status(m, ai)
 }
 
 /// C: `FUN_overlay_d_96__02189a6c`: command 95, `ai[0x38] = 021c81d0(flow, mon at slot, 1)`.
-pub fn cmd_81d0<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let bpp = slot_mon(env, m, ai);
-    let x = env.call(0x021C_81D0, &mut [Arg::P, Arg::V(bpp), Arg::V(1)]);
+pub fn cmd_81d0<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let bpp = slot_mon(env, m, vm, ai);
+    let x = env.call(
+        0x021C_81D0,
+        &mut [Arg::PAt(m.r32(ai + FLOW)), Arg::V(bpp), Arg::V(1)],
+    );
     m.w32(ai + RESULT, x);
     status(m, ai)
 }
 
 /// C: `FUN_overlay_d_96__02189a9c`: command 96, `ai[0x38] = 021d5ba4(slot)`.
-pub fn cmd_5ba4<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    slot_mon(env, m, ai);
-    let x = bp(env, 0x021D_5BA4);
+pub fn cmd_5ba4<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let bpp = slot_mon(env, m, vm, ai);
+    let x = bp(env, 0x021D_5BA4, bpp);
     m.w32(ai + RESULT, x);
     status(m, ai)
 }
@@ -1993,11 +2008,11 @@ pub fn cmd_5ba4<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 /// C: `FUN_overlay_d_96__02189ac0`: command 97, `if some living party member outscores self against the target: goto b`
 /// ([`best_score`]).
 pub fn cmd_if_party_better<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let x = op(env);
-    let b = op(env);
+    let x = op(env, vm);
+    let b = op(env, vm);
     let (party, mut i) = party_of(env, m, ai, m.r8(ai + OWN_POS));
     let base = best_score(env, m, ai, m.r32(ai + SELF_MON), m.r32(ai + TARGET_MON), x);
-    while (i as i32) < party_len(env) as i32 {
+    while (i as i32) < party_len(env, party) as i32 {
         let mon = party_mon(env, party, i & 0xFF);
         mon_id(env, mon);
         if fainted(env, mon) == 0 && best_score(env, m, ai, mon, m.r32(ai + TARGET_MON), x) > base {
@@ -2011,7 +2026,7 @@ pub fn cmd_if_party_better<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -
 
 /// C: `FUN_overlay_d_96__02189b78`: command 98, `if some own move is super effective (021c7dac class 4 or 5): goto b`.
 pub fn cmd_if_super_effective<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let b = op(env);
+    let b = op(env, vm);
     let me = m.r32(ai + SELF_MON);
     let mut i = 0u32;
     while (i as i32) < move_count(env, me) as i32 {
@@ -2030,13 +2045,13 @@ pub fn cmd_if_super_effective<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32
 
 /// C: `FUN_overlay_d_96__02189bfc`: command 99, `if score(last move of the mon at slot vs target) > best own score: goto b`.
 pub fn cmd_if_last_move_beats<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let s = op(env);
-    let x = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let x = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let bpp = mon_at(env, m, ai, pos);
     let base = best_score(env, m, ai, m.r32(ai + SELF_MON), m.r32(ai + TARGET_MON), x);
-    let w = bp(env, 0x021D_67A8);
+    let w = bp(env, 0x021D_67A8, bpp);
     let ia = mon_id(env, bpp);
     let ib = mon_id(env, m.r32(ai + TARGET_MON));
     let y = score7e14(env, m.r32(ai + FLOW), ia, ib, w, 1, x);
@@ -2048,8 +2063,8 @@ pub fn cmd_if_last_move_beats<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32
 
 /// C: `FUN_overlay_d_96__02189c8c`: command 100, `ai[0x38]` = sum over the stat-stage values 1..7 (ids from
 /// [`INIT_RECORD`] words 6..12) of a slot of `max(v - 6, 0)` (boosts above neutral).
-pub fn cmd_sum_boosts<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let s = op(env);
+pub fn cmd_sum_boosts<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let s = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     m.w32(ai + RESULT, 0);
     for k in 0..7 {
@@ -2064,9 +2079,9 @@ pub fn cmd_sum_boosts<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 }
 
 /// C: `FUN_overlay_d_96__02189cec`: command 101, `ai[0x38] = value(slot, id) - value(self, id)`.
-pub fn cmd_value_diff<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let s = op(env);
-    let id = op(env);
+pub fn cmd_value_diff<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let s = op(env, vm);
+    let id = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let bpp = mon_at(env, m, ai, pos);
     let a = mon_value(env, bpp, id);
@@ -2077,10 +2092,13 @@ pub fn cmd_value_diff<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__02189d48`: command 105, `ai[0x38]` = 0 (self not in the party / current move scores 0), 2 (no
 /// other party member does better), 1 (another `021d5b7c` party member has a move that outscores the current one).
-pub fn cmd_party_outscores<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let x = op(env);
+pub fn cmd_party_outscores<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let x = op(env, vm);
     let (party, cnt) = party_of(env, m, ai, m.r8(ai + OWN_POS));
-    let me = env.call(0x021B_9C98, &mut [Arg::P, Arg::V(m.r32(ai + SELF_MON))]);
+    let me = env.call(
+        0x021B_9C98,
+        &mut [Arg::PAt(party), Arg::V(m.r32(ai + SELF_MON))],
+    );
     let ia = mon_id(env, m.r32(ai + SELF_MON));
     let ib = mon_id(env, m.r32(ai + TARGET_MON));
     let base = score7e14(env, m.r32(ai + FLOW), ia, ib, m.r16(ai + 2), 1, x);
@@ -2111,8 +2129,8 @@ pub fn cmd_party_outscores<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32
 
 /// C: `FUN_overlay_d_96__02189e90`: `if fainted(slot) <kind> 1: goto b`.
 pub fn if_fainted<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let s = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let bpp = mon_at(env, m, ai, pos);
     let x = fainted(env, bpp);
@@ -2127,8 +2145,8 @@ wrapper!(
     cmd_107 => if_fainted(3));
 
 /// C: `FUN_overlay_d_96__02189ed0`: command 108, `ai[0x38]` = value 0x11 of a slot.
-pub fn cmd_value11<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    let bpp = slot_mon(env, m, ai);
+pub fn cmd_value11<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let bpp = slot_mon(env, m, vm, ai);
     let x = mon_value(env, bpp, 0x11);
     m.w32(ai + RESULT, x);
     status(m, ai)
@@ -2136,28 +2154,28 @@ pub fn cmd_value11<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__02189ef8`: command 109, `if 021d6d7c(slot) != 0: goto b`.
 pub fn cmd_if_6d7c<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let s = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
-    mon_at(env, m, ai, pos);
-    if bp(env, 0x021D_6D7C) != 0 {
+    let bpp = mon_at(env, m, ai, pos);
+    if bp(env, 0x021D_6D7C, bpp) != 0 {
         jump(env, m, vm, b);
     }
     status(m, ai)
 }
 
 /// C: `FUN_overlay_d_96__02189f34`: command 110, `ai[0x38]` = species of a slot (`021d5444`).
-pub fn cmd_species<E: FlowEnv>(env: &mut E, m: &mut Mem, ai: u32) -> u32 {
-    slot_mon(env, m, ai);
-    let x = bp(env, 0x021D_5444);
+pub fn cmd_species<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
+    let bpp = slot_mon(env, m, vm, ai);
+    let x = bp(env, 0x021D_5444, bpp);
     m.w32(ai + RESULT, x);
     status(m, ai)
 }
 
 /// C: `FUN_overlay_d_96__02189f98`: `if ai[0xCC] <kind> a: goto b` (the per-turn random word).
 pub fn if_turn_rand<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let a = op(env);
-    let b = op(env);
+    let a = op(env, vm);
+    let b = op(env, vm);
     branch_if(env, m, vm, kind, m.r32(ai + 0xCC), a, b)
 }
 
@@ -2177,9 +2195,9 @@ wrapper!(
 /// C: `FUN_overlay_d_96__02189fc0`: command 115, a jump table on the current move's effect: mode != 0 or effect > `thr`
 /// ends the script ([`cmd_end`], returns 1); else jumps to `tbl + tbl[effect]` (script u32 table at `vm[0x14] + t`).
 pub fn cmd_switch_effect<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32) -> u32 {
-    let mode = op(env);
-    let thr = op(env);
-    let t = op(env);
+    let mode = op(env, vm);
+    let thr = op(env, vm);
+    let t = op(env, vm);
     let tbl = m.r32(vm + VM_BASE).wrapping_add(t);
     let mut idx = 0u32;
     let stop = if mode != 0 {
@@ -2191,17 +2209,20 @@ pub fn cmd_switch_effect<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32)
         v > thr as i32
     };
     if stop {
-        return cmd_end(env, m, ai);
+        return cmd_end(env, m, vm, ai);
     }
     let off = m.r16(tbl.wrapping_add(idx << 1)) | (m.r16(tbl.wrapping_add((idx + 1) << 1)) << 16);
-    env.call(0x0201_13B0, &mut [Arg::P, Arg::V(tbl.wrapping_add(off))]);
+    env.call(
+        0x0201_13B0,
+        &mut [Arg::PAt(vm), Arg::V(tbl.wrapping_add(off))],
+    );
     status(m, ai)
 }
 
 /// C: `FUN_overlay_d_96__0218a034`: command 116, `if 021c82f4(flow, pos(slot), 3) != 0: goto b`.
 pub fn cmd_if_82f4<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
-    let s = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     if call(env, 0x021C_82F4, &[m.r32(ai + FLOW), pos, 3]) != 0 {
         jump(env, m, vm, b);
@@ -2211,8 +2232,8 @@ pub fn cmd_if_82f4<E: FlowEnv>(env: &mut E, m: &Mem, vm: u32, ai: u32) -> u32 {
 
 /// C: `FUN_overlay_d_96__0218a0a4`: `if pos(slot) <kind> value(slot, 0xA): goto b` (value 8 read and dropped first).
 pub fn if_pos_vs_value<E: FlowEnv>(env: &mut E, m: &mut Mem, vm: u32, ai: u32, kind: u32) -> u32 {
-    let s = op(env);
-    let b = op(env);
+    let s = op(env, vm);
+    let b = op(env, vm);
     let pos = pos_of(env, m, ai, s);
     let bpp = mon_at(env, m, ai, pos);
     mon_value(env, bpp, 8);

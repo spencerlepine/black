@@ -378,26 +378,17 @@ pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>])
             0
         }
         a if THUMB_ARM9.contains(&a) || THUMB_ARM9_RANGES.iter().any(|r| r.contains(&a)) => {
-            let vmc = (0x0201_11EC..0x0201_13D8).contains(&a);
-            let cur = env.ai_vm.last().copied();
             let v: Vec<u32> = args
                 .iter()
-                .enumerate()
-                .map(|(i, x)| match x {
+                .map(|x| match x {
                     Arg::V(v) | Arg::PAt(v) => *v,
-                    // the AI ports' pass-through VM handle (see `ai::call`)
-                    Arg::P if vmc && i == 0 && cur.is_some() => cur.unwrap(),
                     _ => panic!(
                         "B16 gap: ARM9 {a:#x} gets a pointer the caller does not know ({})",
                         env.backtrace()
                     ),
                 })
                 .collect();
-            let r = env.run_thumb(a, &v);
-            if a == 0x0201_121C {
-                env.vms.insert(r);
-            }
-            r
+            env.run_thumb(a, &v)
         }
         _ => return None,
     })

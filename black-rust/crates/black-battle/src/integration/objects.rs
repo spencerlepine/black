@@ -201,19 +201,29 @@ impl Objects {
     }
 
     /// The held block whose holder's buffer contains `ptr..ptr + len`: `(base, offset)`.
+    /// Live holder buffers never overlap, so two matches mean a stale `held_ptr` (a holder's buffer
+    /// that moved or was freed while its block stayed held): that panics instead of picking one.
     pub fn held_block(&self, ptr: usize, len: usize) -> Option<(u32, usize)> {
-        self.blocks.iter().find_map(|(&b, blk)| {
-            (blk.held && ptr >= blk.held_ptr && ptr + len <= blk.held_ptr + blk.len)
-                .then(|| (b, ptr - blk.held_ptr))
-        })
+        let mut m = self
+            .blocks
+            .iter()
+            .filter(|(_, blk)| {
+                blk.held && ptr >= blk.held_ptr && ptr + len <= blk.held_ptr + blk.len
+            })
+            .map(|(&b, blk)| (b, ptr - blk.held_ptr));
+        let r = m.next();
+        if let Some((b2, _)) = m.next() {
+            panic!(
+                "B16: a lent slice matches two held blocks ({:#010x}, {b2:#010x}): stale holder",
+                r.unwrap().0
+            );
+        }
+        r
     }
 
     /// Address of a lent slice: the held block whose buffer contains `ptr`.
     pub fn held_addr(&self, ptr: usize, len: usize) -> Option<u32> {
-        self.blocks.iter().find_map(|(&b, blk)| {
-            (blk.held && ptr >= blk.held_ptr && ptr + len <= blk.held_ptr + blk.len)
-                .then(|| b + (ptr - blk.held_ptr) as u32)
-        })
+        self.held_block(ptr, len).map(|(b, o)| b + o as u32)
     }
 }
 

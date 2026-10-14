@@ -19,11 +19,13 @@ impl AiEnv for Env {
     }
 }
 
-/// The AI ports that are wired end to end (B16): object create / start / answers.
-const WIRED: &[u32] = &[0x0218_7F00, 0x0218_80BC, 0x0218_8134, 0x0218_8140];
+/// The AI entry points that run as ports even in the [`Env::ai_interp`] cross-check (B16's wiring):
+/// object create / start / chosen move / chosen target.
+const ENTRY: &[u32] = &[0x0218_7F00, 0x0218_80BC, 0x0218_8134, 0x0218_8140];
 
-/// An AI function whose first argument is a VM the environment created: the VM is the current
-/// one for the call (the AI ports pass the VM to the VM routines as a pass-through `P`; B16 gap).
+/// Every overlay-96 function runs as its port (B17: the ports pass the VM / BattleMon / server
+/// pointers the original passes, as `Arg::PAt`); an address with no port answers `None` (a gap).
+/// With [`Env::ai_interp`] (test cross-check) all but [`ENTRY`] run as original Thumb code.
 pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>]) -> Option<u32> {
     // ai_delete from the client's destructor (`021cd8e0`) gets no argument from the port (the
     // original passes `c + 0xF0` in r0): the VM of the calling client
@@ -35,33 +37,20 @@ pub fn call(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>])
         let vm = env.r32(c + 0xF0);
         return call(env, lent, addr, &mut [Arg::V(vm)]);
     }
-    let vm = match args.first() {
-        Some(Arg::V(x)) | Some(Arg::PAt(x)) if env.vms.contains(x) => Some(*x),
-        _ => None,
-    };
-    if let Some(vm) = vm {
-        env.ai_vm.push(vm);
-    }
-    let r = if WIRED.contains(&addr) {
-        call_inner(env, lent, addr, args)
-    } else {
-        // the AI ports pass the BattleMon / server / VM pointers they got from a previous call as
-        // pass-through `P` (~150 sites, B16 gap): the rest of overlay 96 runs as original Thumb code
+    *env.ai_calls.entry(addr & !1).or_default() += 1;
+    if env.ai_interp && !ENTRY.contains(&(addr & !1)) {
         let v: Vec<u32> = args
             .iter()
             .map(|a| match a {
                 Arg::V(x) | Arg::PAt(x) => *x,
                 _ => panic!(
-                    "B16 gap: AI {addr:#x} (interpreted) gets a pointer the caller does not know"
+                    "B17: AI {addr:#x} (interpreted) gets a pointer the caller does not know"
                 ),
             })
             .collect();
-        Some(env.run_thumb(addr, &v))
-    };
-    if vm.is_some() {
-        env.ai_vm.pop();
+        return Some(env.run_thumb(addr, &v));
     }
-    r
+    call_inner(env, lent, addr, args)
 }
 
 fn call_inner(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>]) -> Option<u32> {
@@ -82,7 +71,8 @@ fn call_inner(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>
     let v: Vec<u32> = (0..8)
         .map(|i| match args.get(i) {
             Some(Arg::V(x)) | Some(Arg::PAt(x)) => *x,
-            Some(Arg::P) | None => 0,
+            None => 0,
+            Some(Arg::P) => panic!("B17: ai1 {addr:#x} gets a pointer the caller does not know"),
             Some(_) => panic!("B16: ai1 {addr:#x} gets a buffer argument"),
         })
         .collect();
@@ -118,8 +108,8 @@ fn call_inner(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>
         0x0218_85BC => run_moves(e, m, vm, ai),
         0x0218_8080 => ai_delete(e, m, vm),
         0x0218_80BC => ai_start(e, m, vm, v[1], v[2]),
-        0x0218_8134 => chosen_move(e, m),
-        0x0218_8140 => chosen_target(e, m),
+        0x0218_8134 => chosen_move(e, m, vm),
+        0x0218_8140 => chosen_target(e, m, vm),
         // helpers of the command wrappers: (vm, ai, kind)
         0x0218_875C => cmd_if_rand(e, m, vm, k),
         0x0218_87F4 => if_hp(e, m, vm, ai, k),
@@ -145,7 +135,7 @@ fn call_inner(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>
         0x0218_872C => cmd_01(e, m, vm, ai),
         0x0218_873C => cmd_02(e, m, vm, ai),
         0x0218_874C => cmd_03(e, m, vm, ai),
-        0x0218_878C => cmd_add_score(e, m, ai),
+        0x0218_878C => cmd_add_score(e, m, vm, ai),
         0x0218_87B4 => cmd_05(e, m, vm, ai),
         0x0218_87C4 => cmd_06(e, m, vm, ai),
         0x0218_87D4 => cmd_07(e, m, vm, ai),
@@ -173,15 +163,15 @@ fn call_inner(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>
         0x0218_8BB0 => cmd_if_has_damaging(e, m, vm, ai),
         0x0218_8C1C => cmd_if_no_damaging(e, m, vm, ai),
         0x0218_8C88 => cmd_get_8138(e, m, ai),
-        0x0218_8CA0 => cmd_get_type(e, m, ai),
+        0x0218_8CA0 => cmd_get_type(e, m, vm, ai),
         0x0218_8D48 => cmd_move_1d8(e, m, ai),
-        0x0218_8D5C => cmd_cmp_scores(e, m, ai),
-        0x0218_8E00 => cmd_last_move(e, m, ai),
+        0x0218_8D5C => cmd_cmp_scores(e, m, vm, ai),
+        0x0218_8E00 => cmd_last_move(e, m, vm, ai),
         0x0218_8E24 => cmd_cmp_speed(e, m, vm, ai),
-        0x0218_8E90 => cmd_count_party_5b7c(e, m, ai),
+        0x0218_8E90 => cmd_count_party_5b7c(e, m, vm, ai),
         0x0218_8F08 => cmd_result_from_score(m, ai),
         0x0218_8F14 => cmd_move_effect(e, m, ai),
-        0x0218_8F2C => cmd_trait(e, m, ai),
+        0x0218_8F2C => cmd_trait(e, m, vm, ai),
         0x0218_8F50 => cmd_status(m, ai),
         0x0218_8F58 => cmd_if_effectiveness(e, m, vm, ai),
         0x0218_8FAC => cmd_45(e, m, vm, ai),
@@ -202,49 +192,49 @@ fn call_inner(env: &mut Env, lent: &mut Lent<'_>, addr: u32, args: &mut [Arg<'_>
         0x0218_93AC | 0x0218_93CC | 0x0218_93D4 | 0x0218_94F8 | 0x0218_9D30 | 0x0218_9D38
         | 0x0218_9D40 => cmd_nop(m, ai),
         0x0218_93B4 => cmd_set_abort(m, ai),
-        0x0218_93DC => cmd_ability(e, m, ai),
-        0x0218_9400 => cmd_ability_lookup(e, m, ai),
-        0x0218_9434 => cmd_value12(e, m, ai),
-        0x0218_945C => cmd_5bdc0_zero(e, m, ai),
-        0x0218_948C => cmd_69ac(e, m, ai),
+        0x0218_93DC => cmd_ability(e, m, vm, ai),
+        0x0218_9400 => cmd_ability_lookup(e, m, vm, ai),
+        0x0218_9434 => cmd_value12(e, m, vm, ai),
+        0x0218_945C => cmd_5bdc0_zero(e, m, vm, ai),
+        0x0218_948C => cmd_69ac(e, m, vm, ai),
         0x0218_94B4 => cmd_result_from_98(m, ai),
         0x0218_94C4 => cmd_result_from_9c(m, ai),
-        0x0218_94D4 => cmd_6740(e, m, ai),
+        0x0218_94D4 => cmd_6740(e, m, vm, ai),
         0x0218_9500 => cmd_result_param3(e, m, ai),
         0x0218_9524 => cmd_result_effect(e, m, ai),
-        0x0218_9548 => cmd_protect_count(e, m, ai),
+        0x0218_9548 => cmd_protect_count(e, m, vm, ai),
         0x0218_9590 => cmd_goto(e, m, vm, ai),
-        0x0218_95AC => cmd_end(e, m, ai),
+        0x0218_95AC => cmd_end(e, m, vm, ai),
         0x0218_95C4 => cmd_cmp_value_f(e, m, vm, ai),
         0x0218_9620 => cmd_79(e, m, vm, ai),
         0x0218_9630 => cmd_80(e, m, vm, ai),
         0x0218_9668 => cmd_if_same_side(e, m, vm, ai),
-        0x0218_9694 => cmd_has_type(e, m, ai),
-        0x0218_96E0 => cmd_trait_is(e, m, ai),
+        0x0218_9694 => cmd_has_type(e, m, vm, ai),
+        0x0218_96E0 => cmd_trait_is(e, m, vm, ai),
         0x0218_9718 => cmd_if_5bdc_d(e, m, vm, ai),
         0x0218_9758 => cmd_if_ability(e, m, vm, ai),
         0x0218_979C => cmd_if_f948(e, m, vm, ai),
-        0x0218_97CC => cmd_side(e, m, ai),
+        0x0218_97CC => cmd_side(e, m, vm, ai),
         0x0218_9800 => cmd_if_party_hp(e, m, vm, ai),
         0x0218_989C => cmd_if_party_no_pp(e, m, vm, ai),
-        0x0218_9978 => cmd_ability_lookup_a(e, m, ai),
+        0x0218_9978 => cmd_ability_lookup_a(e, m, vm, ai),
         0x0218_99C4 => cmd_slot_usable(e, m, ai),
         0x0218_99DC => cmd_if_5478(e, m, vm, ai),
         0x0218_9A2C => cmd_move_param2(e, m, ai),
         0x0218_9A44 => cmd_target_last_param2(e, m, ai),
-        0x0218_9A6C => cmd_81d0(e, m, ai),
-        0x0218_9A9C => cmd_5ba4(e, m, ai),
+        0x0218_9A6C => cmd_81d0(e, m, vm, ai),
+        0x0218_9A9C => cmd_5ba4(e, m, vm, ai),
         0x0218_9AC0 => cmd_if_party_better(e, m, vm, ai),
         0x0218_9B78 => cmd_if_super_effective(e, m, vm, ai),
         0x0218_9BFC => cmd_if_last_move_beats(e, m, vm, ai),
-        0x0218_9C8C => cmd_sum_boosts(e, m, ai),
-        0x0218_9CEC => cmd_value_diff(e, m, ai),
-        0x0218_9D48 => cmd_party_outscores(e, m, ai),
+        0x0218_9C8C => cmd_sum_boosts(e, m, vm, ai),
+        0x0218_9CEC => cmd_value_diff(e, m, vm, ai),
+        0x0218_9D48 => cmd_party_outscores(e, m, vm, ai),
         0x0218_9E70 => cmd_106(e, m, vm, ai),
         0x0218_9E80 => cmd_107(e, m, vm, ai),
-        0x0218_9ED0 => cmd_value11(e, m, ai),
+        0x0218_9ED0 => cmd_value11(e, m, vm, ai),
         0x0218_9EF8 => cmd_if_6d7c(e, m, vm, ai),
-        0x0218_9F34 => cmd_species(e, m, ai),
+        0x0218_9F34 => cmd_species(e, m, vm, ai),
         0x0218_9F58 => cmd_111(e, m, vm, ai),
         0x0218_9F68 => cmd_112(e, m, vm, ai),
         0x0218_9F78 => cmd_113(e, m, vm, ai),

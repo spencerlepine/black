@@ -568,6 +568,15 @@ impl Env {
             c.r[15] = t & !1;
             return;
         }
+        // `OS_GetTick` (r0:r1 result; the interpreted AI of the B17 cross-check): the same clock
+        // as the ports' `AiEnv::call64`
+        if t & !1 == 0x0208_70D0 {
+            let r = crate::ai::AiEnv::call64(self, 0x0208_70D0, &mut []);
+            c.r[0] = r as u32;
+            c.r[1] = (r >> 32) as u32;
+            c.r[15] = c.r[14] & !1;
+            return;
+        }
         // 64-bit runtime helpers (r0:r1 results)
         if let Some(r) = long_helper(t & !1, &c.r) {
             c.r[0] = r as u32;

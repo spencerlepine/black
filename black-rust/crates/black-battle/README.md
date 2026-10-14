@@ -189,7 +189,7 @@ miss), 4 frames / 56 commands.
 routes by address range to the port (`server1`-`3` with `Mem` windows, `server_side`, the flow
 areas through `flowcase` = the areas' differential-test `call` tables driven by their spec
 blocks, `client1`-`5`, `battle_mon`, `calc` / `calc_target` / `calc_action`, `event_factor` +
-the ported handlers, `field`, `sick_cont`, `poke_type`, adapter, AI create / start / answers) or
+the ported handlers, `field`, `sick_cont`, `poke_type`, adapter, all of overlay 96 = the ai1 ports) or
 to an explicit host model: heap / GameProc / MI memory (`arm9`), `poke_tool` / personal / waza /
 archives (the `black-pokemon` / `black-data` ports), sound, the headless battle view (every start
 returns, every "finished?" answers yes, the move menu answers move slot 0), the battle record
@@ -200,8 +200,24 @@ An address with neither panics with `B16 gap: no port or host model for callee �
 **Original code in an interpreter.** Unported Thumb glue runs in a minimal ARMv5T Thumb
 interpreter (`thumb.rs`): overlay-95 routines behind the `bx pc` veneers (the side-effect
 adder / remover are the ported `handlers::effects` ones), vm.c, btl_setup.c, the held-item and
-move-handler factor registration (`OV93_THUMB`), the turn-end side-effect walks, and **overlay 96
-except the four wired AI entry points** (see the gaps).
+move-handler factor registration (`OV93_THUMB`) and the turn-end side-effect walks. Overlay 96
+runs only as the ai1 ports (B17); `Env::ai_interp` runs it as original Thumb code instead (all but
+create / start / chosen move / chosen target) for the cross-check below.
+
+**AI (B17).** The ai1 ports pass every pointer the original passes (`Arg::PAt`: the VM to the vm.c
+routines, BattleMon pointers to their accessors, M / pokecon / flow / party to the server and flow
+callees, the freed blocks to `020307B0`; hash-neutral, ai1 still `svflow` clean against the
+recorded table). In `b16_single_battle` (a wild battle: AI mask 0, no scripts) the opponent's
+decisions come from the ports `ai_create` / `ai_start` / `ai_think` (`think_single`, the best-slot
+pick) / chosen move / chosen target; the battle is unchanged. `b17_ai_scripts_match_original`
+forces the AI client's script mask (`Env::ai_mask`, answered by `021b9fbc`) so the trainer-AI
+scripts run (the interpreted vm.c step calls the ported command handlers; 22 distinct handlers) and
+checks that 12 masks give the same HP trace and command frames as the original overlay-96 code in
+the interpreter. Masks that stop on gaps outside ai1 (same panic with the original AI): bits 0 / 1 /
+4 (`021c7e14` -> core4 `021c1e74` -> core6 `021c728c` gets a caller-local record buffer, `LOCAL_BUF`),
+bit 11 alone (core2 `021bd708` -> calc `021d8244` touches the flow work its caller holds without
+lending),
+bit 12 (vm.c reads unmapped 0x02309B70), bits 14 / 15 (no script member in archive 0xAB).
 
 **Coherence (lending).** Ports hold objects as Rust images (the flow work, `S`, client objects,
 the command queue, the 0x021F3B20 globals). A call lends them (`callw` / `callwr` / `callh` /
@@ -209,7 +225,12 @@ the command queue, the 0x021F3B20 globals). A call lends them (`callw` / `callwr
 lent images into the object table for the call and reloads the writable ones afterwards; an
 object a frame holds without lending it panics on access (`… is held by a port frame and was not
 lent`). Read-only holders flush only the bytes they changed since their last flush (a callee's
-writes survive; each is reported as a note). Flow cases store back only the bytes a port changed
+writes survive; each is reported as a note); the snapshots are keyed by the holder's frame depth
+and the image's place in its block and dropped when the frame returns (B17: they were keyed by the
+image's host address, so an image allocated where a freed one had been inherited its snapshot and
+the outcome could depend on the allocator; suspected cause of the rare `b16_single_battle` failure
+under the full parallel suite, "client object … already held by an outer port frame", not proven).
+A lent slice that matches two held blocks (a stale holder) panics. Flow cases store back only the bytes a port changed
 (arguments overlap, e.g. the 0x021F3B20 arrays) and treat regions / buffers inside the work as
 parts of the work. `Arg::{PBuf, PHost, PAt}` (hash-neutral: the stubs see `P`) carry the pointer
 values the ports used to drop. `FlowEnv::peek` lets a port read memory its test model placed
@@ -217,9 +238,8 @@ inside its own image (`S` slot table, adapter reply blocks).
 
 **Gaps found (see the B16 report for the full list).** High: ~120 call sites still pass a
 pass-through `P` where the callee's spec argument is a buffer / BattleMon (scan:
-server1 31, server2 27, core4 16, client 22, core5 6, handex 5, api 4, core1 3, ai1 5); the AI
-ports (ai1) pass their BattleMon / server / VM pointers as `P` throughout (~150 sites), so only
-create / start / chosen move / chosen target run as ports; ports hold records that live in the
+server1 31, server2 27, core4 16, client 22, core5 6, handex 5, api 4, core1 3; ai1 0 since B17);
+ports hold records that live in the
 flow work as separate slices (D / E at work + 0xD04 / 0xD18, the damage records, the per-turn
 struct) — `SvFlowWork::pull` / `push` sync them in `use_move` / `build_damage` / `build_records`
 only. Medium: read-only work holders whose callees write the work (`021bbb60`, `021bf3d8`,

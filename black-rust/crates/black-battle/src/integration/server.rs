@@ -371,7 +371,12 @@ fn server3_call(e: &mut Env, addr: u32, v: &[u32], m0: u32) -> Option<u32> {
         0x021B_9F70 => record_empty_at(m, v[0], v[1]),
         0x021B_9F84 => record_u16x4(m, v[0], v[1], v[2]),
         0x021B_9FAC => record_ptr1(m, v[0], v[1], v[2]),
-        0x021B_9FBC => record_word(e, m, v[0], v[1]),
+        // the AI mask of a client (`021b9fbc(M, id)`, read only for AI clients); the B17 test
+        // forces it to run the trainer-AI scripts in this wild battle
+        0x021B_9FBC => match e.ai_mask {
+            Some(x) => x,
+            None => record_word(e, m, v[0], v[1]),
+        },
         0x021B_A004 => record_u16b(m, v[0], v[1]),
         0x021B_A020 => record_u16a(m, v[0], v[1]),
         0x021B_A02C => record_sub(e, m, v[0], v[1], v[2]),

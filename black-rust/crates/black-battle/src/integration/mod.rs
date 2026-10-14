@@ -111,13 +111,20 @@ pub struct Env {
     pub notes: BTreeMap<String, u32>,
     /// The OS tick (`OS_GetTick`).
     pub tick: u64,
-    /// The VMs created by `0201121C` (vm.c) and the stack of the current AI VM.
-    pub vms: std::collections::BTreeSet<u32>,
-    pub ai_vm: Vec<u32>,
-    /// The image of each read-only holder (by its address) at its last flush: a read-only holder
-    /// cannot take a callee's writes back, so a later flush stores only the bytes its image changed
-    /// since then (changes an outer writable holder made) and keeps the callee's.
-    pub ro_snap: std::collections::HashMap<(usize, usize), Vec<u8>>,
+    /// Calls of overlay-96 (AI) functions from outside the overlay, by address (B17).
+    pub ai_calls: BTreeMap<u32, u32>,
+    /// The AI mask `021b9fbc` answers for the AI client (B17 test knob; `None` = the setup's).
+    pub ai_mask: Option<u32>,
+    /// Run overlay 96 as original Thumb code in the interpreter instead of the ai1 ports, except
+    /// the entry points create / start / chosen move / chosen target (B17 cross-check).
+    pub ai_interp: bool,
+    /// The image of each read-only holder at its last flush, keyed by the holder's frame depth and
+    /// the image's place `(depth, block, offset, len)` (not by its host address: an allocator that
+    /// reuses a freed image's address must not hand its snapshot to a later image); a frame's
+    /// entries are dropped when it returns. A read-only holder cannot take a callee's writes back,
+    /// so a later flush stores only the bytes its image changed since then (changes an outer
+    /// writable holder made) and keeps the callee's.
+    pub ro_snap: BTreeMap<(usize, u32, usize, usize), Vec<u8>>,
     /// The heap the battle calc's blocks come from (`021d7854` / `021d7894`).
     pub calc_heap: black_core::heap::HostHeap,
     /// The command frames the server sent (message 8 of the adapter), in order.
@@ -184,12 +191,13 @@ impl Env {
             specs: std::collections::HashMap::new(),
             thumb_sp: None,
             tick: 0,
-            vms: Default::default(),
-            ai_vm: Vec::new(),
+            ai_calls: BTreeMap::new(),
+            ai_mask: None,
+            ai_interp: false,
             trace: 0,
             cmd_frames: Vec::new(),
             calc_heap: Default::default(),
-            ro_snap: std::collections::HashMap::new(),
+            ro_snap: BTreeMap::new(),
             mt: {
                 let mut mt = black_core::rng::Mt19937::new();
                 mt.seed(0x89AB_CDEF);
@@ -346,6 +354,8 @@ impl Env {
     /// addresses first.
     pub fn dispatch(&mut self, lent: Lent<'_>, addr: u32, args: &mut [Arg<'_>]) -> u32 {
         self.stack.push(addr);
+        // frame depth of the caller (the holder of the lent images)
+        let depth = self.stack.len() - 1;
         *self.counts.entry(addr).or_default() += 1;
         for a in args.iter_mut() {
             if let Arg::PHost(h) = *a {
@@ -398,6 +408,7 @@ impl Env {
                 let blk = o.blocks.get_mut(&base).unwrap();
                 ro_flush(
                     &mut self.ro_snap,
+                    (depth, base, off, b.len()),
                     &mut blk.data[off..off + b.len()],
                     b,
                     true,
@@ -415,6 +426,7 @@ impl Env {
                 let blk = o.blocks.get_mut(&base).unwrap();
                 ro_flush(
                     &mut self.ro_snap,
+                    (depth, base, off, data.len()),
                     &mut blk.data[off..off + data.len()],
                     data,
                     read_only,
@@ -447,6 +459,8 @@ impl Env {
                 self.backtrace()
             ),
         };
+        // the callee's frames have ended: their read-only snapshots go
+        self.ro_snap.retain(|k, _| k.0 <= depth);
         let mut ro_note = None;
         {
             let mut o = self.objs.borrow_mut();
@@ -760,7 +774,8 @@ bpp_forward!(&mut Env);
 /// Flushes a lent image into its block: writable images entirely; read-only ones only where they
 /// changed since their last flush (see [`Env::ro_snap`]).
 fn ro_flush(
-    snap: &mut std::collections::HashMap<(usize, usize), Vec<u8>>,
+    snap: &mut BTreeMap<(usize, u32, usize, usize), Vec<u8>>,
+    key: (usize, u32, usize, usize),
     dst: &mut [u8],
     img: &[u8],
     read_only: bool,
@@ -769,7 +784,6 @@ fn ro_flush(
         dst.copy_from_slice(img);
         return;
     }
-    let key = (img.as_ptr() as usize, img.len());
     match snap.get(&key) {
         Some(prev) => {
             for i in 0..img.len() {
