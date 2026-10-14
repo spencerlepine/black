@@ -188,3 +188,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14** — Merged F11 (119/119 in 4 field areas; README union conflicts; rebased onto the B18b lint, its areas load and match).
 
 - **2026-10-14** — Validator R-20261014-2233 (4eef755..5ebce73): B18b audited (lint parity, set-aware matching hides nothing, PWork/Layout cannot mask wrong pointers), 10 new field areas pass at 1000 inputs; V-0034 (high, field_tasks periodic_proc period 0) fixed by the coordinator (remainder 0 like 0209C0A4; spec draws 0; field_tasks 39/39 3391eec8a4f8a757). e86606a PARTIAL (118 unchanged areas not rerun; checkpoint 59d8851 had them green). The validator pkilled check processes account-wide at ~23:06Z: a worker check may have died.
+
+- **2026-10-14** — Human: keep full pace (weekly budget); validator pitfalls updated (no account-wide pkill). Spawned F2b (Opus).
