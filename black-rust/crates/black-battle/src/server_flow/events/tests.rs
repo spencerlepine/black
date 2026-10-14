@@ -6,13 +6,13 @@ use crate::server_flow::SvFlowWork;
 // Written by tools/check-svflow.sh only, after the Rust hashes matched the ROM run.
 // svflow-recorded-begin
 const RECORDED: &[(u32, &str)] = &[
-    (0x021CA8F8, "9d25d674b9832003"),
+    (0x021CA8F8, "f1d4875ace1ee0ea"),
     (0x021CAA24, "1ea2cac46007136a"),
-    (0x021CAA58, "62d4b5aafea2a69e"),
-    (0x021CACF4, "cbb8f6dacf4945d8"),
+    (0x021CAA58, "9b4548a13d55beb7"),
+    (0x021CACF4, "3e3d065b2cd6687a"),
     (0x021CAFD8, "5367856210339e6c"),
-    (0x021CB174, "4d984a37ed944f75"),
-    (0x021CB1A4, "68d8f70ad688192d"),
+    (0x021CB174, "8797e4a48f865fc8"),
+    (0x021CB1A4, "4ed07141776036d0"),
     (0x021CB1D4, "9f5cbc4b245821a4"),
     (0x021CB214, "fe2aae5d86964f69"),
     (0x021CB274, "f45726fc7e055657"),

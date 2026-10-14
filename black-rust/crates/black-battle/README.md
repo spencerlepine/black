@@ -302,9 +302,8 @@ where the integration has a host model (`arm9.rs`), the ROM side runs the origin
 - `events` `021cb174` / `021cb1a4` (`mon_of_main_a` / `_b`): r1 / r2 of the call pass through to
   `021b8c50(main, pos, slot)` / `021b8cb0(main, pos)`; the port dropped them (a foe's single-target
   move, Leer, resolved to the foe itself). The callers (`021ca8f8`, `021caa58`, `021cacf4`) now pass
-  the position (`021b8d8c`) and slot (0 / 1 / 2, or `rand(2)`). The events spec declares only r0
-  for these stubs: `testkit::UNDECLARED_PASS_THROUGH` drops the extra words for the stub log (hashes
-  unchanged); declaring them in `events.spec` (`args=v,v,v` / `v,v`) is open.
+  the position (`021b8d8c`) and slot (0 / 1 / 2, or `rand(2)`). The events spec stubs declare them
+  (`args=v,v,v` / `v,v`, B19b), so the per-function harness compares pos / slot too.
 - `core2` `021bec58` (`apply_move_category`): the struct `work[0x4A8]` points at lies in the work
   (work + 0xCFC); the port kept its image separate, so `021c091c` / `021bfbd0` read stale positions
   for command 0x30. Now pushed / pulled around the calls (`SvFlowWork::push` / `pull`, no-ops in the
