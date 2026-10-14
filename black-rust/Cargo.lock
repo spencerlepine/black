@@ -2065,6 +2065,8 @@ dependencies = [
  "black-core",
  "black-fndiff",
  "black-pokemon",
+ "ron 0.8.1",
+ "serde",
 ]
 
 [[package]]

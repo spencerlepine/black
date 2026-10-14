@@ -8,6 +8,8 @@ description = "Party, PC boxes, bag/items and the save data model"
 [dependencies]
 black-core = { version = "0.1.0", path = "../black-core" }
 black-pokemon = { version = "0.1.0", path = "../black-pokemon" }
+ron = "0.8"
+serde = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
 black-fndiff = { version = "0.1.0", path = "../black-fndiff" }
