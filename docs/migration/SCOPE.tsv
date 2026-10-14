@@ -1,0 +1,414 @@
+# Scope of every original asm file for tools/progress.py (hand-maintained; generated once on 2026-10-13 from
+# tools/re/T1-TRIAGE.tsv, the deleted PORTING-STATUS.md table and the F1 split). scope: logic = faithful port (D2),
+# ui = rewrite in Bevy incl. sound (D3/D8, not counted as logic), sdk = X3, out = D9/X1/X2. share = fraction of the
+# file's labelled functions that are logic to port (1 for pure logic files; <1 for mixed files, from T1 in:/out: counts
+# or the F1 split); fns = `*_func_start` labels when generated (progress.py recounts); ghidra_fns = functions Ghidra found in
+# the file's address range (battle + field decompile sets, 2026-10-13; 0 = not decompiled): the denominator uses
+# max(fns, ghidra_fns) x share, because `.byte`-encoded code (800+ battle handlers) has no asm labels. Edit this file to re-baseline.
+file	scope	share	fns	ghidra_fns	source
+battle_adapter.s	logic	1	41	46	PORTING-STATUS: battle core
+battle_calc.s	logic	1	169	962	PORTING-STATUS: battle core
+battle_client.s	logic	1	207	276	PORTING-STATUS: battle core
+battle_field.s	logic	1	34	43	PORTING-STATUS: battle core
+battle_net.s	out	0	59	79	X1 battle_net
+battle_pokeparam.s	logic	1	176	186	PORTING-STATUS: battle core
+battle_record.s	logic	1	9	18	PORTING-STATUS: battle core
+battle_server.s	logic	1	190	234	PORTING-STATUS: battle core
+battle_unattributed.s	out	0	0	0	no functions
+battle_ungrouped.s	logic	1	929	1011	PORTING-STATUS: battle core
+battle_view_core.s	ui	0.6	78	664	decomp file split: holds the 337 move handlers + helpers (logic, B6) and 22 logic helpers (SickCont/type pairs) in its Ghidra range 021E02DC-021E9024; the rest is view code (U3)
+battle_view_scu.s	ui	0	287	376	battle UI (U3)
+crt0.s	sdk	0	13	0	X3 startup
+overlay_000_021542C0.s	out	0	1	0	T1 out/X1: networking / C-Gear / minigames (D9)
+overlay_001_021542C0.s	out	0	1	0	PORTING-STATUS: networking / C-Gear
+overlay_002_021542C0.s	out	0	3	0	PORTING-STATUS: networking / C-Gear
+overlay_003_021542C0.s	out	0	1	0	T1 out/X1: networking / C-Gear / minigames (D9)
+overlay_004_021542C0.s	out	0	0	0	T1 out/X1: networking / C-Gear / minigames (D9)
+overlay_005_021542C0.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_006_021542C0.s	out	0	7	0	PORTING-STATUS: networking / C-Gear
+overlay_007_021542C0.s	out	0	0	0	T1 out/X1: networking / C-Gear / minigames (D9)
+overlay_008_02154CA0.s	out	0	2	0	T1 out/X1: networking / C-Gear / minigames (D9)
+overlay_009_02155160.s	out	0	1576	0	Wi-Fi mode replacement for ov10 (X1)
+overlay_010_02155160.s	logic	0.7	1103	1835	PORTING-STATUS: field scripts/events (F1 split: logic share 0.70 of Ghidra fns)
+overlay_011_02172BC0.s	out	0	102	241	F1: intrude/comm (X1)
+overlay_012_02172BC0.s	out	0	42	0	PORTING-STATUS: networking / C-Gear
+overlay_013_021AEB20.s	out	0	93	0	T1 out/X1: networking / C-Gear / minigames (D9)
+overlay_014_02177020.s	out	0	106	0	PORTING-STATUS: networking / C-Gear
+overlay_015_021797C0.s	out	0	45	0	T1 out/X1: networking / C-Gear / minigames (D9)
+overlay_016_021B6100.s	out	0	990	0	networking / C-Gear (X1)
+overlay_017_021B6100.s	out	0	5	0	T1 out/X1: networking / C-Gear / minigames (D9)
+overlay_018_0217AE20.s	out	0	166	281	F1: intrude/comm (X1)
+overlay_019_0217AE20.s	out	0	91	0	PORTING-STATUS: networking / C-Gear
+overlay_020_02183B60.s	logic	0.66	143	182	PORTING-STATUS: field / events (F1 split: logic share 0.66 of Ghidra fns)
+overlay_021_02187F00.s	logic	0.53	3285	4671	PORTING-STATUS: field core (F1 split: logic share 0.53 of Ghidra fns)
+overlay_022_02183B60.s	out	0	18	0	PORTING-STATUS: networking / C-Gear
+overlay_023_021841E0.s	out	0	74	0	PORTING-STATUS: networking / C-Gear
+overlay_024_021EE740.s	logic	1	3	0	T1 in/F10: field child overlay (cutscene/gimmick, unnamed)
+overlay_025_021EE740.s	logic	1	14	0	T1 in/F10: field child overlay (cutscene/gimmick, unnamed)
+overlay_026_021EE740.s	logic	1	27	0	T1 in/F10: field child overlay (cutscene/gimmick, unnamed)
+overlay_027_021EE740.s	logic	1	4	0	T1 in/F10: field child overlay (cutscene/gimmick, unnamed)
+overlay_028_021EE740.s	logic	1	1	0	T1 in/F10: field child overlay (cutscene/gimmick, unnamed)
+overlay_029_021EFEC0.s	out	0	123	0	PORTING-STATUS: networking / C-Gear
+overlay_030_021EFEC0.s	out	0	9	0	PORTING-STATUS: networking / C-Gear
+overlay_031_021EFEC0.s	out	0	33	0	PORTING-STATUS: networking / C-Gear
+overlay_032_021EFEC0.s	out	0	134	0	PORTING-STATUS: networking / C-Gear
+overlay_033_021EFEC0.s	out	0	21	0	PORTING-STATUS: networking / C-Gear
+overlay_034_021EFEC0.s	ui	0	9	0	PORTING-STATUS: UI / app
+overlay_035_021EFEC0.s	out	0	19	0	PORTING-STATUS: networking / C-Gear
+overlay_036_021F36C0.s	logic	1	7	0	T1 in/F10: field gimmick / event overlay
+overlay_037_021F36C0.s	logic	1	3	0	T1 in/F10: field gimmick / event overlay
+overlay_038_021F36C0.s	logic	1	5	0	T1 in/F10: field gimmick / event overlay
+overlay_039_021F36C0.s	logic	1	13	0	T1 in/F10: field gimmick / event overlay
+overlay_040_021F36C0.s	logic	1	4	0	T1 in/F10: field gimmick / event overlay
+overlay_041_021F36C0.s	logic	1	2	0	T1 in/F10: field gimmick / event overlay
+overlay_042_021F36C0.s	logic	1	2	0	T1 in/F10: field gimmick / event overlay
+overlay_043_021F36C0.s	logic	1	13	0	T1 in/F10: field gimmick / event overlay
+overlay_044_021F36C0.s	logic	1	2	0	T1 in/F10: field gimmick / event overlay
+overlay_045_021F36C0.s	logic	1	10	0	T1 in/F10: field gimmick / event overlay
+overlay_046_021F36C0.s	logic	1	16	0	T1 in/F10: field gimmick / event overlay
+overlay_047_021F36C0.s	logic	1	4	0	T1 in/F10: field gimmick / event overlay
+overlay_048_021F36C0.s	logic	1	65	0	PORTING-STATUS: field / events
+overlay_049_021F36C0.s	logic	1	5	0	T1 in/F10: field gimmick / event overlay
+overlay_050_021F36C0.s	logic	1	9	0	T1 in/F10: field gimmick / event overlay
+overlay_051_021F36C0.s	logic	1	20	0	PORTING-STATUS: field / events
+overlay_052_021F36C0.s	logic	1	5	0	PORTING-STATUS: field / events
+overlay_053_021F36C0.s	logic	1	9	0	T1 in/F10: field gimmick / event overlay
+overlay_054_021F36C0.s	logic	1	5	0	T1 in/F10: field gimmick / event overlay
+overlay_055_021F39C0.s	logic	1	33	0	T1 in/F10: field gimmick / event overlay
+overlay_056_021F36C0.s	logic	1	19	0	PORTING-STATUS: field / events
+overlay_057_021F36C0.s	logic	1	1	0	T1 in/F10: field gimmick / event overlay
+overlay_058_021F36C0.s	logic	1	5	0	T1 in/F10: field gimmick / event overlay
+overlay_059_021F36C0.s	logic	1	1	0	PORTING-STATUS: field / events
+overlay_060_021F36C0.s	logic	1	12	0	T1 in/F10: field gimmick / event overlay
+overlay_061_021F36C0.s	logic	1	3	0	T1 in/F10: field gimmick / event overlay
+overlay_062_021F36C0.s	logic	1	1	0	T1 in/F10: field gimmick / event overlay
+overlay_063_021F36C0.s	logic	1	2	0	PORTING-STATUS: field / events
+overlay_064_021F36C0.s	logic	1	1	0	T1 in/F10: field gimmick / event overlay
+overlay_065_021F36C0.s	logic	1	3	0	T1 in/F10: field gimmick / event overlay
+overlay_066_02183B60.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_067_021B6100.s	ui	0	90	0	common UI frame_list/yesno/touchbar (U15)
+overlay_068_021B95A0.s	ui	0	83	0	T1 ?/U: unidentified UI list screen (calls WFC error dialog ov17)
+overlay_069_021B95A0.s	ui	0	33	0	T1 ?/U: ranking / trainer list UI (bank 57 Rank, Trainer No., Location)
+overlay_070_021B6100.s	ui	0	127	0	bag UI itemmenu (U8); bag data logic in main ARM9 (S3)
+overlay_071_021B6100.s	ui	0	170	0	PORTING-STATUS: UI / app
+overlay_072_021B95A0.s	ui	0	105	0	PORTING-STATUS: UI / app
+overlay_073_021F5260.s	logic	1	2	0	T1 in/F10: field gimmick child (73-83, unnamed)
+overlay_074_021F54E0.s	logic	1	0	0	T1 in/F10: field gimmick child (73-83, unnamed)
+overlay_075_021F5260.s	logic	1	4	0	T1 in/F10: field gimmick child (73-83, unnamed)
+overlay_076_021F5260.s	logic	1	3	0	T1 in/F10: field gimmick child (73-83, unnamed)
+overlay_077_021F5620.s	logic	1	1	0	T1 in/F10: field gimmick child (73-83, unnamed)
+overlay_078_021F5620.s	logic	1	3	0	T1 in/F10: field gimmick child (73-83, unnamed)
+overlay_079_021F5A80.s	logic	1	1	0	T1 in/F10: field gimmick child (73-83, unnamed)
+overlay_080_021F5A80.s	logic	1	1	0	T1 in/F10: field gimmick child (73-83, unnamed)
+overlay_081_021F5A80.s	logic	1	7	0	T1 in/F10: field gimmick child (73-83, unnamed)
+overlay_082_021F5260.s	logic	1	17	0	PORTING-STATUS: field / events
+overlay_083_021F5260.s	logic	1	7	0	T1 in/F10: field gimmick child (73-83, unnamed)
+overlay_084_02183B60.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_085_021B6100.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_086_02183B60.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_087_02183B60.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_088_021B95A0.s	ui	0	126	0	start menu (U10)
+overlay_089_021BDA40.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_090_021B6100.s	ui	0	3	0	T1 in/U: party/summary helper (loaded with 91, 131 by ov134)
+overlay_091_021B6240.s	ui	0	188	0	party menu plist_* (U6)
+overlay_092_021B95A0.s	logic	1	8	0	PORTING-STATUS: field / events
+overlay_094_021F6560.s	ui	0	403	674	btlv_* battle view (U3)
+overlay_095_06898020.s	ui	0.15	267	1106	btlv_scd (U4) + ov95 effect handlers/registries ported by B7 (~40 fns logic)
+overlay_096_02187F00.s	logic	1	59	159	tr_ai.c battle AI (B14, ai1)
+overlay_097_021F6560.s	ui	0	38	0	PORTING-STATUS: battle UI
+overlay_098_021B6100.s	out	0	38	0	PORTING-STATUS: networking / C-Gear
+overlay_099_021B95A0.s	out	0	320	0	T1 out/X1: networking / C-Gear / minigames (D9)
+overlay_100_021B95A0.s	out	0	63	0	PORTING-STATUS: networking / C-Gear
+overlay_101_021B6100.s	out	0	54	0	PORTING-STATUS: networking / C-Gear
+overlay_102_021B7560.s	out	0	54	0	T1 out/X1: IR / infrared features (D9)
+overlay_103_021B7560.s	out	0	73	0	T1 out/X1: IR / infrared features (D9)
+overlay_104_021B7560.s	out	0	67	0	T1 out/X1: IR / infrared features (D9)
+overlay_105_021B7560.s	out	0	49	0	T1 out/X1: IR / infrared features (D9)
+overlay_106_021B7560.s	out	0	65	0	PORTING-STATUS: networking / C-Gear
+overlay_107_021EE740.s	out	0	197	0	PORTING-STATUS: networking / C-Gear
+overlay_108_021BB8C0.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_109_021BB8E0.s	ui	0	1	0	T1 ?/U: app helper (tiny, unidentified)
+overlay_110_021B95A0.s	ui	0	360	0	PORTING-STATUS: UI / app
+overlay_111_021C3CC0.s	ui	0	111	0	T1 in/U: Trainer Card UI (trcard)
+overlay_112_021F36C0.s	ui	0	148	0	PORTING-STATUS: UI / app
+overlay_113_021B6100.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_114_021B95A0.s	out	0	445	0	PORTING-STATUS: networking / C-Gear
+overlay_115_021D4240.s	out	0	72	0	PORTING-STATUS: networking / C-Gear
+overlay_116_021D6660.s	out	0	83	0	PORTING-STATUS: networking / C-Gear
+overlay_117_021D4240.s	out	0	1	0	PORTING-STATUS: networking / C-Gear
+overlay_118_021D4240.s	out	0	34	0	PORTING-STATUS: networking / C-Gear
+overlay_119_021D8980.s	out	0	435	0	PORTING-STATUS: networking / C-Gear
+overlay_120_021D4240.s	out	0	151	0	PORTING-STATUS: networking / C-Gear
+overlay_121_021D6660.s	out	0	230	0	PORTING-STATUS: networking / C-Gear
+overlay_122_021D4240.s	out	0	27	0	T1 out/X1: C-Gear UI (help/warning)
+overlay_123_021D4240.s	out	0	205	0	PORTING-STATUS: networking / C-Gear
+overlay_124_021D4240.s	ui	0	15	0	PORTING-STATUS: UI / app
+overlay_125_021D6660.s	out	0	53	0	PORTING-STATUS: networking / C-Gear
+overlay_126_021EE920.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_127_021C3EE0.s	out	0	102	0	PORTING-STATUS: networking / C-Gear
+overlay_128_021C6180.s	out	0	166	0	T1 out/X1: networking / C-Gear / minigames (D9)
+overlay_129_021D85C0.s	ui	0	50	0	T1 in/U: unidentified UI using nature names (bank 25) + MCSS
+overlay_130_021B6100.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_131_021D4240.s	ui	0	161	0	summary screen (U7)
+overlay_132_021F8480.s	out	0	151	0	PORTING-STATUS: networking / C-Gear
+overlay_133_021B6100.s	ui	0	88	0	PORTING-STATUS: UI / app
+overlay_134_021DC860.s	ui	0	5	0	T1 in/U: party/summary launcher (loads 90, 91, 131)
+overlay_135_021F4580.s	out	0	429	0	PORTING-STATUS: networking / C-Gear
+overlay_136_021C3CC0.s	out	0	127	0	PORTING-STATUS: networking / C-Gear
+overlay_137_021DC860.s	out	0	219	0	PORTING-STATUS: networking / C-Gear
+overlay_138_02183B60.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_139_02400020.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_140_02400040.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_141_02400040.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_142_02400040.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_143_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_144_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_145_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_146_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_147_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_148_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_149_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_150_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_151_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_152_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_153_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_154_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_155_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_156_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_157_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_158_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_159_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_160_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_161_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_162_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_163_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_164_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_165_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_166_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_167_021F5260.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_168_02183B60.s	ui	0	43	0	PORTING-STATUS: UI / app
+overlay_169_021B95A0.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_170_021DC860.s	ui	0	538	0	PC box UI box2_* (U9); the box data logic is in main ARM9 (S2)
+overlay_171_021DC860.s	ui	0	69	0	T1 in/U: Hall of Fame record UI
+overlay_172_021B6100.s	out	0	347	0	PORTING-STATUS: networking / C-Gear
+overlay_173_021B6100.s	ui	0	70	0	T1 in/U: move-teaching UI (move relearner / tutor)
+overlay_174_021B6100.s	out	0	36	0	PORTING-STATUS: networking / C-Gear
+overlay_175_021D4240.s	out	0	344	0	PORTING-STATUS: networking / C-Gear
+overlay_176_0217AE20.s	out	0	134	0	PORTING-STATUS: networking / C-Gear
+overlay_177_021E5440.s	out	0	56	0	PORTING-STATUS: networking / C-Gear
+overlay_178_021E5440.s	out	0	12	0	T1 out/X1: networking / C-Gear / minigames (D9)
+overlay_179_021B6100.s	ui	0	18	0	PORTING-STATUS: UI / app
+overlay_180_021B6100.s	ui	0	93	0	T1 in/U: Hall of Fame ceremony / result UI
+overlay_181_021B95A0.s	ui	0	49	0	T1 in/U: Staff credits roll
+overlay_182_021B95A0.s	ui	0	16	0	PORTING-STATUS: UI / app
+overlay_183_021DB2E0.s	out	0	159	0	PORTING-STATUS: networking / C-Gear
+overlay_184_021F8480.s	out	0	10	0	T1 out/X2: Musicals helper (D9/X2)
+overlay_185_021F8480.s	out	0	21	0	T1 out/X2: Musicals helper (D9/X2)
+overlay_186_021F90C0.s	out	0	223	0	PORTING-STATUS: networking / C-Gear
+overlay_187_0220AF40.s	out	0	11	0	PORTING-STATUS: networking / C-Gear
+overlay_188_021EE920.s	ui	0	6	0	PORTING-STATUS: UI / app
+overlay_189_0217AE20.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_190_02183B60.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_191_02183B60.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_192_02183B60.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_193_021EE740.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_194_021F1440.s	ui	0	145	0	PORTING-STATUS: UI / app
+overlay_195_02203FA0.s	ui	0	145	0	PORTING-STATUS: evolution/egg UI
+overlay_196_0220AF40.s	ui	0	6	0	PORTING-STATUS: battle UI
+overlay_197_0220B120.s	ui	0	75	0	in-battle bag UI (U8)
+overlay_198_0220B120.s	ui	0	169	0	in-battle party UI (U6)
+overlay_199_02212560.s	out	0	28	0	PORTING-STATUS: networking / C-Gear
+overlay_200_021F57E0.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_201_021B96A0.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_202_02183B60.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_203_021BDA40.s	ui	0	87	0	PORTING-STATUS: UI / app
+overlay_204_021BDA40.s	ui	0	81	0	PORTING-STATUS: UI / app
+overlay_205_021B95A0.s	logic	1	17	0	T1 in/F: whiteout / battle-return handler
+overlay_206_021B9DE0.s	ui	0	54	0	PORTING-STATUS: UI / app
+overlay_207_0220AF40.s	ui	0	27	0	PORTING-STATUS: UI / app
+overlay_208_021BC240.s	out	0	345	0	PORTING-STATUS: networking / C-Gear
+overlay_209_021BC240.s	ui	0	84	0	T1 in/U: Pokedex app family
+overlay_210_021BC240.s	ui	0	159	0	PORTING-STATUS: UI / app
+overlay_211_021BC240.s	ui	0	15	0	T1 in/U: Pokedex app family
+overlay_212_021C8E80.s	ui	0	20	0	PORTING-STATUS: UI / app
+overlay_213_021B95A0.s	ui	0	73	0	PORTING-STATUS: battle UI
+overlay_214_021B95A0.s	ui	0	78	0	PORTING-STATUS: battle UI
+overlay_215_021F57E0.s	ui	0	90	0	PORTING-STATUS: evolution/egg UI
+overlay_216_021BBD80.s	out	0	69	0	PORTING-STATUS: networking / C-Gear
+overlay_217_021B95A0.s	out	0	727	0	PORTING-STATUS: networking / C-Gear
+overlay_218_021B95A0.s	ui	0	59	0	PORTING-STATUS: UI / app
+overlay_219_02183B60.s	out	0	47	0	T1 out/X1: Geonet location registry UI (Wi-Fi adjacent)
+overlay_220_021B95A0.s	ui	0	22	0	PORTING-STATUS: UI / app
+overlay_221_021B95A0.s	ui	0	28	0	PORTING-STATUS: UI / app
+overlay_222_021B95A0.s	ui	0	28	0	PORTING-STATUS: UI / app
+overlay_223_021B95A0.s	ui	0	106	0	PORTING-STATUS: UI / app
+overlay_224_021B95A0.s	ui	0	15	0	PORTING-STATUS: UI / app
+overlay_225_021B95A0.s	out	0	107	0	PORTING-STATUS: networking / C-Gear
+overlay_226_0220BC60.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_227_021B95A0.s	out	0	1	0	PORTING-STATUS: networking / C-Gear
+overlay_228_021DFC20.s	ui	0	3	0	PORTING-STATUS: UI / app
+overlay_229_02183B60.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_230_02187F00.s	out	0	3	0	T1 ?/?: unidentified data-heavy overlay (3 fns, 6.8 KB)
+overlay_231_02180820.s	out	0	5	0	T1 ?/?: unidentified SDK-heavy helper
+overlay_232_02212560.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_233_02212560.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_234_02212560.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_235_02212560.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+overlay_236_02212560.s	out	0	0	0	T1 n/a/-: stub (32 bytes, no code)
+unk_02004FD4.s	ui	0	15	18	T1 in/G1/G2/A9: boot / system init (gfl_use)
+unk_020055F8.s	ui	0	23	35	T1 in/G1/G2: boot / system init (gfl_use)
+unk_02005BC0.s	ui	0	20	29	T1 in/G1/G2: boot / system init (gfl_use)
+unk_02006118.s	ui	0	16	27	T1 in/G1/G2/A9/H: boot / system init (gfl_use)
+unk_0200674C.s	ui	0	13	20	T1 in/A9/H: sound / ISS
+unk_02006D3C.s	ui	0	15	17	T1 in/A9/H/S5: sound / ISS + save system (savedata)
+unk_020071A8.s	logic	1	17	30	T1 in/S5/S2: save system (savedata) + PC box data
+unk_02007AA4.s	ui	0	17	25	T1 in/A9/H: sound / ISS
+unk_02007F7C.s	logic	1	19	24	T1 in/S5/S3/A9/H: save: misc blocks + bag / items
+unk_02008468.s	logic	1	15	19	T1 in/S5: save: misc blocks
+unk_0200857C.s	logic	1	22	24	T1 in/S5: save: misc blocks
+unk_02008850.s	logic	1	22	40	T1 in/S5/S5/B: save: misc blocks
+unk_02008EF8.s	logic	0.91	21	41	T1 mixed(in:59/out:6)/S5/B: save: misc blocks / trainer data
+unk_02009690.s	out	0	21	31	T1 out/X1: networking / C-Gear / minigames (D9)
+unk_02009C44.s	out	0	18	45	T1 out/X1: networking / C-Gear / minigames (D9)
+unk_0200A480.s	logic	0.13	16	40	T1 mixed(out:52/in:8)/X1: networking / C-Gear / minigames (D9)
+unk_0200AE2C.s	logic	1	18	29	T1 in/S5/B: save: misc blocks / trainer data
+unk_0200B628.s	logic	1	16	20	T1 in/S5/B: save: misc blocks / trainer data
+unk_0200BDE4.s	logic	0.51	20	40	T1 mixed(in:38/out:36)/S5/B/X1: save: misc blocks / trainer data + networking / C-Gear / minigames (D9
+unk_0200C7C0.s	out	0	7	21	T1 out/X1: networking / C-Gear / minigames (D9)
+unk_0200D3A4.s	logic	0.2	15	51	T1 mixed(out:64/in:16)/X1/S5/B: networking / C-Gear / minigames (D9) + save: misc blocks / trainer dat
+unk_0200E024.s	logic	1	17	26	T1 in/S5/B: save: misc blocks / trainer data
+unk_0200E4CC.s	logic	1	18	44	T1 in/S5/B: save: misc blocks / trainer data
+unk_0200EC84.s	logic	1	18	16	T1 in/S5/B: save: misc blocks / trainer data
+unk_0200F150.s	logic	0.48	18	22	T1 mixed(out:11/in:10)/X1/S5/B: networking / C-Gear / minigames (D9) + save: misc blocks / trainer dat
+unk_0200F7B8.s	out	0	13	13	T1 out/X1: networking / C-Gear / minigames (D9)
+unk_0200FD38.s	out	0	11	12	T1 out/X1: networking / C-Gear / minigames (D9)
+unk_020101D4.s	out	0	9	13	T1 out/X1: networking / C-Gear / minigames (D9)
+unk_02010794.s	logic	0.13	19	42	T1 mixed(out:40/in:6)/X1: networking / C-Gear / minigames (D9)
+unk_020111F8.s	ui	0	17	45	T1 in/U: ICA animation
+unk_02011D40.s	logic	1	25	30	T1 in/F/U: game data / event flags + ICA animation
+unk_02012224.s	logic	1	27	28	T1 in/F: game data / event flags
+unk_02012704.s	logic	1	33	41	T1 in/F: game data / event flags
+unk_02012CE0.s	logic	1	20	29	T1 in/B: battle setup
+unk_02013270.s	logic	1	8	18	T1 in/B: battle setup
+unk_02013980.s	logic	1	19	34	T1 in/F2: zone headers
+unk_02014128.s	logic	1	26	37	T1 in/F: game data / event flags
+unk_020147DC.s	ui	0	19	20	T1 in/G/U/F: MCSS (multi-cell sprites) + game data / event flags
+unk_02015580.s	ui	0	7	4	T1 in/G/U: MCSS (multi-cell sprites)
+unk_02015BA4.s	ui	0	13	59	T1 in/G/U: MCSS (multi-cell sprites)
+unk_02016630.s	ui	0	5	7	T1 in/G/U: MCSS (multi-cell sprites)
+unk_02016BA0.s	ui	0	9	5	T1 in/G/U: MCSS (multi-cell sprites)
+unk_02016FC8.s	logic	1	9	16	T1 in/P1/G/U: poke_tool (PokeParam / BoxPokemon) + MCSS (multi-cell sprites)
+unk_02017550.s	logic	1	14	14	T1 in/P1: poke_tool (PokeParam / BoxPokemon)
+unk_02017BC8.s	logic	1	19	21	T1 in/P1: poke_tool (PokeParam / BoxPokemon)
+unk_02017FB0.s	logic	1	17	23	T1 in/P1: poke_tool (PokeParam / BoxPokemon)
+unk_020185B4.s	logic	1	9	22	T1 in/P1: poke_tool (PokeParam / BoxPokemon)
+unk_02018D10.s	logic	1	9	12	T1 in/P1: poke_tool (PokeParam / BoxPokemon)
+unk_02019388.s	logic	1	2	1	T1 in/P1: poke_tool (PokeParam / BoxPokemon)
+unk_02019A50.s	logic	1	20	23	T1 in/P1: poke_tool (PokeParam / BoxPokemon)
+unk_0201A26C.s	logic	1	10	18	T1 in/S5/B/P1: save: misc blocks / trainer data + poke_tool (PokeParam / BoxPokemon)
+unk_0201A858.s	logic	1	19	27	T1 in/S1/P2: party + poke_personal
+unk_0201AF6C.s	logic	1	8	21	T1 in/P5/P2: evolution (shinka_check) + poke_personal
+unk_0201BAE4.s	logic	1	5	18	T1 in/P5/P4: evolution (shinka_check) + waza_tool (moves)
+unk_0201C41C.s	logic	1	13	18	T1 in/F9: text / message system
+unk_0201CA5C.s	logic	1	7	20	T1 in/F9: text / message system
+unk_0201D26C.s	logic	1	16	18	T1 in/F9: text / message system
+unk_0201D6C8.s	logic	1	13	16	T1 in/F9: text / message system
+unk_0201DB20.s	logic	1	22	20	T1 in/F9: text / message system
+unk_0201E4D4.s	logic	1	14	14	T1 in/F9: text / message system
+unk_0201EC64.s	logic	1	16	37	T1 in/F9: text / message system
+unk_0201F41C.s	ui	0	8	24	T1 in/G/F9: UI toolkit (bmp / menus) + text / message system
+unk_0201FC1C.s	logic	0.75	1074	1821	T1 mixed(in:1419/out:483)/X1/A9/H/G: networking / C-Gear / minigames (D9) + sound / ISS
+unk_02040618.s	ui	0	10	18	T1 in/G: gflib graphics (G2/G3, actors, fades)
+unk_02040F84.s	ui	0	14	20	T1 in/G: gflib graphics (G2/G3, actors, fades)
+unk_02041B6C.s	ui	0	9	13	T1 in/G: gflib graphics (G2/G3, actors, fades)
+unk_020425B4.s	ui	0	5	4	T1 in/G: gflib graphics (G2/G3, actors, fades)
+unk_02042D2C.s	ui	0	15	34	T1 in/G: gflib graphics (G2/G3, actors, fades) + UI toolkit (bmp / menus)
+unk_02043900.s	ui	0	113	247	T1 in/G/F9: gflib graphics (G2/G3, actors, fades) + UI toolkit (bmp / menus)
+unk_02048CEC.s	ui	0	17	18	T1 in/G/Z: gflib core (arc / overlay / proc / heap)
+unk_0204944C.s	ui	0	47	91	T1 in/G/Z/G: gflib core (arc / overlay / proc / heap) + gflib graphics (G2/G3, acto
+unk_0204B0C8.s	ui	0	23	63	T1 in/G: gflib graphics (G2/G3, actors, fades)
+unk_0204BD3C.s	ui	0	9	22	T1 in/G: gflib graphics (G2/G3, actors, fades)
+unk_0204C98C.s	ui	0	16	34	T1 in/G: gflib graphics (G2/G3, actors, fades)
+unk_0204D9B4.s	ui	0	11	16	T1 in/G/F9: gflib graphics (G2/G3, actors, fades) + text / message system
+unk_0204E6F4.s	ui	0	5	91	T1 in/G: gflib graphics (G2/G3, actors, fades)
+unk_02050A70.s	ui	0	4	70	T1 in/G: gflib graphics (G2/G3, actors, fades)
+unk_020520FC.s	ui	0	1	29	T1 in/G: gflib 3D math helpers
+unk_02055964.s	ui	0	34	53	T1 in/G: gflib 3D math helpers
+unk_020583CC.s	out	0	57	126	T1 out/X1: DWC / GameSpy network library
+unk_0205B1E4.s	out	0	10	10	T1 out/X1: DWC / GameSpy network library
+unk_0205B98C.s	out	0	11	12	T1 out/X1: DWC / GameSpy network library
+unk_0205C0EC.s	out	0	16	16	T1 out/X1: DWC / GameSpy network library
+unk_0205C81C.s	out	0	8	11	T1 out/X1: DWC / GameSpy network library
+unk_0205D01C.s	out	0	14	14	T1 out/X1: DWC / GameSpy network library
+unk_0205D848.s	out	0	8	9	T1 out/X1: DWC / GameSpy network library
+unk_0205DFA8.s	out	0	8	8	T1 out/X1: DWC / GameSpy network library
+unk_0205E790.s	out	0	13	12	T1 out/X1: DWC / GameSpy network library
+unk_0205EE28.s	out	0	11	11	T1 out/X1: DWC / GameSpy network library
+unk_0205F504.s	out	0	12	17	T1 out/X1: DWC / GameSpy network library
+unk_0205FFC4.s	out	0	27	43	T1 out/X1: DWC / GameSpy network library
+unk_02060C14.s	out	0	45	93	T1 out/X1: DWC / GameSpy network library
+unk_02062634.s	sdk	0	27	27	T1 sdk/X3: NNS G3D/G2D middleware
+unk_02062D40.s	sdk	0	14	20	T1 sdk/X3: NNS G3D/G2D middleware
+unk_020637F4.s	sdk	0	6	6	T1 sdk/X3: NNS G3D/G2D middleware
+unk_02063E54.s	sdk	0	75	119	T1 sdk/X3: NNS G3D/G2D middleware
+unk_02066878.s	sdk	0	7	14	T1 sdk/X3: NNS G3D/G2D middleware
+unk_02067340.s	sdk	0	5	4	T1 sdk/X3: NNS G3D/G2D middleware
+unk_02067AAC.s	sdk	0	21	179	T1 sdk/X3: NNS G3D/G2D middleware
+unk_020726D0.s	sdk	0	20	22	T1 sdk/X3: NNS sound + SDK CARD backup
+unk_02072DE8.s	sdk	0	23	26	T1 sdk/X3: NNS sound + SDK CARD backup
+unk_02073484.s	sdk	0	18	25	T1 sdk/X3: NNS sound + SDK CARD backup
+unk_02073FB8.s	sdk	0	16	18	T1 sdk/X3: NNS sound + SDK CARD backup
+unk_02074770.s	sdk	0	15	15	T1 sdk/X3: NNS sound + SDK CARD backup
+unk_02074E10.s	sdk	0	12	18	T1 sdk/X3: NNS sound + SDK CARD backup
+unk_02075698.s	sdk	0	17	17	T1 sdk/X3: NNS sound + SDK CARD backup
+unk_02075DC8.s	sdk	0	20	28	T1 sdk/X3: NNS sound + SDK CARD backup
+unk_02076A70.s	sdk	0	14	28	T1 sdk/X3: NNS sound + SDK CARD backup
+unk_020774C0.s	sdk	0	8	9	T1 sdk/X3: NNS sound + SDK CARD backup
+unk_02077C78.s	sdk	0	7	7	T1 sdk/X3: NNS sound + SDK CARD backup
+unk_02078360.s	sdk	0	18	19	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02078C18.s	sdk	0	13	14	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_020792B8.s	sdk	0	7	39	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0207A7A8.s	sdk	0	17	21	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0207B51C.s	sdk	0	4	9	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0207C554.s	sdk	0	16	20	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0207CDB8.s	sdk	0	15	22	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0207D7C4.s	sdk	0	19	38	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0207E2A0.s	sdk	0	13	13	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0207E944.s	sdk	0	10	10	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0207F024.s	sdk	0	14	14	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0207F6A8.s	sdk	0	11	17	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02080100.s	sdk	0	9	14	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0208091C.s	sdk	0	15	34	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02081120.s	sdk	0	10	12	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02081940.s	sdk	0	15	19	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02082594.s	sdk	0	12	17	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02083484.s	sdk	0	10	13	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_020840F8.s	sdk	0	16	25	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02084B90.s	sdk	0	20	28	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_020853C0.s	sdk	0	18	23	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02085C08.s	sdk	0	19	19	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_020862B8.s	sdk	0	19	21	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02086A50.s	sdk	0	18	20	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0208738C.s	sdk	0	22	29	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02087C6C.s	sdk	0	22	26	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02088398.s	sdk	0	14	17	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02088ED4.s	sdk	0	31	41	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02089804.s	sdk	0	15	15	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_02089E74.s	sdk	0	15	16	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0208A638.s	sdk	0	11	12	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0208AF18.s	sdk	0	9	14	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0208B798.s	sdk	0	16	18	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0208BEF0.s	sdk	0	11	12	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0208C64C.s	sdk	0	17	32	T1 sdk/X3: NitroSDK (FS/OS/MI/GX/PXI/RTC/SPI)
+unk_0208E010.s	sdk	0	11	18	T1 sdk/X3: C library + MWCC runtime (printf/strtod/string/math)
+unk_0208EAA0.s	sdk	0	8	53	T1 sdk/X3: C library + MWCC runtime (printf/strtod/string/math)
+unk_02090ED8.s	sdk	0	14	55	T1 sdk/X3: C library + MWCC runtime (printf/strtod/string/math)
+unk_020923F0.s	sdk	0	1	23	T1 sdk/X3: C library + MWCC runtime (printf/strtod/string/math)
+unk_020949F4.s	sdk	0	1	50	T1 sdk/X3: C library + MWCC runtime (printf/strtod/string/math)
+unk_0209B750.s	sdk	0	9	0	PORTING-STATUS: runtime library
+unk_0209C2B0.s	sdk	0	8	0	PORTING-STATUS: runtime library
+unk_0209CE10.s	out	0	3	0	PORTING-STATUS: ARM9 data
+arm9/arm9_autoload0_01FF8000.s	sdk	0	1	0	PORTING-STATUS: ARM9 autoload (ITCM/DTCM)
+arm9/arm9_autoload1_02FE0000.s	sdk	0	0	0	PORTING-STATUS: ARM9 autoload (ITCM/DTCM)
+arm9/arm9_autoload2_02400000.s	sdk	0	0	0	PORTING-STATUS: ARM9 autoload (ITCM/DTCM)
+arm9/arm9_autoload3_06898000.s	sdk	0	0	0	PORTING-STATUS: ARM9 autoload (ITCM/DTCM)

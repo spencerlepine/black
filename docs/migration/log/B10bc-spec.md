@@ -1,0 +1,5 @@
+# B10bc-spec — full checklist note (moved from MIGRATION-AGENT.md section 6, Phase B, 2026-10-13)
+
+Verbatim line as it stood on `main` 2732e87:
+
+- [x] B10bc-spec — (e757a48; Opus after 3 short Sonnet runs, ~1.5 h, ~1M tokens incl. 2 forks) svflow specs **hem 10 / api 69 / handex 62 fns, 100% ROM coverage (105/1082/3190 insns), strict clean, closure stubs**; smoke ports 5 per area: hem f8873fb3934257d3 (8838 8860 888c 88a4 88e4), api 369ba4a01f402f88 (7cbc 7cf4 7d54 804c 831c), handex 14b37d8161d5c47f (8d0c 9f0c a738 a7c4 a7d4); events str_init/str_push now call hem (hash unchanged). `021ca7f4` is not a HANDEX proc (core2 calls it). Not specced: `bx pc` veneers, 5 api tail calls into ov95 (7d34 7d44 814c 82c4 82f4). **Traps (need `force` when ported):** api 8338 84ac 84f4 (events), 84e8 8534 8588 859c 85b8 (core1); hem 8810 (core2/3/4), 8828 (core3/4), 88c8 (events); handex 99a0 (core2/3/4), ca7f4 (core2). **Caller-stub mismatches:** events 84ac `ret=bool` (real u32); core2 ca7f4 `ret=none` (returns value, r3 = record ptr); 99a0 callers `ret=none` (returns 0/1); core specs stub core4 27a0 with 6 args (takes 7)

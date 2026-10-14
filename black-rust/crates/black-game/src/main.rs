@@ -40,8 +40,19 @@ struct CompositeCamera;
 
 fn main() {
     let mut app = App::new();
+    // Capture mode (tools/ui-diff): the clock is lock-stepped to one 60 Hz tick per render frame
+    // and screenshots are keyed by that fixed frame counter (screens::FrameCount), so a headless
+    // capture is deterministic.
     #[cfg(not(target_arch = "wasm32"))]
-    app.add_systems(Update, screenshot_and_exit);
+    if std::env::var("BLACK_SCREENSHOT").is_ok() {
+        app.init_resource::<ScreenshotQueue>()
+            .add_systems(First, lockstep_clock.after(bevy::time::TimeSystems))
+            .add_systems(
+                FixedUpdate,
+                screenshot_and_exit.after(screens::count_frames),
+            )
+            .add_systems(Update, flush_screenshots);
+    }
     app.add_plugins(
         DefaultPlugins
             .set(ImagePlugin::default_nearest())
@@ -129,29 +140,131 @@ fn setup(mut commands: Commands, mut images: ResMut<Assets<Image>>) {
     ));
 }
 
-/// Native only: with `BLACK_SCREENSHOT=<path.png>` set, save a frame and exit.
+/// Frames to capture from `BLACK_SCREENSHOT_FRAMES="160,175,190"` (several, written as
+/// `<path>_<frame>.png`) or `BLACK_SCREENSHOT_FRAME=30` (one, written to `<path>` itself).
+/// Returns `(frames, multi)`.
 #[cfg(not(target_arch = "wasm32"))]
-fn screenshot_and_exit(
-    mut commands: Commands,
-    mut frame: Local<u32>,
-    mut exit: MessageWriter<AppExit>,
-) {
-    use bevy::render::view::screenshot::{save_to_disk, Screenshot};
-    let Ok(path) = std::env::var("BLACK_SCREENSHOT") else {
-        return;
-    };
-    *frame += 1;
-    // BLACK_SCREENSHOT_FRAME (default 30) picks the frame to capture; exit 30 frames later.
-    let at: u32 = std::env::var("BLACK_SCREENSHOT_FRAME")
+fn screenshot_frames() -> (Vec<u32>, bool) {
+    if let Ok(list) = std::env::var("BLACK_SCREENSHOT_FRAMES") {
+        let mut frames: Vec<u32> = list
+            .split(',')
+            .filter_map(|s| s.trim().parse().ok())
+            .collect();
+        frames.sort_unstable();
+        frames.dedup();
+        if !frames.is_empty() {
+            return (frames, true);
+        }
+    }
+    let at = std::env::var("BLACK_SCREENSHOT_FRAME")
         .ok()
         .and_then(|v| v.parse().ok())
         .unwrap_or(30);
-    if *frame == at {
-        commands
-            .spawn(Screenshot::primary_window())
-            .observe(save_to_disk(path));
-    } else if *frame == at + 30 {
+    (vec![at], false)
+}
+
+/// Path of the capture for `frame`: `<path>_<frame>.png` in multi-frame mode, else `<path>`.
+#[cfg(not(target_arch = "wasm32"))]
+fn screenshot_path(path: &str, frame: u32, multi: bool) -> String {
+    if !multi {
+        return path.to_string();
+    }
+    match path.strip_suffix(".png") {
+        Some(stem) => format!("{stem}_{frame}.png"),
+        None => format!("{path}_{frame}.png"),
+    }
+}
+
+/// Capture mode: advance the game clock by exactly one fixed timestep per render frame, so fixed
+/// frame N is always the state shown by render frame N. Without this the fixed loop catches up in
+/// bursts after a stall (window creation, shader compile) and several ticks share one image.
+#[cfg(not(target_arch = "wasm32"))]
+fn lockstep_clock(
+    mut current: ResMut<Time>,
+    mut virt: ResMut<Time<Virtual>>,
+    fixed: Res<Time<Fixed>>,
+) {
+    if !virt.is_paused() {
+        virt.pause();
+    }
+    let step = fixed.timestep();
+    virt.advance_by(step);
+    *current = virt.as_generic();
+}
+
+/// Fixed frames whose capture is due but not yet requested from the renderer. Several fixed
+/// ticks can run between two render frames; they all get the image rendered after the last of
+/// them (one `Screenshot` per render frame, copied to each frame's path).
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Resource, Default)]
+struct ScreenshotQueue(Vec<u32>);
+
+/// Native only, `FixedUpdate`: with `BLACK_SCREENSHOT=<path.png>` set, queue the listed fixed
+/// frames (`screens::FrameCount`, the 60 Hz game frame) and exit 30 frames after the last one.
+#[cfg(not(target_arch = "wasm32"))]
+fn screenshot_and_exit(
+    frame: Res<screens::FrameCount>,
+    mut queue: ResMut<ScreenshotQueue>,
+    mut exit: MessageWriter<AppExit>,
+) {
+    if std::env::var("BLACK_SCREENSHOT").is_err() {
+        return;
+    }
+    let (frames, _) = screenshot_frames();
+    let last = *frames.last().expect("at least one frame");
+    if frames.contains(&frame.0) {
+        queue.0.push(frame.0);
+    } else if frame.0 == last + 30 {
         exit.write(AppExit::Success);
+    }
+}
+
+/// Native only, `Update` (once per render frame): request one screenshot for the queued fixed
+/// frames and write it to every queued frame's path.
+#[cfg(not(target_arch = "wasm32"))]
+fn flush_screenshots(mut commands: Commands, mut queue: ResMut<ScreenshotQueue>) {
+    use bevy::render::view::screenshot::{save_to_disk, Screenshot, ScreenshotCaptured};
+    if queue.0.is_empty() {
+        return;
+    }
+    let Ok(path) = std::env::var("BLACK_SCREENSHOT") else {
+        return;
+    };
+    let (_, multi) = screenshot_frames();
+    let frames = std::mem::take(&mut queue.0);
+    let first = screenshot_path(&path, frames[0], multi);
+    let copies: Vec<String> = frames[1..]
+        .iter()
+        .map(|&f| screenshot_path(&path, f, multi))
+        .collect();
+    let mut save = save_to_disk(first.clone());
+    commands.spawn(Screenshot::primary_window()).observe(
+        move |captured: On<ScreenshotCaptured>| {
+            save(captured);
+            for p in &copies {
+                if let Err(e) = std::fs::copy(&first, p) {
+                    error!("screenshot copy {first} -> {p}: {e}");
+                }
+            }
+        },
+    );
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod screenshot_tests {
+    use super::screenshot_path;
+
+    #[test]
+    fn multi_frame_paths_get_the_frame_suffix() {
+        assert_eq!(
+            screenshot_path("/tmp/x/shot.png", 160, true),
+            "/tmp/x/shot_160.png"
+        );
+        assert_eq!(screenshot_path("/tmp/x/shot", 7, true), "/tmp/x/shot_7.png");
+        assert_eq!(
+            screenshot_path("/tmp/x/shot.png", 30, false),
+            "/tmp/x/shot.png"
+        );
     }
 }
 

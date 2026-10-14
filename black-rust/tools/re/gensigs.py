@@ -11,7 +11,7 @@ Writes (next to this script):
 signatures.tsv itself is never touched (coordinator merges). Sources:
   include  prototypes in black-rom/include/*.h, symbol -> address via ndsdisasm_config/*.cfg
   rust     `/// C:` doc comments on Rust fns whose param/return types map unambiguously
-  runtime  compiler/SDK helpers from MIGRATION-AGENT.md section 7 (asm reading notes)
+  runtime  compiler/SDK helpers from docs/migration/NOTES.md "Asm reading notes"
 Later sources never override earlier ones; disagreements are listed in the report.
 """
 import argparse

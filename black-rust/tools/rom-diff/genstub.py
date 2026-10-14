@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Harness stub skeleton generator (MIGRATION-AGENT.md section 3b, Z9).
+"""Harness stub skeleton generator (docs/migration/ENV.md "RE workflow", Z9).
 
 usage: python3 -I tools/rom-diff/genstub.py <addr> [--set battle] [--tag-base 0x126] [--packet FILE]
 

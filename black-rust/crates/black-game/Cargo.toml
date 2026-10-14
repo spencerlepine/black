@@ -11,6 +11,6 @@ black-text = { version = "0.1.0", path = "../black-text" }
 # Minimal feature set: 2D render + windowing + default font + webgl2. No 3D, audio, UI, gltf.
 bevy = { version = "0.20", default-features = false, features = ["2d"] }
 
-# wasm-bindgen is pinned to the installed CLI version (MIGRATION-AGENT §3 Z3).
+# wasm-bindgen is pinned to the installed CLI version (docs/migration/ENV.md, checklist Z3).
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "=0.2.129"

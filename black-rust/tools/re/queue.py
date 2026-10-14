@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Work queue: next leaf-first batch of unported functions (MIGRATION-AGENT.md section 3b, Z8).
+"""Work queue: next leaf-first batch of unported functions (docs/migration/ENV.md "RE workflow", Z8).
 
 usage: python3 -I tools/re/queue.py [SET] [--range START END] [-n N] [--min-size BYTES] [--json] [--stats] [--selftest]
 

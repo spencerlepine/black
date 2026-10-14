@@ -1,0 +1,1612 @@
+{
+ "generated": "2026-10-14T00:08:04Z",
+ "commit": "2732e87",
+ "weights": {
+  "logic": 0.56,
+  "A": 0.075,
+  "G": 0.05,
+  "U": 0.19,
+  "HR": 0.125
+ },
+ "overall": 0.3656,
+ "overall_percent": 37,
+ "logic": {
+  "ported": 4971,
+  "in_scope": 10087.4,
+  "ratio": 0.4928,
+  "ported_by_crate": {
+   "black-battle": 2125,
+   "black-core": 26,
+   "black-field": 1712,
+   "black-pokemon": 97,
+   "black-script": 868,
+   "black-storage": 85,
+   "black-text": 61
+  },
+  "labelled_fns_by_scope": {
+   "logic": 8510,
+   "ui": 5947,
+   "sdk": 912,
+   "out": 10638
+  },
+  "scope_rows_missing_file": [],
+  "in_scope_files": [
+   {
+    "file": "battle_adapter.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 41,
+    "ghidra_fns": 46,
+    "logic_fns": 46.0
+   },
+   {
+    "file": "battle_calc.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 169,
+    "ghidra_fns": 962,
+    "logic_fns": 962.0
+   },
+   {
+    "file": "battle_client.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 207,
+    "ghidra_fns": 276,
+    "logic_fns": 276.0
+   },
+   {
+    "file": "battle_field.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 34,
+    "ghidra_fns": 43,
+    "logic_fns": 43.0
+   },
+   {
+    "file": "battle_pokeparam.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 176,
+    "ghidra_fns": 186,
+    "logic_fns": 186.0
+   },
+   {
+    "file": "battle_record.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 9,
+    "ghidra_fns": 18,
+    "logic_fns": 18.0
+   },
+   {
+    "file": "battle_server.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 190,
+    "ghidra_fns": 234,
+    "logic_fns": 234.0
+   },
+   {
+    "file": "battle_ungrouped.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 929,
+    "ghidra_fns": 1011,
+    "logic_fns": 1011.0
+   },
+   {
+    "file": "battle_view_core.s",
+    "scope": "ui",
+    "share": 0.6,
+    "fns": 78,
+    "ghidra_fns": 664,
+    "logic_fns": 398.4
+   },
+   {
+    "file": "overlay_010_02155160.s",
+    "scope": "logic",
+    "share": 0.7,
+    "fns": 1103,
+    "ghidra_fns": 1835,
+    "logic_fns": 1284.5
+   },
+   {
+    "file": "overlay_020_02183B60.s",
+    "scope": "logic",
+    "share": 0.66,
+    "fns": 143,
+    "ghidra_fns": 182,
+    "logic_fns": 120.1
+   },
+   {
+    "file": "overlay_021_02187F00.s",
+    "scope": "logic",
+    "share": 0.53,
+    "fns": 3285,
+    "ghidra_fns": 4671,
+    "logic_fns": 2475.6
+   },
+   {
+    "file": "overlay_024_021EE740.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 3,
+    "ghidra_fns": 0,
+    "logic_fns": 3.0
+   },
+   {
+    "file": "overlay_025_021EE740.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 14,
+    "ghidra_fns": 0,
+    "logic_fns": 14.0
+   },
+   {
+    "file": "overlay_026_021EE740.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 27,
+    "ghidra_fns": 0,
+    "logic_fns": 27.0
+   },
+   {
+    "file": "overlay_027_021EE740.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 4,
+    "ghidra_fns": 0,
+    "logic_fns": 4.0
+   },
+   {
+    "file": "overlay_028_021EE740.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 1,
+    "ghidra_fns": 0,
+    "logic_fns": 1.0
+   },
+   {
+    "file": "overlay_036_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 7,
+    "ghidra_fns": 0,
+    "logic_fns": 7.0
+   },
+   {
+    "file": "overlay_037_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 3,
+    "ghidra_fns": 0,
+    "logic_fns": 3.0
+   },
+   {
+    "file": "overlay_038_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 5,
+    "ghidra_fns": 0,
+    "logic_fns": 5.0
+   },
+   {
+    "file": "overlay_039_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 13,
+    "ghidra_fns": 0,
+    "logic_fns": 13.0
+   },
+   {
+    "file": "overlay_040_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 4,
+    "ghidra_fns": 0,
+    "logic_fns": 4.0
+   },
+   {
+    "file": "overlay_041_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 2,
+    "ghidra_fns": 0,
+    "logic_fns": 2.0
+   },
+   {
+    "file": "overlay_042_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 2,
+    "ghidra_fns": 0,
+    "logic_fns": 2.0
+   },
+   {
+    "file": "overlay_043_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 13,
+    "ghidra_fns": 0,
+    "logic_fns": 13.0
+   },
+   {
+    "file": "overlay_044_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 2,
+    "ghidra_fns": 0,
+    "logic_fns": 2.0
+   },
+   {
+    "file": "overlay_045_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 10,
+    "ghidra_fns": 0,
+    "logic_fns": 10.0
+   },
+   {
+    "file": "overlay_046_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 16,
+    "ghidra_fns": 0,
+    "logic_fns": 16.0
+   },
+   {
+    "file": "overlay_047_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 4,
+    "ghidra_fns": 0,
+    "logic_fns": 4.0
+   },
+   {
+    "file": "overlay_048_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 65,
+    "ghidra_fns": 0,
+    "logic_fns": 65.0
+   },
+   {
+    "file": "overlay_049_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 5,
+    "ghidra_fns": 0,
+    "logic_fns": 5.0
+   },
+   {
+    "file": "overlay_050_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 9,
+    "ghidra_fns": 0,
+    "logic_fns": 9.0
+   },
+   {
+    "file": "overlay_051_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 20,
+    "ghidra_fns": 0,
+    "logic_fns": 20.0
+   },
+   {
+    "file": "overlay_052_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 5,
+    "ghidra_fns": 0,
+    "logic_fns": 5.0
+   },
+   {
+    "file": "overlay_053_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 9,
+    "ghidra_fns": 0,
+    "logic_fns": 9.0
+   },
+   {
+    "file": "overlay_054_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 5,
+    "ghidra_fns": 0,
+    "logic_fns": 5.0
+   },
+   {
+    "file": "overlay_055_021F39C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 33,
+    "ghidra_fns": 0,
+    "logic_fns": 33.0
+   },
+   {
+    "file": "overlay_056_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 19,
+    "ghidra_fns": 0,
+    "logic_fns": 19.0
+   },
+   {
+    "file": "overlay_057_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 1,
+    "ghidra_fns": 0,
+    "logic_fns": 1.0
+   },
+   {
+    "file": "overlay_058_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 5,
+    "ghidra_fns": 0,
+    "logic_fns": 5.0
+   },
+   {
+    "file": "overlay_059_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 1,
+    "ghidra_fns": 0,
+    "logic_fns": 1.0
+   },
+   {
+    "file": "overlay_060_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 12,
+    "ghidra_fns": 0,
+    "logic_fns": 12.0
+   },
+   {
+    "file": "overlay_061_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 3,
+    "ghidra_fns": 0,
+    "logic_fns": 3.0
+   },
+   {
+    "file": "overlay_062_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 1,
+    "ghidra_fns": 0,
+    "logic_fns": 1.0
+   },
+   {
+    "file": "overlay_063_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 2,
+    "ghidra_fns": 0,
+    "logic_fns": 2.0
+   },
+   {
+    "file": "overlay_064_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 1,
+    "ghidra_fns": 0,
+    "logic_fns": 1.0
+   },
+   {
+    "file": "overlay_065_021F36C0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 3,
+    "ghidra_fns": 0,
+    "logic_fns": 3.0
+   },
+   {
+    "file": "overlay_073_021F5260.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 2,
+    "ghidra_fns": 0,
+    "logic_fns": 2.0
+   },
+   {
+    "file": "overlay_075_021F5260.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 4,
+    "ghidra_fns": 0,
+    "logic_fns": 4.0
+   },
+   {
+    "file": "overlay_076_021F5260.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 3,
+    "ghidra_fns": 0,
+    "logic_fns": 3.0
+   },
+   {
+    "file": "overlay_077_021F5620.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 1,
+    "ghidra_fns": 0,
+    "logic_fns": 1.0
+   },
+   {
+    "file": "overlay_078_021F5620.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 3,
+    "ghidra_fns": 0,
+    "logic_fns": 3.0
+   },
+   {
+    "file": "overlay_079_021F5A80.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 1,
+    "ghidra_fns": 0,
+    "logic_fns": 1.0
+   },
+   {
+    "file": "overlay_080_021F5A80.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 1,
+    "ghidra_fns": 0,
+    "logic_fns": 1.0
+   },
+   {
+    "file": "overlay_081_021F5A80.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 7,
+    "ghidra_fns": 0,
+    "logic_fns": 7.0
+   },
+   {
+    "file": "overlay_082_021F5260.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 17,
+    "ghidra_fns": 0,
+    "logic_fns": 17.0
+   },
+   {
+    "file": "overlay_083_021F5260.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 7,
+    "ghidra_fns": 0,
+    "logic_fns": 7.0
+   },
+   {
+    "file": "overlay_092_021B95A0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 8,
+    "ghidra_fns": 0,
+    "logic_fns": 8.0
+   },
+   {
+    "file": "overlay_095_06898020.s",
+    "scope": "ui",
+    "share": 0.15,
+    "fns": 267,
+    "ghidra_fns": 1106,
+    "logic_fns": 165.9
+   },
+   {
+    "file": "overlay_096_02187F00.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 59,
+    "ghidra_fns": 159,
+    "logic_fns": 159.0
+   },
+   {
+    "file": "overlay_205_021B95A0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 17,
+    "ghidra_fns": 0,
+    "logic_fns": 17.0
+   },
+   {
+    "file": "unk_020071A8.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 17,
+    "ghidra_fns": 30,
+    "logic_fns": 30.0
+   },
+   {
+    "file": "unk_02007F7C.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 19,
+    "ghidra_fns": 24,
+    "logic_fns": 24.0
+   },
+   {
+    "file": "unk_02008468.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 15,
+    "ghidra_fns": 19,
+    "logic_fns": 19.0
+   },
+   {
+    "file": "unk_0200857C.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 22,
+    "ghidra_fns": 24,
+    "logic_fns": 24.0
+   },
+   {
+    "file": "unk_02008850.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 22,
+    "ghidra_fns": 40,
+    "logic_fns": 40.0
+   },
+   {
+    "file": "unk_02008EF8.s",
+    "scope": "logic",
+    "share": 0.91,
+    "fns": 21,
+    "ghidra_fns": 41,
+    "logic_fns": 37.3
+   },
+   {
+    "file": "unk_0200A480.s",
+    "scope": "logic",
+    "share": 0.13,
+    "fns": 16,
+    "ghidra_fns": 40,
+    "logic_fns": 5.2
+   },
+   {
+    "file": "unk_0200AE2C.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 18,
+    "ghidra_fns": 29,
+    "logic_fns": 29.0
+   },
+   {
+    "file": "unk_0200B628.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 16,
+    "ghidra_fns": 20,
+    "logic_fns": 20.0
+   },
+   {
+    "file": "unk_0200BDE4.s",
+    "scope": "logic",
+    "share": 0.51,
+    "fns": 20,
+    "ghidra_fns": 40,
+    "logic_fns": 20.4
+   },
+   {
+    "file": "unk_0200D3A4.s",
+    "scope": "logic",
+    "share": 0.2,
+    "fns": 15,
+    "ghidra_fns": 51,
+    "logic_fns": 10.2
+   },
+   {
+    "file": "unk_0200E024.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 17,
+    "ghidra_fns": 26,
+    "logic_fns": 26.0
+   },
+   {
+    "file": "unk_0200E4CC.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 18,
+    "ghidra_fns": 44,
+    "logic_fns": 44.0
+   },
+   {
+    "file": "unk_0200EC84.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 18,
+    "ghidra_fns": 16,
+    "logic_fns": 18.0
+   },
+   {
+    "file": "unk_0200F150.s",
+    "scope": "logic",
+    "share": 0.48,
+    "fns": 18,
+    "ghidra_fns": 22,
+    "logic_fns": 10.6
+   },
+   {
+    "file": "unk_02010794.s",
+    "scope": "logic",
+    "share": 0.13,
+    "fns": 19,
+    "ghidra_fns": 42,
+    "logic_fns": 5.5
+   },
+   {
+    "file": "unk_02011D40.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 25,
+    "ghidra_fns": 30,
+    "logic_fns": 30.0
+   },
+   {
+    "file": "unk_02012224.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 27,
+    "ghidra_fns": 28,
+    "logic_fns": 28.0
+   },
+   {
+    "file": "unk_02012704.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 33,
+    "ghidra_fns": 41,
+    "logic_fns": 41.0
+   },
+   {
+    "file": "unk_02012CE0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 20,
+    "ghidra_fns": 29,
+    "logic_fns": 29.0
+   },
+   {
+    "file": "unk_02013270.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 8,
+    "ghidra_fns": 18,
+    "logic_fns": 18.0
+   },
+   {
+    "file": "unk_02013980.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 19,
+    "ghidra_fns": 34,
+    "logic_fns": 34.0
+   },
+   {
+    "file": "unk_02014128.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 26,
+    "ghidra_fns": 37,
+    "logic_fns": 37.0
+   },
+   {
+    "file": "unk_02016FC8.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 9,
+    "ghidra_fns": 16,
+    "logic_fns": 16.0
+   },
+   {
+    "file": "unk_02017550.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 14,
+    "ghidra_fns": 14,
+    "logic_fns": 14.0
+   },
+   {
+    "file": "unk_02017BC8.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 19,
+    "ghidra_fns": 21,
+    "logic_fns": 21.0
+   },
+   {
+    "file": "unk_02017FB0.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 17,
+    "ghidra_fns": 23,
+    "logic_fns": 23.0
+   },
+   {
+    "file": "unk_020185B4.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 9,
+    "ghidra_fns": 22,
+    "logic_fns": 22.0
+   },
+   {
+    "file": "unk_02018D10.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 9,
+    "ghidra_fns": 12,
+    "logic_fns": 12.0
+   },
+   {
+    "file": "unk_02019388.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 2,
+    "ghidra_fns": 1,
+    "logic_fns": 2.0
+   },
+   {
+    "file": "unk_02019A50.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 20,
+    "ghidra_fns": 23,
+    "logic_fns": 23.0
+   },
+   {
+    "file": "unk_0201A26C.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 10,
+    "ghidra_fns": 18,
+    "logic_fns": 18.0
+   },
+   {
+    "file": "unk_0201A858.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 19,
+    "ghidra_fns": 27,
+    "logic_fns": 27.0
+   },
+   {
+    "file": "unk_0201AF6C.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 8,
+    "ghidra_fns": 21,
+    "logic_fns": 21.0
+   },
+   {
+    "file": "unk_0201BAE4.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 5,
+    "ghidra_fns": 18,
+    "logic_fns": 18.0
+   },
+   {
+    "file": "unk_0201C41C.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 13,
+    "ghidra_fns": 18,
+    "logic_fns": 18.0
+   },
+   {
+    "file": "unk_0201CA5C.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 7,
+    "ghidra_fns": 20,
+    "logic_fns": 20.0
+   },
+   {
+    "file": "unk_0201D26C.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 16,
+    "ghidra_fns": 18,
+    "logic_fns": 18.0
+   },
+   {
+    "file": "unk_0201D6C8.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 13,
+    "ghidra_fns": 16,
+    "logic_fns": 16.0
+   },
+   {
+    "file": "unk_0201DB20.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 22,
+    "ghidra_fns": 20,
+    "logic_fns": 22.0
+   },
+   {
+    "file": "unk_0201E4D4.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 14,
+    "ghidra_fns": 14,
+    "logic_fns": 14.0
+   },
+   {
+    "file": "unk_0201EC64.s",
+    "scope": "logic",
+    "share": 1.0,
+    "fns": 16,
+    "ghidra_fns": 37,
+    "logic_fns": 37.0
+   },
+   {
+    "file": "unk_0201FC1C.s",
+    "scope": "logic",
+    "share": 0.75,
+    "fns": 1074,
+    "ghidra_fns": 1821,
+    "logic_fns": 1365.8
+   }
+  ],
+  "ported_files": {
+   "crates/black-battle/src/ai/ai1.rs": {
+    "set": "battle",
+    "fns": 161
+   },
+   "crates/black-battle/src/client/client1.rs": {
+    "set": "battle",
+    "fns": 24
+   },
+   "crates/black-battle/src/client/client2.rs": {
+    "set": "battle",
+    "fns": 45
+   },
+   "crates/black-battle/src/client/client3.rs": {
+    "set": "battle",
+    "fns": 41
+   },
+   "crates/black-battle/src/client/client4.rs": {
+    "set": "battle",
+    "fns": 54
+   },
+   "crates/black-battle/src/client/client5.rs": {
+    "set": "battle",
+    "fns": 67
+   },
+   "crates/black-battle/src/handlers/abilities.rs": {
+    "set": "battle",
+    "fns": 242
+   },
+   "crates/black-battle/src/handlers/effects.rs": {
+    "set": "battle",
+    "fns": 30
+   },
+   "crates/black-battle/src/handlers/items.rs": {
+    "set": "battle",
+    "fns": 229
+   },
+   "crates/black-battle/src/handlers/moves.rs": {
+    "set": "battle",
+    "fns": 337
+   },
+   "crates/black-battle/src/server/server1.rs": {
+    "set": "battle",
+    "fns": 24
+   },
+   "crates/black-battle/src/server/server2.rs": {
+    "set": "battle",
+    "fns": 67
+   },
+   "crates/black-battle/src/server/server3.rs": {
+    "set": "battle",
+    "fns": 116
+   },
+   "crates/black-battle/src/server_flow/adapter.rs": {
+    "set": "battle",
+    "fns": 45
+   },
+   "crates/black-battle/src/server_flow/api.rs": {
+    "set": "battle",
+    "fns": 69
+   },
+   "crates/black-battle/src/server_flow/cmd_queue.rs": {
+    "set": "battle",
+    "fns": 27
+   },
+   "crates/black-battle/src/server_flow/core1.rs": {
+    "set": "battle",
+    "fns": 45
+   },
+   "crates/black-battle/src/server_flow/core2.rs": {
+    "set": "battle",
+    "fns": 66
+   },
+   "crates/black-battle/src/server_flow/core3.rs": {
+    "set": "battle",
+    "fns": 39
+   },
+   "crates/black-battle/src/server_flow/core4.rs": {
+    "set": "battle",
+    "fns": 102
+   },
+   "crates/black-battle/src/server_flow/core5.rs": {
+    "set": "battle",
+    "fns": 66
+   },
+   "crates/black-battle/src/server_flow/core6.rs": {
+    "set": "battle",
+    "fns": 52
+   },
+   "crates/black-battle/src/server_flow/events.rs": {
+    "set": "battle",
+    "fns": 53
+   },
+   "crates/black-battle/src/server_flow/handex.rs": {
+    "set": "battle",
+    "fns": 62
+   },
+   "crates/black-battle/src/server_flow/hem.rs": {
+    "set": "battle",
+    "fns": 10
+   },
+   "crates/black-battle/src/server_flow/server_side.rs": {
+    "set": "battle",
+    "fns": 53
+   },
+   "crates/black-core/src/battle_record.rs": {
+    "set": "battle",
+    "fns": 9
+   },
+   "crates/black-core/src/poke_crypt.rs": {
+    "set": "field",
+    "fns": 2
+   },
+   "crates/black-core/src/rng.rs": {
+    "set": "field",
+    "fns": 8
+   },
+   "crates/black-core/src/softfloat.rs": {
+    "set": "battle",
+    "fns": 7
+   },
+   "crates/black-field/src/acmd1.rs": {
+    "set": "field",
+    "fns": 14
+   },
+   "crates/black-field/src/acmd2a.rs": {
+    "set": "field",
+    "fns": 40
+   },
+   "crates/black-field/src/acmd2b.rs": {
+    "set": "field",
+    "fns": 49
+   },
+   "crates/black-field/src/acmd2c.rs": {
+    "set": "field",
+    "fns": 53
+   },
+   "crates/black-field/src/acmd2d.rs": {
+    "set": "field",
+    "fns": 50
+   },
+   "crates/black-field/src/acmd2e.rs": {
+    "set": "field",
+    "fns": 32
+   },
+   "crates/black-field/src/btl_setup.rs": {
+    "set": "field",
+    "fns": 35
+   },
+   "crates/black-field/src/effect_encount.rs": {
+    "set": "field",
+    "fns": 29
+   },
+   "crates/black-field/src/enc_pokeset.rs": {
+    "set": "field",
+    "fns": 25
+   },
+   "crates/black-field/src/encount.rs": {
+    "set": "field",
+    "fns": 19
+   },
+   "crates/black-field/src/encount_st.rs": {
+    "set": "field",
+    "fns": 10
+   },
+   "crates/black-field/src/event_battle_head.rs": {
+    "set": "field",
+    "fns": 7
+   },
+   "crates/black-field/src/event_work.rs": {
+    "set": "field",
+    "fns": 28
+   },
+   "crates/black-field/src/eventdata.rs": {
+    "set": "field",
+    "fns": 56
+   },
+   "crates/black-field/src/eventdata_tail.rs": {
+    "set": "field",
+    "fns": 19
+   },
+   "crates/black-field/src/fieldmap.rs": {
+    "set": "field",
+    "fns": 98
+   },
+   "crates/black-field/src/fieldmap_event.rs": {
+    "set": "field",
+    "fns": 52
+   },
+   "crates/black-field/src/fieldmap_func.rs": {
+    "set": "field",
+    "fns": 13
+   },
+   "crates/black-field/src/fldmmdl.rs": {
+    "set": "field",
+    "fns": 253
+   },
+   "crates/black-field/src/game_data.rs": {
+    "set": "field",
+    "fns": 159
+   },
+   "crates/black-field/src/height_ex.rs": {
+    "set": "field",
+    "fns": 36
+   },
+   "crates/black-field/src/land_data_patch.rs": {
+    "set": "field",
+    "fns": 6
+   },
+   "crates/black-field/src/map_attr.rs": {
+    "set": "field",
+    "fns": 68
+   },
+   "crates/black-field/src/map_matrix.rs": {
+    "set": "field",
+    "fns": 33
+   },
+   "crates/black-field/src/mmdl_draw.rs": {
+    "set": "field",
+    "fns": 4
+   },
+   "crates/black-field/src/mmdl_move.rs": {
+    "set": "field",
+    "fns": 70
+   },
+   "crates/black-field/src/mvproc3a.rs": {
+    "set": "field",
+    "fns": 6
+   },
+   "crates/black-field/src/mvproc3b.rs": {
+    "set": "field",
+    "fns": 6
+   },
+   "crates/black-field/src/mvproc3c.rs": {
+    "set": "field",
+    "fns": 6
+   },
+   "crates/black-field/src/mvproc3d.rs": {
+    "set": "field",
+    "fns": 6
+   },
+   "crates/black-field/src/namipoke.rs": {
+    "set": "field",
+    "fns": 18
+   },
+   "crates/black-field/src/player.rs": {
+    "set": "field",
+    "fns": 72
+   },
+   "crates/black-field/src/player_core.rs": {
+    "set": "field",
+    "fns": 64
+   },
+   "crates/black-field/src/player_event.rs": {
+    "set": "field",
+    "fns": 17
+   },
+   "crates/black-field/src/player_grid.rs": {
+    "set": "field",
+    "fns": 97
+   },
+   "crates/black-field/src/trainer_eye.rs": {
+    "set": "field",
+    "fns": 38
+   },
+   "crates/black-field/src/wfbc_data.rs": {
+    "set": "field",
+    "fns": 40
+   },
+   "crates/black-field/src/zonedata.rs": {
+    "set": "field",
+    "fns": 84
+   },
+   "crates/black-pokemon/src/create.rs": {
+    "set": "field",
+    "fns": 13
+   },
+   "crates/black-pokemon/src/evolution.rs": {
+    "set": "field",
+    "fns": 10
+   },
+   "crates/black-pokemon/src/growth.rs": {
+    "set": "field",
+    "fns": 4
+   },
+   "crates/black-pokemon/src/icon.rs": {
+    "set": "field",
+    "fns": 9
+   },
+   "crates/black-pokemon/src/personal.rs": {
+    "set": "field",
+    "fns": 11
+   },
+   "crates/black-pokemon/src/poke_tool.rs": {
+    "set": "field",
+    "fns": 19
+   },
+   "crates/black-pokemon/src/waza.rs": {
+    "set": "field",
+    "fns": 31
+   },
+   "crates/black-script/src/scrcmd_bsubway.rs": {
+    "set": "field",
+    "fns": 7
+   },
+   "crates/black-script/src/scrcmd_c03center.rs": {
+    "set": "field",
+    "fns": 28
+   },
+   "crates/black-script/src/scrcmd_core.rs": {
+    "set": "field",
+    "fns": 53
+   },
+   "crates/black-script/src/scrcmd_encount.rs": {
+    "set": "field",
+    "fns": 19
+   },
+   "crates/black-script/src/scrcmd_fld.rs": {
+    "set": "field",
+    "fns": 97
+   },
+   "crates/black-script/src/scrcmd_fld_battle.rs": {
+    "set": "field",
+    "fns": 6
+   },
+   "crates/black-script/src/scrcmd_misc10.rs": {
+    "set": "field",
+    "fns": 32
+   },
+   "crates/black-script/src/scrcmd_misc10b.rs": {
+    "set": "field",
+    "fns": 6
+   },
+   "crates/black-script/src/scrcmd_misc10c.rs": {
+    "set": "field",
+    "fns": 6
+   },
+   "crates/black-script/src/scrcmd_misc21.rs": {
+    "set": "field",
+    "fns": 81
+   },
+   "crates/black-script/src/scrcmd_misc21b.rs": {
+    "set": "field",
+    "fns": 7
+   },
+   "crates/black-script/src/scrcmd_obj.rs": {
+    "set": "field",
+    "fns": 63
+   },
+   "crates/black-script/src/scrcmd_pokemon_fld.rs": {
+    "set": "field",
+    "fns": 47
+   },
+   "crates/black-script/src/scrcmd_proc.rs": {
+    "set": "field",
+    "fns": 22
+   },
+   "crates/black-script/src/scrcmd_proc_fld.rs": {
+    "set": "field",
+    "fns": 21
+   },
+   "crates/black-script/src/scrcmd_screen.rs": {
+    "set": "field",
+    "fns": 36
+   },
+   "crates/black-script/src/scrcmd_shop.rs": {
+    "set": "field",
+    "fns": 13
+   },
+   "crates/black-script/src/scrcmd_sodateya.rs": {
+    "set": "field",
+    "fns": 18
+   },
+   "crates/black-script/src/scrcmd_talk.rs": {
+    "set": "field",
+    "fns": 70
+   },
+   "crates/black-script/src/scrcmd_work.rs": {
+    "set": "field",
+    "fns": 130
+   },
+   "crates/black-script/src/script_sys.rs": {
+    "set": "field",
+    "fns": 90
+   },
+   "crates/black-script/src/vm.rs": {
+    "set": "field",
+    "fns": 16
+   },
+   "crates/black-storage/src/bag.rs": {
+    "set": "field",
+    "fns": 26
+   },
+   "crates/black-storage/src/box_data.rs": {
+    "set": "field",
+    "fns": 33
+   },
+   "crates/black-storage/src/party.rs": {
+    "set": "field",
+    "fns": 26
+   },
+   "crates/black-text/src/layout.rs": {
+    "set": "field",
+    "fns": 2
+   },
+   "crates/black-text/src/speed.rs": {
+    "set": "field",
+    "fns": 4
+   },
+   "crates/black-text/src/strbuf.rs": {
+    "set": "field",
+    "fns": 33
+   },
+   "crates/black-text/src/wordset.rs": {
+    "set": "field",
+    "fns": 22
+   }
+  }
+ },
+ "phases": {
+  "A": {
+   "done": 13,
+   "half": 1,
+   "total": 16,
+   "score": 0.84375
+  },
+  "G": {
+   "done": 4,
+   "half": 0,
+   "total": 9,
+   "score": 0.4444444444444444
+  },
+  "U": {
+   "done": 0,
+   "half": 1,
+   "total": 23,
+   "score": 0.021739130434782608
+  },
+  "H": {
+   "done": 0,
+   "half": 0,
+   "total": 3,
+   "score": 0.0
+  },
+  "R": {
+   "done": 0,
+   "half": 0,
+   "total": 5,
+   "score": 0.0
+  }
+ },
+ "phase_items": {
+  "A": [
+   {
+    "id": "A0",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "A1",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "A2",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "A3",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "A4",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "A4b",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "A5",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "A6",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "A7",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "A8",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "A9",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "A9b",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "A10",
+    "mark": "~",
+    "score": 0.5
+   },
+   {
+    "id": "A11b",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "A11",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "A12",
+    "mark": "x",
+    "score": 1.0
+   }
+  ],
+  "G": [
+   {
+    "id": "G1",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "G2",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "G3",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "G4",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "G5",
+    "mark": "x",
+    "score": 1.0
+   },
+   {
+    "id": "G6",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "G7",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "G8",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "G9",
+    "mark": " ",
+    "score": 0.0
+   }
+  ],
+  "U": [
+   {
+    "id": "U0",
+    "mark": "x",
+    "score": 0.5,
+    "note": "pending sign-off (0/0 ui cases pass)"
+   },
+   {
+    "id": "U1",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U2",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U3",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U4",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U5",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U6",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U7",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U8",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U9",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U10",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U11",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U12",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U13",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U14",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U15",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U16",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U17",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U18",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U19",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U20",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U21",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "U22",
+    "mark": " ",
+    "score": 0.0
+   }
+  ],
+  "H": [
+   {
+    "id": "H1",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "H2",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "H3",
+    "mark": " ",
+    "score": 0.0
+   }
+  ],
+  "R": [
+   {
+    "id": "R1",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "R2",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "R3",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "R4",
+    "mark": " ",
+    "score": 0.0
+   },
+   {
+    "id": "R5",
+    "mark": " ",
+    "score": 0.0
+   }
+  ]
+ },
+ "ui_cases": {}
+}

@@ -1,0 +1,29 @@
+{
+ "_doc": "UI-diff cases (tools/ui-diff/README.md). Committed; everything else under ui-ref/ is gitignored (D5). port.frames count 60 Hz fixed frames from power-on (the port boots Boot -> Title with 16-frame fades: Title is visible from ~frame 79; A at 90 -> NewGame -> Overworld visible from ~frame 184); ref.frames count from the savestate load. ref.frames[i] is compared with port.frames[i]; an entry is an int or a [lo, hi] window (best pair counts). ref.inputs is the human's recipe, not executed by code. phash is written by capture_ref.sh.",
+ "cases": [
+  {
+   "id": "G5-title-msgbox",
+   "screen": "G5",
+   "port": {"script": "", "fade_frames": 16, "frames": [90, 120, 150]},
+   "ref": {"savestate": "boot.mln", "inputs": "load boot.mln (title screen, steady); no input", "frames": [30, 60, 90]},
+   "regions": {"top": "whole", "bottom": {"rect": "whole", "weights": [0.3, 0.2, 0.5]}},
+   "phash": {}
+  },
+  {
+   "id": "G2-overworld-idle",
+   "screen": "G2",
+   "port": {"script": "90:A", "fade_frames": 16, "frames": [190, 230]},
+   "ref": {"savestate": "overworld.mln", "inputs": "load overworld.mln (outdoor map, player idle); no input", "frames": [60, 100]},
+   "regions": {"top": "whole", "bottom": "whole"},
+   "phash": {}
+  },
+  {
+   "id": "G2-start-menu",
+   "screen": "G2",
+   "port": {"script": "90:A,200:Start", "fade_frames": 16, "frames": [[228, 232], [243, 247], [258, 262]]},
+   "ref": {"savestate": "overworld.mln", "inputs": "load overworld.mln; press Start at frame 70", "frames": [[98, 102], [113, 117], [128, 132]]},
+   "regions": {"top": "whole", "bottom": "whole"},
+   "phash": {}
+  }
+ ]
+}

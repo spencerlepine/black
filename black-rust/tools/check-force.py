@@ -29,7 +29,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SPECS = glob.glob(os.path.join(ROOT, "tools/rom-diff/svflow_specs/*.spec"))
 FN_SPECS = glob.glob(os.path.join(ROOT, "tools/rom-diff/specs/*/*.spec"))
 # Unforced on purpose (the caller's Rust port calls the ported callee directly, so both sides run real code):
-# (spec, callee). Each entry is documented in MIGRATION-AGENT.md (§6 B13-spec2 / B10g / B13a merge note).
+# (spec, callee). Each entry is documented in docs/migration/checklist/B.md (B13-spec2 / B10g) and docs/migration/OPEN.md (B13a merge note).
 EXPECTED = {("client5", 0x021CD9F4), ("core2", 0x021BCB14), ("core2", 0x021BD148), ("client4", 0x021CDF1C)}
 # The dirs whose PORTED lists svflow.py's `ported_flow` scans, read from svflow.py itself so the two can't drift
 # (B14: the ai dir was missing here).

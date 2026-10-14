@@ -1,0 +1,5 @@
+# F7-spec — full checklist note (moved from MIGRATION-AGENT.md section 6, Phase F, 2026-10-13)
+
+Verbatim line as it stood on `main` 2732e87:
+
+- [x] F7-spec — (f313c73; Opus, ~1.5 h, 330k tokens) black-script check-fn areas **script_sys** (script_sys.c + script_work.c + 8 ctx getters 0215A5CC–5F4: 90 fns, 1254/1257 insns, 3 unreachable; smoke 53bef382cbffbb10) and **vm** (vm.c in main 0x020111EC–0x020113D8: 16 fns, 225/225; smoke 8acc0f245b916195); strict + closure clean. Layouts (crate README): SYS 0x18, SCRIPT_WORK 0x14C (magic 0x3643F, script vars 0x8000.. u16 at +0x7C, +0x148 scrcmd work), VM 0x530 (PC +0x14, ctx +0x20, hook +0x24), CTX 0x24. **Command table = 0x0217062C × 0x261 (609) cmds; cmd id = F1 slot − 15** (F1's slots 0–14 are 14 init procs run by 021591b4, mask 0x02172BA0); pre-dispatch permission check 02158de8 over a 609-B table at 0x02170374 (3 ctx modes). F8 must skip 0215A5CC–5F4 (done here). Traps: vm-area ports don't deactivate script_sys stubs; Ghidra field set treats Heap_AllocDebug/Free as noreturn

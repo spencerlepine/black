@@ -1,0 +1,5 @@
+# F8-spec1 — full checklist note (moved from MIGRATION-AGENT.md section 6, Phase F, 2026-10-13)
+
+Verbatim line as it stood on `main` 2732e87:
+
+- [x] F8-spec1 — (5afc588; Opus, ~2.5 h, 450k tokens) black-script areas **scrcmd_core** (02159204–0215995E: 53 fns = 49 handlers for cmds 0..48 + 4 helpers; 747/747; 8571c7a4a83df68b) and **scrcmd_work** (0215A514–0215C63A: 130 fns, 86 cmd ids; 3451/3451; 935b80ee13c13582); strict + closure clean; 10 smoke ports, 6/6 mutations. Core cmd roles: 0/1 nop, 2/29 end, 3 wait, 4/30 call/jump rel, 5 return, 27/28 parallel/call script, 31/32 cond jump/call (6×3 table 0x021705DC), 8–17 expr stack, 16/35–37 flags, 18/19/38–45 var arith. scrcmd_work = system/Pokédex/time queries + party/PokeParam get/set, give mon/egg. ScriptHost: menu = choice-menu builder 0215a77c/7f0/864/954/990 → `menu_start(&MenuRequest)`; message/yes-no/fade handlers are in the ov21 F8 jobs (21.42/21.44/21.45); talk window at SCRCMD WORK +0xFC. Trap: script-operand stubs must be `seq`

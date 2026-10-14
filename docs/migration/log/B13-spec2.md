@@ -1,0 +1,5 @@
+# B13-spec2 — full checklist note (moved from MIGRATION-AGENT.md section 6, Phase B, 2026-10-13)
+
+Verbatim line as it stood on `main` 2732e87:
+
+- [x] B13-spec2 — (8d08338; Opus after a Sonnet draft was discarded, ~2.5 h, 610k tokens) **btl_client fully specced: client1 24, client2 45, client3 41, client4 54, client5 67 fns** (+129; 10 Thumb→ARM veneers skipped; 021d3d84 found by reachability, called from ov95; 021d3f04 is battle_net, excluded); strict clean, ≥96% per-fn coverage (dead code in 021cfbf0); closure stubs; unbounded u8-counter loops (021cf…, 021d09e0, 021d215c, 021d39a8) bounded by commented `fix` lines. Smoke ports: client4 224cccbed6cd03e8 (2990 299c 2c7c), client3 57be4cd86698fdc6 (+d0b10), client5 c8edd9b4cd350b43 (+d3ec8). UI surface listed in client/mod.rs (111 btlv entry points 0x021E90A0–0x021EAF78, view object c+0x34 fns, sound ov94 + main). Traps: 021d3c44's 021cd9f4 stub is inactive (PORTED) → port must call client1::counter_add directly; 021d1c40 runs ported 021cdee8 as real code

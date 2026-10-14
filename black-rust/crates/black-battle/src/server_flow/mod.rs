@@ -1,6 +1,6 @@
 //! Server flow (`btl_server_flow.c`, asm/battle_ungrouped.s, 0x021BAA94-0x021CD800).
 //!
-//! Split by B9 into address-contiguous areas (one module each, see MIGRATION-AGENT.md §7).
+//! Split by B9 into address-contiguous areas (one module each, see docs/migration/NOTES.md "B9").
 //! Each area adds its own `impl SvFlowWork` block with accessors for the fields it uses; field
 //! offsets are named as they are identified. Code outside this layer (server, client, main
 //! module, Pokemon container) is reached through traits, never re-implemented here.

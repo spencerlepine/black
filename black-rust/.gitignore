@@ -2,5 +2,8 @@ target/
 web/*.wasm
 # extracted game assets (D5): private, never commit
 assets/
+# UI-diff goldens / port captures / reports (D5): only ui-ref/manifest.json is tracked
+ui-ref/*
+!ui-ref/manifest.json
 __pycache__/
 *.pyc

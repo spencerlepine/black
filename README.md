@@ -8,7 +8,7 @@ Two long-running Claude Code roles work on it:
 
 | Role        | Prompt / source of truth                     | Does                                                                                                                  |
 | ----------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Coordinator | [`MIGRATION-AGENT.md`](MIGRATION-AGENT.md)   | Plans, dispatches port jobs, merges, pushes `main`                                                                    |
+| Coordinator | [`MIGRATION-AGENT.md`](MIGRATION-AGENT.md) + [`docs/migration/`](docs/migration/) | Plans, dispatches port jobs, merges, pushes `main`; progress is computed by `black-rust/tools/progress.py` |
 | Validator   | [`VALIDATION-AGENT.md`](VALIDATION-AGENT.md) | Independently re-runs the original and the port on new commits; writes findings to `validation/` (never edits source) |
 
 ## 1. Prerequisites
@@ -69,7 +69,7 @@ git clone https://github.com/spencerlepine/black.git $HOME/workplace/black
 ```
 
 Use the **same absolute path**: `$HOME/workplace/black` is the single source of truth that
-`MIGRATION-AGENT.md`, `VALIDATION-AGENT.md` and `.mcp.json` spell out. If you must clone elsewhere,
+`MIGRATION-AGENT.md` (+ `docs/migration/ENV.md`), `VALIDATION-AGENT.md` and `.mcp.json` spell out. If you must clone elsewhere,
 substitute the path in all three.
 
 ### 2.2 Rust
@@ -180,7 +180,7 @@ The full `tools/gate.sh` (with `black-game` and the wasm build) needs ~10 GB mor
 
 ## 4. Running the two roles
 
-**Coordinator** (long, unattended; see `MIGRATION-AGENT.md` §0 for the exact prompt):
+**Coordinator** (long, unattended; see `MIGRATION-AGENT.md` §0 for the exact prompt and its "Reading order" table for the files under `docs/migration/`):
 
 ```sh
 tmux new -s rewrite

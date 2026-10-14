@@ -22,12 +22,19 @@ command -v rizin >/dev/null && ok "rizin" || fail rizin "install rizin"
 if ! /tmp/blk/venv/bin/python -c "import unicorn" 2>/dev/null; then
   PY=$(ls -d "$HOME"/.local/share/mise/installs/python/3.12*/bin/python3 2>/dev/null | head -1)
   if [ -n "$PY" ]; then
-    mkdir -p /tmp/blk && "$PY" -m venv /tmp/blk/venv && /tmp/blk/venv/bin/pip -q install unicorn
+    mkdir -p /tmp/blk && "$PY" -m venv /tmp/blk/venv && /tmp/blk/venv/bin/pip -q install unicorn pillow numpy
   fi
 fi
-/tmp/blk/venv/bin/python -c "import unicorn" 2>/dev/null && ok "unicorn venv" || fail venv "see MIGRATION-AGENT.md §3"
+/tmp/blk/venv/bin/python -c "import unicorn" 2>/dev/null && ok "unicorn venv" || fail venv "see docs/migration/ENV.md"
+# imaging libs for tools/ui-diff (compare.py); scikit-image is not needed (pure numpy metrics)
+/tmp/blk/venv/bin/python -c "import PIL, numpy" 2>/dev/null || /tmp/blk/venv/bin/pip -q install pillow numpy >/dev/null 2>&1
+/tmp/blk/venv/bin/python -c "import PIL, numpy" 2>/dev/null && ok "ui-diff venv (pillow, numpy)" || fail "ui-diff venv" "/tmp/blk/venv/bin/pip install pillow numpy"
+# headless window for tools/ui-diff/capture_port.py on Linux
+if [ "$(uname -s)" = Linux ] && [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
+  command -v xvfb-run >/dev/null && ok "xvfb-run (headless UI captures)" || fail xvfb-run "install xorg-x11-server-Xvfb (needed only for Phase G/U captures)"
+fi
 
-# decompile cache for every known overlay set (MIGRATION-AGENT.md §3b "Overlay sets")
+# decompile cache for every known overlay set (docs/migration/ENV.md "RE workflow", Overlay sets)
 while read -r name mods; do
   [ -z "$name" ] && continue
   if [ ! -f "$RE_OUT/$name/pc/index.jsonl" ]; then

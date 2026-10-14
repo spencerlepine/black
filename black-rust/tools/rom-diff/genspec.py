@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Draft svflow spec generator (MIGRATION-AGENT.md B10h).
+"""Draft svflow spec generator (docs/migration/checklist/B.md, B10h).
 
 usage: python3 -I tools/rom-diff/genspec.py <addr>... [--set battle] [--area NAME] [--packets-dir DIR]
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Work packet for one function (MIGRATION-AGENT.md section 3b, Z8).
+"""Work packet for one function (docs/migration/ENV.md "RE workflow", Z8).
 
 usage: python3 -I tools/re/packet.py <addr> [--set battle] [--out DIR]
 

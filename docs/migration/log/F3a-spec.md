@@ -1,0 +1,5 @@
+# F3a-spec — full checklist note (moved from MIGRATION-AGENT.md section 6, Phase F, 2026-10-13)
+
+Verbatim line as it stood on `main` 2732e87:
+
+- [x] F3a-spec — (6de9937; Opus, ~3.5 h, 650k tokens) black-field areas **player** (021A2D88–021A36E4: 72; 7a77d4f37d4b2fe1), **player_core** (–021A4140: 64; b6110fa7fe6d5c7f), **player_grid** (–021A5880: 97; 1560d3655b5196fb), **namipoke** (surf, 021ACA38–021AD758: 18; 23d1b071964a9d4b), **height_ex** (021C0598–021C1024: 38; 358aff190a331d7a), **player_event** (–021C1A08: 17; cf794bd97b65a59c) = 306 fns (9 render-only left for U2; 7 fldeff_encount heads excluded), 7596/7597 insns, 28 smoke ports. Layouts: FIELD_PLAYER 0x10, PLAYER CORE 0x34, PLAYER GRID 0x20, input record 0x14; form/OBJ table 0x021D890C, request state machine 0x021D89C4; running = B + event flag 0x963. Grammar `outv:N:V1/V2` (out-param drawn from compared constants). Traps: loops over pointer-only stubs need `seq` (Z22 fixes `in:` mixing); mutual recursion self-stubs skipped by the generator

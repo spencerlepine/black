@@ -368,7 +368,7 @@ mod tests {
     }
 
     /// Labels drawn from a small set so operations collide; hashed against the original code
-    /// run under an emulator (see `MIGRATION-AGENT.md` §7, "Verification methods").
+    /// run under an emulator (see `docs/migration/NOTES.md`, "Verification methods").
     #[test]
     fn matches_rom_fuzz() {
         let mut h = Fnv::new();

@@ -1,5 +1,5 @@
 //! Nitro 3D (G3D) readers (A5): NSBMD/BMD0 models, NSBTX/BTX0 textures, animation headers, and a
-//! glTF 2.0 exporter. See MIGRATION-AGENT.md §7 "A5" for the format notes.
+//! glTF 2.0 exporter. See docs/migration/checklist/A.md (A5) for the format notes.
 //!
 //! - [`model::Bmd0`]: `BMD0` file with `MDL0` models and an optional embedded `TEX0`.
 //! - [`tex::Tex0`]: texture + palette block (formats 1-7 incl. 4x4 compressed) -> [`crate::render::Image`].

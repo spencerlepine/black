@@ -1,6 +1,6 @@
 //! Field map data readers (A6): zone headers, map matrices, map containers and zone events.
 //!
-//! ROM archives (ARC ID = decimal `XYZ` of `files/a/X/Y/Z`), see MIGRATION-AGENT.md §7 "A6":
+//! ROM archives (ARC ID = decimal `XYZ` of `files/a/X/Y/Z`), see docs/migration/checklist/A.md (A6):
 //! - ARC 012: one member holding all zone headers, 48 bytes each ([`zone::ZoneHeader`]).
 //! - ARC 009: map matrices, one member per matrix ([`matrix::MapMatrix`]).
 //! - ARC 008: map containers, one member per map id ([`container::MapContainer`]).

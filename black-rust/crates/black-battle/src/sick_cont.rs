@@ -220,7 +220,7 @@ mod tests {
     }
 
     /// Hash of every constructor over random inputs, matching the original machine code run
-    /// under an emulator (see `MIGRATION-AGENT.md` §7, "Verification methods").
+    /// under an emulator (see `docs/migration/NOTES.md`, "Verification methods").
     #[test]
     fn matches_rom_fuzz() {
         let mut h = Fnv::new();

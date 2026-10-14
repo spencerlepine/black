@@ -1,0 +1,33 @@
+# Phase U — Screens (rewrite in Bevy, spec = original asm) — PAR after G
+
+Part of the master checklist (moved out of `MIGRATION-AGENT.md` section 6 on 2026-10-13). Status markers and rules: [§5](../../MIGRATION-AGENT.md). Format: `- [status] ID — TAG — description — deps: … — notes`. A done-note longer than ~400 chars is cut here and kept in full in `../log/<ID>.md`.
+
+
+Each: rebuild behaviour/layout/timing from the listed source; logic calls into ported crates.
+
+**UI-diff guardrail (U0, 2026-10-13):** every U item's deliverable includes cases in `black-rust/ui-ref/manifest.json` for its screen, all scoring ≥ 0.70 against the human's goldens (`black-rust/tools/ui-diff/README.md`); animations as multi-frame cases. A worker reads the JSON scores, opens a failure image at most 3 times per item, then marks `[x] pending sign-off` with the best score for `../HUMAN.md`. Goldens missing on the host → `pending sign-off` as well.
+
+- [x] U0 — SEQ — UI diff kit (port side, 2026-10-13, layout-refactor commit): `tools/ui-diff/` (`compare.py` SSIM/ΔE76/Canny-IoU metric in pure numpy, `capture_port.py`, `capture_ref.sh`, `test_compare.py` 3/3), `BLACK_SCREENSHOT_FRAMES` + 60 Hz `FrameCount` in `black-game` (capture mode lock-steps the clock to one tick per render frame; scripted input and captures share it; verified: 20/20 frames of the 3 cases captured, none black), `doctor.sh` (pillow/numpy, xvfb-run on Linux) and `gate.sh` (`compare.py --all --regress`, skips without goldens; `ui-ref/` tracked-files check) hooks, `ui-ref/manifest.json` with the first three cases `G5-title-msgbox`, `G2-start-menu`, `G2-overworld-idle`. **Pending sign-off:** scores need the goldens requested in `../HUMAN.md` (U0 goldens); until then `progress.py` counts the cases as not passing. — deps: G1, G2, G5
+
+- [ ] U1 — PAR — Title screen + intro/new game (`overlay_204` intro\_\*, `overlay_203` demo3d). — deps: G2, G5, G7 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U2 — PAR — Overworld screen: player/NPC sprites, camera, dialog box, signs, field effects. — deps: G8, F12, G5 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U3 — PAR — Battle screen top: backgrounds, Pokémon sprites, HP/EXP gauges, messages, animations (`battle_view_core.s`, `battle_view_scu.s`, `overlay_094` btlv\_\*, `overlay_095` btlv_scd). — deps: B12, G5, G7 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U4 — PAR — Battle screen bottom: fight/bag/pokémon/run menus, move select, target select (`overlay_095` btlv_scd). — deps: U3, B13 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U5 — PAR×N — Move/battle animations (btlv_effect, btlv_effvm = effect script VM). Port the effect VM as logic, re-render effects. Split by move animation ranges. — deps: U3 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U6 — PAR — Party menu (`overlay_091` plist*\*, in-battle `overlay_198` b_plist*\*). — deps: S1, G5 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U7 — PAR — Summary screen (`overlay_131` p*sta*\*). — deps: P2, G5 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U8 — PAR — Bag (`overlay_070` itemmenu, in-battle `overlay_197` b_bag_main). — deps: S3, G5 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U9 — PAR — PC box (`overlay_170` box2\_\*). — deps: S2, G5 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U10 — PAR — Start menu + save screen (`overlay_088` startmenu, save_control_intr). — deps: G9 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U11 — PAR — Pokédex (`overlay_206` zukan_info, `overlay_210` zknsearch, `overlay_212` zukan, `overlay_207` nickname/register, `overlay_208` zukan_detail). — deps: A10, G5 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U12 — PAR — Evolution scene (`overlay_195` shinka_demo) + egg hatch (`overlay_215` egg_demo). — deps: P5, G7 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U13 — PAR — Naming screen (`overlay_194` namein). — deps: G5 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U14 — PAR — Town map (`overlay_072` townmap). — deps: F2, G5 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U15 — PAR — Common UI overlays (`overlay_067` frame_list, yesno_menu, touchbar, ui_scene). Feeds G5; can run alongside it. — deps: G1 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U16 — PAR — Starter select (`overlay_223` psel), Hall of Fame / ending (`overlay_182` the_end, `overlay_220-222` awards). — deps: G5 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U17 — PAR — Trainer card, Xtransceiver-free stubs, misc single-player apps found by T1. — deps: T2, G5 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U18 — PAR — Trainer card (`overlay_111`; `trcard_sys` logic in overlay 10). — deps: G5 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U19 — PAR — Hall of Fame record (`overlay_171`) and ceremony (`overlay_180`), staff credits (`overlay_181`). — deps: G5, G7 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U20 — PAR — Move-teaching screen (`overlay_173`; `waza_oshie` logic in overlay 10). — deps: P4, G5 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U21 — PAR — Party/summary launcher (`overlay_134`, `overlay_090`); Pokédex family extras (`overlay_209`, `overlay_211`; ARC 159) with U11. — deps: U6, U7 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases
+- [ ] U22 — SEQ — Unidentified UI overlays 68, 69, 109, 129, 230, 231: identify (screenshot/emulator or deeper RE), then add items. — deps: T3 — deliverable: cases in `manifest.json` for this screen, all ≥ 0.70; animations as multi-frame cases

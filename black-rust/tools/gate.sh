@@ -26,5 +26,16 @@ cargo build -q --workspace $X --release
 python3 -I tools/sync-docs.py >/dev/null
 # V-0021: every address in a `pub const PORTED` must have a SYMBOLS.md row (a `/// C:` head sync-docs can read)
 python3 -I tools/check-symbols.py >/dev/null
+# plan files stay small and their section references resolve (split of MIGRATION-AGENT.md, 2026-10-13)
+python3 -I tools/check-docsize.py >/dev/null
+# the completion percentage is computed (docs/migration/PROGRESS.json); here only: it must run
+python3 -I tools/progress.py --check >/dev/null
 if [ -n "$(git ls-files assets)" ]; then echo "gate: assets/ is tracked (D5)"; exit 1; fi
+if [ -n "$(git ls-files ui-ref | grep -v '^ui-ref/manifest.json$')" ]; then echo "gate: ui-ref/ images are tracked (D5)"; exit 1; fi
+# UI-diff regression guard: only where the human's goldens exist (tools/ui-diff/README.md)
+if ls ui-ref/*/ref_*.png >/dev/null 2>&1 && [ -x /tmp/blk/venv/bin/python ]; then
+  /tmp/blk/venv/bin/python -I tools/ui-diff/compare.py --all --regress
+else
+  echo "ui-diff: no goldens, skipped"
+fi
 if [ -n "$GATE_NO_GAME" ]; then echo "gate (no black-game): fmt ok, clippy ok, test ok, build ok"; else echo "gate: fmt ok, clippy ok, test ok, build ok, wasm ok"; fi
