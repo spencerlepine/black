@@ -15,7 +15,7 @@ const RECORDED: &[(u32, &str)] = &[
     (0x021AA35C, "fea6cfe9d2453a12"),
     (0x021AA3E0, "e58485b1e4fc408c"),
     (0x021AA3FC, "4a0ea365af4f3bc3"),
-    (0x021AA42C, "017e518aa867be29"),
+    (0x021AA42C, "083287addf0dde4c"),
     (0x021AA490, "ce058ebd026f8e01"),
     (0x021AA548, "137a4e54265f626b"),
     (0x021AA5CC, "bec790c19761ef47"),

@@ -311,7 +311,9 @@ fn 021aa42c ret=u32 inputs=100
   arg buf 0x10
   arg u32 any
   fix arg0 8 u32 alt range 0 40 || any
-  stub 020056ec force ret=pick:0/1/2/49/50/51/98/99 args=v  # RNG next(100): below 100 (around the 02010FB0 picks)
+  # V-0030: every roll 0..99 once (the whole next(100) range, as the old `lt:0`) plus the boundary rolls 0/1/2/49/50/51/98/99
+  # (around the 02010FB0 picks) 8 more times each; the max is always the constant 100 here, so this is exactly `lt:0`'s range
+  stub 020056ec force ret=pick:0/1/2/3/4/5/6/7/8/9/10/11/12/13/14/15/16/17/18/19/20/21/22/23/24/25/26/27/28/29/30/31/32/33/34/35/36/37/38/39/40/41/42/43/44/45/46/47/48/49/50/51/52/53/54/55/56/57/58/59/60/61/62/63/64/65/66/67/68/69/70/71/72/73/74/75/76/77/78/79/80/81/82/83/84/85/86/87/88/89/90/91/92/93/94/95/96/97/98/99/0/1/2/49/50/51/98/99/0/1/2/49/50/51/98/99/0/1/2/49/50/51/98/99/0/1/2/49/50/51/98/99/0/1/2/49/50/51/98/99/0/1/2/49/50/51/98/99/0/1/2/49/50/51/98/99/0/1/2/49/50/51/98/99 args=v  # RNG next(100): below 100
   stub 02010fb0 force ret=pick:0/1/2/49/50/51/98/99/100/0x7FFFFFFF/0xFFFFFFFF args=v  # encounter rate modifier of the pass powers (rate -> rate; compared with a roll below 100)
   stub 0207c7b4 force ret=u32 args=v  # FX sqrt / root (fx32)
   stub 021938f4 force ret=u32 args=v  # field_wfbc: encounter level factor (wfbc)

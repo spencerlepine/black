@@ -221,7 +221,9 @@ fn 021a9828 ret=none inputs=400
   arg buf 0x30
   arg u32 alt oneof 1 3 4 5 0xC || range 0 0xD || any
   fix arg0 0x1B u8 alt oneof 1 8 9 0xE 0x15 0x16 0x1C 0x23 0x2A 0x2E 0x33 0x37 0x38 0x3C 0x47 0x48 0x49 0x51 0x5F 0x63 || oneof 0x2B 0x34 0x17 0x10 0 2 0x51 8 || any
-  stub 020056ec force ret=pick:0/20000/32799/32800/43295/43296/43951/43952/65534 args=v  # RNG next(0xFFFF), only through 021A9DC8 (/ 0x290): rolls 0 / 30 / 49 / 50 / 65 / 66 / 66 / 67 / 99 (the Cute Charm < 67 and >= 50 thresholds)
+  # V-0030: `pick+u16` = 1 in 4 answers any u16 (the whole next(0xFFFF) range 0..0xFFFE as the old `lt:0`, plus 0xFFFF, which
+  # / 0x290 is roll 99 like 65534), the rest the boundary list
+  stub 020056ec force ret=pick+u16:0/20000/32799/32800/43295/43296/43951/43952/65534 args=v  # RNG next(0xFFFF), only through 021A9DC8 (/ 0x290): rolls 0 / 30 / 49 / 50 / 65 / 66 / 66 / 67 / 99 (the Cute Charm < 67 and >= 50 thresholds)
   stub 021a9dc8 ret=pick:0/19/20/39/40/49/50/59/60/66/67/69/70/79/80/84/85/89/90/93/94/97/98/99 args=  # in-area
 
 # 021A996C(efp, level) -> rejected: flag 8: 0; flag 0x8000 and level + 5 <= lead level: 1; flag 4 without flag 2 and level < lead
