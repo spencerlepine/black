@@ -11,7 +11,7 @@
 //! 0x6E gender, 0x6F form, 0x46..0x4B EVs, 3 / 0x97 (UNVERIFIED roles). ROM tables embedded and compared with the build by
 //! the tests: [`TABLE_463_1`] / [`TABLE_463_2`] / [`TABLE_463_3`].
 
-use crate::scrcmd_core::CoreHooks;
+use crate::scrcmd_core::{s32_div, CoreHooks};
 
 /// Functions of this area that are ported (read by `tools/rom-diff/svflow.py --ported-src`).
 pub const PORTED: &[u32] = &[
@@ -334,12 +334,13 @@ pub fn cmd_307<H: C03Hooks>(h: &mut H, vm: u32, ctx: u32) -> u32 {
 }
 
 /// C: `sub_021b5b0c`: the TCB of command 307 (tcb, W = {start, delta, i, n}): i += 1; the angle = start + delta * i / n (signed
-/// division, u16); i >= n -> W is freed and the TCB deleted. UNVERIFIED: n = 0 divides by zero (`_s32_div_f`; Rust panics).
+/// division, u16); i >= n -> W is freed and the TCB deleted. n = 0: `_s32_div_f` returns the dividend (angle = start +
+/// delta * i) and i >= 0 ends the task at once (V-0028).
 pub fn turn_task<H: C03Hooks>(h: &mut H, tcb: u32, w: u32) {
     let i = h.r32(w + 8).wrapping_add(1);
     h.w32(w + 8, i);
     let num = i.wrapping_mul(h.r32(w + 4)) as i32;
-    let q = num.wrapping_div(h.r32(w + 0xC) as i32);
+    let q = s32_div(num, h.r32(w + 0xC) as i32);
     h.w16(TURN_ANGLE, q as u16);
     let a = h.r16(TURN_ANGLE).wrapping_add(h.r32(w) as u16);
     h.w16(TURN_ANGLE, a);

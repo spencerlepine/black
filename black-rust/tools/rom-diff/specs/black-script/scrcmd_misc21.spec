@@ -1280,13 +1280,14 @@ fn 021d2d50 ret=u32 inputs=200
 # phase = (u16)((t << 16) / frames); every && n0 - n >= every -> ++k >= period -> k = 0, a -= d (min 1); t >= frames -> n--,
 # t = 0; n == 0 -> 0218ED04(E, &0), 0218EC30(E, W.pos), 0218F05C(E), next; else s = sin table 0x020A1B38[phase >> 4],
 # 0218EC90(E, &(*W.pos + (ax s, ay s, 0))), 0218ED04(E, &(ax s, ay s, 0)); 3: 1; steps 0 / 1 / 2-done: seq++; 0.
+# V-0027: frames 0 is drawn too (_u32_div_f returns the dividend for a zero divisor).
 fn 021d2d7c ret=u32 inputs=200
   nowork
   arg u32 any
   arg buf 0x10
   arg buf 0x100
   fix arg1 0 u32 alt range 0 4 || any
-  fix arg2 0x10 u32 alt range 1 8 || range 9 0xFFFF
+  fix arg2 0x10 u32 alt const 0 || range 1 8 || range 9 0xFFFF
   fix arg2 0x14 u32 alt range 0 8 || any
   fix arg2 0x18 u32 addrof arg2 0x80
   fix arg2 8 u16 alt const 0 || range 1 4

@@ -13,7 +13,7 @@
 //! by the tests: [`MART_LISTS`] (0x021DE1A8 / counts 0x021D95DE), [`MART_BY_BADGES`] (0x021D946C), [`SPECIAL_LISTS`]
 //! (0x021DE164 / counts 0x021D9430), [`CAMERA_OFFSETS`] (0x021D9708), [`CAMERA_BACK`] (0x021D9738).
 
-use crate::scrcmd_core::CoreHooks;
+use crate::scrcmd_core::{u32_div, CoreHooks};
 
 /// Functions of this area that are ported (read by `tools/rom-diff/svflow.py --ported-src`).
 pub const PORTED: &[u32] = &[
@@ -528,7 +528,7 @@ pub fn currency<H: ShopHooks>(h: &mut H, w2: u32) -> u32 {
 /// {0xA, 4}; the [`currency`] is below the price (W2+0x200) -> message W2[0x163] ? 0x10 : 3, {0xA, 4}; below twice the price
 /// -> the count prompt `FUN_021B4804`, {0xA, 5}; W2[0x162] -> the count prompt, {0xA, 6}; else message 4, {0xA, 2} and the
 /// purchase maximum W2+0x204 = min(money / price, 99), cut to `FUN_0200823C(item)` minus what the bag holds.
-/// UNVERIFIED: a price of 0 divides by zero (the original's `_u32_div_f` result is unknown; Rust panics).
+/// A price of 0: `_u32_div_f` returns the dividend, so the maximum is min(money, 99) (V-0029).
 pub fn buy_check<H: ShopHooks>(h: &mut H, w2: u32) {
     let money = currency(h, w2);
     let item = u32::from(h.r16(w2 + W2_ITEM));
@@ -573,7 +573,7 @@ pub fn buy_check<H: ShopHooks>(h: &mut H, w2: u32) {
     h.w8(w2, 0xA);
     h.w8(w2 + 1, 2);
     let price = h.r32(w2 + W2_PRICE);
-    let n = money / price;
+    let n = u32_div(money, price);
     h.w32(w2 + W2_MAX, n);
     if n > 99 {
         h.w32(w2 + W2_MAX, 99);

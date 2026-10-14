@@ -79,13 +79,14 @@ fn 021b5a18 ret=u32 inputs=200
 
 # TCB of cmd 307 (tcb, W): W[2] += 1; *g = (u16)W[0] + _s32_div(W[2] * W[1], W[3]) (u16, g = 0x021EE724); W[2] >= W[3] ->
 # Heap_Free(W), 02030EAC(tcb) (TCB delete).
+# V-0028: n = 0 is drawn too (_s32_div_f returns the dividend for a zero divisor; i >= 0 ends the task at once).
 fn 021b5b0c ret=none inputs=200
   nowork
   arg u32 any
   arg buf 0x40
   global 021ee724 4
   fix arg1 8 u32 alt range 0 8 || any
-  fix arg1 0xC u32 alt range 1 8 || range 9 0xFFFFFFFF
+  fix arg1 0xC u32 alt const 0 || range 1 8 || range 9 0xFFFFFFFF
   stub 020307b0 force ret=none args=v
   stub 02030eac force ret=u32 args=v
 

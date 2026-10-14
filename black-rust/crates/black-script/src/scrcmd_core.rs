@@ -345,10 +345,30 @@ fn reg_addr<H: MemEnv>(h: &mut H, vm: u32, i: u8) -> u32 {
 
 /// `_u32_div_f` (`0x0209C2B0`, real code in the original): `(n / d, n % d)`; division by zero gives `(n, 0)` (as
 /// `black_battle::calc::u32_divmod`).
-fn u32_divmod(n: u32, d: u32) -> (u32, u32) {
+///
+/// The shared library-division helpers of black-script ([`u32_divmod`], [`u32_div`], [`s32_div`]): the ARM9 library
+/// never traps, a zero divisor returns the dividend (`_u32_div_f`: `cmp r1, 0; bxeq lr`; `_s32_div_f` 0x0209C0A4: skips
+/// the loop and restores the sign). Checked under Unicorn on main.sbin (V-0026 / V-0027): `0x12345 / 0` -> 0x12345
+/// (r1 0), signed `-0x12345 / 0` -> -0x12345.
+pub(crate) fn u32_divmod(n: u32, d: u32) -> (u32, u32) {
     match (n.checked_div(d), n.checked_rem(d)) {
         (Some(q), Some(r)) => (q, r),
         _ => (n, 0),
+    }
+}
+
+/// `_u32_div_f` (`0x0209C2B0`) quotient: `n / d`; a zero divisor returns `n` (see [`u32_divmod`]).
+pub(crate) fn u32_div(n: u32, d: u32) -> u32 {
+    u32_divmod(n, d).0
+}
+
+/// `_s32_div_f` (`FUN_0209C0A4`) quotient, truncating toward zero (wrapping for `i32::MIN / -1`); a zero divisor
+/// returns `n` (see [`u32_divmod`]).
+pub(crate) fn s32_div(n: i32, d: i32) -> i32 {
+    if d == 0 {
+        n
+    } else {
+        n.wrapping_div(d)
     }
 }
 

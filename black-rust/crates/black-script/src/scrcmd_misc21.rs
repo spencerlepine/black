@@ -12,7 +12,7 @@
 //! operand readers, the ctx getters and the GMEVENT / child-event calls come from [`CoreHooks`]). Roles are UNVERIFIED (named by
 //! address). ROM data the functions read is embedded and compared with the build by the tests.
 
-use crate::scrcmd_core::CoreHooks;
+use crate::scrcmd_core::{u32_div, CoreHooks};
 
 /// Functions of this area that are ported (read by `tools/rom-diff/svflow.py --ported-src`).
 pub const PORTED: &[u32] = &[
@@ -2111,7 +2111,7 @@ pub fn shake_event<H: Misc21Hooks>(h: &mut H, gs: u32, rec: u32) -> u32 {
 /// target `FUN_0218EC5C(E)`; 2 one frame: t + 1, phase = (t << 16) / frames, every `every` counted swings the amplitudes drop
 /// by (dx, dy) (min 1), `n` swings of `frames` frames, the target is the kept one + (ax, ay) * sin(phase) (`FUN_0218EC90`,
 /// `FUN_0218ED04`); after the last swing the offset is cleared and the target restored; 3 done (1); finished steps: seq + 1; 0.
-/// UNVERIFIED: frames = 0 divides by zero (`_u32_div_f`; Rust panics).
+/// frames = 0: `_u32_div_f` returns the dividend, so phase = (t << 16) & 0xFFFF = 0 (V-0027).
 pub fn event_shake<H: Misc21Hooks>(h: &mut H, event: u32, seq: u32) -> u32 {
     let gs = h.fun_020124e4(event);
     let fm = h.fun_0201210c(gs);
@@ -2130,7 +2130,7 @@ pub fn event_shake<H: Misc21Hooks>(h: &mut H, event: u32, seq: u32) -> u32 {
         2 => {
             let t = h.r32(w + 0x14).wrapping_add(1);
             h.w32(w + 0x14, t);
-            let phase = (t.wrapping_shl(16) / h.r32(w + 0x10)) & 0xFFFF;
+            let phase = u32_div(t.wrapping_shl(16), h.r32(w + 0x10)) & 0xFFFF;
             let every = h.r16(w + 8);
             if every != 0 && i32::from(h.r8(w + 0xE)) - i32::from(h.r8(w + 0xF)) >= i32::from(every)
             {

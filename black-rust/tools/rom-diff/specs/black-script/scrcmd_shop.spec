@@ -215,12 +215,13 @@ fn 021b3350 ret=u32 inputs=200
 # W2[0x162] -> 021B4804, {0xA, 6}; else msg 4, {0xA, 2}, max = min(money / price, 99), cut to 0200823C(item) - have.
 # F8e-spec2: the price ties the money answers (1 / 0x50 / 0x100 / 0x10000: money == price; 0x28 / 0x80 / 0x8000: money == 2 price)
 # and puts money / price at 98..100 for money 0x10000 (price 655..662); 021B4804 gets W2[0x162] in r1 at both calls.
+# V-0029: price 0 is drawn too (_u32_div_f returns the dividend for a zero divisor: max = min(money, 99)).
 fn 021b3370 ret=none inputs=1000
   nowork
   arg buf 0x400
   fix arg0 0x163 u8 alt const 0 || any
   fix arg0 0x162 u8 alt const 0 || any
-  fix arg0 0x200 u32 alt oneof 1 0x50 0x100 0x10000 || oneof 0x28 0x80 0x8000 || range 655 662 || range 1 0x100 || range 1 0xFFFFFF
+  fix arg0 0x200 u32 alt const 0 || oneof 1 0x50 0x100 0x10000 || oneof 0x28 0x80 0x8000 || range 655 662 || range 1 0x100 || range 1 0xFFFFFF
   stub 021b4804 ret=none args=v,v
   stub 021b3350 ret=pick:0/1/0x50/0x100/0x10000 args=v
   stub 021b4714 ret=none args=v,v,v,v
