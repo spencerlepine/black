@@ -11,6 +11,10 @@ Two long-running Claude Code roles work on it:
 | Coordinator | [`MIGRATION-AGENT.md`](MIGRATION-AGENT.md) + [`docs/migration/`](docs/migration/) | Plans, dispatches port jobs, merges, pushes `main`; progress is computed by `black-rust/tools/progress.py` |
 | Validator   | [`VALIDATION-AGENT.md`](VALIDATION-AGENT.md) | Independently re-runs the original and the port on new commits; writes findings to `validation/` (never edits source) |
 
+![](.docs/migration-diagram.svg)
+
+![](./.docs/tech-stack-diagram.svg)
+
 ## 1. Prerequisites
 
 ### 1.1 Required tools

@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 860 600" role="img" font-family="-apple-system, 'Segoe UI', system-ui, sans-serif">
+  <title>Black tech stack: before and after</title>
+  <desc>Before: black-rom/ is ARM assembly and C, compiled by Metrowerks mwccarm into a byte-identical Pokémon Black .nds ROM that only runs inside a DS emulator on a desktop. After: black-rust/ is Rust logic crates plus a Bevy app shell, built by cargo into a native desktop binary, a wasm web build, or a mobile app, all drawing through wgpu to the device GPU with no emulator. Game assets are extracted once from the ROM.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1L9 5L1 9z" fill="#555"/>
+    </marker>
+    <style>
+      .box  { fill: #fbfbfa; stroke: #444; stroke-width: 1.2; }
+      .old  { fill: #fdecea; stroke: #b5473a; }
+      .new  { fill: #e7f5ea; stroke: #3d8a52; }
+      .plan { fill: #fbfbfa; stroke: #3d8a52; stroke-dasharray: 5 4; }
+      .ln   { stroke: #555; stroke-width: 1.3; fill: none; }
+      .dash { stroke: #888; stroke-width: 1.2; fill: none; stroke-dasharray: 4 3; }
+      .t    { font-size: 14px; font-weight: 600; fill: #222; text-anchor: middle; }
+      .s    { font-size: 11px; fill: #555; text-anchor: middle; }
+      .h    { font-size: 15px; font-weight: 700; fill: #222; text-anchor: middle; }
+      .hs   { font-size: 12px; fill: #555; text-anchor: middle; font-family: ui-monospace, Menlo, monospace; }
+      .lg   { font-size: 11px; fill: #555; }
+    </style>
+  </defs>
+
+  <!-- Headers -->
+  <text class="h" x="220" y="30">BEFORE · Original ROM</text>
+  <text class="hs" x="220" y="48">black-rom/</text>
+  <text class="h" x="640" y="30">AFTER · Rust Port</text>
+  <text class="hs" x="640" y="48">black-rust/</text>
+
+  <!-- BEFORE column -->
+  <rect class="box old" x="40" y="70" width="360" height="54" rx="6"/>
+  <text class="t" x="220" y="93">ARM assembly + C</text>
+  <text class="s" x="220" y="111">decompiled Pokémon Black (NDS)</text>
+  <line class="ln" x1="220" y1="124" x2="220" y2="152" marker-end="url(#a)"/>
+
+  <rect class="box" x="40" y="154" width="360" height="54" rx="6"/>
+  <text class="t" x="220" y="177">Metrowerks mwccarm</text>
+  <text class="s" x="220" y="195">make, in Docker + Wine</text>
+  <line class="ln" x1="220" y1="208" x2="220" y2="236" marker-end="url(#a)"/>
+
+  <rect class="box" x="40" y="238" width="360" height="54" rx="6"/>
+  <text class="t" x="220" y="261">pokeblack.us.nds</text>
+  <text class="s" x="220" y="279">byte-identical ROM (sha1 match)</text>
+  <line class="ln" x1="220" y1="292" x2="220" y2="320" marker-end="url(#a)"/>
+
+  <rect class="box" x="40" y="322" width="360" height="54" rx="6"/>
+  <text class="t" x="220" y="345">DS emulator</text>
+  <text class="s" x="220" y="363">melonDS · DeSmuME</text>
+  <line class="ln" x1="220" y1="376" x2="220" y2="404" marker-end="url(#a)"/>
+
+  <rect class="box" x="40" y="406" width="360" height="54" rx="6"/>
+  <text class="t" x="220" y="429">Emulated DS hardware</text>
+  <text class="s" x="220" y="447">ARM9 + ARM7 CPUs, DS 2D/3D engines</text>
+  <line class="ln" x1="220" y1="460" x2="220" y2="488" marker-end="url(#a)"/>
+
+  <rect class="box old" x="40" y="490" width="360" height="54" rx="6"/>
+  <text class="t" x="220" y="513">Desktop only</text>
+  <text class="s" x="220" y="531">wherever the emulator runs</text>
+
+  <!-- AFTER column -->
+  <rect class="box new" x="460" y="70" width="360" height="54" rx="6"/>
+  <text class="t" x="640" y="93">Rust logic crates</text>
+  <text class="s" x="640" y="111">battle · field · script · pokemon · text · storage</text>
+  <line class="ln" x1="640" y1="124" x2="640" y2="152" marker-end="url(#a)"/>
+
+  <rect class="box" x="460" y="154" width="360" height="54" rx="6"/>
+  <text class="t" x="640" y="177">black-game · Bevy</text>
+  <text class="s" x="640" y="195">app shell, two 256×192 DS screens</text>
+  <line class="ln" x1="640" y1="208" x2="640" y2="236" marker-end="url(#a)"/>
+
+  <rect class="box" x="460" y="238" width="360" height="54" rx="6"/>
+  <text class="t" x="640" y="261">cargo build</text>
+  <text class="s" x="640" y="279">one codebase, per-platform target</text>
+  <line class="ln" x1="516" y1="292" x2="516" y2="320" marker-end="url(#a)"/>
+  <line class="ln" x1="640" y1="292" x2="640" y2="320" marker-end="url(#a)"/>
+  <line class="ln" x1="764" y1="292" x2="764" y2="320" marker-end="url(#a)"/>
+
+  <rect class="box" x="460" y="322" width="112" height="54" rx="6"/>
+  <text class="t" x="516" y="345">Desktop</text>
+  <text class="s" x="516" y="363">native binary</text>
+  <rect class="box" x="584" y="322" width="112" height="54" rx="6"/>
+  <text class="t" x="640" y="345">Web</text>
+  <text class="s" x="640" y="363">wasm32</text>
+  <rect class="box plan" x="708" y="322" width="112" height="54" rx="6"/>
+  <text class="t" x="764" y="345">Mobile</text>
+  <text class="s" x="764" y="363">iOS · Android</text>
+  <line class="ln" x1="516" y1="376" x2="516" y2="404" marker-end="url(#a)"/>
+  <line class="ln" x1="640" y1="376" x2="640" y2="404" marker-end="url(#a)"/>
+  <line class="ln" x1="764" y1="376" x2="764" y2="404" marker-end="url(#a)"/>
+
+  <rect class="box" x="460" y="406" width="360" height="54" rx="6"/>
+  <text class="t" x="640" y="429">wgpu</text>
+  <text class="s" x="640" y="447">Metal · Vulkan · DX12 · WebGL2</text>
+  <line class="ln" x1="640" y1="460" x2="640" y2="488" marker-end="url(#a)"/>
+
+  <rect class="box new" x="460" y="490" width="360" height="54" rx="6"/>
+  <text class="t" x="640" y="513">Runs natively</text>
+  <text class="s" x="640" y="531">real CPU + GPU, no emulator</text>
+
+  <!-- Assets extracted once from the ROM -->
+  <path class="dash" d="M400 265 H430 V181 H458" marker-end="url(#a)"/>
+  <text class="s" x="430" y="226" transform="rotate(-90 430 226)" dy="-5">assets</text>
+
+  <!-- Legend -->
+  <rect class="box old" x="232" y="566" width="14" height="14" rx="3"/>
+  <text class="lg" x="252" y="577">original</text>
+  <rect class="box new" x="332" y="566" width="14" height="14" rx="3"/>
+  <text class="lg" x="352" y="577">Rust port</text>
+  <rect class="box plan" x="432" y="566" width="14" height="14" rx="3"/>
+  <text class="lg" x="452" y="577">planned</text>
+  <line class="dash" x1="532" y1="573" x2="556" y2="573"/>
+  <text class="lg" x="562" y="577">assets extracted from ROM</text>
+</svg>

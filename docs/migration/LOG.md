@@ -154,3 +154,9 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14 ~14:15Z** — Usage ORANGE 77% → DRAIN (this window: 5 Opus-heavy agents, ~0.6–0.9%/min). Handler modules (abilities/items/moves/effects) green on main after B18.
 
 - **2026-10-14** — Human: concurrency cap lowered from 5 to 3 workers (more than 3 maxes out the laptop CPU); session protocol rule 7 updated. The 4 workers already running (F5b, F13, B18b, B19) finish under DRAIN; no new spawns until fewer than 3 run.
+
+- **2026-10-14** — Merged F13 (5db13e0; daycare 30/30 + ov63_event 3/3; reuses S5b daycare via hooks). 3 workers left (F5b, B18b, B19) = new cap.
+
+- **2026-10-14** — Merged B19 (f8164d9): first whole-battle differential against the original (4 battles trace-equal; 3 port bugs + 1 integration bug fixed; B16 outcome corrected to the original's). F13 verified on main (gate, daycare/egg/hatch/ov63_event, check-force/symbols).
+
+- **2026-10-14** — Merged F5b (4 field areas, 80/80; README union conflict with F13 resolved). F5 done.

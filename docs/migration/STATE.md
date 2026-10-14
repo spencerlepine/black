@@ -20,7 +20,7 @@ _2026-10-14T14:14:21Z, commit 497aac8, `python3 -I tools/progress.py`._
 <!-- progress-table:end -->
 
 - **Milestones so far:** battle handlers complete; btl_server_flow 644; battle_server.s 207/207; btl_client 228/231; battle AI ai1 161/161; B16 first full headless battle through the ports. Pokémon: poke_tool/create/personal/growth/waza/evolution/icon. Storage: party/bag/box. Field: map matrix/fieldmap, player 304/306, fldmmdl 253/253 + acmd 242/242, trainer_eye 38/38, encounter 151/151, eventdata 184/185; script VM + ~700 scrcmd handlers. Text: strbuf/wordset/layout/speed. Assets A0–A12 mostly; Bevy shell G1/G2/G4/G5. Harness: Z19/Z20/Z22/Z23, check-force/symbols/docsize, progress.py, ui-diff with scripted DeSmuME references.
-- **Running:** F5b (Opus, worktree-agent-a33ccd900ce8e7ce5), F13 (Opus, worktree-agent-a6d47baf4cf57655b: daycare), B18b (Opus, worktree-agent-adae199e185c4775e: ptr lint for all crates), B19 (Opus, worktree-agent-aefa3baf9274f6a52: whole-battle Unicorn differential).
+- **Running:** B18b (Opus, worktree-agent-adae199e185c4775e: ptr lint for all crates).
 - **Next:** merge as workers report; then F2b, F3b, F6b, U0b, F14, F11.
 - **Blocked:** none. B16 flake: B17 fixed `ro_snap` keying; 3/3 full black-battle suites green on main after merge (root cause not proven, OPEN.md).
 - **Usage guard:** DRAINING (ORANGE 77%) since ~14:15Z — no new spawns; F5b, F13, B18b, B19 finish and merge; then pause until resume_at 17:25Z (resume_cron "25 10 14 10 *").
