@@ -1844,3 +1844,69 @@ Mutation spot check (`check-fn.sh --fn`, each reverted; `/tmp/blk/f2b/mutate.py`
 buildmodel 19). Survivors of the first run closed with spec inputs: ring-sector bounds (FX_Atan2Idx / VEC_Mag answers on the area
 bounds), the +0x800 rounding (FX_Div answers 0x800 / 0x1800), the box bound of `find_in_box` (VEC_Add `outw` answers from the bounds'
 set), the 0x80 map-byte bound of `index_of` (model count drawn to 0xFFFF where only compared).
+## F3b: the no-grid (rail) player and the rail system: specs + ports
+
+Nine new spec areas under `tools/rom-diff/specs/black-field/` (set `field`), one per source file (`field_rail.c` split in three by
+address), all ported and verified with `tools/check-fn.sh black-field AREA --per-function`. Closure stubs (checked with every function
+of the area treated as ported: no fault, stray write or unstubbed callee); every out-of-area stub is `force`, also between the nine
+areas; `svflow.py AREA --all --strict-callees` (plain and with the ports) and `--order-check` are clean. No stub argument is `p`.
+
+| area | original | range | fns | spec hash (`--all`, plain) | area hash (ported) |
+|---|---|---|---|---|---|
+| `rail_loader` | `field_rail_loader.c` (F1 row 21.12 head) | `0x0219EF14..0x0219F030` | 7 | c05aa5eab0609b42 | b3726269a8f86fa4 |
+| `rail_attr` | `rail_attr.c` (21.54) | `0x021BB088..0x021BB1F4` | 13 | 69f74b752aebfbfd | ad80f6abc7c6c76b |
+| `nogrid_mapper` | `field_nogrid_mapper.c` (21.55) | `0x021BB1F4..0x021BB484` | 17 | aaf6836b2635b7ec | 4424baf23d41ca62 |
+| `rail` | `field_rail.c` part 1 (21.53): system, RAIL WORK, LOCATIONs, move driver, lookups | `0x021B7884..0x021B88DC` | 74 | 37335281f9ffb8d2 | 5a5b7740068ff7ea |
+| `rail_move` | `field_rail.c` part 2: line movement, helpers, segment / slerp math | `0x021B88DC..0x021B9B7C` | 34 | 17e4e1edc7da1ea9 | 8513ce6127fb2d8e |
+| `rail_cam` | `field_rail.c` part 3: position / line-hit / camera procs | `0x021B9B7C..0x021BB088` | 28 | 8c152af16e3cbbd2 | d329893610e5809f |
+| `player_nogrid` | `field_player_nogrid.c` (21.24) | `0x021A5880..0x021A6CB8` | 90 | dbf1eb75fb9ac788 | 3a4d72ff15f2e46a |
+| `ctrl_nogrid` | `fieldmap_ctrl_nogrid_work.c` (21.25) | `0x021A6CB8..0x021A6DC4` | 8 | b7431a13bf56fcc7 | 27fadaf4eb6a0c9d |
+| `ctrl_hybrid` | `fieldmap_ctrl_hybrid.c` (21.26) | `0x021A6DC4..0x021A7358` | 12 | c88cb84920719129 | c8f27da40dcebb00 |
+
+Instruction coverage (own body, plain / closure): rail_loader 120/120 / 120/120, rail_attr 167/167 / 167/167, nogrid_mapper 243/243 /
+243/243, rail 1881/1886 / 1879/1886, rail_move 2118/2121 / 2118/2121, rail_cam 2287/2288 / 2281/2288, player_nogrid 2138/2138 /
+2138/2138, ctrl_nogrid 95/95 / 95/95, ctrl_hybrid 595/595 / 595/595. Gaps: 021B7C90 / 021B7CD8 equal-LOCATION exits (plain only; the
+closure covers them), 021B7D68 kind 0 / 2 (closure only: the real 021B7EE4 always leaves kind 1; plain covers them), 021B9828's zero
+denominator (needs collinear normalised vectors from the VEC stubs), 021BAE7C's negative height difference (the hit inputs keep the
+projected point at height 0), 021B9E84 / 021B9FC8 accept paths (closure only; plain covers them).
+
+File bounds: the `Heap_AllocDebug` `__FILE__` strings ("field_rail_loader.c" 0x021DDE08, "field_player_nogrid.c" 0x021DDF04,
+"fieldmap_ctrl_nogrid_work.c" 0x021DDF1C, "fieldmap_ctrl_hybrid.c" 0x021DDF64, "field_rail.c" 0x021DE2A0, "rail_attr.c" 0x021DE2C4,
+"field_nogrid_mapper.c" 0x021DE2D0). F1 put row 21.12 (`field_rail_loader.c`) at `0x0219EF44..0x021A0100` (94 functions): the file is
+only `0x0219EF14..0x0219F030` (7; 0219EF14 sat in row 21.11); `0x0219F030..0x021A0100` are the MMDL billboard-actor draw procs (proc
+table ROM 0x021D8558, calls into fldmmdl_blact 0219C9DC / 02050848 / 02050880): render code (D3, U2), not specced here. Function lists:
+bl targets of the field set, odd code pointers, the Ghidra index and a Thumb walk; not specced: switch-case / LAB_ fragments (listed in
+the spec headers), false entries 021A5C76 / 021B9BE8 / 021BB35E (`bl` words in data, inside other functions), 021B9366 (padding),
+021B95A0 / 021B95C8 (labels inside 021B9530 / 021B95C0). Specced although without a field-set caller: the mapper thunks 021BB388 /
+021BB3D0 / 021BB3DC and 021A6DC4.
+
+Records (full layouts in the module docs): RAIL system R (0x74: current / main RAIL WORK, the RAIL DATA copy at +0x20 with counts and
+pointers to points 0x70 / lines 0x48 / camera and line records 0x24 / three proc tables, the 18-entry blocked-line list at +0x50), RAIL
+WORK (0x7C), LOCATION (8: u16 index, u8 kind, u8 dir, s16 x, u16 z), RAIL LOADER (0x38), RAIL ATTR (0x10, per-line attribute grids),
+NOGRID MAPPER (0x18), NOGRID PLAYER (0x24), the MAP CTRL works (8 / 0xC). The rail data's proc tables (ROM 0x021DDDA0 position procs,
+0x021DDDAC line-hit procs, 0x021DDDB8 camera procs) are called through `FieldEnv::call` at the entry addresses (the specs plant FAKE
+callees 0x02EE0011 / 21 / 31); the slope procs of the no-grid player (ROM 0x021D8ABC) and the hybrid mode procs (ROM 0x021DDF38) are
+dispatched to the Rust ports.
+
+Spec conventions (headers): the arena is a trailing `arg buf` the function never reads as a register; the RAIL universe (rail /
+rail_move / rail_cam) is a consistent seven-point / seven-line loop with every index drawn in range, the default ROM records 0x021D9A0C /
+0x021D9A30 read as real ROM data on both sides; overlay-21 data words the code writes (the rail / grid MMDL headers 0x021DDEE0 /
+0x021DDF40) and the sine table `FX_SinCosTable_` (ARM9 0x020A1B38) are `global`s. The NitroSDK vector / fx functions (VEC_*, FX_Div,
+FX_AcosIdx, FX_Atan2Idx), the field camera (fieldmap 0218E124 .. 0218F05C), fldmmdl, the PLAYER CORE / FIELD_PLAYER and map attributes
+are `force` stubs (D3: the camera is driven through hooks); FX_Mul products are inline in the code and computed as the original does
+(64-bit, +0x800, >> 12).
+
+ROM data embedded (tests compare them with the overlay): `rail::ROM_DEFAULTS` (0x021D9A00, the up vector and the default records),
+`rail::STEP_TABLE` (0x021DE298), `player_nogrid::SPIN_DIRS` (0x021D8AB0).
+
+UNVERIFIED (unreachable for the differential tests, kept out of the spec inputs): `021B7EE4` with a point whose first listed line
+touches it at neither end reads uninitialised stack words (0 under the Z19 entry state; the port uses 0); `021B810C` with a move speed
+> 4 and `021A6B50` with a counter outside 0..3 / kind > 1 read past their ROM tables (the ports panic); `021A6F24` with mode > 1 reads
+past the 2-entry proc table (the port panics); `021A5A68` with a form > 3 returns an uninitialised stack word (the port answers 0);
+`021BA6E8` with a zero line length divides by zero.
+
+Deliberate deviations: none in behaviour; `memcmp` (0203EFC8) is inlined.
+
+Mutation spot check (`check-fn.sh --fn`, each reverted; `/tmp/blk/f3b/mutate.py`, `mut2.py`): 37 of 42 caught; the 5 survivors are
+equivalent (021BB2F8 heap `& 0x7FFF` vs `& 0xFFFF` under `| 0x8000`, 021B86A4 `v >= s`, 021B83FC `m <= e`, 021B9338 `|lat| > w`,
+021B9530 `pos >= side`: equal values give the same result).
