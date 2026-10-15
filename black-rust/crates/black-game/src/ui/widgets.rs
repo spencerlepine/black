@@ -117,7 +117,12 @@ impl Plugin for UiPlugin {
                 (UiSet::Input, UiSet::Widgets, UiSet::Render).chain(),
             )
             .add_systems(PreStartup, load_font)
-            .add_systems(Update, collect_input.in_set(UiSet::Input))
+            .add_systems(
+                Update,
+                collect_input
+                    .in_set(UiSet::Input)
+                    .run_if(crate::loading::not_loading),
+            )
             .add_systems(
                 Update,
                 (update_msgbox, update_list, update_number).in_set(UiSet::Widgets),

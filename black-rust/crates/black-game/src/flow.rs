@@ -8,8 +8,11 @@ use crate::input::DsButton;
 /// Top-level screen, mirroring the original proc/overlay flow at a high level.
 #[derive(States, Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub enum Screen {
-    /// System/FS init, first-boot logo (original: boot + gfl_use init).
+    /// Asset loading (G3): waits for the required assets, then enters `Boot`. No frame counter,
+    /// fade or input runs here.
     #[default]
+    Loading,
+    /// System/FS init, first-boot logo (original: boot + gfl_use init).
     Boot,
     Title,
     NewGame,

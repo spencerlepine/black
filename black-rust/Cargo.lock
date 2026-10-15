@@ -2040,6 +2040,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "black-core",
+ "black-data",
  "black-text",
  "wasm-bindgen",
 ]

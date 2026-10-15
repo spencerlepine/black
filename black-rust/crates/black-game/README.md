@@ -16,6 +16,38 @@ to `=0.2.129` (matches the installed CLI).
   `wasm-bindgen --target web --out-dir dist/pkg <target>/wasm32-unknown-unknown/debug/black-game.wasm`
   and load `dist/pkg/black-game.js` from a page with `<canvas id="bevy">`.
 
+## Asset loading (G3, `src/loading/`)
+
+Bevy `AssetServer` over the extracted tree (D4, gitignored, D5). `assets::asset_plugin()` points `AssetPlugin` at
+`$BLACK_ASSETS` (default `./assets`, made absolute) on native and at the relative URL `assets/` on wasm; meta files are never
+probed. `types.rs`: one newtype asset + loader per RON table (`PersonalAsset`, ... via `black_data::loader::load_<table>`, bytes
+in so wasm-safe), `TextBankAsset` (`text/en/*.json`, raw UTF-8), `AtlasAsset` (`*.atlas.ron` bytes; parse with
+`black_data::loader::load::<T>`), `ManifestAsset` (`manifest.json`, parsed by `manifest.rs`). PNG goes through Bevy's `Image`;
+OGG/glTF need Bevy features that are not enabled yet.
+
+`Screen::Loading` is the default state. `OnEnter` starts `manifest.json` plus the 12 `data/*.ron` tables (`GameTables`); once the
+manifest is read it adds every `text/en/*.json` it lists (`TextBanks`) and records required files it does not list
+(`LoadReport::unlisted`). When all tracked assets are loaded or failed, the app enters `Boot`. Failures never block (logged,
+in `LoadReport::failed`), so a partial tree (e.g. `--only fonts`, used by tools/ui-diff) still runs. A progress bar is drawn
+on the bottom screen (`ProgressScreenPlugin`). The frame counter, flow ticks and scripted input are gated off during
+`Loading`, so `BLACK_SCREENSHOT_FRAMES` / `BLACK_SCRIPT` frame numbers still start at `Boot`. Sprites/audio/models are loaded on
+demand by the screens that need them, using paths from the manifest. Manifest sha1/size are not verified yet.
+The UI font still uses the direct native `std::fs` loader in `ui/widgets.rs` (not moved to the asset server).
+
+### Serving assets for the browser (local only, never deploy: D5/R4)
+
+The wasm build fetches `assets/<path>` relative to the page URL, so the page's directory must contain `assets/`.
+Trunk wipes `dist/` on every build, so link the tree in afterwards:
+
+```sh
+cd crates/black-game && trunk build            # writes dist/
+ln -sfn "$PWD/../../assets" dist/assets        # extracted tree (black extract-assets --out assets)
+python3 -m http.server 8080 --bind 127.0.0.1 --directory dist
+```
+
+(`trunk serve` also works if `dist/assets` is re-linked after each rebuild.) Keep it on 127.0.0.1; the assets are extracted
+from a private ROM and must never be hosted publicly. A missing `assets/` only shows up as failed loads in the console.
+
 ## App state machine (G2)
 
 `src/flow.rs` is the pure part (no window; unit-tested): `Screen` (`Boot -> Title -> NewGame | Continue -> Overworld <-> Battle`,

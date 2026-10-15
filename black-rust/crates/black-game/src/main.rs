@@ -7,6 +7,7 @@
 
 mod flow;
 mod input;
+mod loading;
 mod screens;
 mod ui;
 
@@ -55,6 +56,7 @@ fn main() {
     }
     app.add_plugins(
         DefaultPlugins
+            .set(loading::asset_plugin())
             .set(ImagePlugin::default_nearest())
             .set(WindowPlugin {
                 primary_window: Some(Window {
@@ -71,6 +73,8 @@ fn main() {
     .add_plugins((
         input::InputPlugin,
         screens::ScreensPlugin,
+        loading::AssetsPlugin,
+        loading::ProgressScreenPlugin,
         ui::UiPlugin,
         ui::demo::DemoPlugin,
     ))

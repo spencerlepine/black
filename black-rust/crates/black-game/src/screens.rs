@@ -83,7 +83,12 @@ impl Plugin for ScreensPlugin {
             .init_resource::<Dwell>()
             .init_resource::<FrameCount>()
             .add_systems(Startup, spawn_fade_rects)
-            .add_systems(FixedUpdate, (count_frames, drive, tick_flow).chain())
+            .add_systems(
+                FixedUpdate,
+                (count_frames, drive, tick_flow)
+                    .chain()
+                    .run_if(crate::loading::not_loading),
+            )
             .add_systems(Update, (sync_overlay, apply_fade));
         for s in [
             Screen::Boot,
@@ -135,6 +140,8 @@ fn spawn_fade_rects(mut commands: Commands) {
 /// (top colour, bottom colour, title, hint) for a screen.
 fn screen_style(s: Screen) -> (Color, Color, &'static str, &'static str) {
     match s {
+        // Never spawned (no OnEnter hook): the progress bar is `loading::ProgressScreenPlugin`.
+        Screen::Loading => (Color::BLACK, Color::BLACK, "", ""),
         Screen::Boot => (
             Color::srgb(0.1, 0.1, 0.1),
             Color::srgb(0.05, 0.05, 0.05),

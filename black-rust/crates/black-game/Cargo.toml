@@ -7,6 +7,7 @@ description = "The game app (Bevy shell, screens); the only crate that depends o
 
 [dependencies]
 black-core = { version = "0.1.0", path = "../black-core" }
+black-data = { version = "0.1.0", path = "../black-data" }
 black-text = { version = "0.1.0", path = "../black-text" }
 # Minimal feature set: 2D render + windowing + default font + webgl2. No 3D, audio, UI, gltf.
 bevy = { version = "0.20", default-features = false, features = ["2d"] }
