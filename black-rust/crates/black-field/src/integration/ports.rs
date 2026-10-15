@@ -609,6 +609,7 @@ pub const SOURCES: &[&[u32]] = &[
     crate::acmd2d::PORTED,
     crate::acmd2e::PORTED,
     crate::btl_setup::PORTED,
+    crate::buildmodel::PORTED,
     crate::calender::PORTED,
     crate::effect_encount::PORTED,
     crate::enc_pokeset::PORTED,
@@ -649,6 +650,9 @@ pub const SOURCES: &[&[u32]] = &[
     crate::player_event::PORTED,
     crate::player_grid::PORTED,
     crate::proclink::PORTED,
+    crate::proclink_event::PORTED,
+    crate::scenearea::PORTED,
+    crate::scenearea_loader::PORTED,
     crate::symbol_map::PORTED,
     crate::trainer_eye::PORTED,
     crate::weather::PORTED,
@@ -1800,6 +1804,12 @@ pub const PORTS: &[(u32, u16, &str)] = &[
     (0x0215_F0E8, 10, "field_skill"),
     (0x0215_F104, 10, "field_skill"),
     (0x0215_F118, 10, "field_skill"),
+    (0x0216_075C, 10, "proclink_event"),
+    (0x0216_07E0, 10, "proclink_event"),
+    (0x0216_0A28, 10, "proclink_event"),
+    (0x0216_0A4C, 10, "proclink_event"),
+    (0x0216_0A64, 10, "proclink_event"),
+    (0x0216_0A7C, 10, "proclink_event"),
     (0x0216_0A94, 10, "proclink"),
     (0x0216_0C88, 10, "proclink"),
     (0x0216_0D6C, 10, "proclink"),
@@ -2574,6 +2584,95 @@ pub const PORTS: &[(u32, u16, &str)] = &[
     (0x0218_B630, 21, "fieldmap_event"),
     (0x0218_B6AC, 21, "fieldmap_event"),
     (0x0218_B6F8, 21, "fieldmap_event"),
+    (0x0218_B754, 21, "buildmodel"),
+    (0x0218_B7F8, 21, "buildmodel"),
+    (0x0218_B83C, 21, "buildmodel"),
+    (0x0218_B88C, 21, "buildmodel"),
+    (0x0218_B8AC, 21, "buildmodel"),
+    (0x0218_B910, 21, "buildmodel"),
+    (0x0218_B924, 21, "buildmodel"),
+    (0x0218_B930, 21, "buildmodel"),
+    (0x0218_B974, 21, "buildmodel"),
+    (0x0218_B9FC, 21, "buildmodel"),
+    (0x0218_BA04, 21, "buildmodel"),
+    (0x0218_BA48, 21, "buildmodel"),
+    (0x0218_BA70, 21, "buildmodel"),
+    (0x0218_BA98, 21, "buildmodel"),
+    (0x0218_BACC, 21, "buildmodel"),
+    (0x0218_BB04, 21, "buildmodel"),
+    (0x0218_BB0C, 21, "buildmodel"),
+    (0x0218_BB64, 21, "buildmodel"),
+    (0x0218_BB78, 21, "buildmodel"),
+    (0x0218_BBD0, 21, "buildmodel"),
+    (0x0218_BBF4, 21, "buildmodel"),
+    (0x0218_BC00, 21, "buildmodel"),
+    (0x0218_BC10, 21, "buildmodel"),
+    (0x0218_BC1C, 21, "buildmodel"),
+    (0x0218_BC40, 21, "buildmodel"),
+    (0x0218_BC6C, 21, "buildmodel"),
+    (0x0218_BC8C, 21, "buildmodel"),
+    (0x0218_BCAC, 21, "buildmodel"),
+    (0x0218_BCB0, 21, "buildmodel"),
+    (0x0218_BCE4, 21, "buildmodel"),
+    (0x0218_BCF4, 21, "buildmodel"),
+    (0x0218_BD20, 21, "buildmodel"),
+    (0x0218_BD24, 21, "buildmodel"),
+    (0x0218_BD28, 21, "buildmodel"),
+    (0x0218_BD94, 21, "buildmodel"),
+    (0x0218_BDD8, 21, "buildmodel"),
+    (0x0218_BE84, 21, "buildmodel"),
+    (0x0218_BEE8, 21, "buildmodel"),
+    (0x0218_BF84, 21, "buildmodel"),
+    (0x0218_BFB4, 21, "buildmodel"),
+    (0x0218_C02C, 21, "buildmodel"),
+    (0x0218_C040, 21, "buildmodel"),
+    (0x0218_C08C, 21, "buildmodel"),
+    (0x0218_C0D8, 21, "buildmodel"),
+    (0x0218_C124, 21, "buildmodel"),
+    (0x0218_C150, 21, "buildmodel"),
+    (0x0218_C154, 21, "buildmodel"),
+    (0x0218_C1A4, 21, "buildmodel"),
+    (0x0218_C1C4, 21, "buildmodel"),
+    (0x0218_C23C, 21, "buildmodel"),
+    (0x0218_C290, 21, "buildmodel"),
+    (0x0218_C2E4, 21, "buildmodel"),
+    (0x0218_C350, 21, "buildmodel"),
+    (0x0218_C388, 21, "buildmodel"),
+    (0x0218_C3B0, 21, "buildmodel"),
+    (0x0218_C3E0, 21, "buildmodel"),
+    (0x0218_C438, 21, "buildmodel"),
+    (0x0218_C43C, 21, "buildmodel"),
+    (0x0218_C47C, 21, "buildmodel"),
+    (0x0218_C490, 21, "buildmodel"),
+    (0x0218_C4A0, 21, "buildmodel"),
+    (0x0218_C4EC, 21, "buildmodel"),
+    (0x0218_C518, 21, "buildmodel"),
+    (0x0218_C530, 21, "buildmodel"),
+    (0x0218_C54C, 21, "buildmodel"),
+    (0x0218_C574, 21, "buildmodel"),
+    (0x0218_C584, 21, "buildmodel"),
+    (0x0218_C638, 21, "buildmodel"),
+    (0x0218_C654, 21, "buildmodel"),
+    (0x0218_C674, 21, "buildmodel"),
+    (0x0218_C69C, 21, "buildmodel"),
+    (0x0218_C6D0, 21, "buildmodel"),
+    (0x0218_C6F4, 21, "buildmodel"),
+    (0x0218_C724, 21, "buildmodel"),
+    (0x0218_C7D8, 21, "buildmodel"),
+    (0x0218_C7F0, 21, "buildmodel"),
+    (0x0218_C860, 21, "buildmodel"),
+    (0x0218_C88C, 21, "buildmodel"),
+    (0x0218_C89C, 21, "buildmodel"),
+    (0x0218_C8B0, 21, "buildmodel"),
+    (0x0218_C8D8, 21, "buildmodel"),
+    (0x0218_C8FC, 21, "buildmodel"),
+    (0x0218_C910, 21, "buildmodel"),
+    (0x0218_C924, 21, "buildmodel"),
+    (0x0218_C934, 21, "buildmodel"),
+    (0x0218_C944, 21, "buildmodel"),
+    (0x0218_C990, 21, "buildmodel"),
+    (0x0218_C9A4, 21, "buildmodel"),
+    (0x0218_C9C4, 21, "buildmodel"),
     (0x0219_7C4C, 21, "mmdl_draw"),
     (0x0219_7C78, 21, "mmdl_draw"),
     (0x0219_7C9C, 21, "mmdl_draw"),
@@ -3476,6 +3575,38 @@ pub const PORTS: &[(u32, u16, &str)] = &[
     (0x021A_B504, 21, "map_attr"),
     (0x021A_B580, 21, "map_attr"),
     (0x021A_B5AC, 21, "map_attr"),
+    (0x021A_B5F4, 21, "scenearea"),
+    (0x021A_B624, 21, "scenearea"),
+    (0x021A_B634, 21, "scenearea"),
+    (0x021A_B650, 21, "scenearea"),
+    (0x021A_B660, 21, "scenearea"),
+    (0x021A_B75C, 21, "scenearea"),
+    (0x021A_B760, 21, "scenearea"),
+    (0x021A_B764, 21, "scenearea"),
+    (0x021A_B768, 21, "scenearea"),
+    (0x021A_B780, 21, "scenearea"),
+    (0x021A_B798, 21, "scenearea"),
+    (0x021A_B7C0, 21, "scenearea"),
+    (0x021A_B7E4, 21, "scenearea_loader"),
+    (0x021A_B81C, 21, "scenearea_loader"),
+    (0x021A_B840, 21, "scenearea_loader"),
+    (0x021A_B868, 21, "scenearea_loader"),
+    (0x021A_B880, 21, "scenearea_loader"),
+    (0x021A_B884, 21, "scenearea_loader"),
+    (0x021A_B888, 21, "scenearea_loader"),
+    (0x021A_B890, 21, "scenearea_loader"),
+    (0x021A_B908, 21, "scenearea_loader"),
+    (0x021A_B9FC, 21, "scenearea_loader"),
+    (0x021A_BA3C, 21, "scenearea_loader"),
+    (0x021A_BABC, 21, "scenearea_loader"),
+    (0x021A_BB54, 21, "scenearea_loader"),
+    (0x021A_BB78, 21, "scenearea_loader"),
+    (0x021A_BBA0, 21, "scenearea_loader"),
+    (0x021A_BBF0, 21, "scenearea_loader"),
+    (0x021A_BC14, 21, "scenearea_loader"),
+    (0x021A_BC38, 21, "scenearea_loader"),
+    (0x021A_BC5C, 21, "scenearea_loader"),
+    (0x021A_BD08, 21, "scenearea_loader"),
     (0x021A_CA38, 21, "namipoke"),
     (0x021A_CA5C, 21, "namipoke"),
     (0x021A_CB38, 21, "namipoke"),
@@ -5239,6 +5370,17 @@ pub fn call(env: &mut Env, addr: u32, a: &[u32]) -> u64 {
         0x0215_F118 => {
             (crate::field_skill::in_rect(env, a[0], a[1], a[2], a[3], a[4]) as u64) as u64
         }
+        0x0216_075C => (crate::proclink_event::new(env, a[0], a[1])) as u64,
+        0x0216_07E0 => (crate::proclink_event::proc_(env, a[0], a[1], a[2])) as u64,
+        0x0216_0A28 => {
+            ({
+                crate::proclink_event::rec_init(env, a[0], a[1], a[2], a[3], a[4], a[5]);
+                0
+            }) as u64
+        }
+        0x0216_0A4C => (crate::proclink_event::rec_a(env, a[0])) as u64,
+        0x0216_0A64 => (crate::proclink_event::rec_b(env, a[0])) as u64,
+        0x0216_0A7C => (crate::proclink_event::rec_c(env, a[0])) as u64,
         0x0216_0A94 => (crate::proclink::party_init(env, a[0], a[1], a[2], a[3])) as u64,
         0x0216_0C88 => (crate::proclink::party_return(env, a[0], a[1])) as u64,
         0x0216_0D6C => (crate::proclink::d4_init(env, a[0], a[1])) as u64,
@@ -7519,6 +7661,340 @@ pub fn call(env: &mut Env, addr: u32, a: &[u32]) -> u64 {
         0x0218_B630 => (crate::fieldmap_event::party_move_slot(env, a[0], a[1]) as u64) as u64,
         0x0218_B6AC => (crate::fieldmap_event::party_count_a0(env, a[0]) as u64) as u64,
         0x0218_B6F8 => (crate::fieldmap_event::jump_tiles_free(env, a[0], a[1]) as u64) as u64,
+        0x0218_B754 => (crate::buildmodel::new(env, a[0], a[1], a[2])) as u64,
+        0x0218_B7F8 => {
+            ({
+                crate::buildmodel::delete(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0218_B83C => {
+            ({
+                crate::buildmodel::update(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0218_B88C => {
+            ({
+                crate::buildmodel::draw(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0218_B8AC => {
+            ({
+                crate::buildmodel::load(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x0218_B910 => (crate::buildmodel::record_of(env, a[0], a[1])) as u64,
+        0x0218_B924 => (crate::buildmodel::record(env, a[0], a[1])) as u64,
+        0x0218_B930 => (crate::buildmodel::linked(env, a[0], a[1], a[2], a[3])) as u64,
+        0x0218_B974 => (crate::buildmodel::place_block(env, a[0], a[1], a[2], a[3])) as u64,
+        0x0218_B9FC => {
+            ({
+                crate::buildmodel::remove_thunk(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_BA04 => (crate::buildmodel::place_one(env, a[0], a[1], a[2], a[3])) as u64,
+        0x0218_BA48 => {
+            ({
+                crate::buildmodel::door_slot_clear(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_BA70 => {
+            ({
+                crate::buildmodel::door_slot_put(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_BA98 => (crate::buildmodel::door_by_code(env, a[0], a[1])) as u64,
+        0x0218_BACC => (crate::buildmodel::door_code(env, a[0], a[1])) as u64,
+        0x0218_BB04 => (crate::buildmodel::s_ptr(a[0])) as u64,
+        0x0218_BB0C => {
+            ({
+                crate::buildmodel::load_list(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x0218_BB64 => {
+            ({
+                crate::buildmodel::free_list(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0218_BB78 => {
+            ({
+                crate::buildmodel::build_map(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_BBD0 => (crate::buildmodel::index_of(env, a[0], a[1])) as u64,
+        0x0218_BBF4 => (crate::buildmodel::list_entry(env, a[0], a[1])) as u64,
+        0x0218_BC00 => (crate::buildmodel::list_entry2(env, a[0], a[1])) as u64,
+        0x0218_BC10 => (crate::buildmodel::hdr_entry(env, a[0], a[1])) as u64,
+        0x0218_BC1C => (crate::buildmodel::member_of(a[0])) as u64,
+        0x0218_BC40 => (crate::buildmodel::load_textures(env, a[0], a[1], a[2], a[3])) as u64,
+        0x0218_BC6C => {
+            ({
+                crate::buildmodel::free_textures(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0218_BC8C => (crate::buildmodel::hdr_count(env, a[0])) as u64,
+        0x0218_BCAC => (crate::buildmodel::hdr_of(a[0])) as u64,
+        0x0218_BCB0 => (crate::buildmodel::door_kind(env, a[0])) as u64,
+        0x0218_BCE4 => {
+            ({
+                crate::buildmodel::tod_init(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_BCF4 => {
+            ({
+                crate::buildmodel::tod_update(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0218_BD20 => (crate::buildmodel::tod_changed(env, a[0])) as u64,
+        0x0218_BD24 => (crate::buildmodel::tod_anim(env, a[0])) as u64,
+        0x0218_BD28 => {
+            ({
+                crate::buildmodel::load_sets(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_BD94 => {
+            ({
+                crate::buildmodel::free_sets(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0218_BDD8 => {
+            ({
+                crate::buildmodel::make_objs(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_BE84 => {
+            ({
+                crate::buildmodel::free_objs(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_BEE8 => {
+            ({
+                crate::buildmodel::load_set(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x0218_BF84 => {
+            ({
+                crate::buildmodel::free_set(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0218_BFB4 => {
+            ({
+                crate::buildmodel::make_obj(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x0218_C02C => {
+            ({
+                crate::buildmodel::init_off(env, a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C040 => {
+            ({
+                crate::buildmodel::init_all(env, a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C08C => {
+            ({
+                crate::buildmodel::init_tod(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C0D8 => {
+            ({
+                crate::buildmodel::obj_delete(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0218_C124 => {
+            ({
+                crate::buildmodel::obj_frame(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C150 => {
+            ({
+                crate::buildmodel::frame_none();
+                0
+            }) as u64
+        }
+        0x0218_C154 => {
+            ({
+                crate::buildmodel::frame_tod(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C1A4 => {
+            ({
+                crate::buildmodel::frame_all(env, a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C1C4 => {
+            ({
+                crate::buildmodel::frame_states(env, a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C23C => {
+            ({
+                crate::buildmodel::play_forward(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C290 => {
+            ({
+                crate::buildmodel::play_loop(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C2E4 => {
+            ({
+                crate::buildmodel::play_backward(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C350 => {
+            ({
+                crate::buildmodel::stop(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C388 => {
+            ({
+                crate::buildmodel::all_off(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0218_C3B0 => {
+            ({
+                crate::buildmodel::set_state(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x0218_C3E0 => {
+            ({
+                crate::buildmodel::state_proc(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x0218_C438 => {
+            ({
+                crate::buildmodel::state_none();
+                0
+            }) as u64
+        }
+        0x0218_C43C => (crate::buildmodel::stopped(env, a[0], a[1])) as u64,
+        0x0218_C47C => (crate::buildmodel::frame_of(env, a[0], a[1])) as u64,
+        0x0218_C490 => {
+            ({
+                crate::buildmodel::entry_clear(env, a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C4A0 => (crate::buildmodel::place(env, a[0], a[1], a[2], a[3])) as u64,
+        0x0218_C4EC => {
+            ({
+                crate::buildmodel::remove(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C518 => {
+            ({
+                crate::buildmodel::entry_remove(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C530 => (crate::buildmodel::entry_state(env, a[0])) as u64,
+        0x0218_C54C => {
+            ({
+                crate::buildmodel::entry_swap(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C574 => {
+            ({
+                crate::buildmodel::entry_set_state(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x0218_C584 => (crate::buildmodel::find_in_box(env, a[0], a[1], a[2], a[3])) as u64,
+        0x0218_C638 => (crate::buildmodel::first_in_box(env, a[0], a[1], a[2])) as u64,
+        0x0218_C654 => (crate::buildmodel::first_near(env, a[0], a[1], a[2])) as u64,
+        0x0218_C674 => (crate::buildmodel::entry_door_kind(env, a[0], a[1])) as u64,
+        0x0218_C69C => {
+            ({
+                crate::buildmodel::entry_set_anim(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x0218_C6D0 => {
+            ({
+                crate::buildmodel::entry_position(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C6F4 => (crate::buildmodel::entry_frame(env, a[0], a[1], a[2])) as u64,
+        0x0218_C724 => (crate::buildmodel::door_new(env, a[0], a[1])) as u64,
+        0x0218_C7D8 => (crate::buildmodel::door_new_near(env, a[0], a[1], a[2])) as u64,
+        0x0218_C7F0 => (crate::buildmodel::door_new_at(env, a[0], a[1], a[2])) as u64,
+        0x0218_C860 => {
+            ({
+                crate::buildmodel::door_delete(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0218_C88C => {
+            ({
+                crate::buildmodel::door_set(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x0218_C89C => {
+            ({
+                crate::buildmodel::door_mode(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0218_C8B0 => (crate::buildmodel::door_start(env, a[0], a[1])) as u64,
+        0x0218_C8D8 => (crate::buildmodel::door_restart(env, a[0])) as u64,
+        0x0218_C8FC => (crate::buildmodel::door_stopped_s(env, a[0], a[1])) as u64,
+        0x0218_C910 => (crate::buildmodel::door_stopped(env, a[0])) as u64,
+        0x0218_C924 => (crate::buildmodel::door_model_kind(env, a[0])) as u64,
+        0x0218_C934 => {
+            ({
+                crate::buildmodel::door_draw(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0218_C944 => (crate::buildmodel::door_se_of(env, a[0], a[1], a[2])) as u64,
+        0x0218_C990 => (crate::buildmodel::door_se(env, a[0], a[1])) as u64,
+        0x0218_C9A4 => (crate::buildmodel::door_play_se(env, a[0])) as u64,
+        0x0218_C9C4 => {
+            ({
+                crate::buildmodel::box_around(env, a[0], a[1]);
+                0
+            }) as u64
+        }
         0x0219_7C4C => {
             ({
                 crate::mmdl_draw::delete_draw(env, a[0]);
@@ -9771,6 +10247,92 @@ pub fn call(env: &mut Env, addr: u32, a: &[u32]) -> u64 {
         0x021A_B504 => (crate::map_attr::effect_kind(a[0]) as u64) as u64,
         0x021A_B580 => (crate::map_attr::ground_kind(a[0]) as u64) as u64,
         0x021A_B5AC => (crate::map_attr::enters(a[0], a[1]) as u64) as u64,
+        0x021A_B5F4 => (crate::scenearea::new(env, a[0], a[1], a[2])) as u64,
+        0x021A_B624 => {
+            crate::scenearea::delete(env, a[0]);
+            0u64
+        }
+        0x021A_B634 => {
+            crate::scenearea::set_list(env, a[0], a[1], a[2], a[3]);
+            0u64
+        }
+        0x021A_B650 => {
+            crate::scenearea::clear_list(env, a[0]);
+            0u64
+        }
+        0x021A_B660 => (crate::scenearea::update(env, a[0], a[1])) as u64,
+        0x021A_B75C => {
+            crate::scenearea::set_enabled(env, a[0], a[1]);
+            0u64
+        }
+        0x021A_B760 => (crate::scenearea::fieldsys(env, a[0])) as u64,
+        0x021A_B764 => (crate::scenearea::fieldmap(env, a[0])) as u64,
+        0x021A_B768 => (crate::scenearea::has_check(env, a[0], a[1])) as u64,
+        0x021A_B780 => (crate::scenearea::has_update(env, a[0], a[1])) as u64,
+        0x021A_B798 => (crate::scenearea::run_check(env, a[0], a[1], a[2], a[3], a[4])) as u64,
+        0x021A_B7C0 => (crate::scenearea::run_update(env, a[0], a[1], a[2], a[3], a[4])) as u64,
+        0x021A_B7E4 => (crate::scenearea_loader::new(env, a[0])) as u64,
+        0x021A_B81C => {
+            crate::scenearea_loader::delete(env, a[0]);
+            0u64
+        }
+        0x021A_B840 => {
+            crate::scenearea_loader::load(env, a[0], a[1], a[2], a[3]);
+            0u64
+        }
+        0x021A_B868 => {
+            crate::scenearea_loader::free_list(env, a[0]);
+            0u64
+        }
+        0x021A_B880 => (crate::scenearea_loader::list(env, a[0])) as u64,
+        0x021A_B884 => (crate::scenearea_loader::count(env, a[0])) as u64,
+        0x021A_B888 => (crate::scenearea_loader::callback_table()) as u64,
+        0x021A_B890 => (crate::scenearea_loader::check_ring(env, a[0], a[1], a[2])) as u64,
+        0x021A_B908 => {
+            crate::scenearea_loader::cam_circle(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_B9FC => {
+            crate::scenearea_loader::cam_fixed(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_BA3C => (crate::scenearea_loader::check_rect(env, a[0], a[1], a[2])) as u64,
+        0x021A_BABC => {
+            crate::scenearea_loader::cam_lerp(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_BB54 => {
+            crate::scenearea_loader::cam_lerp_pre(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_BB78 => {
+            crate::scenearea_loader::cam_lerp_post(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_BBA0 => {
+            crate::scenearea_loader::rect_pos(env, a[0], a[1], a[2], a[3]);
+            0u64
+        }
+        0x021A_BBF0 => {
+            crate::scenearea_loader::cam_lerp_all(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_BC14 => {
+            crate::scenearea_loader::cam_lerp_all_pre(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_BC38 => {
+            crate::scenearea_loader::cam_lerp_all_post(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_BC5C => {
+            crate::scenearea_loader::cam_offset(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_BD08 => {
+            crate::scenearea_loader::cam_fov(env, a[0], a[1], a[2]);
+            0u64
+        }
         0x021A_CA38 => (crate::namipoke::res_create(env, a[0], a[1]) as u64) as u64,
         0x021A_CA5C => {
             ({
