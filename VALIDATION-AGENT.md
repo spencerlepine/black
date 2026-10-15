@@ -63,7 +63,7 @@ start of each one.
 | Unicorn python                                                  | `/tmp/blk/venv/bin/python -I` (recreate: `sh $R/black-rust/tools/doctor.sh`)                                                                                                                                                                                                                                                                                    |
 | Rust toolchain                                                  | `. ~/.cargo/env`                                                                                                                                                                                                                                                                                                                                                |
 | **Your scratch worktree**                                       | `/tmp/blk/wt-validate` (detached checkout of the commit under test; §4 step 2)                                                                                                                                                                                                                                                                                  |
-| **Your build/output dirs**                                      | `export CARGO_TARGET_DIR=/tmp/blk/target-validate BLK_OUT=/tmp/blk/out-validate JOBS=8`. Keep `target-validate` between runs (incremental builds); delete it only if `df -h /tmp /` shows < 10 GB free on either.                                                                                                                                           |
+| **Your build/output dirs**                                      | `export CARGO_TARGET_DIR=/tmp/blk/target-validate BLK_OUT=/tmp/blk/out-validate JOBS=4`. Keep `target-validate` between runs (incremental builds); delete it only if `df -h /tmp /` shows < 10 GB free on either.                                                                                                                                           |
 | **Your ledger files** (the only files you write outside `/tmp`) | `$R/validation/COMMITS.csv`, `$R/validation/VALIDATION.md`, `$R/validation/RUNS.md`                                                                                                                                                                                                                                                                             |
 
 Environment: shells do **not** persist between tool calls, so §4 step 0 writes
@@ -74,7 +74,7 @@ starts with `. /tmp/blk/out-validate/env.sh`. Its contents:
 . ~/.cargo/env
 export R=$HOME/workplace/black # the main checkout (source of truth)
 export BLACK_ROM_BUILD=$R/black-rom/build/black.us
-export CARGO_TARGET_DIR=/tmp/blk/target-validate BLK_OUT=/tmp/blk/out-validate JOBS=8
+export CARGO_TARGET_DIR=/tmp/blk/target-validate BLK_OUT=/tmp/blk/out-validate JOBS=4
 export W=/tmp/blk/wt-validate/black-rust
 export RUN=R-<YYYYMMDD-HHMM>   # your run id, generated in step 0
 export TIP=<short sha>         # origin/main tip under test, from step 0
