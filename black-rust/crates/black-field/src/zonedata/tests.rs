@@ -125,7 +125,8 @@ impl ZoneHooks for Rom<'_> {
     fn fun_0201441c(&mut self, v: u32) -> u32 {
         self.stubs.call(0x0201_441c, &mut [Arg::V(v)])
     }
-    fn fun_02020e08(&mut self, a: u32, b: u32, c: u32) -> u32 {
+    // the spec records r0-r2 (the size in r3 is the constant 10)
+    fn fun_02020e08(&mut self, a: u32, b: u32, c: u32, _size: u32) -> u32 {
         self.stubs
             .call(0x0202_0e08, &mut [Arg::V(a), Arg::V(b), Arg::V(c)])
     }

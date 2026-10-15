@@ -347,7 +347,9 @@ fn grid_check_at<E: FieldEnv>(
             let heap = env.r16(req) as u32;
             return env.call(0x021C_FC14, &mut [CArg::V(gs), CArg::P(heap), CArg::V(r)]);
         }
-        if env.callv(0x021C_D440, &[fm]) == 1 {
+        // r1 = the request (`add r1, sp, 0x28` before the branch): the callee stores a u16 at its `+0` (F12 found
+        // the port dropped it; the spec's stub lists r0 only)
+        if env.call(0x021C_D440, &mut [CArg::V(fm), CArg::X(req)]) == 1 {
             return script_event(env, req, 0x271B);
         }
         let zone = env.r16(req + 0x10) as u32;

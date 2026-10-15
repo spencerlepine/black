@@ -32,6 +32,8 @@ pub mod fldmmdl;
 pub mod game_data;
 pub mod height_ex;
 pub mod hooks;
+#[cfg(test)]
+mod integration;
 pub mod land_data_patch;
 pub mod map_attr;
 pub mod map_matrix;

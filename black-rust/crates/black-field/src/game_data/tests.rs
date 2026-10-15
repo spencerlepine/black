@@ -197,7 +197,8 @@ impl GameDataHooks for Rom<'_> {
     fn fun_020124f4(&mut self, heap: u32) -> u32 {
         self.stubs.call(0x0201_24f4, &mut [Arg::V(heap)])
     }
-    fn fun_020261e4(&mut self, heap: u32) -> u32 {
+    fn fun_020261e4(&mut self, heap: u32, _gd: u32) -> u32 {
+        // the spec's stub logs r0 only (`args=v`)
         self.stubs.call(0x0202_61e4, &mut [Arg::V(heap)])
     }
     fn fun_0202b4bc(&mut self, gd: u32, heap: u32) -> u32 {
@@ -311,7 +312,8 @@ impl GameDataHooks for Rom<'_> {
     fn fun_02007b44(&mut self, save: u32) -> u32 {
         self.stubs.call(0x0200_7b44, &mut [Arg::V(save)])
     }
-    fn fun_020085d4(&mut self, x: u32) -> u32 {
+    // the spec records r0 (r1 passes through)
+    fn fun_020085d4(&mut self, x: u32, _b: u32) -> u32 {
         self.stubs.call(0x0200_85d4, &mut [Arg::V(x)])
     }
     fn fun_0200873c(&mut self, handle: u32) -> u32 {
@@ -509,7 +511,7 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             0
         }),
         0x0201_2BF8 => with_rom(c, &[], |h, v| gd_call_0200c44c(h, v[0], v[1]) as u64),
-        0x0201_2FBC => with_rom(c, &[], |h, v| gd_call_020085d4(h, v[0]) as u64),
+        0x0201_2FBC => with_rom(c, &[], |h, v| gd_call_020085d4(h, v[0], 0) as u64),
         0x0201_2FF0 => with_rom(c, &[0x020A7298], |h, v| {
             global_handle_set(h, v[0]);
             0

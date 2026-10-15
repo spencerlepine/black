@@ -271,8 +271,10 @@ pub trait GameDataHooks: HeapHooks {
     fn fun_02031324(&mut self, heap: u32) -> u32;
     /// C: `FUN_020124F4(heap)`: allocate and fill the GAMEDATA record (`game_data` constructor).
     fn fun_020124f4(&mut self, heap: u32) -> u32;
-    /// C: `FUN_020261E4(heap)`: create the object stored at `sys + 0x24`.
-    fn fun_020261e4(&mut self, heap: u32) -> u32;
+    /// C: `FUN_020261E4(heap, gamedata)`: create the object stored at `sys + 0x24`. `FUN_02011F28` leaves the
+    /// GAMEDATA in r1 (`adds r1, r0, 0` after `FUN_020124F4`) and the callee reads it (its MYSTATUS: F12 found
+    /// the port dropped it; the spec's stub logs r0 only).
+    fn fun_020261e4(&mut self, heap: u32, gd: u32) -> u32;
     /// C: `FUN_0202B4BC(gamedata, heap)`: create the object stored at `sys + 0x2C`.
     fn fun_0202b4bc(&mut self, gd: u32, heap: u32) -> u32;
     /// C: `FUN_02035138(proc, arg)`: register a callback (the thunk target of `FUN_02012248`).
@@ -341,8 +343,8 @@ pub trait GameDataHooks: HeapHooks {
     fn fun_02009448(&mut self, save: u32) -> u32;
     /// C: `FUN_02007B44(save)`.
     fn fun_02007b44(&mut self, save: u32) -> u32;
-    /// C: `FUN_020085D4(x)`.
-    fn fun_020085d4(&mut self, x: u32) -> u32;
+    /// C: `FUN_020085D4(x, b)` (`b`: what `FUN_02012FBC` passes on in r1).
+    fn fun_020085d4(&mut self, x: u32, b: u32) -> u32;
     /// C: `FUN_0200873C(handle)`.
     fn fun_0200873c(&mut self, handle: u32) -> u32;
     /// C: `FUN_02008374(x)`.
@@ -365,8 +367,9 @@ pub trait ZoneHooks: HeapHooks {
     fn fun_0204944c(&mut self, handle: u32, a: u32, offset: u32, size: u32, dst: u32);
     /// C: `FUN_0201441C(v)`: the byte table lookup of `event_work::table_0209e050`.
     fn fun_0201441c(&mut self, v: u32) -> u32;
-    /// C: `FUN_02020E08(0xD, a, b)`: load archive 0xD entry data (allocated); returns its address.
-    fn fun_02020e08(&mut self, a: u32, b: u32, c: u32) -> u32;
+    /// C: `FUN_02020E08(0xD, heap, offset, size)`: load `size` bytes of archive 0xD at `offset` (allocated);
+    /// returns its address. `size` 0 loads to the end of the file (F12: the caller passes 10 in r3).
+    fn fun_02020e08(&mut self, a: u32, b: u32, c: u32, size: u32) -> u32;
 }
 
 /// One argument of an unported callee reached through [`FieldEnv::call`], in the callee's own

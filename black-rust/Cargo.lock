@@ -2026,6 +2026,8 @@ version = "0.1.0"
 dependencies = [
  "black-core",
  "black-fndiff",
+ "black-script",
+ "black-text",
 ]
 
 [[package]]

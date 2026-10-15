@@ -474,7 +474,7 @@ pub fn zone_table_c<E: MemEnv>(env: &mut E, id: u32) -> u32 {
 }
 
 /// C: `FUN_0201407C(heap, kind, season)`: for an id in 2..0xD2 add `c` (mod 0x10000), wrap at 282, then
-/// `FUN_02020E08(0xD, a, b * 10)` (archive 0xD load), whose result it returns: the area data the FIELDMAP keeps at
+/// `FUN_02020E08(0xD, a, b * 10, 10)` (archive 0xD load: the 10-byte record; r3 is the multiplier), whose result it returns: the area data the FIELDMAP keeps at
 /// `+0xC` (`fieldmap::create`; tail `bl` then `pop`, V-0022 audit).
 pub fn load_area_data<H: ZoneHooks>(h: &mut H, a: u32, b: u32, c: u32) -> u32 {
     let mut b = b;
@@ -484,7 +484,7 @@ pub fn load_area_data<H: ZoneHooks>(h: &mut H, a: u32, b: u32, c: u32) -> u32 {
     if b >= 0x11A {
         b = 0;
     }
-    h.fun_02020e08(0xD, a, b.wrapping_mul(10))
+    h.fun_02020e08(0xD, a, b.wrapping_mul(10), 10)
 }
 
 /// C: `FUN_020140B4`: tail call of the heap free routine.

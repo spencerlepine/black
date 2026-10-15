@@ -228,7 +228,7 @@ pub fn sys_init<H: GameDataHooks>(h: &mut H, sys: u32, heap: u32, a2: u32) {
     let id = h.r16(sys) as u32;
     h.w32(sys + 0x1C, gd);
     h.w32(sys + 0x20, 0);
-    let v = h.fun_020261e4(id);
+    let v = h.fun_020261e4(id, gd);
     h.w32(sys + 0x24, v);
     let gd = h.r32(sys + 0x1C);
     h.w32(sys + 0x28, 0);
@@ -620,10 +620,11 @@ pub fn gd_call_0200c44c<H: GameDataHooks>(h: &mut H, gd: u32, a: u32) -> u32 {
     h.fun_0200c44c(x, a)
 }
 
-/// C: `FUN_02012FBC`: tail call `FUN_020085D4(*(gd + 0x6AC))`.
-pub fn gd_call_020085d4<H: GameDataHooks>(h: &mut H, gd: u32) -> u32 {
+/// C: `FUN_02012FBC(gd, b)`: tail call `FUN_020085D4(*(gd + 0x6AC), b)`; r1 passes through unchanged (the
+/// play-time update `FUN_02021464` adds its seconds this way; F12).
+pub fn gd_call_020085d4<H: GameDataHooks>(h: &mut H, gd: u32, b: u32) -> u32 {
     let x = h.r32(gd + 0x6AC);
-    h.fun_020085d4(x)
+    h.fun_020085d4(x, b)
 }
 
 /// C: `FUN_02012FF0`: the global `0x020A7298` = `v`.
