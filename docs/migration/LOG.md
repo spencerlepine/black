@@ -194,3 +194,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-15 ~00:55Z** — Usage ORANGE 83% → DRAIN. F12 reported done (field session + Unicorn diff equal, 5 port bugs fixed), committed + rebased; its generated ports table breaks on the new main ports → back to the worker. F3b, F2b running.
 
 - **2026-10-15** — Merged F12 (field integration + whole-session Unicorn diff; 5 port bugs fixed; generator fixed after the rebase, trace unchanged). Gate + touched areas on main running.
+
+- **2026-10-15 ~01:15Z** — Usage RED 94% → WRAP UP NOW: F3b and F2b stopped mid mutation run (work kept in their worktrees; check for leftover mutants on resume). USAGE-CHECK cron deleted; PAUSED until 03:25Z (resume cron 15a13356). Window 22:25–01:15Z: merged F11, V-0034, F12 + validator run; weekly 63%.
