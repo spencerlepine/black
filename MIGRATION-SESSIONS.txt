@@ -57,3 +57,12 @@ Prompt cache (main):   162 requests · 98% of input tokens from cache · 2 misse
        claude-fable-5-1:  2.9k input, 229.9k output, 36.5m cache read, 535.1k cache write ($31.35)
 
 [e4214233-fd35-437e-b478-76c67eaa0318]
+   Total cost:            $840.55
+   Total duration (API):  15h 52m 52s
+   Total duration (wall): 1d 11h 33m
+   Total code changes:    76693 lines added, 2342 lines removed
+   Usage by model:
+        claude-opus-5-5:  2.1m input, 4.4m output, 2.3b cache read, 42.6m cache write ($778.24)
+       claude-haiku-5-5:  1.4k input, 26.2k output, 503.9k cache read, 562.9k cache write ($0.0887)
+      claude-sonnet-5-5:  572.3k input, 928.3k output, 195.9m cache read, 5.0m cache write ($62.22)
+   Prompt cache (main):   247 requests · 99% of input tokens from cache · 2 misses (last 5h 51m 5s ago — likely cause: idle past the 1h TTL, 1.6m tokens re-cached) · cold — idle 3h 47m 30s, next turn re-caches ~917.3k tokens
