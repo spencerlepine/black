@@ -212,3 +212,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-15 08:25Z** — Resumed by the one-shot cron: session 4%, weekly 74%, extra usage unchanged. USAGE-CHECK 8e10ee03. Spawned only 2 Sonnet workers (Z24 FX/VEC math port — new item; G3 asset loading) since weekly is about to hit 75%.
 
 - **2026-10-15** — Merged Z24 (6657bae, black-core fx 24 fns). Divider-model disagreement with B19 battle_diff → Z25.
+
+- **2026-10-15 ~09:05Z** — Usage weekly ORANGE 75% → DRAIN (session 10%, extra usage unchanged). Running Z25, G3, validator finish; then pause until the weekly reset 2026-10-20 13:05Z.
