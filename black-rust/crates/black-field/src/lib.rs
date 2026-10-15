@@ -54,6 +54,7 @@ pub mod player_core;
 pub mod player_event;
 pub mod player_grid;
 pub mod proclink;
+pub mod proclink_event;
 pub mod season;
 pub mod symbol_map;
 #[cfg(test)]

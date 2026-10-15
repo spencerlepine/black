@@ -1577,6 +1577,44 @@ Mutation spot check (`check-fn.sh --fn`, each reverted; `/tmp/blk/f14/mutate.py`
 table order, FX_Mul rounding 0x800, move weight 0x1000, party-list mode index 12, bag action 11, pause flag mask, arc end `> 15`,
 parameter byte +0xD, item next action 2, party field 0xA9).
 
+## F14b: `proclink_event` (6/6): spec + port, and the 10.21 / 10.22 file boundary
+
+New spec area `tools/rom-diff/specs/black-field/proclink_event.spec` (set `field`), `src/proclink_event.rs`, verified with
+`tools/check-fn.sh black-field proclink_event --per-function` (`JOBS=1` on macOS). Range `0x0216075C..0x02160A92`, 6 functions: the
+proclink event constructor `0216075C` ([`proclink_event::new`]), its proc `021607E0` (`proc_`: a 14-state GMEVENT machine), and the
+callback record `02160A28` (fill) / `02160A4C` / `02160A64` / `02160A7C` (call callback A / B / C, 1 when none).
+
+| spec hash (`--all`, plain) | area hash (ported) | coverage (own body) |
+|---|---|---|
+| 2365e10b26b75ec7 | 3a9ee5e59cf1779a | every instruction (the unexecuted halfwords are the second halves of `bl` / `blx` pairs and the 14 jump-table words of `021607E0`) |
+
+**File boundary (F1 rows 10.21 / 10.22 corrected).** `__FILE__` strings: `"event_shortcut_menu.c"` (0x02172960) is used only by
+`0215FF54` (the one allocation of that file), `"event_field_proclink.c"` (0x02172978) first by `02160A94`. `0216075C..02160A92` has no
+`__FILE__`; it is the code that reads the PROCLINK table (literals 0x021712CC.. at 0x02160A10..0x02160A24) and calls the table's
+callbacks, so it belongs with them. The code before it is the shortcut menu's: its GMEVENT procs call the shortcut menu (ov21
+`021C4F7C`, `021C51A0`, `021C5224`, `021C5334`, `021C5380`, `021C5394`) and the helpers `0216070C` (also called by `021600C6` /
+`021602D0`) and `021606DC`; the function ending at `0x02160758` (a party loop) is the last of them. So: `event_shortcut_menu.c`
+= `0215FF54..02160758` (row 10.21; by F1's count of 37 entries, 31 are left for U10), `event_field_proclink.c` = `0216075C..02161D96` (the
+F14 `proclink` area's 46 functions plus these 6). Nothing of `0216075C..02160A92` is UI: no function is left over for U10 from this range.
+Ghidra's "functions" `02160822`, `02160864`, `021608B0`, `02160948`, `0216097C`, `021609CC` are cases of the jump table in `021607E0`.
+
+The table (ROM `0x021712CC`, `proclink_event::TABLE`, 0x18-byte entries): `+0` overlay, `+4` proc data (0 = nothing to run; entry 4
+only), `+8` init, `+0xC` return, `+0x10` special (only entry 4, the report), `+0x14` free (veneer `0216171C` = Heap_Free, or `02161534`
+for the item screen). States of the event: 0 start; 1 dispatch on the kind (`pl+0x10`, 4 at the start); 2 write the result `S+0x24`
+and finish; 3-5 the special callback; 6-7 / 8-0xA field teardown and restore through child events; 0xB build the app's parameter
+(init, free the previous one) and start its sub-proc (`020120B4(gs, overlay, proc data, param)`); 0xC wait; 0xD read the result back
+(return): 4 = switch to the app `pl+0xC`, else free the parameter and tear down. Hooks (by address, `force` stubs): GMEVENT
+`020122C0` / `020124E8` / `02012374`, sub-procs `020120B4` / `020120F0`, the child events `021BE8D4` / `020144DC` / `020145CC` /
+`021BE92C`, `0201210C`, `02188DA0` / `02188DB0`, snapshots `02164480` / `0215E840`, Heap_Free and the table's callbacks.
+
+Spec domain: the app index is drawn over 0..18 and the table over 19 entries (the real one has 12, the original does not bound the
+index). State 3 is only drawn together with an entry that has a `special` callback (the original calls it unconditionally). Details in
+the spec header. `table_matches_rom` compares the real table's shape with the overlay.
+
+Mutation spot check (`check-fn.sh --fn`, each reverted; `/tmp/blk/f14b/mut.py`): 14 of 14 caught (kind dispatch bound, result range
+`<= 3`, free callback index, initial kind, record offset B, state 5 kind test, busy test, parameter clear after free, null proc data,
+`special` test, state 2 kind 1, record owner / arg order, id width, overlay word).
+
 ## F11: `calender` (14/14), `field_light` (29/29), `weather` (16/16), `weather_task` (60/60): specs + ports
 
 Four new spec areas under `tools/rom-diff/specs/black-field/` (set `field`), one per original file, all ported and verified with
