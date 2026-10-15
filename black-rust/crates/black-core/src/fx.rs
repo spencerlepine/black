@@ -15,12 +15,10 @@
 //! (`0x020A5B38`, 129 `s16`) are computed ([`sin`], [`cos`], [`atan_entry`]); the tests compare all entries with the
 //! ROM image. Nothing from the ROM is embedded.
 //!
-//! Verification: the functions in [`PORTED`] (no hardware unit) run under `tools/check-fn.sh black-core fx
-//! --per-function`; the hardware users in [`HW_PORTED`] cannot, because the generic harness leaves the I/O page
-//! as plain memory. They are verified with `tools/rom-diff/fx_hw_diff.py` (the same emulator with the divider
-//! modelled) against the recorded hash in `fx/tests.rs`.
+//! Verification: every function in [`PORTED`], the hardware users too, runs under `tools/check-fn.sh black-core fx
+//! --per-function` (Z25: the shared emulator models the divider and square-root unit, `tools/rom-diff/emu.py`).
 
-/// Functions verified by `check-fn` (no divider / square-root unit).
+/// Functions verified by `check-fn`.
 pub const PORTED: &[u32] = &[
     0x0207_AF50, // MTX_RotAxis33
     0x0207_B65C, // MTX_RotAxis43
@@ -34,10 +32,6 @@ pub const PORTED: &[u32] = &[
     0x0207_CB68, // VEC_Fx16CrossProduct
     0x0207_CEE4, // VEC_MultAdd
     0x0207_D184, // FX_AcosIdx
-];
-
-/// Functions that use the divider / square-root unit (verified by `fx_hw_diff.py`).
-pub const HW_PORTED: &[u32] = &[
     0x0207_C768, // FX_Div
     0x0207_C778, // FX_Inv
     0x0207_C7B4, // FX_Sqrt

@@ -79,17 +79,16 @@ Deviations: `Mt19937::next_u32` compares `index` as a signed int like the origin
 is out of bounds there, a panic here). `seed_lcg64` passes 20 zero bytes for the first SHA-1 update
 (the original hashes uninitialised stack), and the diff stubs hash updates by length only.
 
-`fx` (Z24): NitroSDK fixed-point math of the ARM9 main image (0x0207AF50..0x0207D184), pure Rust, all
-`fx32`/`fx16` vectors and matrices as arrays. Verified per function: the 12 functions without the divider
-unit (`MTX_RotAxis33` 0207AF50, `MTX_RotAxis43` 0207B65C, `MTX_MultVec43` 0207BC08, `VEC_Add` 0207C9D0,
-`VEC_Subtract` 0207CA00, `VEC_Fx16Add` 0207CA30, `VEC_DotProduct` 0207CA68, `VEC_Fx16DotProduct` 0207CAA4,
-`VEC_CrossProduct` 0207CAE8, `VEC_Fx16CrossProduct` 0207CB68, `VEC_MultAdd` 0207CEE4, `FX_AcosIdx` 0207D184) by
-`tools/check-fn.sh black-core fx` (area hash 87bb15503d1d4eb8). The 12 hardware users (`FX_Div` 0207C768, `FX_Inv`
-0207C778, `FX_Sqrt` 0207C7B4, `FX_InvSqrt` 0207C7E8, 32-bit quotient / remainder 0207C958 / 0207C994, `VEC_Mag`
-0207CBD0, `VEC_Fx16Mag` 0207CC30, `VEC_Normalize` 0207CCA4, `VEC_Fx16Normalize` 0207CDB8, `VEC_Distance` 0207CF3C,
-`FX_Atan2Idx` 0207CFB8) cannot run under `check-fn` (the I/O page is plain memory there); `tools/rom-diff/fx_hw_diff.py`
-runs the original under Unicorn with the divider / sqrt unit modelled (`fx::div32` / `div64_32` / `div64_64` /
-`sqrt32` / `sqrt64`, GBATEK rules; the registers are not part of the API) and the recorded hashes are checked by
-`fx::tests::hw_match_rom_model`. `FX_SinCosTable_` (0x020A1B38) and the arctangent table (0x020A5B38, 129 entries)
+`fx` (Z24, Z25): NitroSDK fixed-point math of the ARM9 main image (0x0207AF50..0x0207D184), pure Rust, all
+`fx32`/`fx16` vectors and matrices as arrays. All 24 functions are verified per function by `tools/check-fn.sh black-core
+fx --per-function`: `MTX_RotAxis33` 0207AF50, `MTX_RotAxis43` 0207B65C, `MTX_MultVec43` 0207BC08, `FX_Div` 0207C768,
+`FX_Inv` 0207C778, `FX_Sqrt` 0207C7B4, `FX_InvSqrt` 0207C7E8, 32-bit quotient / remainder 0207C958 / 0207C994, `VEC_Add`
+0207C9D0, `VEC_Subtract` 0207CA00, `VEC_Fx16Add` 0207CA30, `VEC_DotProduct` 0207CA68, `VEC_Fx16DotProduct` 0207CAA4,
+`VEC_CrossProduct` 0207CAE8, `VEC_Fx16CrossProduct` 0207CB68, `VEC_Mag` 0207CBD0, `VEC_Fx16Mag` 0207CC30, `VEC_Normalize`
+0207CCA4, `VEC_Fx16Normalize` 0207CDB8, `VEC_MultAdd` 0207CEE4, `VEC_Distance` 0207CF3C, `FX_Atan2Idx` 0207CFB8,
+`FX_AcosIdx` 0207D184 (area hash f705a50d28bf8858). Since Z25 the emulator models the divider / sqrt unit
+(`tools/rom-diff/emu.py`, shared with battle_diff / field_diff), so the 12 hardware users run directly; `tools/rom-diff/fx_hw_diff.py`
+is retired. The port mirrors the unit as `fx::div32` / `div64_32` / `div64_64` / `sqrt32` / `sqrt64` (GBATEK rules; the
+registers are not part of the API). `FX_SinCosTable_` (0x020A1B38) and the arctangent table (0x020A5B38, 129 entries)
 are computed (`fx::sin` / `cos` / `atan_entry`) and checked against the ROM by `tables_match_rom`. `fx_atan2_idx`
 panics where the original would read outside its table (`i32::MIN` operands).

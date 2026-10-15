@@ -289,5 +289,15 @@ class PtrArgs(unittest.TestCase):
             S.BARE_P.clear()
 
 
+class HwMathAndRange(unittest.TestCase):
+    """Z25: the shared divider / sqrt model (emu.py) and the `range LO HI` lint; same vectors as black-fndiff spec.rs."""
+
+    def test_range_lint(self):
+        self.assertEqual(S.range_lint_selftest(), [])
+
+    def test_math_model(self):
+        self.assertEqual(S.math_selftest_fails(), [])
+
+
 if __name__ == "__main__":
     unittest.main()

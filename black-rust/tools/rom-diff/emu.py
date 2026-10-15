@@ -2,10 +2,11 @@
 
 Reads the decomp's build products read-only; nothing is written back.
 """
+import math
 import os
 import struct
 import sys
-from unicorn import Uc, UC_ARCH_ARM, UC_MODE_ARM, UC_HOOK_CODE
+from unicorn import Uc, UC_ARCH_ARM, UC_MODE_ARM, UC_HOOK_CODE, UC_HOOK_MEM_READ
 from unicorn.arm_const import *
 
 B = os.environ.get("BLACK_ROM_BUILD", os.path.join(os.path.dirname(__file__), "../../../black-rom/build/black.us"))
@@ -37,6 +38,93 @@ def overlay_base(n):
     return next(s["addr"] for s in secs if s["name"] == "OVY_%d" % n and s["type"] == mkelf.SHT_PROGBITS)
 
 
+# Z25: the one model of the DS hardware divider and square-root unit (I/O registers 0x04000280..0x040002BF):
+# DIVCNT 0x04000280 (bits 0-1 mode: 0 = 32/32, 1 = 64/32, 2 or 3 = 64/64; bit 15 busy), DIV_NUMER 0x04000290 (64 bit),
+# DIV_DENOM 0x04000298 (64 bit), DIV_RESULT 0x040002A0, DIVREM_RESULT 0x040002A8, SQRTCNT 0x040002B0 (bit 0 = 64-bit
+# parameter; bit 15 busy), SQRT_RESULT 0x040002B4, SQRT_PARAM 0x040002B8 (64 bit). The unit is never busy (bit 15 reads 0).
+# Rules (GBATEK "DS Maths"): truncating signed division, remainder = numerator - quotient * denominator.
+#  * division by zero: quotient = -1 if numerator >= 0 else +1, remainder = numerator; in mode 0 (32/32) the upper 32 bits of
+#    DIV_RESULT are inverted (0x00000000_FFFFFFFF for n >= 0, 0xFFFFFFFF_00000001 for n < 0);
+#  * MIN / -1 wraps: mode 0 gives 0x00000000_80000000 (the exact 2^31), modes 1 and 2 give i64::MIN; remainder 0;
+#  * sqrt = floor(sqrt(param)), param = low 32 bits unless SQRTCNT bit 0.
+# `div_unit` / `sqrt_unit` are pure; `HwMath` (Emu, battle_diff, field_diff) and the Rust black-core `fx` ports use these rules.
+DIV_BASE, DIV_END = 0x04000280, 0x040002BF
+
+
+def _s(v, bits):
+    v &= (1 << bits) - 1
+    return v - (1 << bits) if v >> (bits - 1) else v
+
+
+def div_unit(cnt, num, den):
+    """(DIV_RESULT, DIVREM_RESULT) as unsigned 64-bit values, from DIVCNT, DIV_NUMER and DIV_DENOM."""
+    cnt &= 3
+    n = _s(num, 32) if cnt == 0 else _s(num, 64)
+    d = _s(den, 64) if cnt == 2 or cnt == 3 else _s(den, 32)
+    if d == 0:
+        q, rem = (1 if n < 0 else -1), n
+        if cnt == 0:  # 32/32: the upper word of the quotient is inverted
+            q = 0xFFFFFFFF00000001 if n < 0 else 0x00000000FFFFFFFF
+    else:
+        q = abs(n) // abs(d)
+        if (n < 0) != (d < 0):
+            q = -q
+        rem = n - q * d
+    return q & 0xFFFFFFFFFFFFFFFF, rem & 0xFFFFFFFFFFFFFFFF
+
+
+def sqrt_unit(cnt, param):
+    """SQRT_RESULT from SQRTCNT and SQRT_PARAM."""
+    param &= 0xFFFFFFFFFFFFFFFF
+    if not cnt & 1:
+        param &= 0xFFFFFFFF
+    return math.isqrt(param)
+
+
+def math_selftest():
+    """Edge-case vectors of the model (GBATEK); raises AssertionError."""
+    M = 0xFFFFFFFFFFFFFFFF
+    assert div_unit(0, 7, 2) == (3, 1)
+    assert div_unit(0, (-7) & M, 2) == ((-3) & M, (-1) & M)
+    assert div_unit(0, 5, 0) == (0x00000000FFFFFFFF, 5)  # 32/32 by zero: upper word inverted
+    assert div_unit(0, (-5) & 0xFFFFFFFF, 0) == (0xFFFFFFFF00000001, (-5) & M)
+    assert div_unit(0, 0x80000000, 0xFFFFFFFF) == (0x80000000, 0)  # MIN / -1 (32/32)
+    assert div_unit(0, 0xFFFFFFFF80000000, 0xFFFFFFFFFFFFFFFF) == (0x80000000, 0)  # operands are 32 bit in mode 0
+    assert div_unit(1, 1 << 63, 0xFFFFFFFF) == (1 << 63, 0)  # i64::MIN / -1 wraps
+    assert div_unit(1, 7, 0) == (M, 7) and div_unit(1, (-7) & M, 0) == (1, (-7) & M)
+    assert div_unit(2, (-9) & M, 4) == ((-2) & M, (-1) & M)
+    assert div_unit(2, 1 << 63, M) == (1 << 63, 0)
+    assert div_unit(2, 1 << 40, 0x100000001) == (0xFF, (1 << 40) - 0xFF * 0x100000001)  # a 64-bit denominator
+    assert div_unit(1, 1 << 40, 0x100000001) == (1 << 40, 0)  # mode 1 uses the low 32 bits of the denominator: 1
+    assert div_unit(3, 9, 2) == (4, 1)  # mode 3 = 64/64
+    assert div_unit(4, 7, 2) == (3, 1)  # only bits 0-1 of DIVCNT select the mode (bit 2 is ignored)
+    assert (sqrt_unit(0, 0), sqrt_unit(0, 15), sqrt_unit(0, 16), sqrt_unit(0, 0x1FFFFFFFF)) == (0, 3, 4, 65535)
+    assert sqrt_unit(1, M) == 0xFFFFFFFF and sqrt_unit(1, 1 << 40) == 1 << 20
+
+
+class HwMath:
+    """The divider / sqrt unit on the Unicorn instance `uc`: `update` computes the result registers from the operand
+    registers; `hook` (a UC_HOOK_MEM_READ on the block) does it at each read, `update` alone suits write-triggered users."""
+
+    def __init__(self, uc):
+        self.uc = uc
+
+    def update(self):
+        uc = self.uc
+        cnt = struct.unpack("<H", bytes(uc.mem_read(0x04000280, 2)))[0]
+        num, den = struct.unpack("<QQ", bytes(uc.mem_read(0x04000290, 8)) + bytes(uc.mem_read(0x04000298, 8)))
+        q, rem = div_unit(cnt, num, den)
+        uc.mem_write(0x040002A0, struct.pack("<QQ", q, rem))
+        uc.mem_write(0x04000280, struct.pack("<H", cnt & 0x7FFF))
+        scnt = struct.unpack("<H", bytes(uc.mem_read(0x040002B0, 2)))[0]
+        p = struct.unpack("<Q", bytes(uc.mem_read(0x040002B8, 8)))[0]
+        uc.mem_write(0x040002B4, struct.pack("<I", sqrt_unit(scnt, p)))
+        uc.mem_write(0x040002B0, struct.pack("<H", scnt & 0x7FFF))
+
+    def hook(self, uc, access, addr, size, value, _):
+        self.update()
+
+
 class Emu:
     """`overlays=None`: ARM9 main + overlay 93 (battle), as always. `overlays=[10, 11, ...]`:
     ARM9 main + those overlays at their link addresses (a `tools/re/sets.txt` set); `ovy` is empty."""
@@ -56,6 +144,9 @@ class Emu:
             # F2a-spec: the I/O register page, so field code that toggles a register (EXMEMCNT 0x04000204 around card
             # access) runs; a spec owns and hashes such a register with `global 04000204 4` (an undeclared write is a stray).
             uc.mem_map(0x04000000, 0x2000)
+            # Z25: the divider / square-root unit is modelled (computed on every read of 0x04000280..0x040002BF)
+            self.hwmath = HwMath(uc)
+            uc.hook_add(UC_HOOK_MEM_READ, self.hwmath.hook, begin=DIV_BASE, end=DIV_END)
             for n in overlays:
                 blob = open(f"{B}/OVY_{n}.sbin", "rb").read()
                 base = overlay_base(n)

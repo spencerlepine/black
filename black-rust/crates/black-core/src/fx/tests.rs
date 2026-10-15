@@ -1,5 +1,5 @@
 use super::*;
-use black_fndiff::{run_suite, Case, Rng, Suite};
+use black_fndiff::{run_suite, Case, Suite};
 
 // Written by tools/check-fn.sh only, after the Rust hashes matched the ROM run.
 // fndiff-recorded-begin
@@ -7,6 +7,12 @@ const RECORDED: &[(u32, &str)] = &[
     (0x0207AF50, "1c58a2eb1681341e"),
     (0x0207B65C, "3fa5c8814ccb6a19"),
     (0x0207BC08, "c72856297aeb6109"),
+    (0x0207C768, "c88b679dc7288239"),
+    (0x0207C778, "f984f51593b346d5"),
+    (0x0207C7B4, "05e06a0085e9798e"),
+    (0x0207C7E8, "2cb324d89cf9659c"),
+    (0x0207C958, "65ad7133f1c83410"),
+    (0x0207C994, "02c483431347bccf"),
     (0x0207C9D0, "b3464002c617e9f4"),
     (0x0207CA00, "1cc0ef4165de7674"),
     (0x0207CA30, "ed407ee85f71b5e2"),
@@ -14,7 +20,13 @@ const RECORDED: &[(u32, &str)] = &[
     (0x0207CAA4, "5d563a3cd386ac37"),
     (0x0207CAE8, "a34429ee5f08bdda"),
     (0x0207CB68, "f4286e1346b69900"),
+    (0x0207CBD0, "5ec1c7d7a6b8b552"),
+    (0x0207CC30, "ce2c158e2a1b1673"),
+    (0x0207CCA4, "d785c13595db2f79"),
+    (0x0207CDB8, "19cce8f0a1c32c67"),
     (0x0207CEE4, "6fb4d24c63675122"),
+    (0x0207CF3C, "98b48469e1f4c759"),
+    (0x0207CFB8, "7dc3a638b67d945d"),
     (0x0207D184, "ad3015007275a5a6"),
 ];
 // fndiff-recorded-end
@@ -93,11 +105,31 @@ fn call(addr: u32, c: &mut Case) -> u64 {
             0
         }
         0x0207_D184 => fx_acos_idx(c.vals[0] as i32) as u64,
+        0x0207_C768 => fx_div(c.vals[0] as i32, c.vals[1] as i32) as u32 as u64,
+        0x0207_C778 => fx_inv(c.vals[0] as i32) as u32 as u64,
+        0x0207_C7B4 => fx_sqrt(c.vals[0] as i32) as u32 as u64,
+        0x0207_C7E8 => fx_inv_sqrt(c.vals[0] as i32) as u32 as u64,
+        0x0207_C958 => cp_div32(c.vals[0] as i32, c.vals[1] as i32) as u32 as u64,
+        0x0207_C994 => cp_mod32(c.vals[0] as i32, c.vals[1] as i32) as u32 as u64,
+        0x0207_CBD0 => vec_mag(&v3(c.region("v"))) as u32 as u64,
+        0x0207_CC30 => vec_fx16_mag(&v16(c.region("v"))) as u32 as u64,
+        0x0207_CCA4 => {
+            let r = vec_normalize(&v3(c.region("v")));
+            put3(c.region_mut("dst"), &r);
+            0
+        }
+        0x0207_CDB8 => {
+            let r = vec_fx16_normalize(&v16(c.region("v")));
+            put16(c.region_mut("dst"), &r);
+            0
+        }
+        0x0207_CF3C => vec_distance(&v3(c.region("a")), &v3(c.region("b"))) as u32 as u64,
+        0x0207_CFB8 => fx_atan2_idx(c.vals[0] as i32, c.vals[1] as i32) as u16 as u64,
         _ => unreachable!("{addr:#010x} is PORTED but not wired into the test"),
     }
 }
 
-/// Every ported function without the hardware unit against the original (`tools/check-fn.sh black-core fx`).
+/// Every ported function (the divider / sqrt users too: the emulator models the unit) against the original (`tools/check-fn.sh black-core fx`).
 #[test]
 fn fndiff_match_rom() {
     run_suite(
@@ -143,154 +175,6 @@ fn tables_match_rom() {
             i16::from_le_bytes([main[e], main[e + 1]]),
             "atan entry {i}"
         );
-    }
-}
-
-// ---------------------------------------------------------------- hardware users
-
-const BOUND: [u32; 23] = [
-    0,
-    1,
-    0xFFFF_FFFF,
-    0x7FFF_FFFF,
-    0x8000_0000,
-    0x8000_0001,
-    0x1000,
-    0xFFFF_F000,
-    0x800,
-    0xFFFF_F800,
-    0x10000,
-    0xFFFF_0000,
-    0x4000_0000,
-    0xC000_0000,
-    2,
-    3,
-    0xFFFF_FFFE,
-    0x1001,
-    0xFFFF_EFFF,
-    0x7FFF,
-    0x8000,
-    0xFFFF_8000,
-    0xFFFF,
-];
-
-/// Same draw as `word` in `tools/rom-diff/fx_hw_diff.py`.
-fn word(r: &mut Rng) -> u32 {
-    match r.next() % 8 {
-        0 | 1 => BOUND[(r.next() % 23) as usize],
-        2 | 3 => r.next(),
-        4 => r.next() % 0x20000,
-        5 => (r.next() % 0x20000).wrapping_neg(),
-        6 => r.next() & 0xFF_FFFF,
-        _ => BOUND[(r.next() % 23) as usize]
-            .wrapping_add(r.next() % 9)
-            .wrapping_sub(4),
-    }
-}
-
-struct Fnv(u64);
-
-impl Fnv {
-    fn w(&mut self, v: u32) {
-        for b in v.to_le_bytes() {
-            self.0 = (self.0 ^ b as u64).wrapping_mul(1099511628211);
-        }
-    }
-}
-
-/// Port results for the 3000 inputs of `fx_hw_diff.py`, hashed like it.
-fn hw_hash(addr: u32) -> String {
-    let mut r = Rng::new(addr);
-    let mut h = Fnv(14695981039346656037);
-    for _ in 0..3000 {
-        match addr {
-            0x0207_C768 | 0x0207_C958 | 0x0207_C994 => {
-                let (a, b) = (word(&mut r) as i32, word(&mut r) as i32);
-                h.w(match addr {
-                    0x0207_C768 => fx_div(a, b),
-                    0x0207_C958 => cp_div32(a, b),
-                    _ => cp_mod32(a, b),
-                } as u32);
-            }
-            0x0207_C778 | 0x0207_C7B4 | 0x0207_C7E8 => {
-                let x = word(&mut r) as i32;
-                h.w(match addr {
-                    0x0207_C778 => fx_inv(x),
-                    0x0207_C7B4 => fx_sqrt(x),
-                    _ => fx_inv_sqrt(x),
-                } as u32);
-            }
-            0x0207_CBD0 | 0x0207_CC30 => {
-                let w = [word(&mut r), word(&mut r), word(&mut r)];
-                h.w(if addr == 0x0207_CBD0 {
-                    vec_mag(&w.map(|x| x as i32))
-                } else {
-                    vec_fx16_mag(&w.map(|x| x as u16 as i16))
-                } as u32);
-            }
-            0x0207_CCA4 => {
-                let w = [word(&mut r), word(&mut r), word(&mut r)];
-                for x in vec_normalize(&w.map(|x| x as i32)) {
-                    h.w(x as u32);
-                }
-            }
-            0x0207_CDB8 => {
-                let w = [word(&mut r), word(&mut r), word(&mut r)];
-                for x in vec_fx16_normalize(&w.map(|x| x as u16 as i16)) {
-                    h.w(x as u16 as u32);
-                }
-            }
-            0x0207_CF3C => {
-                let w: Vec<i32> = (0..6).map(|_| word(&mut r) as i32).collect();
-                h.w(vec_distance(&[w[0], w[1], w[2]], &[w[3], w[4], w[5]]) as u32);
-            }
-            0x0207_CFB8 => {
-                let fix = |x: u32| if x == 0x8000_0000 { 0x8000_0001 } else { x } as i32;
-                let (y, x) = (fix(word(&mut r)), fix(word(&mut r)));
-                h.w(fx_atan2_idx(y, x) as u16 as u32);
-            }
-            _ => unreachable!(),
-        }
-    }
-    format!("{:016x}", h.0)
-}
-
-/// Hashes printed by `tools/rom-diff/fx_hw_diff.py` (the original code under Unicorn with the divider / sqrt unit modelled).
-const HW_RECORDED: &[(u32, &str)] = &[
-    (0x0207C768, "d0d495166a4ad55e"),
-    (0x0207C778, "9ad34aefe1aede94"),
-    (0x0207C7B4, "d1e40d5845d690e3"),
-    (0x0207C7E8, "3af0bf6685ef1f28"),
-    (0x0207C958, "40888aa497bef33b"),
-    (0x0207C994, "01c13a135254e586"),
-    (0x0207CBD0, "0abe14f05561eb19"),
-    (0x0207CC30, "4d3f18229bb92e8c"),
-    (0x0207CCA4, "be16f5e30525440b"),
-    (0x0207CDB8, "e8c719c23276f1f8"),
-    (0x0207CF3C, "67c4b4a8c745f6ab"),
-    (0x0207CFB8, "92387acd14cda12e"),
-];
-
-/// The hardware users equal the ROM run of `fx_hw_diff.py` (recorded hashes; the script needs the ROM, this test does not).
-#[test]
-fn hw_match_rom_model() {
-    assert_eq!(
-        HW_RECORDED.len(),
-        super::HW_PORTED.len(),
-        "one recorded hash per HW_PORTED function"
-    );
-    for &(a, want) in HW_RECORDED {
-        assert!(super::HW_PORTED.contains(&a));
-        assert_eq!(hw_hash(a), want, "{a:#010x}");
-    }
-}
-
-#[test]
-fn print_hw_hashes() {
-    if std::env::var("FX_PRINT_HW").is_ok() {
-        for &a in super::HW_PORTED {
-            println!("HW {a:08x} {}", hw_hash(a));
-        }
     }
 }
 

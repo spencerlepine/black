@@ -31,7 +31,7 @@ fn 021ccaa8 ret=none [mode=arm] [inputs=200]
   `ret - address(argK)` (0 stays 0) and the port returns the offset (0 = null).
 * Scalar types: u8 u16 u32 s8 s16 s32 (the register holds the zero/sign-extended value).
 * Generators (scalar `arg` and `fix`): `any` (edge-biased: 0, 1, 0xFF, <0x100, <0x10000, full),
-  `range LO HI` (inclusive), `near N D` (N-D..N+D, for boundaries), `oneof a b c`, `const V`,
+  `range LO HI` (inclusive; Z25: `HI < LO`, or a span of 2^32 or more, is an error in both svflow.py and black-fndiff, which used to draw differently), `near N D` (N-D..N+D, for boundaries), `oneof a b c`, `const V`,
   `mask M`, `addrof (work|argK|globalK) [OFS]` (the fixed address of a region; no random draw),
   `alt GEN || GEN || ...` (B10a-spec: one draw picks an alternative uniformly, then that
   alternative draws; e.g. `alt near 2990 24 || range 0 2900` = near the cap or anywhere below).

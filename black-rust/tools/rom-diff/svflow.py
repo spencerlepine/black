@@ -38,7 +38,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from emu import B, RET, STACK_ZERO_HI, STACK_ZERO_LO, Emu, Rng  # noqa: E402
+from emu import B, RET, STACK_ZERO_HI, STACK_ZERO_LO, Emu, Rng, math_selftest, DIV_BASE, DIV_END  # noqa: E402
 from bpp import Env, mix, random_bpp, SIZE as BPP_SIZE  # noqa: E402
 
 M = 0xFFFFFFFF
@@ -149,7 +149,12 @@ def parse_gen(tok, line):
         return Gen(kind, [int(tok[1], 0), parse_gen(tok[2:], line)])
     if kind == "any":
         return Gen("any", [])
-    if kind in ("range", "near"):
+    if kind == "range":  # Z25: HI < LO (as integers; a negative LO wraps like any number) is an error, not a different draw per parser
+        lo, hi = int(tok[1], 0), int(tok[2], 0)
+        if hi < lo or hi - lo >= 1 << 32:
+            raise ValueError("bad generator: `range LO HI` needs LO <= HI and HI - LO < 2^32 (got %s %s): %s" % (tok[1], tok[2], line))
+        return Gen(kind, [lo, hi])
+    if kind == "near":
         return Gen(kind, [int(tok[1], 0), int(tok[2], 0)])
     if kind == "oneof":
         return Gen("oneof", [int(x, 0) for x in tok[1:]])
@@ -799,7 +804,10 @@ ALLOW = {0x0209C2B0, 0x0209C054, 0x0209C074, 0x02082BCC, 0x02082D44, 0x02082AC0,
          # 0203efc8 memcmp(a, b, n) (byte difference or 0)
          0x02082A48, 0x0203EFC8,
          # F6a-spec: 02082c60 memset(dst, v, n) (byte fill; mmdl_move 021631c0 clears its 0x1C-byte ATTR INFO with it)
-         0x02082C60} | {int(x, 16) for x in os.environ.get("SVFLOW_ALLOW", "").replace(",", " ").split()}
+         0x02082C60,
+         # Z25-spec: the divider / sqrt helpers inside black-core `fx` (0207c848 .. 0207c930: start a division / sqrt, read the result
+         # rounded); real code on the ROM side by design (the divider is modelled in emu.py), inlined in fx.rs (`result_fx`, `div64_32`)
+         0x0207C848, 0x0207C86C, 0x0207C8A0, 0x0207C8D0, 0x0207C904, 0x0207C930} | {int(x, 16) for x in os.environ.get("SVFLOW_ALLOW", "").replace(",", " ").split()}
 
 # B10-spec3: callees that run as real ROM code by design in a spec with `env bpp` (events; see the header of events.spec).
 # The Rust ports reproduce them (inlined or ported elsewhere), so an equal area hash verifies their effect:
@@ -836,6 +844,11 @@ class Runner:
                 if not any(lo <= pg <= hi for lo, hi in mapped):
                     e.uc.mem_map(pg, 0x1000)
                     mapped.append((pg, pg + 0xFFF))
+        self.hw = getattr(e, "hwmath", None)
+        if self.hw is not None:
+            # Z25: the divider / sqrt unit (emu.py) is part of the machine, not memory the function owns: its operand writes are not
+            # strays (the Rust ports are pure) and it is cleared before every input, so a result cannot depend on the previous call.
+            self.owned.append((DIV_BASE, DIV_END + 1))
         for st in fs.stubs:
             if st.addr in active_stubs:
                 e.stub(st.addr, make_stub(st, self.ctx))
@@ -975,6 +988,8 @@ class Runner:
             e.wbytes(self.buf_addr(i), b)
         for (ga, _), b in zip(fs.globals, gl):
             e.wbytes(ga, b)
+        if self.hw is not None:
+            e.wbytes(DIV_BASE, bytes(DIV_END + 1 - DIV_BASE))
         self.dirty.clear()  # the stack window and the registers are reset by Emu.call (Z19)
         fault = None
         ret = None
@@ -1118,6 +1133,31 @@ def order_check(fs, active_stubs):
     return sorted(bad)
 
 
+def range_lint_selftest():
+    """Z25 vectors: `range LO HI` with HI < LO is rejected (also a span of 2^32 or more); LO == HI, a negative LO that wraps
+    (`range -5 5`) and the full word (`range 0 0xFFFFFFFF`) are fine. Same vectors as `range_lint_vectors` in black-fndiff spec.rs."""
+    fails = []
+    for tok, ok in ((["range", "5", "5"], True), (["range", "0", "0xFFFFFFFF"], True), (["range", "-5", "5"], True),
+                    (["range", "10", "5"], False), (["range", "1", "0"], False), (["range", "0xFFFFFFFF", "0"], False),
+                    (["range", "-1", "0xFFFFFFFF"], False)):
+        try:
+            parse_gen(tok, " ".join(tok))
+            got = True
+        except ValueError:
+            got = False
+        if got != ok:
+            fails.append("range lint: %s %s" % (" ".join(tok), "rejected" if ok else "accepted"))
+    return fails
+
+
+def math_selftest_fails():
+    try:
+        math_selftest()
+    except AssertionError as ex:
+        return ["divider / sqrt model: " + (str(ex) or "assertion failed")]
+    return []
+
+
 def selftest():
     """Z19 reset probes on hand-written code, then the order check on the function that found
     the leak (server1 021b6848 reads the caller's saved r3 through a stack buffer) and on the
@@ -1154,6 +1194,8 @@ def selftest():
     e.wbytes(a, struct.pack("<HHHH", 0x18C0, 0x9900, 0x1840, 0x4770))  # adds r0,r0,r3; ldr r1,[sp]; adds r0,r0,r1; bx lr
     if e.call(a, 5, 0, 0, 7, stack_args=(9,))[0] != 21:
         fails.append("arguments r0/r3/stack word 0 not passed")
+    fails += range_lint_selftest()  # Z25: `range LO HI` with HI < LO is rejected (mirrored in black-fndiff spec.rs)
+    fails += math_selftest_fails()  # Z25: divider / sqrt model edge cases (emu.py; mirrored in black-core fx tests)
     fails += pick_any_selftest()  # Z23: `pick+W:` parity vectors (mirrored in black-fndiff stub.rs)
     fails += ptr_selftest()  # B18: `ptr` stub arguments + bare_p_lint vectors (mirrored in black-fndiff stub.rs)
     battle_bare_p("")  # B18: the lint over every repository spec (B18b: every crate's too; fills BARE_P)

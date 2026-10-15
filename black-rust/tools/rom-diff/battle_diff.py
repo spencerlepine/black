@@ -350,40 +350,19 @@ class Battle:
         self.io_unknown[addr] = self.io_unknown.get(addr, 0) + 1
 
     def _math(self):
-        """DIVCNT / DIV_NUMER / DIV_DENOM -> DIV_RESULT / DIVREM_RESULT, SQRTCNT / SQRT_PARAM ->
-        SQRT_RESULT (both always ready); division by 0 gives the hardware's +-1 / numerator."""
-        def s64(v):
-            return v - (1 << 64) if v >> 63 else v
-
-        def s32(v):
-            v &= M32
-            return v - (1 << 32) if v >> 31 else v
-        cnt = self.r16(0x04000280) & 3
-        num = struct.unpack("<Q", self.rb(0x04000290, 8))[0]
-        den = struct.unpack("<Q", self.rb(0x04000298, 8))[0]
-        if cnt == 0:  # 32 / 32
-            n, d = s32(num), s32(den)
-        elif cnt == 1:  # 64 / 32
-            n, d = s64(num), s32(den)
-        else:  # 64 / 64
-            n, d = s64(num), s64(den)
-        if d == 0:
-            q = -1 if n >= 0 else 1
-            rem = n
-        else:
-            q = abs(n) // abs(d)
-            if (n < 0) != (d < 0):
-                q = -q
-            rem = n - q * d
-        self.uc.mem_write(0x040002A0, struct.pack("<Q", q & ((1 << 64) - 1)))
-        self.uc.mem_write(0x040002A8, struct.pack("<Q", rem & ((1 << 64) - 1)))
-        self.w16(0x04000280, self.r16(0x04000280) & ~0x8000)
-        scnt = self.r16(0x040002B0) & 1
-        p = struct.unpack("<Q", self.rb(0x040002B8, 8))[0]
-        if not scnt:
-            p &= M32
-        self.w32(0x040002B4, math.isqrt(p))
-        self.w16(0x040002B0, self.r16(0x040002B0) & ~0x8000)
+        """DIVCNT / DIV_NUMER / DIV_DENOM -> DIV_RESULT / DIVREM_RESULT, SQRTCNT / SQRT_PARAM -> SQRT_RESULT (both always
+        ready), computed on a write. Z25: the one shared model, emu.py `div_unit` / `sqrt_unit` (GBATEK edge cases: division
+        by zero, MIN / -1, the inverted upper word in 32/32 mode)."""
+        from emu import div_unit, sqrt_unit
+        cnt = self.r16(0x04000280)
+        num, den = struct.unpack("<QQ", bytes(self.uc.mem_read(0x04000290, 16)))
+        q, rem = div_unit(cnt, num, den)
+        self.uc.mem_write(0x040002A0, struct.pack("<QQ", q, rem))
+        self.w16(0x04000280, cnt & ~0x8000)
+        scnt = self.r16(0x040002B0)
+        p = struct.unpack("<Q", bytes(self.uc.mem_read(0x040002B8, 8)))[0]
+        self.w32(0x040002B4, sqrt_unit(scnt, p))
+        self.w16(0x040002B0, scnt & ~0x8000)
 
     # ---------------------------------------------------------------- shims
     def _install_shims(self):

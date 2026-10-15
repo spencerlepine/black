@@ -51,7 +51,10 @@ impl Gen {
             }
             "xrel" => Gen::XRel(num(t[1]) as usize, Box::new(Gen::parse(&t[2..]))),
             "any" => Gen::Any,
-            "range" => Gen::Range(num(t[1]), num(t[2])),
+            "range" => {
+                range_check(t[1], t[2]);
+                Gen::Range(num(t[1]), num(t[2]))
+            }
             "near" => Gen::Near(num(t[1]), num(t[2])),
             "oneof" => Gen::OneOf(t[1..].iter().map(|x| num(x)).collect()),
             "const" => Gen::Const(num(t[1])),
@@ -217,6 +220,28 @@ fn pick_any(kind: &str, p: &str, val: u32) -> u32 {
         return val & mask;
     }
     vs[crate::mix(val, 0xC0DE) as usize % vs.len()] as u32
+}
+
+/// Z25: `range LO HI` needs LO <= HI as integers (a leading `-` is a negative integer that wraps into the word, as in
+/// svflow.py) and HI - LO < 2^32; svflow.py and this parser used to draw differently for HI < LO, so both reject it.
+fn range_check(lo: &str, hi: &str) {
+    let signed = |s: &str| -> i64 {
+        let (neg, t) = match s.trim().strip_prefix('-') {
+            Some(t) => (true, t),
+            None => (false, s.trim()),
+        };
+        let v = num(t) as i64;
+        if neg {
+            -v
+        } else {
+            v
+        }
+    };
+    let (l, h) = (signed(lo), signed(hi));
+    assert!(
+        h >= l && h - l < 1 << 32,
+        "fndiff spec: bad generator: `range LO HI` needs LO <= HI and HI - LO < 2^32 (got {lo} {hi})"
+    );
 }
 
 /// `int(x, 0)` for a list value that may not fit 32 bits (`pick+W:` rejects it instead of wrapping).
@@ -423,4 +448,25 @@ pub(crate) fn parse_spec(text: &str) -> Vec<FnSpec> {
         }
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn ok(t: &[&str]) -> bool {
+        std::panic::catch_unwind(|| Gen::parse(t)).is_ok()
+    }
+
+    /// Z25: the same vectors as `range_lint_selftest` in tools/rom-diff/svflow.py (run by `svflow.py --selftest`).
+    #[test]
+    fn range_lint_vectors() {
+        assert!(ok(&["range", "5", "5"]));
+        assert!(ok(&["range", "0", "0xFFFFFFFF"]));
+        assert!(ok(&["range", "-5", "5"]));
+        assert!(!ok(&["range", "10", "5"]));
+        assert!(!ok(&["range", "1", "0"]));
+        assert!(!ok(&["range", "0xFFFFFFFF", "0"]));
+        assert!(!ok(&["range", "-1", "0xFFFFFFFF"]));
+    }
 }

@@ -19,6 +19,13 @@ python3 -m venv /tmp/blk/venv && /tmp/blk/venv/bin/pip install unicorn
   0x02EF0000..0x02F01000 zero-filled; see `Emu.reset_cpu`). `Emu.stub(addr, fn)` replaces an undecompiled callee with a Python
   function. The return honours interworking: Unicorn picks Thumb from bit 0 of the value
   written to PC.
+- `emu.py` also holds the one model of the DS hardware divider / square-root unit (Z25; `div_unit`, `sqrt_unit`, `HwMath`, I/O
+  0x04000280..0x040002BF). An `Emu(overlays=[...])` (check-fn field / set images) computes the result registers on every read of the
+  block; `battle_diff.py` and `field_diff.py` call the same `div_unit` / `sqrt_unit` on a write. Rules (GBATEK): truncating signed
+  division in modes 32/32, 64/32, 64/64; division by zero gives quotient -1 (numerator >= 0) or +1, remainder = numerator, and in
+  32/32 mode the upper 32 bits of DIV_RESULT are inverted; `MIN / -1` wraps; the unit is never busy. `svflow.py` owns the block (no
+  stray) and clears it before each input. `svflow.py --selftest` runs the edge-case vectors (`math_selftest`). `fx_hw_diff.py`
+  (Z24) is retired: `black-core fx.spec` runs the 12 divider users directly.
 - `gen.py` has one function per Rust fuzz test. Each one copies its Rust test's generator
   (xorshift32 seeding, call order, hashed values) exactly, and its stubs behave like the Rust
   test mocks.
