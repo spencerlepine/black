@@ -1,4 +1,4 @@
 # Phase Z — Foundations (do first, all SEQ)
 
 Part of the master checklist (moved out of `MIGRATION-AGENT.md` section 6 on 2026-10-13). Status markers and rules: [§5](../../MIGRATION-AGENT.md). Format: `- [status] ID — TAG — description — deps: … — notes`. A done-note longer than ~400 chars is cut here and kept in full in `../log/<ID>.md`. Finished items are moved out by `tools/archive-checklist.py` (stub in `DONE.md`, full line in `archive/`).
-
+- [~] Z24 (worktree-agent-a9b55ebc86a0bd2bd, 2026-10-15) — PAR — black-core: port the NitroSDK FX/VEC/MTX fixed-point math used by the field ports (F11 list 0207CB68, 0207CAA4, 0207D184, 0207B65C, 0207BC08, 0207CCA4, 0207CDB8; F3b: VEC_Normalize, VEC_Mag, FX_Div, FX_AcosIdx, FX_Atan2Idx, FX_Sqrt …; FX_SinCosTable_ 0x020A1B38) as a verified black-core area, then list which field hooks can now call it — deps: none
