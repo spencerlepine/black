@@ -202,3 +202,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-15** — Validator R-20261015-0326 (5ebce73..22b42dd): clean; F12 port fixes confirmed in the disassembly, field diff equal (32 s warm), tail-call scan → OPEN.md. Spawned F14b.
 
 - **2026-10-15** — Merged F14b (proclink_event 6/6; F1-SPLIT rows 10.21/10.22 corrected by the coordinator).
+
+- **2026-10-15 ~05:00Z** — Usage session 70% (≥ temporary 65%) → DRAIN; weekly 73%; extra usage unchanged. Settings: worktree-cleanup allow-list extended (b39f590, human request).

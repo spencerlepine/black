@@ -23,6 +23,6 @@ _2026-10-15T04:16:46Z, commit 679da78, `python3 -I tools/progress.py`._
 - **Running (cap 3):** F3b (resumed), F2b (resumed), U0b (Sonnet, worktree-agent-a408f9840baf7be61: overworld/title savestates).
 - **Next:** G-phase (G3, G6, G7, G8, G9), tail-call register audit (F12 finding).
 - **Blocked:** none. B16 flake: B17 fixed `ro_snap` keying; 3/3 full black-battle suites green on main after merge (root cause not proven, OPEN.md).
-- **Usage guard:** RUN (GREEN 6% session / 64% weekly at 03:25Z; USAGE-CHECK cron d2f2aea9 every 10 min; session thresholds ORANGE 65% / RED 80% (weekly stays 75/90), drain on any extra-usage increase until the human answers HUMAN.md 2026-10-15).
+- **Usage guard:** DRAINING (session 70% ≥ the temporary 65% threshold) since ~05:00Z — no new spawns; F3b, F2b, U0b finish and merge; then pause until the session reset 08:20Z (or the weekly reset if weekly reaches 75%). Extra usage 73%, unchanged.
 - **Disk:** 39 GB free (the human cleared space 2026-10-14); worker cap 3 (human, 2026-10-14: CPU).
 - **RE tooling:** Ghidra headless + rizin + rea (MCP) via `tools/re/` (`ENV.md` "RE workflow"); `tools/doctor.sh` green on macOS. Sets battle, field, bag (ov70), party-summary (ov90/91/131/134) decompiled under /tmp/blk/re/.
