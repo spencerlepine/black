@@ -117,7 +117,17 @@ def unwrap(expr, name):
         expr = expr[:m.start()] + inner[:cut] + expr[e:]
 
 
-def convert(expr, path, mod, fns, memexpr):
+def unit_fns(src):
+    """The `pub fn`s of `src` without a return type."""
+    out = set()
+    for m in re.finditer(r"^pub fn (\w+)(<[^>]*>)?\(", src, re.M):
+        end = balanced(src, m.end() - 1, "(", ")")
+        if end is not None and "->" not in src[end:src.index("{", end)]:
+            out.add(m.group(1))
+    return out
+
+
+def convert(expr, path, mod, fns, memexpr, units=()):
     """The arm as code over `env` / `a`, or None."""
     if BAD.search(expr):
         return None
@@ -148,8 +158,9 @@ def convert(expr, path, mod, fns, memexpr):
     for m2 in re.finditer(r"(?<![:.\w])([A-Za-z_][A-Za-z0-9_]*)\b(?!\s*(\(|::|!))", expr):
         if m2.group(1) not in ok:
             return None
-    if expr.startswith("{"):
-        return "(%s) as u64" % expr
+    m = re.match(r"%s::%s::(\w+)\(" % (re.escape(path), re.escape(mod)), expr)
+    if m and m.group(1) in units and balanced(expr, m.end() - 1, "(", ")") == len(expr):
+        return "{ %s; 0u64 }" % expr
     return "(%s) as u64" % expr
 
 
@@ -174,6 +185,7 @@ def generate():
                 if am:
                     sigs[int((am.group(1) or am.group(2)).replace("_", ""), 16)] = m
             fns = set(re.findall(r"^pub fn (\w+)", s, re.M))
+            units = unit_fns(s)
             tf = os.path.join(os.path.dirname(f), mod, "tests.rs")
             tarms = arms(open(tf).read()) if os.path.exists(tf) else {}
             for addr in sorted(ported):
@@ -183,7 +195,7 @@ def generate():
                 if addr in CALL_AS:
                     tarms[addr] = CALL_AS[addr]
                 if addr in tarms:
-                    code = convert(tarms[addr], path, mod, fns, memexpr)
+                    code = convert(tarms[addr], path, mod, fns, memexpr, units)
                 if code is None and addr in sigs:
                     code = from_signature(sigs[addr], path, mod, memexpr)
                 if code is None:

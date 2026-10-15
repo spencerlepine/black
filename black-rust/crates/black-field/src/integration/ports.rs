@@ -609,6 +609,7 @@ pub const SOURCES: &[&[u32]] = &[
     crate::acmd2d::PORTED,
     crate::acmd2e::PORTED,
     crate::btl_setup::PORTED,
+    crate::calender::PORTED,
     crate::effect_encount::PORTED,
     crate::enc_pokeset::PORTED,
     crate::encount::PORTED,
@@ -618,7 +619,10 @@ pub const SOURCES: &[&[u32]] = &[
     crate::event_work::PORTED,
     crate::eventdata::PORTED,
     crate::eventdata_tail::PORTED,
+    crate::field_light::PORTED,
     crate::field_skill::PORTED,
+    crate::field_task::PORTED,
+    crate::field_tasks::PORTED,
     crate::fieldmap::PORTED,
     crate::fieldmap_event::PORTED,
     crate::fieldmap_func::PORTED,
@@ -644,8 +648,11 @@ pub const SOURCES: &[&[u32]] = &[
     crate::player_core::PORTED,
     crate::player_event::PORTED,
     crate::player_grid::PORTED,
+    crate::proclink::PORTED,
     crate::symbol_map::PORTED,
     crate::trainer_eye::PORTED,
+    crate::weather::PORTED,
+    crate::weather_task::PORTED,
     crate::wfbc_data::PORTED,
     crate::zonedata::PORTED,
     black_script::scrcmd_bsubway::PORTED,
@@ -1556,6 +1563,7 @@ pub const PORTS: &[(u32, u16, &str)] = &[
     (0x0201_441C, 0, "event_work"),
     (0x0201_4428, 0, "event_work"),
     (0x0201_4444, 0, "event_work"),
+    (0x0209_BBB0, 0, "field_tasks"),
     (0x0215_8804, 10, "script_sys"),
     (0x0215_882C, 10, "script_sys"),
     (0x0215_886C, 10, "script_sys"),
@@ -1792,6 +1800,52 @@ pub const PORTS: &[(u32, u16, &str)] = &[
     (0x0215_F0E8, 10, "field_skill"),
     (0x0215_F104, 10, "field_skill"),
     (0x0215_F118, 10, "field_skill"),
+    (0x0216_0A94, 10, "proclink"),
+    (0x0216_0C88, 10, "proclink"),
+    (0x0216_0D6C, 10, "proclink"),
+    (0x0216_0DDC, 10, "proclink"),
+    (0x0216_0E08, 10, "proclink"),
+    (0x0216_0F88, 10, "proclink"),
+    (0x0216_0FB4, 10, "proclink"),
+    (0x0216_0FE0, 10, "proclink"),
+    (0x0216_1070, 10, "proclink"),
+    (0x0216_117C, 10, "proclink"),
+    (0x0216_11E0, 10, "proclink"),
+    (0x0216_1214, 10, "proclink"),
+    (0x0216_1280, 10, "proclink"),
+    (0x0216_1308, 10, "proclink"),
+    (0x0216_1340, 10, "proclink"),
+    (0x0216_1350, 10, "proclink"),
+    (0x0216_1378, 10, "proclink"),
+    (0x0216_13A4, 10, "proclink"),
+    (0x0216_13CC, 10, "proclink"),
+    (0x0216_1484, 10, "proclink"),
+    (0x0216_1534, 10, "proclink"),
+    (0x0216_1554, 10, "proclink"),
+    (0x0216_1610, 10, "proclink"),
+    (0x0216_163C, 10, "proclink"),
+    (0x0216_1668, 10, "proclink"),
+    (0x0216_16A4, 10, "proclink"),
+    (0x0216_16F0, 10, "proclink"),
+    (0x0216_1724, 10, "proclink"),
+    (0x0216_1824, 10, "proclink"),
+    (0x0216_1850, 10, "proclink"),
+    (0x0216_18A0, 10, "proclink"),
+    (0x0216_18E0, 10, "proclink"),
+    (0x0216_1938, 10, "proclink"),
+    (0x0216_1950, 10, "proclink"),
+    (0x0216_1964, 10, "proclink"),
+    (0x0216_1984, 10, "proclink"),
+    (0x0216_19B8, 10, "proclink"),
+    (0x0216_1AC0, 10, "proclink"),
+    (0x0216_1B1C, 10, "proclink"),
+    (0x0216_1B74, 10, "proclink"),
+    (0x0216_1B90, 10, "proclink"),
+    (0x0216_1BF8, 10, "proclink"),
+    (0x0216_1C84, 10, "proclink"),
+    (0x0216_1CDC, 10, "proclink"),
+    (0x0216_1D18, 10, "proclink"),
+    (0x0216_1D64, 10, "proclink"),
     (0x0216_1D98, 10, "wfbc_data"),
     (0x0216_1DC4, 10, "wfbc_data"),
     (0x0216_1E4C, 10, "wfbc_data"),
@@ -1978,7 +2032,21 @@ pub const PORTS: &[(u32, u16, &str)] = &[
     (0x0216_4708, 10, "eventdata_tail"),
     (0x0216_4728, 10, "eventdata_tail"),
     (0x0216_4778, 10, "scrcmd_misc10c"),
+    (0x0216_47A0, 10, "calender"),
+    (0x0216_47D8, 10, "calender"),
+    (0x0216_47E8, 10, "calender"),
+    (0x0216_47F0, 10, "calender"),
+    (0x0216_47FC, 10, "calender"),
+    (0x0216_480C, 10, "calender"),
+    (0x0216_481C, 10, "calender"),
+    (0x0216_4844, 10, "calender"),
+    (0x0216_4890, 10, "calender"),
+    (0x0216_48A8, 10, "calender"),
+    (0x0216_48CC, 10, "calender"),
+    (0x0216_49C8, 10, "calender"),
     (0x0216_49E8, 10, "scrcmd_misc10c"),
+    (0x0216_4A2C, 10, "calender"),
+    (0x0216_4B38, 10, "calender"),
     (0x0216_64CC, 10, "symbol_map"),
     (0x0216_65D0, 10, "symbol_map"),
     (0x0216_65F0, 10, "symbol_map"),
@@ -2929,6 +2997,111 @@ pub const PORTS: &[(u32, u16, &str)] = &[
     (0x0219_C2E0, 21, "mvproc3d"),
     (0x0219_C314, 21, "mvproc3d"),
     (0x0219_C338, 21, "mvproc3d"),
+    (0x021A_03D0, 21, "field_light"),
+    (0x021A_0448, 21, "field_light"),
+    (0x021A_0458, 21, "field_light"),
+    (0x021A_0568, 21, "field_light"),
+    (0x021A_0590, 21, "field_light"),
+    (0x021A_05D8, 21, "field_light"),
+    (0x021A_0618, 21, "field_light"),
+    (0x021A_063C, 21, "field_light"),
+    (0x021A_065C, 21, "field_light"),
+    (0x021A_066C, 21, "field_light"),
+    (0x021A_0734, 21, "field_light"),
+    (0x021A_0748, 21, "field_light"),
+    (0x021A_07B0, 21, "field_light"),
+    (0x021A_07B4, 21, "field_light"),
+    (0x021A_07F8, 21, "field_light"),
+    (0x021A_0818, 21, "field_light"),
+    (0x021A_0860, 21, "field_light"),
+    (0x021A_08CC, 21, "field_light"),
+    (0x021A_0918, 21, "field_light"),
+    (0x021A_0974, 21, "field_light"),
+    (0x021A_0980, 21, "field_light"),
+    (0x021A_0A50, 21, "field_light"),
+    (0x021A_0B14, 21, "field_light"),
+    (0x021A_0B34, 21, "field_light"),
+    (0x021A_0B4C, 21, "field_light"),
+    (0x021A_0C50, 21, "field_light"),
+    (0x021A_0C60, 21, "field_light"),
+    (0x021A_0C74, 21, "field_light"),
+    (0x021A_0CE4, 21, "field_light"),
+    (0x021A_19E8, 21, "weather"),
+    (0x021A_1AAC, 21, "weather"),
+    (0x021A_1AF4, 21, "weather"),
+    (0x021A_1B38, 21, "weather"),
+    (0x021A_1B50, 21, "weather"),
+    (0x021A_1B74, 21, "weather"),
+    (0x021A_1BDC, 21, "weather"),
+    (0x021A_1BE4, 21, "weather"),
+    (0x021A_1BF4, 21, "weather"),
+    (0x021A_1BF8, 21, "weather"),
+    (0x021A_1C04, 21, "weather"),
+    (0x021A_1C1C, 21, "weather"),
+    (0x021A_1C34, 21, "weather"),
+    (0x021A_1C68, 21, "weather"),
+    (0x021A_1D04, 21, "weather"),
+    (0x021A_1D78, 21, "weather"),
+    (0x021A_1DB4, 21, "weather_task"),
+    (0x021A_1DF8, 21, "weather_task"),
+    (0x021A_1E08, 21, "weather_task"),
+    (0x021A_1FEC, 21, "weather_task"),
+    (0x021A_2050, 21, "weather_task"),
+    (0x021A_20C8, 21, "weather_task"),
+    (0x021A_2108, 21, "weather_task"),
+    (0x021A_2114, 21, "weather_task"),
+    (0x021A_2120, 21, "weather_task"),
+    (0x021A_2130, 21, "weather_task"),
+    (0x021A_213C, 21, "weather_task"),
+    (0x021A_2148, 21, "weather_task"),
+    (0x021A_2154, 21, "weather_task"),
+    (0x021A_2160, 21, "weather_task"),
+    (0x021A_2170, 21, "weather_task"),
+    (0x021A_2180, 21, "weather_task"),
+    (0x021A_2190, 21, "weather_task"),
+    (0x021A_21A0, 21, "weather_task"),
+    (0x021A_21B0, 21, "weather_task"),
+    (0x021A_21B8, 21, "weather_task"),
+    (0x021A_21F8, 21, "weather_task"),
+    (0x021A_2228, 21, "weather_task"),
+    (0x021A_223C, 21, "weather_task"),
+    (0x021A_2248, 21, "weather_task"),
+    (0x021A_22E0, 21, "weather_task"),
+    (0x021A_231C, 21, "weather_task"),
+    (0x021A_232C, 21, "weather_task"),
+    (0x021A_2390, 21, "weather_task"),
+    (0x021A_23B0, 21, "weather_task"),
+    (0x021A_23D4, 21, "weather_task"),
+    (0x021A_23E8, 21, "weather_task"),
+    (0x021A_23F4, 21, "weather_task"),
+    (0x021A_2400, 21, "weather_task"),
+    (0x021A_240C, 21, "weather_task"),
+    (0x021A_2418, 21, "weather_task"),
+    (0x021A_25BC, 21, "weather_task"),
+    (0x021A_25CC, 21, "weather_task"),
+    (0x021A_25DC, 21, "weather_task"),
+    (0x021A_2604, 21, "weather_task"),
+    (0x021A_26D8, 21, "weather_task"),
+    (0x021A_2724, 21, "weather_task"),
+    (0x021A_273C, 21, "weather_task"),
+    (0x021A_282C, 21, "weather_task"),
+    (0x021A_284C, 21, "weather_task"),
+    (0x021A_28CC, 21, "weather_task"),
+    (0x021A_2924, 21, "weather_task"),
+    (0x021A_2968, 21, "weather_task"),
+    (0x021A_2970, 21, "weather_task"),
+    (0x021A_2A84, 21, "weather_task"),
+    (0x021A_2AAC, 21, "weather_task"),
+    (0x021A_2AB8, 21, "weather_task"),
+    (0x021A_2B8C, 21, "weather_task"),
+    (0x021A_2C2C, 21, "weather_task"),
+    (0x021A_2C30, 21, "weather_task"),
+    (0x021A_2C6C, 21, "weather_task"),
+    (0x021A_2C98, 21, "weather_task"),
+    (0x021A_2CC8, 21, "weather_task"),
+    (0x021A_2CEC, 21, "weather_task"),
+    (0x021A_2CF8, 21, "weather_task"),
+    (0x021A_2D04, 21, "weather_task"),
     (0x021A_2D88, 21, "player"),
     (0x021A_2DE4, 21, "player"),
     (0x021A_2DF0, 21, "player"),
@@ -3618,6 +3791,63 @@ pub const PORTS: &[(u32, u16, &str)] = &[
     (0x021C_46F8, 21, "ov63_event"),
     (0x021C_474C, 21, "ov63_event"),
     (0x021C_4788, 21, "ov63_event"),
+    (0x021C_6C70, 21, "field_task"),
+    (0x021C_6CA8, 21, "field_task"),
+    (0x021C_6CCC, 21, "field_task"),
+    (0x021C_6CD0, 21, "field_task"),
+    (0x021C_6CE0, 21, "field_task"),
+    (0x021C_6CE4, 21, "field_task"),
+    (0x021C_6CEC, 21, "field_task"),
+    (0x021C_6CF4, 21, "field_task"),
+    (0x021C_6D10, 21, "field_task"),
+    (0x021C_6D5C, 21, "field_task"),
+    (0x021C_6D90, 21, "field_task"),
+    (0x021C_6DE0, 21, "field_task"),
+    (0x021C_6E20, 21, "field_task"),
+    (0x021C_6E48, 21, "field_task"),
+    (0x021C_6E5C, 21, "field_task"),
+    (0x021C_6E74, 21, "field_task"),
+    (0x021C_6E94, 21, "field_task"),
+    (0x021C_6EA8, 21, "field_task"),
+    (0x021C_6EDC, 21, "field_task"),
+    (0x021C_6F00, 21, "field_tasks"),
+    (0x021C_6F30, 21, "field_tasks"),
+    (0x021C_701C, 21, "field_tasks"),
+    (0x021C_7058, 21, "field_tasks"),
+    (0x021C_7094, 21, "field_tasks"),
+    (0x021C_70DC, 21, "field_tasks"),
+    (0x021C_71A4, 21, "field_tasks"),
+    (0x021C_71D4, 21, "field_tasks"),
+    (0x021C_7220, 21, "field_tasks"),
+    (0x021C_7260, 21, "field_tasks"),
+    (0x021C_72AC, 21, "field_tasks"),
+    (0x021C_72F8, 21, "field_tasks"),
+    (0x021C_734C, 21, "field_tasks"),
+    (0x021C_73B4, 21, "field_tasks"),
+    (0x021C_7418, 21, "field_tasks"),
+    (0x021C_748C, 21, "field_tasks"),
+    (0x021C_7500, 21, "field_tasks"),
+    (0x021C_754C, 21, "field_tasks"),
+    (0x021C_7584, 21, "field_tasks"),
+    (0x021C_7684, 21, "field_tasks"),
+    (0x021C_76C4, 21, "field_tasks"),
+    (0x021C_7730, 21, "field_tasks"),
+    (0x021C_77D8, 21, "field_tasks"),
+    (0x021C_77FC, 21, "field_tasks"),
+    (0x021C_7814, 21, "field_tasks"),
+    (0x021C_7844, 21, "field_tasks"),
+    (0x021C_7858, 21, "field_tasks"),
+    (0x021C_7878, 21, "field_tasks"),
+    (0x021C_78DC, 21, "field_tasks"),
+    (0x021C_7940, 21, "field_tasks"),
+    (0x021C_7A20, 21, "field_tasks"),
+    (0x021C_7A7C, 21, "field_tasks"),
+    (0x021C_7AE4, 21, "field_tasks"),
+    (0x021C_7B1C, 21, "field_tasks"),
+    (0x021C_7C10, 21, "field_tasks"),
+    (0x021C_7C74, 21, "field_tasks"),
+    (0x021C_7D28, 21, "field_tasks"),
+    (0x021C_7D78, 21, "field_tasks"),
     (0x021C_8608, 21, "scrcmd_misc21b"),
     (0x021C_86E8, 21, "scrcmd_misc21b"),
     (0x021C_8738, 21, "scrcmd_misc21b"),
@@ -4327,6 +4557,7 @@ pub fn call(env: &mut Env, addr: u32, a: &[u32]) -> u64 {
             crate::event_work::field_status_free(env, a[0]);
             0u64
         }
+        0x0209_BBB0 => (u64::from(crate::field_tasks::fcmpgt(a[0], a[1]))) as u64,
         0x0215_8804 => (black_script::script_sys::sys_new(env, a[0])) as u64,
         0x0215_882C => (black_script::script_sys::sys_step(env, a[0]) as u64) as u64,
         0x0215_886C => (black_script::script_sys::sys_add_vm(env, a[0], a[1]) as u64) as u64,
@@ -5008,6 +5239,80 @@ pub fn call(env: &mut Env, addr: u32, a: &[u32]) -> u64 {
         0x0215_F118 => {
             (crate::field_skill::in_rect(env, a[0], a[1], a[2], a[3], a[4]) as u64) as u64
         }
+        0x0216_0A94 => (crate::proclink::party_init(env, a[0], a[1], a[2], a[3])) as u64,
+        0x0216_0C88 => (crate::proclink::party_return(env, a[0], a[1])) as u64,
+        0x0216_0D6C => (crate::proclink::d4_init(env, a[0], a[1])) as u64,
+        0x0216_0DDC => (crate::proclink::d4_return(env, a[0], a[1])) as u64,
+        0x0216_0E08 => (crate::proclink::app83_init(env, a[0], a[1], a[2], a[3])) as u64,
+        0x0216_0F88 => (crate::proclink::app83_return(env, a[0], a[1])) as u64,
+        0x0216_0FB4 => (crate::proclink::zone_mode(env, a[0])) as u64,
+        0x0216_0FE0 => (crate::proclink::bag_init(env, a[0], a[1], a[2], a[3])) as u64,
+        0x0216_1070 => (crate::proclink::bag_return(env, a[0], a[1])) as u64,
+        0x0216_117C => (crate::proclink::app6f_init(env, a[0], a[1])) as u64,
+        0x0216_11E0 => (crate::proclink::app6f_return(env, a[0], a[1])) as u64,
+        0x0216_1214 => (crate::proclink::app48_init(env, a[0])) as u64,
+        0x0216_1280 => (crate::proclink::app48_return(env, a[0], a[1])) as u64,
+        0x0216_1308 => (crate::proclink::app44_init(env, a[0])) as u64,
+        0x0216_1340 => (crate::proclink::app44_return(env, a[1])) as u64,
+        0x0216_1350 => {
+            ({
+                crate::proclink::report_special(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0216_1378 => (crate::proclink::app80_init(env, a[0])) as u64,
+        0x0216_13A4 => (crate::proclink::app80_return(env, a[0], a[1])) as u64,
+        0x0216_13CC => (crate::proclink::item_init(env, a[0], a[2], a[3])) as u64,
+        0x0216_1484 => (crate::proclink::item_return(env, a[0], a[1])) as u64,
+        0x0216_1534 => {
+            ({
+                crate::proclink::item_free(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0216_1554 => (crate::proclink::appc3_init(env, a[0], a[2], a[3])) as u64,
+        0x0216_1610 => (crate::proclink::appc3_return(env, a[0])) as u64,
+        0x0216_163C => (crate::proclink::appbb_init(env, a[0])) as u64,
+        0x0216_1668 => (crate::proclink::appbb_return(env, a[0], a[1])) as u64,
+        0x0216_16A4 => (crate::proclink::event_new(env, a[0], a[1], a[2], a[3], a[4])) as u64,
+        0x0216_16F0 => (crate::proclink::event_proc(env, a[2])) as u64,
+        0x0216_1724 => (crate::proclink::pause_proc(env, a[1], a[2])) as u64,
+        0x0216_1824 => (crate::proclink::pause_new(env, a[0], a[1])) as u64,
+        0x0216_1850 => (crate::proclink::acmd_proc(env, a[1], a[2])) as u64,
+        0x0216_18A0 => (crate::proclink::acmd_new(env, a[0], a[1], a[2], a[3])) as u64,
+        0x0216_18E0 => (crate::proclink::acmd_new_player(env, a[0], a[1])) as u64,
+        0x0216_1938 => (crate::proclink::obj_of(env, a[0], a[1])) as u64,
+        0x0216_1950 => {
+            ({
+                crate::proclink::slots_clear(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0216_1964 => {
+            ({
+                crate::proclink::slot_put(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x0216_1984 => (crate::proclink::slots_update(env, a[0])) as u64,
+        0x0216_19B8 => (crate::proclink::jump_proc(env, a[1], a[2])) as u64,
+        0x0216_1AC0 => (crate::proclink::jump_new(env, a[0], a[1], a[2], a[3])) as u64,
+        0x0216_1B1C => (crate::proclink::acmd_start_player(env, a[0])) as u64,
+        0x0216_1B74 => (crate::proclink::acmd_end(env, a[0])) as u64,
+        0x0216_1B90 => (crate::proclink::fade_new(env, a[0], a[1], a[2], a[3], a[4])) as u64,
+        0x0216_1BF8 => (crate::proclink::fade_proc(env, a[1], a[2])) as u64,
+        0x0216_1C84 => {
+            (crate::proclink::param_fill(env, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]))
+                as u64
+        }
+        0x0216_1CDC => (crate::proclink::param_a(env, a[0], a[1], a[2], a[3])) as u64,
+        0x0216_1D18 => (crate::proclink::param_b(env, a[0], a[1], a[2], a[3])) as u64,
+        0x0216_1D64 => {
+            ({
+                crate::proclink::display_set(env, a[0]);
+                0
+            }) as u64
+        }
         0x0216_1D98 => {
             crate::wfbc_data::list_init(env.fmem(), a[0]);
             0u64
@@ -5627,9 +5932,48 @@ pub fn call(env: &mut Env, addr: u32, a: &[u32]) -> u64 {
             }) as u64
         }
         0x0216_4778 => (black_script::scrcmd_misc10c::cmd_458(env, a[0], a[1])) as u64,
+        0x0216_47A0 => (crate::calender::new(env, a[0], a[1]) as u64) as u64,
+        0x0216_47D8 => {
+            ({
+                crate::calender::delete(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0216_47E8 => (crate::calender::today_thunk(env, a[0], a[1]) as u64) as u64,
+        0x0216_47F0 => {
+            ({
+                crate::calender::clear(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0216_47FC => {
+            ({
+                crate::calender::open(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0216_480C => {
+            ({
+                crate::calender::close(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0216_481C => (crate::calender::today(env, a[0], a[1]) as u64) as u64,
+        0x0216_4844 => (crate::calender::special_day(env, a[0], a[1], a[2], a[3]) as u64) as u64,
+        0x0216_4890 => {
+            ({
+                crate::calender::read_records(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0216_48A8 => (crate::calender::zone_offset(env, a[0], a[1]) as u64) as u64,
+        0x0216_48CC => (crate::calender::day_of_year(a[0], a[1]) as u64) as u64,
+        0x0216_49C8 => (crate::calender::cmd467_end(env, a[0]) as u64) as u64,
         0x0216_49E8 => {
             (black_script::scrcmd_misc10c::event_468(env, a[0], a[1], a[2]) as u64) as u64
         }
+        0x0216_4A2C => (crate::calender::event_proc(env, a[0], a[1], a[2]) as u64) as u64,
+        0x0216_4B38 => (crate::calender::event_new(env, a[0], a[2]) as u64) as u64,
         0x0216_64CC => (crate::symbol_map::symbol_record(env, a[0], a[1], a[2]) as u64) as u64,
         0x0216_65D0 => (crate::symbol_map::beacon_value(env, a[0], a[1]) as u64) as u64,
         0x0216_65F0 => (crate::symbol_map::beacon_index(env, a[0], a[1], a[2]) as u64) as u64,
@@ -8002,6 +8346,411 @@ pub fn call(env: &mut Env, addr: u32, a: &[u32]) -> u64 {
         0x0219_C2E0 => (crate::mvproc3d::wall_dir(env, a[0], a[1], a[2])) as u64,
         0x0219_C314 => (crate::mvproc3d::wall_dir_hit(env, a[0], a[1], a[2])) as u64,
         0x0219_C338 => (crate::mvproc3d::wall_step(env, a[0], a[1], a[2])) as u64,
+        0x021A_03D0 => (crate::field_light::new(env, a[0], a[1], a[2], a[3], a[4], a[5])) as u64,
+        0x021A_0448 => {
+            crate::field_light::delete(env, a[0]);
+            0u64
+        }
+        0x021A_0458 => {
+            crate::field_light::update(env, a[0], a[1]);
+            0u64
+        }
+        0x021A_0568 => {
+            crate::field_light::upload_if_dirty(env, a[0], a[1]);
+            0u64
+        }
+        0x021A_0590 => {
+            crate::field_light::change_table(env, a[0], a[1], a[2], a[3]);
+            0u64
+        }
+        0x021A_05D8 => {
+            crate::field_light::restore_table(env, a[0]);
+            0u64
+        }
+        0x021A_0618 => {
+            crate::field_light::fade_request(env, a[0], a[1], a[2], a[3]);
+            0u64
+        }
+        0x021A_063C => {
+            crate::field_light::fade_request_once(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_065C => (crate::field_light::fade_active(env, a[0])) as u64,
+        0x021A_066C => {
+            crate::field_light::upload(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_0734 => {
+            crate::field_light::load_default(env, a[0], a[1]);
+            0u64
+        }
+        0x021A_0748 => {
+            crate::field_light::load(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_07B0 => {
+            crate::field_light::nop();
+            0u64
+        }
+        0x021A_07B4 => (crate::field_light::keyframe_at(env, a[0], a[1])) as u64,
+        0x021A_07F8 => (crate::field_light::keyframe_time(env, a[0], a[1])) as u64,
+        0x021A_0818 => {
+            crate::field_light::ramp_init(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_0860 => (crate::field_light::ramp_at(env, a[0], a[1], a[2])) as u64,
+        0x021A_08CC => {
+            crate::field_light::rot_init(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_0918 => {
+            crate::field_light::rot_at(env, a[0], a[1], a[2], a[3]);
+            0u64
+        }
+        0x021A_0974 => {
+            crate::field_light::crossfade60(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_0980 => {
+            crate::field_light::crossfade(env, a[0], a[1], a[2], a[3]);
+            0u64
+        }
+        0x021A_0A50 => {
+            crate::field_light::fade_to_colour(env, a[0], a[1], a[2], a[3]);
+            0u64
+        }
+        0x021A_0B14 => {
+            crate::field_light::step(env, a[0]);
+            0u64
+        }
+        0x021A_0B34 => (crate::field_light::running(env, a[0])) as u64,
+        0x021A_0B4C => {
+            crate::field_light::light_at(env, a[0], a[1]);
+            0u64
+        }
+        0x021A_0C50 => {
+            crate::field_light::request_set(env, a[0], a[1], a[2], a[3]);
+            0u64
+        }
+        0x021A_0C60 => {
+            crate::field_light::request_set_once(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_0C74 => (crate::field_light::request_step(env, a[0], a[1], a[2], a[3])) as u64,
+        0x021A_0CE4 => (crate::field_light::request_active(env, a[0])) as u64,
+        0x021A_19E8 => (crate::weather::new(env, a[0], a[1], a[2], a[3], a[4], a[5], a[6])) as u64,
+        0x021A_1AAC => {
+            crate::weather::delete(env, a[0]);
+            0u64
+        }
+        0x021A_1AF4 => {
+            crate::weather::update(env, a[0], a[1]);
+            0u64
+        }
+        0x021A_1B38 => {
+            crate::weather::draw(env, a[0]);
+            0u64
+        }
+        0x021A_1B50 => (crate::weather::starting(env, a[0])) as u64,
+        0x021A_1B74 => {
+            crate::weather::set(env, a[0], a[1], a[2]);
+            0u64
+        }
+        0x021A_1BDC => (crate::weather::request_thunk(env, a[0], a[1])) as u64,
+        0x021A_1BE4 => {
+            crate::weather::request_quiet(env, a[0], a[1]);
+            0u64
+        }
+        0x021A_1BF4 => (crate::weather::current(env, a[0])) as u64,
+        0x021A_1BF8 => {
+            crate::weather::load_overlay(env, a[0], a[1]);
+            0u64
+        }
+        0x021A_1C04 => {
+            crate::weather::unload_overlay(env, a[0]);
+            0u64
+        }
+        0x021A_1C1C => {
+            crate::weather::vblank(env, a[1]);
+            0u64
+        }
+        0x021A_1C34 => (crate::weather::request(env, a[0], a[1])) as u64,
+        0x021A_1C68 => {
+            crate::weather::change_plain(env, a[0], a[1]);
+            0u64
+        }
+        0x021A_1D04 => {
+            crate::weather::change_crossfade(env, a[0], a[1]);
+            0u64
+        }
+        0x021A_1D78 => (crate::weather::crossfade_pair(a[0], a[1])) as u64,
+        0x021A_1DB4 => {
+            (crate::weather_task::new(env, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]))
+                as u64
+        }
+        0x021A_1DF8 => {
+            ({
+                crate::weather_task::delete(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_1E08 => {
+            ({
+                crate::weather_task::frame(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_1FEC => {
+            ({
+                crate::weather_task::start(env, a[0], a[1], a[2], a[3], a[4], a[5]);
+                0
+            }) as u64
+        }
+        0x021A_2050 => {
+            ({
+                crate::weather_task::stop(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_20C8 => {
+            ({
+                crate::weather_task::end(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_2108 => {
+            ({
+                crate::weather_task::light_change(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_2114 => {
+            ({
+                crate::weather_task::light_change_now(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_2120 => {
+            ({
+                crate::weather_task::light_restore(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_2130 => {
+            ({
+                crate::weather_task::light_fade(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x021A_213C => (crate::weather_task::light_fade_set(env, a[0])) as u64,
+        0x021A_2148 => (crate::weather_task::camera_target(env, a[0])) as u64,
+        0x021A_2154 => {
+            ({
+                crate::weather_task::light_fade_once(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_2160 => {
+            ({
+                crate::weather_task::bg_set_8(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_2170 => {
+            ({
+                crate::weather_task::bg_set_14(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_2180 => {
+            ({
+                crate::weather_task::bg_set_18(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_2190 => {
+            ({
+                crate::weather_task::bg_set_c(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_21A0 => {
+            ({
+                crate::weather_task::bg_set_10(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_21B0 => (crate::weather_task::status_thunk(env, a[0])) as u64,
+        0x021A_21B8 => (crate::weather_task::work(env, a[0])) as u64,
+        0x021A_21F8 => {
+            ({
+                crate::weather_task::stepper_start(
+                    env, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8],
+                );
+                0
+            }) as u64
+        }
+        0x021A_2228 => {
+            ({
+                crate::weather_task::stepper_retarget(env, a[0], a[1], a[2], a[3], a[4]);
+                0
+            }) as u64
+        }
+        0x021A_223C => (crate::weather_task::stepper_frame(env, a[0], a[1])) as u64,
+        0x021A_2248 => (crate::weather_task::stepper_frame_plain(env, a[0], a[1])) as u64,
+        0x021A_22E0 => {
+            ({
+                crate::weather_task::fog_on(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x021A_231C => {
+            ({
+                crate::weather_task::fog_off(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_232C => {
+            ({
+                crate::weather_task::fog_fade(env, a[0], a[1], a[2], a[3], a[4]);
+                0
+            }) as u64
+        }
+        0x021A_2390 => {
+            ({
+                crate::weather_task::fog_set(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x021A_23B0 => (crate::weather_task::fog_idle(env, a[0])) as u64,
+        0x021A_23D4 => (crate::weather_task::zonefog_on(env, a[0])) as u64,
+        0x021A_23E8 => (crate::weather_task::zonefog_get_0380(env, a[0])) as u64,
+        0x021A_23F4 => (crate::weather_task::zonefog_get_0390(env, a[0])) as u64,
+        0x021A_2400 => (crate::weather_task::zonefog_get_03a4(env, a[0])) as u64,
+        0x021A_240C => (crate::weather_task::zonefog_get_03b8(env, a[0])) as u64,
+        0x021A_2418 => (crate::weather_task::zonefog_get_03cc(env, a[0])) as u64,
+        0x021A_25BC => {
+            ({
+                crate::weather_task::se_start(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_25CC => {
+            ({
+                crate::weather_task::se_stop(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_25DC => {
+            ({
+                crate::weather_task::se_play(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_2604 => {
+            ({
+                crate::weather_task::se_play2(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_26D8 => {
+            ({
+                crate::weather_task::reset(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_2724 => (crate::weather_task::callback(env, a[0], a[1], a[2])) as u64,
+        0x021A_273C => (crate::weather_task::status(env, a[0])) as u64,
+        0x021A_282C => {
+            ({
+                crate::weather_task::res_load(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_284C => {
+            ({
+                crate::weather_task::res_free(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_28CC => {
+            ({
+                crate::weather_task::work_new(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_2924 => {
+            ({
+                crate::weather_task::work_free(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_2968 => {
+            ({
+                crate::weather_task::set_ready(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_2970 => (crate::weather_task::ready(env, a[0])) as u64,
+        0x021A_2A84 => {
+            ({
+                crate::weather_task::stepper_init(
+                    env, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9],
+                );
+                0
+            }) as u64
+        }
+        0x021A_2AAC => {
+            ({
+                crate::weather_task::stepper_targets(env, a[0], a[1], a[2], a[3], a[4]);
+                0
+            }) as u64
+        }
+        0x021A_2AB8 => (crate::weather_task::stepper_step(env, a[0], a[1])) as u64,
+        0x021A_2B8C => (crate::weather_task::stepper_tick(env, a[0], a[1])) as u64,
+        0x021A_2C2C => {
+            ({
+                crate::weather_task::sound_set_mode(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_2C30 => {
+            ({
+                crate::weather_task::sound_start(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_2C6C => {
+            ({
+                crate::weather_task::sound_stop(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_2C98 => {
+            ({
+                crate::weather_task::sound_resume(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_2CC8 => {
+            ({
+                crate::weather_task::fog_fade_request(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x021A_2CEC => {
+            ({
+                crate::weather_task::fog_fade_clear(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_2CF8 => (crate::weather_task::fog_fade_pending(env, a[0])) as u64,
+        0x021A_2D04 => {
+            ({
+                crate::weather_task::fog_fade_apply(env, a[0]);
+                0
+            }) as u64
+        }
         0x021A_2D88 => {
             ({
                 crate::player::ctrl_create(env, a[0], a[1], a[2]);
@@ -9800,6 +10549,209 @@ pub fn call(env: &mut Env, addr: u32, a: &[u32]) -> u64 {
         }
         0x021C_474C => (u64::from(crate::ov63_event::obj_event_new(env, a[0], a[1], a[2]))) as u64,
         0x021C_4788 => (u64::from(crate::ov63_event::proc_(env, a[0]))) as u64,
+        0x021C_6C70 => (u64::from(crate::field_task::task_new(env, a[0], a[1], a[2]))) as u64,
+        0x021C_6CA8 => {
+            ({
+                crate::field_task::task_free(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021C_6CCC => (u64::from(crate::field_task::task_work(env, a[0]))) as u64,
+        0x021C_6CD0 => (u64::from(crate::field_task::task_is_done(env, a[0]))) as u64,
+        0x021C_6CE0 => (u64::from(crate::field_task::task_state(env, a[0]))) as u64,
+        0x021C_6CE4 => {
+            ({
+                crate::field_task::task_start(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021C_6CEC => {
+            ({
+                crate::field_task::task_end(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021C_6CF4 => {
+            ({
+                crate::field_task::task_run(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021C_6D10 => (u64::from(crate::field_task::mgr_new(env, a[0], a[1]))) as u64,
+        0x021C_6D5C => {
+            ({
+                crate::field_task::mgr_free(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021C_6D90 => {
+            ({
+                crate::field_task::mgr_run(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021C_6DE0 => {
+            ({
+                crate::field_task::mgr_add(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021C_6E20 => (u64::from(crate::field_task::mgr_active(env, a[0]))) as u64,
+        0x021C_6E48 => (u64::from(crate::field_task::mgr_is_empty(env, a[0]))) as u64,
+        0x021C_6E5C => {
+            ({
+                crate::field_task::mgr_set(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x021C_6E74 => {
+            ({
+                crate::field_task::mgr_remove(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021C_6E94 => {
+            ({
+                crate::field_task::mgr_run_one(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021C_6EA8 => {
+            ({
+                crate::field_task::mgr_start_waiting(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021C_6EDC => {
+            ({
+                crate::field_task::mgr_cleanup(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021C_6F00 => (u64::from(crate::field_tasks::zoom_new(env, a[0], a[1], a[2]))) as u64,
+        0x021C_6F30 => (u64::from(crate::field_tasks::zoom_proc(env, a[0]))) as u64,
+        0x021C_701C => (u64::from(crate::field_tasks::rot_new(env, a[0], a[1], a[2], 0))) as u64,
+        0x021C_7058 => (u64::from(crate::field_tasks::rot_new(env, a[0], a[1], a[2], 1))) as u64,
+        0x021C_7094 => {
+            ({
+                crate::field_tasks::rot_init(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021C_70DC => {
+            ({
+                crate::field_tasks::rot_step(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021C_71A4 => (u64::from(crate::field_tasks::rot_proc(env, a[0]))) as u64,
+        0x021C_71D4 => {
+            (u64::from(crate::field_tasks::spin_new_player(
+                env,
+                a[0],
+                a[1],
+                a[2],
+                0x021C_7419,
+            ))) as u64
+        }
+        0x021C_7220 => {
+            (u64::from(crate::field_tasks::spin_new_obj(
+                env, a[0], a[1], a[2], a[3],
+            ))) as u64
+        }
+        0x021C_7260 => {
+            (u64::from(crate::field_tasks::spin_new_player(
+                env,
+                a[0],
+                a[1],
+                a[2],
+                0x021C_748D,
+            ))) as u64
+        }
+        0x021C_72AC => {
+            (u64::from(crate::field_tasks::spin_new_end(
+                env, a[0], a[1], a[2], a[3],
+            ))) as u64
+        }
+        0x021C_72F8 => (u64::from(crate::field_tasks::curve_a(env, a[0], a[1], a[2]))) as u64,
+        0x021C_734C => (u64::from(crate::field_tasks::curve_b(env, a[0], a[1], a[2]))) as u64,
+        0x021C_73B4 => (u64::from(crate::field_tasks::curve_c(env, a[0], a[1], a[2]))) as u64,
+        0x021C_7418 => (u64::from(crate::field_tasks::spin_proc(env, a[0], 0))) as u64,
+        0x021C_748C => (u64::from(crate::field_tasks::spin_proc(env, a[0], 1))) as u64,
+        0x021C_7500 => (u64::from(crate::field_tasks::spin_proc_end(env, a[0]))) as u64,
+        0x021C_754C => {
+            (u64::from(crate::field_tasks::move_new(
+                env,
+                a[0],
+                a[1],
+                a[2],
+                0x021C_7585,
+            ))) as u64
+        }
+        0x021C_7584 => (u64::from(crate::field_tasks::move_proc(env, a[0]))) as u64,
+        0x021C_7684 => {
+            (u64::from(crate::field_tasks::shake_new(env, a[0], a[1], a[2], a[3]))) as u64
+        }
+        0x021C_76C4 => {
+            ({
+                crate::field_tasks::shake_calc(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x021C_7730 => (u64::from(crate::field_tasks::shake_proc(env, a[0]))) as u64,
+        0x021C_77D8 => (u64::from(crate::field_tasks::wait_new(env, a[0], a[1]))) as u64,
+        0x021C_77FC => (u64::from(crate::field_tasks::wait_proc(env, a[0]))) as u64,
+        0x021C_7814 => {
+            (u64::from(crate::field_tasks::call_new(
+                env, a[0], a[1], a[2], a[3], a[4],
+            ))) as u64
+        }
+        0x021C_7844 => (u64::from(crate::field_tasks::call_proc(env, a[0]))) as u64,
+        0x021C_7858 => {
+            (u64::from(crate::field_tasks::offset_new_player(env, a[0], a[1], a[2]))) as u64
+        }
+        0x021C_7878 => {
+            (u64::from(crate::field_tasks::offset_new(
+                env,
+                a[0],
+                a[1],
+                a[2],
+                a[3],
+                0x021C_7A21,
+            ))) as u64
+        }
+        0x021C_78DC => {
+            (u64::from(crate::field_tasks::offset_new(
+                env,
+                a[0],
+                a[1],
+                a[2],
+                a[3],
+                0x021C_7A7D,
+            ))) as u64
+        }
+        0x021C_7940 => {
+            ({
+                crate::field_tasks::lerp(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x021C_7A20 => (u64::from(crate::field_tasks::offset_proc(env, a[0], false))) as u64,
+        0x021C_7A7C => (u64::from(crate::field_tasks::offset_proc(env, a[0], true))) as u64,
+        0x021C_7AE4 => {
+            (u64::from(crate::field_tasks::move_new(
+                env,
+                a[0],
+                a[1],
+                a[2],
+                0x021C_7B1D,
+            ))) as u64
+        }
+        0x021C_7B1C => (u64::from(crate::field_tasks::campos_proc(env, a[0]))) as u64,
+        0x021C_7C10 => (u64::from(crate::field_tasks::cam_new(env, a[0], a[1], a[2], a[3]))) as u64,
+        0x021C_7C74 => (u64::from(crate::field_tasks::cam_proc(env, a[0]))) as u64,
+        0x021C_7D28 => (u64::from(crate::field_tasks::periodic_new(env, a[0], a[2], a[3]))) as u64,
+        0x021C_7D78 => (u64::from(crate::field_tasks::periodic_proc(env, a[0]))) as u64,
         0x021C_8608 => (black_script::scrcmd_misc21b::boat_alloc(env) as u64) as u64,
         0x021C_86E8 => {
             ({

@@ -602,3 +602,9 @@ impl crate::mapchange_proc::MapChangeEnv for Env {
         self.call_words(addr, &[])
     }
 }
+
+impl crate::field_tasks::FieldEnv64 for Env {
+    fn call64(&mut self, addr: u32, args: &[u32]) -> u64 {
+        self.call_words(addr, args)
+    }
+}
