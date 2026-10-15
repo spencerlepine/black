@@ -127,3 +127,5 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [x] F11 — F — PAR — Time/season system, day/night palettes logic.
 - [x] F12 — F — SEQ — Field integration test: load a map, walk, talk to NPC (script + text), trigger wild battle, warp. Headless. — (ebedf7c)
 - [x] F14 — F — PAR — field_task(+manager) (ov21 0x021C6C70, 79 fns) + event_field_proclink.c (ov10 0x02160A94, 57 fns): field task/proc glue for G2/F12. — (aaa171b)
+- [x] F2 — F — PAR — Map matrix, zone headers, map loading model. — (8ce1524)
+- [x] F3 — F — PAR — Collision/permission grid, player movement (walk/run/bike/surf, ledges, slopes), facing. — (6de9937)

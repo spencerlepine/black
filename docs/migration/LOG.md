@@ -204,3 +204,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-15** — Merged F14b (proclink_event 6/6; F1-SPLIT rows 10.21/10.22 corrected by the coordinator).
 
 - **2026-10-15 ~05:00Z** — Usage session 70% (≥ temporary 65%) → DRAIN; weekly 73%; extra usage unchanged. Settings: worktree-cleanup allow-list extended (b39f590, human request).
+
+- **2026-10-15** — Merged F2b (121/121) and F3b (283/283) → F2 and F3 done; both rebased with union README/lib.rs, SYMBOLS regenerated, F12 ports.rs regenerated (3082 ports) with the F12 trace unchanged. Still DRAIN; U0b running.
