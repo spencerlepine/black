@@ -23,6 +23,6 @@ _2026-10-14T23:13:58Z, commit 9e7ca5d, `python3 -I tools/progress.py`._
 - **Running (cap 3):** F2b (Opus, worktree-agent-ade14361ab2bbfdd2: buildmodel + scenearea), F3b (resumed, worktree-agent-a858739933e9b77b9), F12 (resumed, worktree-agent-ab3c43b94fcb82115).
 - **Next:** F14b, U0b, G-phase.
 - **Blocked:** none. B16 flake: B17 fixed `ro_snap` keying; 3/3 full black-battle suites green on main after merge (root cause not proven, OPEN.md).
-- **Usage guard:** RUN (GREEN 0% session / 51% weekly at 22:25Z; USAGE-CHECK cron ae0b0b51). Weekly budget: ~49% left for 5.5 days.
+- **Usage guard:** DRAINING (ORANGE 83%) since ~00:55Z — no new spawns; F12 (finishing its port-table regen after rebase), F3b, F2b finish and merge; then pause until resume_at 03:25Z (resume_cron "25 20 14 10 *"; local time).
 - **Disk:** 39 GB free (the human cleared space 2026-10-14); worker cap 3 (human, 2026-10-14: CPU).
 - **RE tooling:** Ghidra headless + rizin + rea (MCP) via `tools/re/` (`ENV.md` "RE workflow"); `tools/doctor.sh` green on macOS. Sets battle, field, bag (ov70), party-summary (ov90/91/131/134) decompiled under /tmp/blk/re/.
