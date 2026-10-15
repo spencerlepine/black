@@ -220,3 +220,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-15** — Merged Z25 (639b74d, divider/sqrt in the harness; battle/field diffs unchanged). Full verification sweep of main running (harness change). DRAIN: validator still running.
 
 - **2026-10-15** — Validator R-20261015-0847 (6168493..8590493): 13 new field areas match, field diff equal, input limits justified; V-0035 (low, buildmodel harness limits) → OPEN.md. UI scores: U1-title 0.066, U1-title-anim 0.176 (up), G2-overworld-idle 0.299, G2-start-menu 0.294 (first). VALIDATION-AGENT.md JOBS=8 → 4.
+
+- **2026-10-15 ~10:30Z** — Full verification after Z25 green (gate, 22 svflow, 4 handler modules, battle + field diffs, every fn area: 170 MATCH). Weekly 75% drain complete → PAUSED until the weekly reset 2026-10-20 13:05Z (resume cron 672eeb17); USAGE-CHECK cron deleted. Session 6 total so far: 36% → 48%.

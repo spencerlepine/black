@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-15T09:19:31Z",
- "commit": "1338d50",
+ "generated": "2026-10-15T10:28:29Z",
+ "commit": "0c7dafa",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -8,15 +8,15 @@
   "U": 0.19,
   "HR": 0.125
  },
- "overall": 0.4753,
+ "overall": 0.476,
  "overall_percent": 48,
  "logic": {
-  "ported": 6646,
+  "ported": 6658,
   "in_scope": 10087.4,
-  "ratio": 0.6588,
+  "ratio": 0.66,
   "ported_by_crate": {
    "black-battle": 2125,
-   "black-core": 38,
+   "black-core": 50,
    "black-field": 2671,
    "black-pokemon": 186,
    "black-script": 1012,
@@ -975,7 +975,7 @@
    },
    "crates/black-core/src/fx.rs": {
     "set": "field",
-    "fns": 12
+    "fns": 24
    },
    "crates/black-core/src/poke_crypt.rs": {
     "set": "field",

@@ -132,3 +132,4 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [x] U0 — U — SEQ — UI diff kit (2026-10-13, layout-refactor commits): `tools/ui-diff/` (`compare.py` SSIM/ΔE76/Canny-IoU metric in pure numpy, `capture_p… — (46e41b2)
 - [x] Z24 — Z — PAR — black-core: port the NitroSDK FX/VEC/MTX fixed-point math used by the field ports (F11 list 0207CB68, 0207CAA4, 0207D184, 0207B65C, 02… — (6657bae)
 - [x] G3 — G — SEQ — Asset loading: Bevy AssetServer over `assets/`, loading screens, wasm HTTP serving.
+- [x] Z25 — Z — PAR — harness: model the DS divider/sqrt unit (I/O 0x04000280..0x040002BF) in tools/rom-diff/emu.py so check-fn can verify divider users dir… — (639b74d)
