@@ -125,3 +125,4 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [x] B19b — B — PAR — (= V-0033, low; validator confirmed the widened spec MATCHes 41778e03be68b664 at 1000 inputs) harness: events.spec declares the pass-t… — (e99e227)
 - [x] F6 — F — PAR — Warps, doors, map transitions, triggers. — (dd1a031)
 - [x] F11 — F — PAR — Time/season system, day/night palettes logic.
+- [x] F12 — F — SEQ — Field integration test: load a map, walk, talk to NPC (script + text), trigger wild battle, warp. Headless. — (ebedf7c)

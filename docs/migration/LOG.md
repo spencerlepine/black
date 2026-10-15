@@ -192,3 +192,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-14** — Human: keep full pace (weekly budget); validator pitfalls updated (no account-wide pkill). Spawned F2b (Opus).
 
 - **2026-10-15 ~00:55Z** — Usage ORANGE 83% → DRAIN. F12 reported done (field session + Unicorn diff equal, 5 port bugs fixed), committed + rebased; its generated ports table breaks on the new main ports → back to the worker. F3b, F2b running.
+
+- **2026-10-15** — Merged F12 (field integration + whole-session Unicorn diff; 5 port bugs fixed; generator fixed after the rebase, trace unchanged). Gate + touched areas on main running.
