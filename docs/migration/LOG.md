@@ -216,3 +216,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-15 ~09:05Z** — Usage weekly ORANGE 75% → DRAIN (session 10%, extra usage unchanged). Running Z25, G3, validator finish; then pause until the weekly reset 2026-10-20 13:05Z.
 
 - **2026-10-15** — Merged G3 (asset loading). DRAIN continues: Z25 + validator running.
+
+- **2026-10-15** — Merged Z25 (639b74d, divider/sqrt in the harness; battle/field diffs unchanged). Full verification sweep of main running (harness change). DRAIN: validator still running.
