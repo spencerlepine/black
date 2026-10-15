@@ -126,3 +126,4 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [x] F6 — F — PAR — Warps, doors, map transitions, triggers. — (dd1a031)
 - [x] F11 — F — PAR — Time/season system, day/night palettes logic.
 - [x] F12 — F — SEQ — Field integration test: load a map, walk, talk to NPC (script + text), trigger wild battle, warp. Headless. — (ebedf7c)
+- [x] F14 — F — PAR — field_task(+manager) (ov21 0x021C6C70, 79 fns) + event_field_proclink.c (ov10 0x02160A94, 57 fns): field task/proc glue for G2/F12. — (aaa171b)

@@ -71,8 +71,8 @@ functions with the most callers from outside the area (caller count in parenthes
 | 10.18 | 0215E2B8-0215E440 | 10 | field_encount_st.c | 1 name-anchors; render 0/10 | logic | 0215e364(2) 0215e428(2) 0215e2b8(1) | F5 |
 | 10.19 | 0215E440-0215F166 | 65 | move_pokemon.c | 1 name-anchors; render 0/65 | logic | 0215e6a8(2) 0215ed60(2) 0215e440(1) | F5 |
 | 10.20 | 0215F168-0215FF52 | 54 | scrcmd_network.c | 1 name-anchors; 13 scrcmd handlers; render 0/54; loads arc209 | oos | 0215f6e8(3) 0215fa44(2) 0215fa90(2) | X1 |
-| 10.21 | 0215FF54-02160A92 | 37 | event_shortcut_menu.c | 1 name-anchors; render 0/37 | logic | 0215ff54(2) 0216007c(1) 0216008c(1) | U10 |
-| 10.22 | 02160A94-02161D96 | 57 | event_field_proclink.c | 8 name-anchors; render 0/57 | logic | 02161824(11) 02161b90(2) 02161d64(2) | G2 |
+| 10.21 | 0215FF54-02160758 | ~31 | event_shortcut_menu.c (corrected by F14b 2026-10-15: `__FILE__` used only by 0215FF54; 0216075C+ is proclink) | 1 name-anchors; render 0/37 | logic | 0215ff54(2) 0216007c(1) 0216008c(1) | U10 |
+| 10.22 | 0216075C-02161D96 | 63 | event_field_proclink.c (F14b: the head 0216075C..02160A92 = area proclink_event, 6 fns) | 8 name-anchors; render 0/57 | logic | 02161824(11) 02161b90(2) 02161d64(2) | G2 |
 | 10.23 | 02161D98-02164768 | 191 | eventdata_system.c | 1 name-anchors; render 1/191 | logic | 02163f10(18) 02164208(12) 02161ecc(10) | F6 |
 | 10.24 | 02164778-02164B12 | 19 | calender.c | 1 name-anchors; 5 scrcmd handlers; render 1/19; loads arc97 | logic | 0216481c(1) | F11 |
 | 10.25 | 02164B6C-021664C6 | 152 | game_beacon_search.c, game_beacon_accessor.c | 5 name-anchors; render 8/152 | oos | 021656a0(9) 0216576c(6) 02165144(5) | X1 |

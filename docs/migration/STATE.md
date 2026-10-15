@@ -6,21 +6,21 @@
 <!-- progress-table:start -->
 | bucket | done | of | ratio | weight | contributes |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| logic (ported fns / in-scope fns per SCOPE.tsv) | 6224 | 10087.4 | 61.7% | 0.560 | 34.6% |
+| logic (ported fns / in-scope fns per SCOPE.tsv) | 6230 | 10087.4 | 61.8% | 0.560 | 34.6% |
 | phase A (items) | 15 | 16 | 93.8% | 0.075 | 7.0% |
 | phase G (items) | 4 | 9 | 44.4% | 0.050 | 2.2% |
 | phase U (items) | 0.5 | 23 | 2.2% | 0.190 | 0.4% |
 | phases H+R (items) | 0 | 8 | 0.0% | 0.125 | 0.0% |
 | **overall** | | | | | **44%** |
 
-Ported by crate: black-field 2261, black-battle 2125, black-script 1012, black-storage 562, black-pokemon 186, black-text 61, black-core 26.
+Ported by crate: black-field 2267, black-battle 2125, black-script 1012, black-storage 562, black-pokemon 186, black-text 61, black-core 26.
 UI cases: U1-title 0.07, U1-title-anim 0.12.
 
-_2026-10-15T03:46:28Z, commit a32301e, `python3 -I tools/progress.py`._
+_2026-10-15T04:10:33Z, commit 9564c6d, `python3 -I tools/progress.py`._
 <!-- progress-table:end -->
 
 - **Milestones so far:** battle handlers complete; btl_server_flow 644; battle_server.s 207/207; btl_client 228/231; battle AI ai1 161/161; B16 first full headless battle through the ports. Pokémon: poke_tool/create/personal/growth/waza/evolution/icon. Storage: party/bag/box. Field: map matrix/fieldmap, player 304/306, fldmmdl 253/253 + acmd 242/242, trainer_eye 38/38, encounter 151/151, eventdata 184/185; script VM + ~700 scrcmd handlers. Text: strbuf/wordset/layout/speed. Assets A0–A12 mostly; Bevy shell G1/G2/G4/G5. Harness: Z19/Z20/Z22/Z23, check-force/symbols/docsize, progress.py, ui-diff with scripted DeSmuME references.
-- **Running (cap 3):** F3b (resumed), F2b (resumed), F14b (Sonnet, worktree-agent-aed319f6fc6328480: proclink event proc).
+- **Running (cap 3):** F3b (resumed), F2b (resumed).
 - **Next on resume:** U0b, G-phase (G3, G6, G7, G8, G9), tail-call register audit (F12 finding).
 - **Blocked:** none. B16 flake: B17 fixed `ro_snap` keying; 3/3 full black-battle suites green on main after merge (root cause not proven, OPEN.md).
 - **Usage guard:** RUN (GREEN 6% session / 64% weekly at 03:25Z; USAGE-CHECK cron d2f2aea9 every 10 min; session thresholds ORANGE 65% / RED 80% (weekly stays 75/90), drain on any extra-usage increase until the human answers HUMAN.md 2026-10-15).

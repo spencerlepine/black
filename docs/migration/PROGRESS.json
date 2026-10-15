@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-15T03:46:28Z",
- "commit": "a32301e",
+ "generated": "2026-10-15T04:10:33Z",
+ "commit": "9564c6d",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -8,16 +8,16 @@
   "U": 0.19,
   "HR": 0.125
  },
- "overall": 0.4422,
+ "overall": 0.4425,
  "overall_percent": 44,
  "logic": {
-  "ported": 6224,
+  "ported": 6230,
   "in_scope": 10087.4,
-  "ratio": 0.617,
+  "ratio": 0.6176,
   "ported_by_crate": {
    "black-battle": 2125,
    "black-core": 26,
-   "black-field": 2261,
+   "black-field": 2267,
    "black-pokemon": 186,
    "black-script": 1012,
    "black-storage": 562,
@@ -1172,6 +1172,10 @@
    "crates/black-field/src/proclink.rs": {
     "set": "field",
     "fns": 46
+   },
+   "crates/black-field/src/proclink_event.rs": {
+    "set": "field",
+    "fns": 6
    },
    "crates/black-field/src/symbol_map.rs": {
     "set": "field",

@@ -200,3 +200,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-15 03:25Z** — Resumed by the one-shot cron: GREEN (session 6%, weekly 64%) BUT extra usage 49% → 73% of $100 (~$24 overshoot in the previous window). HUMAN.md entry + stricter guard. USAGE-CHECK every 10 min (d2f2aea9). Resumed F3b, F2b (mutant check first); validator on Sonnet.
 
 - **2026-10-15** — Validator R-20261015-0326 (5ebce73..22b42dd): clean; F12 port fixes confirmed in the disassembly, field diff equal (32 s warm), tail-call scan → OPEN.md. Spawned F14b.
+
+- **2026-10-15** — Merged F14b (proclink_event 6/6; F1-SPLIT rows 10.21/10.22 corrected by the coordinator).
