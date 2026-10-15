@@ -34,13 +34,15 @@ MANIFEST = os.path.join(UI_REF, "manifest.json")
 ROM = os.environ.get("BLACK_ROM_NDS", os.path.join(ROOT, "black-rom", "build", "black.us", "pokeblack.us.nds"))
 SAVETYPE_FLASH_4MBIT = 6
 DEFAULT_HOLD = 4
+RTC_DATE = (2013, 6, 15, 12, 0, 0, 0)  # fixed power-on RTC (y, m, d, h, min, s, ms): noon, so no night tint
+MOVIE_TMP = os.path.join(os.environ.get("TMPDIR", "/tmp"), "capture_ref_rtc.dsm")
 
 sys.path.insert(0, HERE)
 import compare  # noqa: E402  (phash; pillow + numpy)
 
 try:
     from desmume.controls import Keys, keymask
-    from desmume.emulator import DeSmuME
+    from desmume.emulator import DeSmuME, DeSmuME_Date, StartFrom
 except ImportError:
     sys.exit("capture_ref: py-desmume is not installed in this interpreter; run tools/doctor.sh and use /tmp/blk/venv-dsm/bin/python")
 
@@ -60,7 +62,15 @@ def parse_script(s, hold):
             continue
         f, b = item.split(":")
         key = BUTTONS[b.strip().lower()]
-        out.setdefault(int(f), []).append((key, int(f) + hold))
+        f = f.strip()
+        if "-" in f:  # capture_ref-only repeat range "LO-HI/STEP:Button" (a press every STEP frames in [LO, HI])
+            span, step = f.split("/")
+            lo, hi = span.split("-")
+            frames = range(int(lo), int(hi) + 1, int(step))
+        else:
+            frames = [int(f)]
+        for fr in frames:
+            out.setdefault(fr, []).append((key, fr + hold))
     return out
 
 
@@ -85,13 +95,22 @@ class Emu:
             _CORE.open(ROM)
             _CORE.volume_set(0)
         else:
+            if _CORE.movie.is_active():
+                _CORE.movie.stop()
             _CORE.reset()  # power-on state again for the next case
         self.emu = _CORE
+        # DeSmuME's RTC follows the host clock (the game tints the overworld by time of day and shows a clock), so
+        # frames drift run to run. A movie recording with a fixed start date makes the RTC a function of the frame.
+        # A state saved during the recording carries the movie/RTC data with it: loading one must not start a new
+        # recording first (that fails with "Error loading savestate").
         if savestate:
             path = savestate if os.path.isabs(savestate) else os.path.join(STATES, savestate)
             if not os.path.exists(path):
                 raise FileNotFoundError(path)
             self.emu.savestate.load_file(path)
+        else:
+            d = DeSmuME_Date(*RTC_DATE)
+            self.emu.movie.record(MOVIE_TMP, "capture_ref", StartFrom.START_BLANK, "", d)
         self.frame = 0
 
     def run(self, script, until, on_frame):

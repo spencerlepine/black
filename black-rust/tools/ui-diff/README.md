@@ -50,7 +50,11 @@ the venv's Python); results are deterministic.
   once with `--save-state NAME --script "..." --at N` into `ui-ref/states/` and named by `ref.savestate`.
   Save type is forced to FLASH 4 Mbit (autodetect leaves the game on a white screen); the core is a
   process singleton (`reset()` between cases). ~160 frames/s on an M-series Mac. melonDS is not used:
-  version 1.1 has no scripting interface.
+  version 1.1 has no scripting interface. Power-on runs record a DeSmuME movie with a fixed RTC date
+  (2013-06-15 12:00) so day/night tint and clocks do not follow the host clock; scripts accept
+  `LO-HI/STEP:Button` ranges (a press every STEP frames). The `title` and `overworld` states and the exact
+  scripts that make them are documented in `ui-ref/manifest.json` `_doc`; frame numbers of cases that start
+  from a state count from the state.
 - **Human**: sign-off decisions only (`HUMAN.md`), never captures.
 - **UI worker** (Phase G/U item): edit → `python3 -I tools/ui-diff/capture_port.py <case>` →
   `/tmp/blk/venv/bin/python -I tools/ui-diff/compare.py --case <case>` → read the JSON. Add cases for the

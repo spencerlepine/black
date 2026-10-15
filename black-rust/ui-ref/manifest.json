@@ -1,5 +1,5 @@
 {
- "_doc": "UI-diff cases (tools/ui-diff/README.md). Committed; everything else under ui-ref/ is gitignored (D5). Both sides are scripted: port = black-game with BLACK_SCRIPT (fixed frames from power-on: Boot -> Title with 16-frame fades, Title visible from ~79, A at 90 -> NewGame -> Overworld visible from ~184); ref = the DeSmuME core via capture_ref.py (frames from power-on: health screen, A at 400 skips it, intro movie, title screen from ~4900; or from ui-ref/states/<savestate>). ref.frames[i] is compared with port.frames[i]; an entry is an int or a [lo, hi] window (best pair counts). phash is written by capture_ref.py.",
+ "_doc": "UI-diff cases (tools/ui-diff/README.md). Committed; everything else under ui-ref/ is gitignored (D5). Both sides are scripted: port = black-game with BLACK_SCRIPT (fixed frames from power-on: Boot -> Title with 16-frame fades, Title visible from ~79, A at 90 -> NewGame -> Overworld visible from ~184); ref = the DeSmuME core via capture_ref.py (frames from power-on: health screen, A at 400 skips it, intro movie, title screen from ~4900; or from ui-ref/states/<savestate>). ref.frames[i] is compared with port.frames[i]; an entry is an int or a [lo, hi] window (best pair counts). phash is written by capture_ref.py. REFERENCE STATES (make once, ui-ref/states/*.dst, gitignored; capture_ref.py records a fixed-date RTC movie from power-on so the frames do not depend on the host clock; frame numbers of a case that names ref.savestate count from the state). title.dst = title screen: capture_ref.py --save-state title --script \"400:A\" --at 4800 (power-on frame 4800; the old U1 frames 4900/5000/5200/5400-5410/5500-5510 are now 100/200/400/600-610/700-710 and byte-equal to the power-on captures). overworld.dst = Nuvema Town outdoors in front of the player's house, free control, default name AAAAAAA, Tepig chosen, both rival battles done, mom dialogue done (RTC 2013-06-15 12:00): capture_ref.py --save-state overworld --at 37998 --script \"400:A,4900:A,5000:A,5100-15270/30:A,15309:Down,15339-15359/20:Left,15389-15429/20:Down,15469-15489/20:Right,15519:Down,15549-19269/30:A,19308-22278/30:A,22308-25278/30:A,25308-28878/30:A,28908-32478/30:A,32508-32528/20:Up,32558-32698/20:Right,32728-32828/20:Up,32858-32878/20:Left,32898-32998/20:Up,33018:Left,33058-33198/20:Up,33218-33298/20:Right,33318-33498/20:Down,33808-36778/30:A,36808-37228/30:A,37318-37558/20:Down,37578-37638/20:Right,37678-37798/20:Down\" (power-on frame numbers, each press held 4 frames; 'LO-HI/STEP:Button' = a press every STEP frames; phases: 400 skip health screen; 4900/5000/5100-15270 title menu -> New Game -> professor intro, A mash through the name entry (A types AAAAAAA, the name is accepted at the Yes prompt), Tepig, credits and the bedroom cutscene; 15309-15519 walk to the gift box (Down, Left x2, Down x3, Right x2, Down); 15549-32478 A mash through the gift box, starter pick, 2 battles (scripted loss to Bianca, win vs Cheren) and the after-talk; 32508-33498 walk Up/Right/Up/Left/Up/Left/Up/Right to the stairs and Down the stairs; 33808-37228 A mash through mom downstairs; 37318-37798 walk Down/Right/Down out of the house; 37998 save).",
  "cases": [
   {
    "id": "U1-title",
@@ -14,21 +14,22 @@
     ]
    },
    "ref": {
-    "script": "400:A",
+    "script": "",
     "frames": [
-     4900,
-     5000,
-     5200
-    ]
+     100,
+     200,
+     400
+    ],
+    "savestate": "title.dst"
    },
    "regions": {
     "top": "whole",
     "bottom": "whole"
    },
    "phash": {
-    "4900": "6916d27c33d3a469",
-    "5000": "eb055eb435cb8439",
-    "5200": "0fa5721e95636c93"
+    "100": "6996d27c3393a469",
+    "200": "fb055ab435cb8439",
+    "400": "87a5521eb5736c83"
    }
   },
   {
@@ -49,45 +50,46 @@
     ]
    },
    "ref": {
-    "script": "400:A",
+    "script": "",
     "frames": [
      [
-      5400,
-      5410
+      600,
+      610
      ],
      [
-      5500,
-      5510
+      700,
+      710
      ]
-    ]
+    ],
+    "savestate": "title.dst"
    },
    "regions": {
     "top": "whole",
     "bottom": "whole"
    },
    "phash": {
-    "5400": "63fc9c567893244b",
-    "5401": "63fc9c567893244b",
-    "5402": "63fc9c567893244b",
-    "5403": "63fc9c567893244b",
-    "5404": "637c9c567893a44b",
-    "5405": "637c9c567893a44b",
-    "5406": "637c9c567893a44b",
-    "5407": "637c9c567893a44b",
-    "5408": "637c9c567893a44b",
-    "5409": "633c9c767893a44b",
-    "5410": "633c9c767893a44b",
-    "5500": "492b7b34a4b31b1b",
-    "5501": "492b7b34a4b31b1b",
-    "5502": "492b7b34a4b29b1b",
-    "5503": "482b7b34a4b39b1b",
-    "5504": "482b7b3ca4939b1b",
-    "5505": "78297b3ca4929b1b",
-    "5506": "78293b3ea4929b1b",
-    "5507": "78292b3eb4929b1b",
-    "5508": "78292b3eb4929b1b",
-    "5509": "78292b3eb4929b1b",
-    "5510": "78292b3eb4d29b0b"
+    "600": "6358bc567c9324cb",
+    "601": "6358bc567c9324cb",
+    "602": "6378bc56789324cb",
+    "603": "63f8bc567893244b",
+    "604": "637cbc567893244b",
+    "605": "63fc9c567893244b",
+    "606": "63fc9c567893244b",
+    "607": "63fc9c567893244b",
+    "608": "63fc9c567893244b",
+    "609": "637c9c567893a44b",
+    "610": "637c9c567893a44b",
+    "700": "59236f34a033373b",
+    "701": "59237f34a433171b",
+    "702": "59237b34a4b3171b",
+    "703": "59237b34a4b3171b",
+    "704": "492b7b34a4b31b1b",
+    "705": "492b7b34a4b31b1b",
+    "706": "492b7b34a4b31b1b",
+    "707": "492b7b34a4b29b1b",
+    "708": "482b7b34a4b39b1b",
+    "709": "482b7b3ca4939b1b",
+    "710": "78297b3ca4929b1b"
    }
   },
   {
@@ -113,7 +115,10 @@
     "top": "whole",
     "bottom": "whole"
    },
-   "phash": {}
+   "phash": {
+    "60": "5059bb2a6ce68787",
+    "100": "51593b2a6ec68787"
+   }
   },
   {
    "id": "G2-start-menu",
@@ -158,7 +163,23 @@
     "top": "whole",
     "bottom": "whole"
    },
-   "phash": {}
+   "phash": {
+    "98": "51593b2a6ec68787",
+    "99": "51593b2a6ec68787",
+    "100": "51593b2a6ec68787",
+    "101": "51593b2a6ec68787",
+    "102": "51593b2a6ec68787",
+    "113": "51593b2a6ec68787",
+    "114": "51593b2a6ec68787",
+    "115": "51593b2a6ec68787",
+    "116": "51593b2a6ec68787",
+    "117": "51593b2a6ec68787",
+    "128": "51593b2a6ec68787",
+    "129": "51d1bba8ece48587",
+    "130": "51d1bba8ece48587",
+    "131": "51593b2a6ec68787",
+    "132": "51593b2a6ec68787"
+   }
   }
  ]
 }
