@@ -23,6 +23,6 @@ _2026-10-15T03:26:05Z, commit 22b42dd, `python3 -I tools/progress.py`._
 - **Running (cap 3):** F3b (resumed), F2b (resumed), validator (Sonnet, 5ebce73..4577fa8).
 - **Next on resume:** resume F3b and F2b; then F14b, U0b, G-phase (G3, G6, G7, G8, G9), tail-call register audit (F12 finding).
 - **Blocked:** none. B16 flake: B17 fixed `ro_snap` keying; 3/3 full black-battle suites green on main after merge (root cause not proven, OPEN.md).
-- **Usage guard:** RUN (GREEN 6% session / 64% weekly at 03:25Z; USAGE-CHECK cron d2f2aea9 every 10 min; thresholds ORANGE 65% / RED 80% and drain on any extra-usage increase until the human answers HUMAN.md 2026-10-15).
+- **Usage guard:** RUN (GREEN 6% session / 64% weekly at 03:25Z; USAGE-CHECK cron d2f2aea9 every 10 min; session thresholds ORANGE 65% / RED 80% (weekly stays 75/90), drain on any extra-usage increase until the human answers HUMAN.md 2026-10-15).
 - **Disk:** 39 GB free (the human cleared space 2026-10-14); worker cap 3 (human, 2026-10-14: CPU).
 - **RE tooling:** Ghidra headless + rizin + rea (MCP) via `tools/re/` (`ENV.md` "RE workflow"); `tools/doctor.sh` green on macOS. Sets battle, field, bag (ov70), party-summary (ov90/91/131/134) decompiled under /tmp/blk/re/.
