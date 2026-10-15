@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-15T08:58:43Z",
- "commit": "6657bae",
+ "generated": "2026-10-15T09:19:31Z",
+ "commit": "1338d50",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -8,8 +8,8 @@
   "U": 0.19,
   "HR": 0.125
  },
- "overall": 0.4725,
- "overall_percent": 47,
+ "overall": 0.4753,
+ "overall_percent": 48,
  "logic": {
   "ported": 6646,
   "in_scope": 10087.4,
@@ -1551,10 +1551,10 @@
    "score": 0.9375
   },
   "G": {
-   "done": 4,
-   "half": 1,
+   "done": 5,
+   "half": 0,
    "total": 9,
-   "score": 0.5
+   "score": 0.5555555555555556
   },
   "U": {
    "done": 1,
@@ -1700,8 +1700,9 @@
    },
    {
     "id": "G3",
-    "mark": "~",
-    "score": 0.5
+    "mark": "x",
+    "score": 1.0,
+    "archived": true
    },
    {
     "id": "G6",
@@ -1888,13 +1889,23 @@
   ]
  },
  "ui_cases": {
-  "U1-title-anim": {
-   "score": 0.1224,
+  "G2-overworld-idle": {
+   "score": 0.2994,
    "pass": false,
-   "min_screen_score": 0.0001
+   "min_screen_score": 0.1929
+  },
+  "G2-start-menu": {
+   "score": 0.2936,
+   "pass": false,
+   "min_screen_score": 0.214
+  },
+  "U1-title-anim": {
+   "score": 0.1759,
+   "pass": false,
+   "min_screen_score": 0.0969
   },
   "U1-title": {
-   "score": 0.0664,
+   "score": 0.0665,
    "pass": false,
    "min_screen_score": 0.062
   }

@@ -2,7 +2,6 @@
 
 Part of the master checklist (moved out of `MIGRATION-AGENT.md` section 6 on 2026-10-13). Status markers and rules: [§5](../../MIGRATION-AGENT.md). Format: `- [status] ID — TAG — description — deps: … — notes`. A done-note longer than ~400 chars is cut here and kept in full in `../log/<ID>.md`. Finished items are moved out by `tools/archive-checklist.py` (stub in `DONE.md`, full line in `archive/`).
 
-- [~] G3 (worktree-agent-a0fd1d8460ef54392, 2026-10-15) — SEQ — Asset loading: Bevy AssetServer over `assets/`, loading screens, wasm HTTP serving. — deps: G1, A12
 - [ ] G6 — PAR — Audio service: BGM with loop points + crossfade, SE, browser autoplay unlock. — deps: G1, A9
 - [ ] G7 — PAR — Sprite/animation system for NCER/NANR-derived atlases. — deps: G1, A10
 - [ ] G8 — PAR — 3D map renderer for the overworld: glTF from A5 (**decided 3D by the human 2026-10-13**, matching the original's NSBMD maps; no 2D re-render), containers/permissions from A6, camera + lighting values from the asm (g3d_mapper, camera, fog per F1). — deps: G1, A5, A6

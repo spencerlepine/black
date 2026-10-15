@@ -214,3 +214,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-15** — Merged Z24 (6657bae, black-core fx 24 fns). Divider-model disagreement with B19 battle_diff → Z25.
 
 - **2026-10-15 ~09:05Z** — Usage weekly ORANGE 75% → DRAIN (session 10%, extra usage unchanged). Running Z25, G3, validator finish; then pause until the weekly reset 2026-10-20 13:05Z.
+
+- **2026-10-15** — Merged G3 (asset loading). DRAIN continues: Z25 + validator running.
