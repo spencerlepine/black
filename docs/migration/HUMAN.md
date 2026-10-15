@@ -14,6 +14,8 @@ Moved out of `MIGRATION-AGENT.md` (its old section 10) on 2026-10-13. Format: `-
 
 - [x] 2026-10-14 — WEEKLY BUDGET — **DECIDED by the human 2026-10-14: keep full pace**; the USAGE-CAP guard (weekly ORANGE/RED → drain/pause) stops the work near the limit. each 5-hour window with 3 Opus workers uses ~10–12% of the weekly limit (54% at 22:55Z, resets 2026-10-20 13:00Z); at full pace the weekly limit hits 75% (DRAIN) in ~1 day and work then stops until the reset. Options: keep full pace, or cap each 5-hour window at ~50% usage so the weekly budget lasts to the reset — default if unanswered: keep full pace (USAGE-CAP rules unchanged).
 
+- [ ] 2026-10-15 — EXTRA USAGE SPEND — paid "extra usage" rose 49% → 73% of $100 (~$24) between the 2026-10-14 20:15Z and 2026-10-15 03:25Z readings, most likely while 3 Opus workers overshot the 5-hour window (last reading RED 94%) between the 20-minute checks. The usage guard only watches the plan windows. Coordinator safeguard from now on: any increase in the extra-usage % → DRAIN immediately (no new spawns, pause once workers finish). Options: (a) keep that safeguard, (b) also lower ORANGE/RED to 65%/80% to leave more headroom, (c) turn extra usage off in your account settings so overshoot just stops work — default if unanswered: (a) + (b).
+
 ## Resolved (recent)
 
 - [x] 2026-10-11 — HOST (resolved: Ghidra 12.1.4 in ~/tools, brew openjdk@21 symlinked at the mise JDK path; doctor.sh green on macOS) — this session runs on macOS, not the Linux host `ENV.md` documents. — default: run only Ghidra-free items and skip decompile-dependent ones.
