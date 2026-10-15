@@ -5,6 +5,7 @@
 
 pub mod battle_common;
 pub mod battle_record;
+pub mod fx;
 pub mod heap;
 pub mod ids;
 pub mod mi_memory;
