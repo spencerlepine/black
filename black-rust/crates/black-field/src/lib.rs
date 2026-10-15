@@ -9,6 +9,7 @@ pub mod acmd2c;
 pub mod acmd2d;
 pub mod acmd2e;
 pub mod btl_setup;
+pub mod buildmodel;
 pub mod calender;
 pub mod effect_encount;
 pub mod enc_pokeset;
@@ -55,6 +56,8 @@ pub mod player_event;
 pub mod player_grid;
 pub mod proclink;
 pub mod proclink_event;
+pub mod scenearea;
+pub mod scenearea_loader;
 pub mod season;
 pub mod symbol_map;
 #[cfg(test)]

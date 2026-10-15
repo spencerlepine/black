@@ -828,3 +828,22 @@ with every specced function of the area treated as ported: no fault, stray write
 * ARM9 FX vector / matrix routines are stubs whose `out:` buffers feed the `in:` words of the next stub (Z22), so a chain
   (rotation matrix -> matrix x vector -> normalise) is compared end to end; FX_SinCosTable_ is read as ROM data by the original and
   computed by the port.
+
+## F2b-spec additions (black-field buildmodel / scenearea / scenearea_loader)
+
+No new syntax; `svflow.py` and `black-fndiff` are unchanged; no existing spec text or hash changes. Conventions of
+`specs/black-field/{buildmodel,scenearea,scenearea_loader}.spec` (headers), on top of the F11 ones: closure stubs (checked with every
+function of the area treated as ported: no fault, stray write or unstubbed callee); every out-of-area stub is `force`, also between the
+three areas; `--strict-callees` (plain and with the ports) and `--order-check` clean.
+
+* buildmodel's object graph (BM -> model list -> records -> animation headers, resource sets, animation objects, doors, placed-model
+  entries -> state words) lives in one `arg buf 0x10000` arena with fixed zones; the block generator writes the same fix groups into
+  every block that has the arena (the argument index varies: arg 0, or a trailing argument after scalar object pointers such as a door
+  `alt const 0 || oneof <zone addresses>`), so any in-area descendant finds valid pointers. Heap_AllocDebug is a `seqptr` bump allocator
+  into the arena's upper half; in-area stubs that hand out pointers answer `pick:` lists of absolute zone addresses.
+* A callee called with two argument shapes in different functions (`0204784C(obj, i, &frame)` / `(obj, i, 0)`) gets the shape of its
+  caller (the generator keys the stub text by the in-closure caller; no block has both).
+* The "no free entry" path of a 0x120-entry scan (0218C4A0) is reached with an `alt` of one `const 0` and 149 `range 1 0xFFFFFFFF`
+  alternatives per entry (about 15% of the inputs have no free entry).
+* Callback tables in an object (the scene-area check / update tables) hold FAKE callbacks 0x02EE0011 / 0x02EE0021 with `force` stubs at
+  0x02EE0010 / 0x02EE0020.

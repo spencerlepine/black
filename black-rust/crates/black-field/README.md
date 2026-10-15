@@ -1783,3 +1783,64 @@ stack addresses kept in MMDL work), the interpreter's stack depth differing from
 
 **Gaps.** The door / entrance camera animation and every render / sound path are host models; the field's VBlank TCBs
 are not run (only the main task system after the frame); the ARM7 side (RTC ticks, touch, sound) does not exist.
+## F2b: `buildmodel` (89/89), `scenearea` (12/12), `scenearea_loader` (20/20): specs + ports
+
+Three new spec areas under `tools/rom-diff/specs/black-field/` (set `field`), one per original file, all ported and verified with
+`tools/check-fn.sh black-field AREA --per-function`. Closure stubs (with every function of an area treated as ported all blocks run
+without a fault, stray write or unstubbed callee); every out-of-area stub is `force`, also between the three areas; `svflow.py AREA
+--all --strict-callees` (plain and with the ports) and `--order-check` are clean (0 order-dependent functions).
+
+| area | original | range | fns | coverage (plain / closure) | spec hash (`--all`, plain) | area hash (ported) |
+|---|---|---|---|---|---|---|
+| `buildmodel` | `field_buildmodel.c` (ov21, F1 row 21.01) | `0x0218B754..0x0218C9E8` | 89 | 2076/2078 / 2076/2078 (dead cap in 0218BB0C) | 11c73c0e4282a253 | 70726603ed6317a5 |
+| `scenearea` | `fld_scenearea.c` (row 21.31, first part) | `0x021AB5F4..0x021AB7E4` | 12 | 229/229 / 229/229 | 27268a24a1b4e44c | 90d074129d6a1aad |
+| `scenearea_loader` | `fld_scenearea_loader.c` + its callbacks (row 21.31) | `0x021AB7E4..0x021ABD50` | 20 | 607/607 / 607/607 | 90a650d1ed02afa7 | c5fcef97e788b93d |
+
+File bounds: `Heap_AllocDebug` `__FILE__` strings "field_buildmodel.c" (0x021DD9CC, 0218B754 and six more allocations),
+"fld_scenearea.c" (0x021DDFC8, 021AB5F4), "fld_scenearea_loader.c" (0x021DE000, 021AB7E4); fieldmap.c ends at 0x0218B752,
+field_g3d_mapper.c starts at 0x0218C9E8, field_effect.c at 0x021ABD50. Function lists: bl/blx targets of the whole field set, odd code
+pointers (the animation proc tables 0x021D3D58, the scene-area callback tables 0x021DDFD8 / 0x021DDFE0), the Ghidra index and a Thumb
+walk. Render-only functions: none excluded; the draw glue (`0218B88C`, `0218C934`) is ported as a call-through and every G3D /
+field_g3d_map / field_g3d_mapper / camera / FX / sound call is an address behind `FieldEnv::call` (D3).
+
+### Building models (buildmodel, from the code)
+
+* BM (0x13F8): heap, the time of day (season -> time zone `020113D8` -> animation index, ROM 0x021D3D50), the model list (archive
+  0xE5 / 0xE6 member by the zone's model set, `member_of`), a 400-byte id map, texture / animation resources, 7 door slots, 0x120
+  placed-model entries. Layouts in the spec header.
+* Animation kinds by the record's header byte (ROM proc tables 0x021D3D58 {init, frame, state} x 4): 0 none, 1 loop all, 2 scripted
+  states (play forward / backward once, loop, stop; state 0 off, 1 looping, 2 stopped, 3 / 4 playing), 3 by time of day.
+* Doors: a door object is made for the placed model of a door kind found in a box around a position (`door_new_near`), or at a given
+  transform (`door_new_at`); door SEs from ROM 0x021D3D88.
+
+### Scene areas (scenearea, scenearea_loader)
+
+* SA (0x20): per frame `update` runs the CHECK callback of every area, then EXIT / ENTER on a change or UPDATE; callbacks are
+  `f(sa, area, pos)` from a callback descriptor (ROM 0x021D8EF4 for the loader's table: checks ring sector / grid rect, updates circle /
+  fixed / interpolated cameras, target offset, field of view).
+* The loader opens ARC 0x50 / 0x9E and loads a member as the area list (count = size / 0x48).
+
+ROM tables embedded (tests compare them with overlay 21): `buildmodel::{TOD_ANIM, DOOR_KIND, DOOR_SE}` and the proc tables,
+`scenearea_loader::{ARCS, CALLBACK_TABLE}` and the callback tables. `FX_SinCosTable_` is computed (`field_light::fx_sin`,
+`fieldmap::fx_cos`); the 64-bit fx32 products (`0209C054`) are inlined.
+
+| C | Rust |
+|---|------|
+| `FUN_0218B754` / `0218B7F8` / `0218B83C` / `0218B8AC` | `buildmodel::{new, delete, update, load}` |
+| `FUN_0218B974` / `0218C4A0` / `0218C4EC` | `buildmodel::{place_block, place, remove}` |
+| `FUN_0218BFB4` / `0218C124` / `0218C3B0` | `buildmodel::{make_obj, obj_frame, set_state}` |
+| `FUN_0218C724` / `0218C7D8` / `0218C7F0` / `0218C860` | `buildmodel::{door_new, door_new_near, door_new_at, door_delete}` |
+| `FUN_021AB5F4` / `021AB634` / `021AB660` | `scenearea::{new, set_list, update}` |
+| `FUN_021AB7E4` / `021AB840` / `021AB888` | `scenearea_loader::{new, load, callback_table}` |
+| `FUN_021AB890` / `021ABA3C` / `021AB908` / `021ABABC` | `scenearea_loader::{check_ring, check_rect, cam_circle, cam_lerp}` |
+
+UNVERIFIED (unreachable for the differential tests): an animation kind above 3 (the originals call words past the proc tables; the
+ports panic), a time zone from 8 on (`tod_update` panics where the original reads past ROM 0x021D3D50), `frame_of` when `02047828` does
+not write its out value (the original answers its caller's r3, the port 0), a camera angle above 0xFFFF in `cam_circle` (the original
+reads outside `FX_SinCosTable_`, the port continues the sine). Deliberate deviations: none in behaviour; unused arguments are dropped from
+the Rust signatures (doc comments say which).
+
+Mutation spot check (`check-fn.sh --fn`, each reverted; `/tmp/blk/f2b/mutate.py`): 36 of 36 caught (scenearea 5, scenearea_loader 12,
+buildmodel 19). Survivors of the first run closed with spec inputs: ring-sector bounds (FX_Atan2Idx / VEC_Mag answers on the area
+bounds), the +0x800 rounding (FX_Div answers 0x800 / 0x1800), the box bound of `find_in_box` (VEC_Add `outw` answers from the bounds'
+set), the 0x80 map-byte bound of `index_of` (model count drawn to 0xFFFF where only compared).
