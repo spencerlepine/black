@@ -206,3 +206,5 @@ Moved out of `MIGRATION-AGENT.md` (its old section 9) on 2026-10-13. Append-only
 - **2026-10-15 ~05:00Z** — Usage session 70% (≥ temporary 65%) → DRAIN; weekly 73%; extra usage unchanged. Settings: worktree-cleanup allow-list extended (b39f590, human request).
 
 - **2026-10-15** — Merged F2b (121/121) and F3b (283/283) → F2 and F3 done; both rebased with union README/lib.rs, SYMBOLS regenerated, F12 ports.rs regenerated (3082 ports) with the F12 trace unchanged. Still DRAIN; U0b running.
+
+- **2026-10-15 ~05:45Z** — Merged U0b (46e41b2). Drain finished (no workers) → PAUSED until 08:25Z (resume cron 4c5ab36b, local 01:25); USAGE-CHECK cron deleted. Window 03:25–05:45Z: merged F14b, F2b, F3b, U0b (+ validator clean); progress 44% → 46%. ui-ref states/references regenerating in the main checkout (gitignored).

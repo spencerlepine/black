@@ -129,3 +129,4 @@ Full lines: `archive/<P>.md`; long done-notes: `../log/<ID>.md`; history: git. A
 - [x] F14 — F — PAR — field_task(+manager) (ov21 0x021C6C70, 79 fns) + event_field_proclink.c (ov10 0x02160A94, 57 fns): field task/proc glue for G2/F12. — (aaa171b)
 - [x] F2 — F — PAR — Map matrix, zone headers, map loading model. — (8ce1524)
 - [x] F3 — F — PAR — Collision/permission grid, player movement (walk/run/bike/surf, ledges, slopes), facing. — (6de9937)
+- [x] U0 — U — SEQ — UI diff kit (2026-10-13, layout-refactor commits): `tools/ui-diff/` (`compare.py` SSIM/ΔE76/Canny-IoU metric in pure numpy, `capture_p… — (46e41b2)

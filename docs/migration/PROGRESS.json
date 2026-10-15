@@ -1,6 +1,6 @@
 {
- "generated": "2026-10-15T05:25:24Z",
- "commit": "ef127ee",
+ "generated": "2026-10-15T05:28:20Z",
+ "commit": "46e41b2",
  "weights": {
   "logic": 0.56,
   "A": 0.075,
@@ -8,8 +8,8 @@
   "U": 0.19,
   "HR": 0.125
  },
- "overall": 0.4649,
- "overall_percent": 46,
+ "overall": 0.4691,
+ "overall_percent": 47,
  "logic": {
   "ported": 6634,
   "in_scope": 10087.4,
@@ -1553,10 +1553,10 @@
    "score": 0.4444444444444444
   },
   "U": {
-   "done": 0,
-   "half": 1,
+   "done": 1,
+   "half": 0,
    "total": 23,
-   "score": 0.021739130434782608
+   "score": 0.043478260869565216
   },
   "H": {
    "done": 0,
@@ -1724,8 +1724,8 @@
    {
     "id": "U0",
     "mark": "x",
-    "score": 0.5,
-    "note": "pending sign-off (0/0 ui cases pass)"
+    "score": 1.0,
+    "archived": true
    },
    {
     "id": "U1",
