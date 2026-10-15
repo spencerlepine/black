@@ -322,6 +322,19 @@
 //! - `02189A68` `crate::fieldmap`
 //! - `02189A70` `crate::fieldmap`
 //! - `02189A78` `crate::fieldmap`
+//! - `021A6428` `crate::player_nogrid`
+//! - `021A6714` `crate::player_nogrid`
+//! - `021A6720` `crate::player_nogrid`
+//! - `021A672C` `crate::player_nogrid`
+//! - `021A6738` `crate::player_nogrid`
+//! - `021A6744` `crate::player_nogrid`
+//! - `021A6750` `crate::player_nogrid`
+//! - `021A675C` `crate::player_nogrid`
+//! - `021A6768` `crate::player_nogrid`
+//! - `021A6774` `crate::player_nogrid`
+//! - `021A6780` `crate::player_nogrid`
+//! - `021A678C` `crate::player_nogrid`
+//! - `021A6798` `crate::player_nogrid`
 //! - `021AE948` `black_script::scrcmd_fld`
 //! - `021AE994` `black_script::scrcmd_fld`
 //! - `021AE9CC` `black_script::scrcmd_fld`
@@ -611,6 +624,8 @@ pub const SOURCES: &[&[u32]] = &[
     crate::btl_setup::PORTED,
     crate::buildmodel::PORTED,
     crate::calender::PORTED,
+    crate::ctrl_hybrid::PORTED,
+    crate::ctrl_nogrid::PORTED,
     crate::effect_encount::PORTED,
     crate::enc_pokeset::PORTED,
     crate::encount::PORTED,
@@ -644,13 +659,20 @@ pub const SOURCES: &[&[u32]] = &[
     crate::mvproc3c::PORTED,
     crate::mvproc3d::PORTED,
     crate::namipoke::PORTED,
+    crate::nogrid_mapper::PORTED,
     crate::ov63_event::PORTED,
     crate::player::PORTED,
     crate::player_core::PORTED,
     crate::player_event::PORTED,
     crate::player_grid::PORTED,
+    crate::player_nogrid::PORTED,
     crate::proclink::PORTED,
     crate::proclink_event::PORTED,
+    crate::rail::PORTED,
+    crate::rail_attr::PORTED,
+    crate::rail_cam::PORTED,
+    crate::rail_loader::PORTED,
+    crate::rail_move::PORTED,
     crate::scenearea::PORTED,
     crate::scenearea_loader::PORTED,
     crate::symbol_map::PORTED,
@@ -1005,6 +1027,19 @@ pub const UNMAPPED: &[u32] = &[
     0x0218_9A68,
     0x0218_9A70,
     0x0218_9A78,
+    0x021A_6428,
+    0x021A_6714,
+    0x021A_6720,
+    0x021A_672C,
+    0x021A_6738,
+    0x021A_6744,
+    0x021A_6750,
+    0x021A_675C,
+    0x021A_6768,
+    0x021A_6774,
+    0x021A_6780,
+    0x021A_678C,
+    0x021A_6798,
     0x021A_E948,
     0x021A_E994,
     0x021A_E9CC,
@@ -3096,6 +3131,13 @@ pub const PORTS: &[(u32, u16, &str)] = &[
     (0x0219_C2E0, 21, "mvproc3d"),
     (0x0219_C314, 21, "mvproc3d"),
     (0x0219_C338, 21, "mvproc3d"),
+    (0x0219_EF14, 21, "rail_loader"),
+    (0x0219_EF44, 21, "rail_loader"),
+    (0x0219_EF6C, 21, "rail_loader"),
+    (0x0219_EF7C, 21, "rail_loader"),
+    (0x0219_EFFC, 21, "rail_loader"),
+    (0x0219_F018, 21, "rail_loader"),
+    (0x0219_F01C, 21, "rail_loader"),
     (0x021A_03D0, 21, "field_light"),
     (0x021A_0448, 21, "field_light"),
     (0x021A_0458, 21, "field_light"),
@@ -3434,6 +3476,103 @@ pub const PORTS: &[(u32, u16, &str)] = &[
     (0x021A_5788, 21, "player_grid"),
     (0x021A_57C0, 21, "player_grid"),
     (0x021A_5810, 21, "player_grid"),
+    (0x021A_5880, 21, "player_nogrid"),
+    (0x021A_5920, 21, "player_nogrid"),
+    (0x021A_5928, 21, "player_nogrid"),
+    (0x021A_5964, 21, "player_nogrid"),
+    (0x021A_596C, 21, "player_nogrid"),
+    (0x021A_59DC, 21, "player_nogrid"),
+    (0x021A_59EC, 21, "player_nogrid"),
+    (0x021A_5A00, 21, "player_nogrid"),
+    (0x021A_5A0C, 21, "player_nogrid"),
+    (0x021A_5A18, 21, "player_nogrid"),
+    (0x021A_5A24, 21, "player_nogrid"),
+    (0x021A_5A30, 21, "player_nogrid"),
+    (0x021A_5A34, 21, "player_nogrid"),
+    (0x021A_5A68, 21, "player_nogrid"),
+    (0x021A_5AD4, 21, "player_nogrid"),
+    (0x021A_5B4C, 21, "player_nogrid"),
+    (0x021A_5B6C, 21, "player_nogrid"),
+    (0x021A_5B7C, 21, "player_nogrid"),
+    (0x021A_5BC0, 21, "player_nogrid"),
+    (0x021A_5C3C, 21, "player_nogrid"),
+    (0x021A_5CA4, 21, "player_nogrid"),
+    (0x021A_5D04, 21, "player_nogrid"),
+    (0x021A_5DD8, 21, "player_nogrid"),
+    (0x021A_5E28, 21, "player_nogrid"),
+    (0x021A_5EA0, 21, "player_nogrid"),
+    (0x021A_5EA4, 21, "player_nogrid"),
+    (0x021A_5EDC, 21, "player_nogrid"),
+    (0x021A_5F14, 21, "player_nogrid"),
+    (0x021A_5F38, 21, "player_nogrid"),
+    (0x021A_5F74, 21, "player_nogrid"),
+    (0x021A_5F98, 21, "player_nogrid"),
+    (0x021A_6014, 21, "player_nogrid"),
+    (0x021A_607C, 21, "player_nogrid"),
+    (0x021A_60DC, 21, "player_nogrid"),
+    (0x021A_61B0, 21, "player_nogrid"),
+    (0x021A_6200, 21, "player_nogrid"),
+    (0x021A_6278, 21, "player_nogrid"),
+    (0x021A_627C, 21, "player_nogrid"),
+    (0x021A_62B4, 21, "player_nogrid"),
+    (0x021A_62D8, 21, "player_nogrid"),
+    (0x021A_62FC, 21, "player_nogrid"),
+    (0x021A_6338, 21, "player_nogrid"),
+    (0x021A_635C, 21, "player_nogrid"),
+    (0x021A_63EC, 21, "player_nogrid"),
+    (0x021A_63F0, 21, "player_nogrid"),
+    (0x021A_6454, 21, "player_nogrid"),
+    (0x021A_6478, 21, "player_nogrid"),
+    (0x021A_64B4, 21, "player_nogrid"),
+    (0x021A_652C, 21, "player_nogrid"),
+    (0x021A_658C, 21, "player_nogrid"),
+    (0x021A_661C, 21, "player_nogrid"),
+    (0x021A_666C, 21, "player_nogrid"),
+    (0x021A_66E4, 21, "player_nogrid"),
+    (0x021A_66EC, 21, "player_nogrid"),
+    (0x021A_66F8, 21, "player_nogrid"),
+    (0x021A_6708, 21, "player_nogrid"),
+    (0x021A_67A4, 21, "player_nogrid"),
+    (0x021A_682C, 21, "player_nogrid"),
+    (0x021A_6870, 21, "player_nogrid"),
+    (0x021A_6908, 21, "player_nogrid"),
+    (0x021A_6974, 21, "player_nogrid"),
+    (0x021A_69D8, 21, "player_nogrid"),
+    (0x021A_6A3C, 21, "player_nogrid"),
+    (0x021A_6A64, 21, "player_nogrid"),
+    (0x021A_6A8C, 21, "player_nogrid"),
+    (0x021A_6AA0, 21, "player_nogrid"),
+    (0x021A_6B08, 21, "player_nogrid"),
+    (0x021A_6B30, 21, "player_nogrid"),
+    (0x021A_6B50, 21, "player_nogrid"),
+    (0x021A_6B88, 21, "player_nogrid"),
+    (0x021A_6B9C, 21, "player_nogrid"),
+    (0x021A_6BAC, 21, "player_nogrid"),
+    (0x021A_6BB4, 21, "player_nogrid"),
+    (0x021A_6C30, 21, "player_nogrid"),
+    (0x021A_6C4C, 21, "player_nogrid"),
+    (0x021A_6C64, 21, "player_nogrid"),
+    (0x021A_6C6C, 21, "player_nogrid"),
+    (0x021A_6CB8, 21, "ctrl_nogrid"),
+    (0x021A_6D30, 21, "ctrl_nogrid"),
+    (0x021A_6D3C, 21, "ctrl_nogrid"),
+    (0x021A_6D48, 21, "ctrl_nogrid"),
+    (0x021A_6D58, 21, "ctrl_nogrid"),
+    (0x021A_6D9C, 21, "ctrl_nogrid"),
+    (0x021A_6DA4, 21, "ctrl_nogrid"),
+    (0x021A_6DC0, 21, "ctrl_nogrid"),
+    (0x021A_6DC4, 21, "ctrl_hybrid"),
+    (0x021A_6E30, 21, "ctrl_hybrid"),
+    (0x021A_6F18, 21, "ctrl_hybrid"),
+    (0x021A_6F24, 21, "ctrl_hybrid"),
+    (0x021A_6F4C, 21, "ctrl_hybrid"),
+    (0x021A_6F5C, 21, "ctrl_hybrid"),
+    (0x021A_7010, 21, "ctrl_hybrid"),
+    (0x021A_70D0, 21, "ctrl_hybrid"),
+    (0x021A_712C, 21, "ctrl_hybrid"),
+    (0x021A_7198, 21, "ctrl_hybrid"),
+    (0x021A_71E4, 21, "ctrl_hybrid"),
+    (0x021A_7258, 21, "ctrl_hybrid"),
     (0x021A_9350, 21, "enc_pokeset"),
     (0x021A_94B0, 21, "enc_pokeset"),
     (0x021A_9508, 21, "enc_pokeset"),
@@ -3851,6 +3990,172 @@ pub const PORTS: &[(u32, u16, &str)] = &[
     (0x021B_709C, 21, "scrcmd_pokemon_fld"),
     (0x021B_70D4, 21, "scrcmd_pokemon_fld"),
     (0x021B_7390, 21, "scrcmd_pokemon_fld"),
+    (0x021B_7884, 21, "rail"),
+    (0x021B_791C, 21, "rail"),
+    (0x021B_7934, 21, "rail"),
+    (0x021B_7954, 21, "rail"),
+    (0x021B_7970, 21, "rail"),
+    (0x021B_79AC, 21, "rail"),
+    (0x021B_79C4, 21, "rail"),
+    (0x021B_79CC, 21, "rail"),
+    (0x021B_79D4, 21, "rail"),
+    (0x021B_79E4, 21, "rail"),
+    (0x021B_79F0, 21, "rail"),
+    (0x021B_7A84, 21, "rail"),
+    (0x021B_7C04, 21, "rail"),
+    (0x021B_7C38, 21, "rail"),
+    (0x021B_7C58, 21, "rail"),
+    (0x021B_7C90, 21, "rail"),
+    (0x021B_7CD8, 21, "rail"),
+    (0x021B_7D38, 21, "rail"),
+    (0x021B_7D50, 21, "rail"),
+    (0x021B_7D68, 21, "rail"),
+    (0x021B_7DC0, 21, "rail"),
+    (0x021B_7DE0, 21, "rail"),
+    (0x021B_7E60, 21, "rail"),
+    (0x021B_7ED4, 21, "rail"),
+    (0x021B_7EE4, 21, "rail"),
+    (0x021B_8028, 21, "rail"),
+    (0x021B_8038, 21, "rail"),
+    (0x021B_8040, 21, "rail"),
+    (0x021B_8048, 21, "rail"),
+    (0x021B_8050, 21, "rail"),
+    (0x021B_80D8, 21, "rail"),
+    (0x021B_80E0, 21, "rail"),
+    (0x021B_810C, 21, "rail"),
+    (0x021B_821C, 21, "rail"),
+    (0x021B_8220, 21, "rail"),
+    (0x021B_8224, 21, "rail"),
+    (0x021B_8230, 21, "rail"),
+    (0x021B_823C, 21, "rail"),
+    (0x021B_8248, 21, "rail"),
+    (0x021B_824C, 21, "rail"),
+    (0x021B_8250, 21, "rail"),
+    (0x021B_82F0, 21, "rail"),
+    (0x021B_82F4, 21, "rail"),
+    (0x021B_82F8, 21, "rail"),
+    (0x021B_82FC, 21, "rail"),
+    (0x021B_8300, 21, "rail"),
+    (0x021B_8304, 21, "rail"),
+    (0x021B_8308, 21, "rail"),
+    (0x021B_830C, 21, "rail"),
+    (0x021B_8314, 21, "rail"),
+    (0x021B_8328, 21, "rail"),
+    (0x021B_833C, 21, "rail"),
+    (0x021B_834C, 21, "rail"),
+    (0x021B_835C, 21, "rail"),
+    (0x021B_836C, 21, "rail"),
+    (0x021B_8378, 21, "rail"),
+    (0x021B_83B0, 21, "rail"),
+    (0x021B_83FC, 21, "rail"),
+    (0x021B_8484, 21, "rail"),
+    (0x021B_8514, 21, "rail"),
+    (0x021B_854C, 21, "rail"),
+    (0x021B_8658, 21, "rail"),
+    (0x021B_8674, 21, "rail"),
+    (0x021B_868C, 21, "rail"),
+    (0x021B_86A4, 21, "rail"),
+    (0x021B_87BC, 21, "rail"),
+    (0x021B_87C8, 21, "rail"),
+    (0x021B_87D8, 21, "rail"),
+    (0x021B_87FC, 21, "rail"),
+    (0x021B_8820, 21, "rail"),
+    (0x021B_8848, 21, "rail"),
+    (0x021B_8870, 21, "rail"),
+    (0x021B_8894, 21, "rail"),
+    (0x021B_88B8, 21, "rail"),
+    (0x021B_88DC, 21, "rail_move"),
+    (0x021B_9164, 21, "rail_move"),
+    (0x021B_919C, 21, "rail_move"),
+    (0x021B_91A8, 21, "rail_move"),
+    (0x021B_91AC, 21, "rail_move"),
+    (0x021B_91C8, 21, "rail_move"),
+    (0x021B_91F8, 21, "rail_move"),
+    (0x021B_9238, 21, "rail_move"),
+    (0x021B_9278, 21, "rail_move"),
+    (0x021B_9280, 21, "rail_move"),
+    (0x021B_9338, 21, "rail_move"),
+    (0x021B_9368, 21, "rail_move"),
+    (0x021B_93D4, 21, "rail_move"),
+    (0x021B_9404, 21, "rail_move"),
+    (0x021B_9434, 21, "rail_move"),
+    (0x021B_9464, 21, "rail_move"),
+    (0x021B_9478, 21, "rail_move"),
+    (0x021B_949C, 21, "rail_move"),
+    (0x021B_94C0, 21, "rail_move"),
+    (0x021B_94D8, 21, "rail_move"),
+    (0x021B_9510, 21, "rail_move"),
+    (0x021B_9530, 21, "rail_move"),
+    (0x021B_95C0, 21, "rail_move"),
+    (0x021B_960C, 21, "rail_move"),
+    (0x021B_963C, 21, "rail_move"),
+    (0x021B_96AC, 21, "rail_move"),
+    (0x021B_9768, 21, "rail_move"),
+    (0x021B_976C, 21, "rail_move"),
+    (0x021B_977C, 21, "rail_move"),
+    (0x021B_97D0, 21, "rail_move"),
+    (0x021B_97FC, 21, "rail_move"),
+    (0x021B_9828, 21, "rail_move"),
+    (0x021B_9A50, 21, "rail_move"),
+    (0x021B_9B24, 21, "rail_move"),
+    (0x021B_9B7C, 21, "rail_cam"),
+    (0x021B_9C28, 21, "rail_cam"),
+    (0x021B_9D60, 21, "rail_cam"),
+    (0x021B_9E84, 21, "rail_cam"),
+    (0x021B_9FC8, 21, "rail_cam"),
+    (0x021B_A25C, 21, "rail_cam"),
+    (0x021B_A2B4, 21, "rail_cam"),
+    (0x021B_A310, 21, "rail_cam"),
+    (0x021B_A348, 21, "rail_cam"),
+    (0x021B_A494, 21, "rail_cam"),
+    (0x021B_A4C4, 21, "rail_cam"),
+    (0x021B_A4FC, 21, "rail_cam"),
+    (0x021B_A550, 21, "rail_cam"),
+    (0x021B_A6E8, 21, "rail_cam"),
+    (0x021B_A7B0, 21, "rail_cam"),
+    (0x021B_A7E0, 21, "rail_cam"),
+    (0x021B_A8E0, 21, "rail_cam"),
+    (0x021B_A9B4, 21, "rail_cam"),
+    (0x021B_AA30, 21, "rail_cam"),
+    (0x021B_AA9C, 21, "rail_cam"),
+    (0x021B_AB30, 21, "rail_cam"),
+    (0x021B_ABB4, 21, "rail_cam"),
+    (0x021B_ABDC, 21, "rail_cam"),
+    (0x021B_AC04, 21, "rail_cam"),
+    (0x021B_AC74, 21, "rail_cam"),
+    (0x021B_ACA8, 21, "rail_cam"),
+    (0x021B_AE7C, 21, "rail_cam"),
+    (0x021B_B014, 21, "rail_cam"),
+    (0x021B_B088, 21, "rail_attr"),
+    (0x021B_B0A4, 21, "rail_attr"),
+    (0x021B_B0B4, 21, "rail_attr"),
+    (0x021B_B11C, 21, "rail_attr"),
+    (0x021B_B13C, 21, "rail_attr"),
+    (0x021B_B188, 21, "rail_attr"),
+    (0x021B_B1A0, 21, "rail_attr"),
+    (0x021B_B1AC, 21, "rail_attr"),
+    (0x021B_B1B8, 21, "rail_attr"),
+    (0x021B_B1C4, 21, "rail_attr"),
+    (0x021B_B1D0, 21, "rail_attr"),
+    (0x021B_B1DC, 21, "rail_attr"),
+    (0x021B_B1E8, 21, "rail_attr"),
+    (0x021B_B1F4, 21, "nogrid_mapper"),
+    (0x021B_B240, 21, "nogrid_mapper"),
+    (0x021B_B260, 21, "nogrid_mapper"),
+    (0x021B_B278, 21, "nogrid_mapper"),
+    (0x021B_B2F8, 21, "nogrid_mapper"),
+    (0x021B_B348, 21, "nogrid_mapper"),
+    (0x021B_B36C, 21, "nogrid_mapper"),
+    (0x021B_B388, 21, "nogrid_mapper"),
+    (0x021B_B394, 21, "nogrid_mapper"),
+    (0x021B_B3A0, 21, "nogrid_mapper"),
+    (0x021B_B3AC, 21, "nogrid_mapper"),
+    (0x021B_B3B8, 21, "nogrid_mapper"),
+    (0x021B_B3C4, 21, "nogrid_mapper"),
+    (0x021B_B3D0, 21, "nogrid_mapper"),
+    (0x021B_B3DC, 21, "nogrid_mapper"),
+    (0x021B_B3E8, 21, "nogrid_mapper"),
+    (0x021B_B480, 21, "nogrid_mapper"),
     (0x021B_B890, 21, "fieldmap_func"),
     (0x021B_B90C, 21, "fieldmap_func"),
     (0x021B_B948, 21, "fieldmap_func"),
@@ -8822,6 +9127,37 @@ pub fn call(env: &mut Env, addr: u32, a: &[u32]) -> u64 {
         0x0219_C2E0 => (crate::mvproc3d::wall_dir(env, a[0], a[1], a[2])) as u64,
         0x0219_C314 => (crate::mvproc3d::wall_dir_hit(env, a[0], a[1], a[2])) as u64,
         0x0219_C338 => (crate::mvproc3d::wall_step(env, a[0], a[1], a[2])) as u64,
+        0x0219_EF14 => {
+            ({
+                crate::rail_loader::clear(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0219_EF44 => (u64::from(crate::rail_loader::create(env, a[0]))) as u64,
+        0x0219_EF6C => {
+            ({
+                crate::rail_loader::delete(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0219_EF7C => {
+            ({
+                crate::rail_loader::load(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x0219_EFFC => {
+            ({
+                crate::rail_loader::unload(env, a[0]);
+                0
+            }) as u64
+        }
+        0x0219_F018 => (u64::from(crate::rail_loader::rail_data(a[0]))) as u64,
+        0x0219_F01C => {
+            (u64::from(crate::rail_loader::call_02158768(
+                env, a[0], a[2], a[4], a[5],
+            ))) as u64
+        }
         0x021A_03D0 => (crate::field_light::new(env, a[0], a[1], a[2], a[3], a[4], a[5])) as u64,
         0x021A_0448 => {
             crate::field_light::delete(env, a[0]);
@@ -9939,6 +10275,456 @@ pub fn call(env: &mut Env, addr: u32, a: &[u32]) -> u64 {
         0x021A_5788 => (crate::player_grid::attr_ahead(env, a[0], a[1], a[2]) as u64) as u64,
         0x021A_57C0 => (crate::player_grid::slope(env, a[0], a[1]) as u64) as u64,
         0x021A_5810 => (crate::player_grid::warp_ahead(env, a[0], a[1]) as u64) as u64,
+        0x021A_5880 => (u64::from(crate::player_nogrid::create(env, a[0], a[1]))) as u64,
+        0x021A_5920 => {
+            ({
+                crate::player_nogrid::delete(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_5928 => {
+            ({
+                crate::player_nogrid::reset_rail(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_5964 => {
+            ({
+                crate::player_nogrid::clear_rail(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_596C => {
+            ({
+                crate::player_nogrid::frame(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_59DC => (u64::from(crate::player_nogrid::is_bump(env, a[0]))) as u64,
+        0x021A_59EC => (u64::from(crate::player_nogrid::is_sliding(env, a[0]))) as u64,
+        0x021A_5A00 => {
+            ({
+                crate::player_nogrid::set_loc(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_5A0C => {
+            ({
+                crate::player_nogrid::get_loc(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_5A18 => {
+            ({
+                crate::player_nogrid::front_loc(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_5A24 => {
+            ({
+                crate::player_nogrid::rail_pos(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_5A30 => (u64::from(crate::player_nogrid::rail_work(env, a[0]))) as u64,
+        0x021A_5A34 => {
+            ({
+                crate::player_nogrid::end_bump(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_5A68 => {
+            (u64::from(crate::player_nogrid::move_value(
+                env, a[0], a[1], a[2], a[3], a[4],
+            ))) as u64
+        }
+        0x021A_5AD4 => {
+            ({
+                crate::player_nogrid::action(env, a[0], a[1], a[2], a[3], a[4], a[5]);
+                0
+            }) as u64
+        }
+        0x021A_5B4C => {
+            ({
+                crate::player_nogrid::after_value(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_5B6C => (u64::from(crate::player_nogrid::hit(env, a[1], a[2], a[3]))) as u64,
+        0x021A_5B7C => {
+            ({
+                crate::player_nogrid::eff_update(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_5BC0 => {
+            ({
+                crate::player_nogrid::walk_action(env, a[0], a[1], a[2], a[3], a[4], a[5]);
+                0
+            }) as u64
+        }
+        0x021A_5C3C => {
+            (u64::from(crate::player_nogrid::walk_value(
+                env, a[0], a[1], a[2], a[3], a[4],
+            ))) as u64
+        }
+        0x021A_5CA4 => {
+            (u64::from(crate::player_nogrid::walk_v_stand(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021A_5D04 => {
+            (u64::from(crate::player_nogrid::v_walk(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021A_5DD8 => {
+            (u64::from(crate::player_nogrid::walk_v_turn(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021A_5E28 => {
+            (u64::from(crate::player_nogrid::walk_v_bump(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021A_5EA0 => {
+            ({
+                crate::player_nogrid::act_none();
+                0
+            }) as u64
+        }
+        0x021A_5EA4 => {
+            ({
+                crate::player_nogrid::act_stand(env, a[0], a[1], a[4]);
+                0
+            }) as u64
+        }
+        0x021A_5EDC => {
+            ({
+                crate::player_nogrid::act_walk(env, a[0], a[1], a[3], a[4], a[5]);
+                0
+            }) as u64
+        }
+        0x021A_5F14 => {
+            ({
+                crate::player_nogrid::act_turn(env, a[0], a[1], a[4]);
+                0
+            }) as u64
+        }
+        0x021A_5F38 => {
+            ({
+                crate::player_nogrid::act_bump(env, a[0], a[1], a[4]);
+                0
+            }) as u64
+        }
+        0x021A_5F74 => {
+            ({
+                crate::player_nogrid::act_base(env, a[0], a[1], a[4], 0x38, 1);
+                0
+            }) as u64
+        }
+        0x021A_5F98 => {
+            ({
+                crate::player_nogrid::cycle_action(env, a[0], a[1], a[2], a[3], a[4], a[5]);
+                0
+            }) as u64
+        }
+        0x021A_6014 => {
+            (u64::from(crate::player_nogrid::cycle_value(
+                env, a[0], a[1], a[2], a[3], a[4],
+            ))) as u64
+        }
+        0x021A_607C => {
+            (u64::from(crate::player_nogrid::cycle_v_stand(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021A_60DC => {
+            (u64::from(crate::player_nogrid::cycle_v_walk(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021A_61B0 => {
+            (u64::from(crate::player_nogrid::cycle_v_turn(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021A_6200 => {
+            (u64::from(crate::player_nogrid::cycle_v_bump(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021A_6278 => {
+            ({
+                crate::player_nogrid::act_none();
+                0
+            }) as u64
+        }
+        0x021A_627C => {
+            ({
+                crate::player_nogrid::act_stand(env, a[0], a[1], a[4]);
+                0
+            }) as u64
+        }
+        0x021A_62B4 => {
+            ({
+                crate::player_nogrid::act_base(env, a[0], a[1], a[4], 0x14, 1);
+                0
+            }) as u64
+        }
+        0x021A_62D8 => {
+            ({
+                crate::player_nogrid::act_turn(env, a[0], a[1], a[4]);
+                0
+            }) as u64
+        }
+        0x021A_62FC => {
+            ({
+                crate::player_nogrid::act_bump(env, a[0], a[1], a[4]);
+                0
+            }) as u64
+        }
+        0x021A_6338 => {
+            ({
+                crate::player_nogrid::act_base(env, a[0], a[1], a[4], 0x38, 1);
+                0
+            }) as u64
+        }
+        0x021A_635C => {
+            ({
+                crate::player_nogrid::surf_action(env, a[0], a[1], a[2], a[3], a[4], a[5]);
+                0
+            }) as u64
+        }
+        0x021A_63EC => {
+            ({
+                crate::player_nogrid::act_none();
+                0
+            }) as u64
+        }
+        0x021A_63F0 => {
+            ({
+                crate::player_nogrid::act_stand(env, a[0], a[1], a[4]);
+                0
+            }) as u64
+        }
+        0x021A_6454 => {
+            ({
+                crate::player_nogrid::act_turn(env, a[0], a[1], a[4]);
+                0
+            }) as u64
+        }
+        0x021A_6478 => {
+            ({
+                crate::player_nogrid::act_bump(env, a[0], a[1], a[4]);
+                0
+            }) as u64
+        }
+        0x021A_64B4 => {
+            (u64::from(crate::player_nogrid::surf_value(
+                env, a[0], a[1], a[2], a[3], a[4],
+            ))) as u64
+        }
+        0x021A_652C => {
+            (u64::from(crate::player_nogrid::surf_v_stand(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021A_658C => {
+            (u64::from(crate::player_nogrid::surf_v_walk(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021A_661C => {
+            (u64::from(crate::player_nogrid::surf_v_turn(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021A_666C => {
+            (u64::from(crate::player_nogrid::surf_v_bump(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021A_66E4 => {
+            ({
+                crate::player_nogrid::set_flags(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_66EC => {
+            ({
+                crate::player_nogrid::clear_flags(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_66F8 => (u64::from(crate::player_nogrid::has_flags(env, a[0], a[1]))) as u64,
+        0x021A_6708 => {
+            crate::player_nogrid::flag_thunk(env, a[0], a[1]);
+            0u64
+        }
+        0x021A_67A4 => (u64::from(crate::player_nogrid::slope_kind(env, a[0]))) as u64,
+        0x021A_682C => (u64::from(crate::player_nogrid::slope(env, a[0], a[1], a[2]))) as u64,
+        0x021A_6870 => {
+            ({
+                crate::player_nogrid::slope_end(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_6908 => (u64::from(crate::player_nogrid::slide_plain(env, a[0], a[1], a[2]))) as u64,
+        0x021A_6974 => (u64::from(crate::player_nogrid::slide_a(env, a[0], a[1], a[2]))) as u64,
+        0x021A_69D8 => (u64::from(crate::player_nogrid::slide_b(env, a[0], a[1], a[2]))) as u64,
+        0x021A_6A3C => (u64::from(crate::player_nogrid::slide_se(env, a[0], a[1], a[2], 2))) as u64,
+        0x021A_6A64 => (u64::from(crate::player_nogrid::slide_se(env, a[0], a[1], a[2], 3))) as u64,
+        0x021A_6A8C => {
+            (u64::from(crate::player_nogrid::slide_bounce(env, a[0], a[1], a[2]))) as u64
+        }
+        0x021A_6AA0 => (u64::from(crate::player_nogrid::hold(env, a[0], a[1], a[2]))) as u64,
+        0x021A_6B08 => {
+            ({
+                crate::player_nogrid::eff_start(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_6B30 => {
+            ({
+                crate::player_nogrid::eff_stop(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_6B50 => {
+            ({
+                crate::player_nogrid::eff_frame(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_6B88 => {
+            ({
+                crate::player_nogrid::rec_init(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_6B9C => {
+            ({
+                crate::player_nogrid::rec_hold(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_6BAC => {
+            ({
+                crate::player_nogrid::rec_reset(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_6BB4 => {
+            ({
+                crate::player_nogrid::rec_input(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_6C30 => {
+            ({
+                crate::player_nogrid::rec_end(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_6C4C => (u64::from(crate::player_nogrid::rec_dir(env, a[0], a[1]))) as u64,
+        0x021A_6C64 => (u64::from(crate::player_nogrid::rec_bit1(env, a[0]))) as u64,
+        0x021A_6C6C => (u64::from(crate::player_nogrid::bump_ok(env, a[0], a[1]))) as u64,
+        0x021A_6CB8 => {
+            ({
+                crate::ctrl_nogrid::create(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_6D30 => {
+            ({
+                crate::ctrl_nogrid::delete(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_6D3C => {
+            ({
+                crate::ctrl_nogrid::frame(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_6D48 => (u64::from(crate::ctrl_nogrid::pos(env, a[0]))) as u64,
+        0x021A_6D58 => (u64::from(crate::ctrl_nogrid::work_new(env, a[0], a[1]))) as u64,
+        0x021A_6D9C => {
+            ({
+                crate::ctrl_nogrid::work_free(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_6DA4 => {
+            ({
+                crate::ctrl_nogrid::work_frame(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_6DC0 => (u64::from(crate::ctrl_nogrid::work_player(env, a[0]))) as u64,
+        0x021A_6DC4 => {
+            ({
+                crate::ctrl_hybrid::reenter(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_6E30 => {
+            ({
+                crate::ctrl_hybrid::create(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021A_6F18 => {
+            ({
+                crate::ctrl_hybrid::delete(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021A_6F24 => {
+            ({
+                crate::ctrl_hybrid::frame(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_6F4C => (u64::from(crate::ctrl_hybrid::pos(env, a[0]))) as u64,
+        0x021A_6F5C => {
+            ({
+                crate::ctrl_hybrid::frame_grid(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_7010 => {
+            ({
+                crate::ctrl_hybrid::frame_rail(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021A_70D0 => {
+            ({
+                crate::ctrl_hybrid::to_rail(env, a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
+                0
+            }) as u64
+        }
+        0x021A_712C => {
+            ({
+                crate::ctrl_hybrid::to_grid(env, a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
+                0
+            }) as u64
+        }
+        0x021A_7198 => {
+            (u64::from(crate::ctrl_hybrid::grid_entry(env, a[0], a[1], a[2], a[3]))) as u64
+        }
+        0x021A_71E4 => {
+            (u64::from(crate::ctrl_hybrid::rail_entry(env, a[0], a[1], a[2], a[3]))) as u64
+        }
+        0x021A_7258 => {
+            ({
+                crate::ctrl_hybrid::set_mode(env, a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
+                0
+            }) as u64
+        }
         0x021A_9350 => {
             ({
                 crate::enc_pokeset::efp_init(env, a[0], a[1], a[2], a[3], a[4]);
@@ -10900,6 +11686,598 @@ pub fn call(env: &mut Env, addr: u32, a: &[u32]) -> u64 {
         }
         0x021B_70D4 => (black_script::scrcmd_pokemon_fld::pdw_const_a() as u64) as u64,
         0x021B_7390 => (black_script::scrcmd_pokemon_fld::is_special_day(a[0], a[1]) as u64) as u64,
+        0x021B_7884 => (u64::from(crate::rail::create(env, a[0], a[1], a[2]))) as u64,
+        0x021B_791C => {
+            ({
+                crate::rail::delete(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_7934 => {
+            ({
+                crate::rail::set_data(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_7954 => {
+            ({
+                crate::rail::clear_data(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_7970 => (u64::from(crate::rail::obj_alloc(env, a[0]))) as u64,
+        0x021B_79AC => {
+            ({
+                crate::rail::obj_free(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_79C4 => {
+            ({
+                crate::rail::set_current(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_79CC => {
+            ({
+                crate::rail::clear_current(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_79D4 => {
+            ({
+                crate::rail::current_pos(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_79E4 => (u64::from(crate::rail::frame_state(env, a[0]))) as u64,
+        0x021B_79F0 => (u64::from(crate::rail::frame(env, a[0], a[1]))) as u64,
+        0x021B_7A84 => (u64::from(crate::rail::line_hit(env, a[0], a[1], a[2], a[3], a[4]))) as u64,
+        0x021B_7C04 => (u64::from(crate::rail::block_line(env, a[0], a[1], a[2]))) as u64,
+        0x021B_7C38 => (u64::from(crate::rail::unit_fx(env, a[0]))) as u64,
+        0x021B_7C58 => {
+            ({
+                crate::rail::loc_from_line(env, a[0], a[1], a[2], a[3], a[4], a[5]);
+                0
+            }) as u64
+        }
+        0x021B_7C90 => (u64::from(crate::rail::move_loc(env, a[0], a[1], a[2], a[3]))) as u64,
+        0x021B_7CD8 => (u64::from(crate::rail::step_loc(env, a[0], a[1], a[2], a[3]))) as u64,
+        0x021B_7D38 => {
+            ({
+                crate::rail::loc_pos(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021B_7D50 => (u64::from(crate::rail::loc_width(env, a[0], a[1]))) as u64,
+        0x021B_7D68 => {
+            ({
+                crate::rail::run_loc_proc(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_7DC0 => {
+            ({
+                crate::rail::get_loc(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_7DE0 => (u64::from(crate::rail::loc_valid(env, a[0], a[1]))) as u64,
+        0x021B_7E60 => (u64::from(crate::rail::cached_step(env, a[0], a[1], a[2], a[3]))) as u64,
+        0x021B_7ED4 => {
+            ({
+                crate::rail::old_pos(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_7EE4 => {
+            ({
+                crate::rail::set_loc(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_8028 => {
+            ({
+                crate::rail::get_pos(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_8038 => (u64::from(crate::rail::dir_byte(env, a[0]))) as u64,
+        0x021B_8040 => (u64::from(crate::rail::moving(env, a[0]))) as u64,
+        0x021B_8048 => (u64::from(crate::rail::moved(env, a[0]))) as u64,
+        0x021B_8050 => {
+            ({
+                crate::rail::dir_vec(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_80D8 => (u64::from(crate::rail::rec_word8(env, a[0]))) as u64,
+        0x021B_80E0 => (u64::from(crate::rail::start_move(env, a[0], a[1], a[2]))) as u64,
+        0x021B_810C => {
+            ({
+                crate::rail::move_frame(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_821C => (u64::from(crate::rail::word10(env, a[0]))) as u64,
+        0x021B_8220 => (u64::from(crate::rail::word14(env, a[0]))) as u64,
+        0x021B_8224 => (u64::from(crate::rail::sys_point(env, a[0], a[1]))) as u64,
+        0x021B_8230 => (u64::from(crate::rail::sys_line(env, a[0], a[1]))) as u64,
+        0x021B_823C => (u64::from(crate::rail::sys_line_rec(env, a[0], a[1]))) as u64,
+        0x021B_8248 => (u64::from(crate::rail::sys_unit(env, a[0]))) as u64,
+        0x021B_824C => (u64::from(crate::rail::main_work(env, a[0]))) as u64,
+        0x021B_8250 => {
+            ({
+                crate::rail::clamp_loc(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021B_82F0 => (u64::from(crate::rail::kind(env, a[0]))) as u64,
+        0x021B_82F4 => (u64::from(crate::rail::rec(env, a[0]))) as u64,
+        0x021B_82F8 => (u64::from(crate::rail::along(env, a[0]))) as u64,
+        0x021B_82FC => (u64::from(crate::rail::length(env, a[0]))) as u64,
+        0x021B_8300 => (u64::from(crate::rail::lateral(env, a[0]))) as u64,
+        0x021B_8304 => (u64::from(crate::rail::width(env, a[0]))) as u64,
+        0x021B_8308 => (u64::from(crate::rail::unit(env, a[0]))) as u64,
+        0x021B_830C => (u64::from(crate::rail::cam_of(env, a[0]))) as u64,
+        0x021B_8314 => {
+            ({
+                crate::rail::pos_no_lat(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_8328 => {
+            ({
+                crate::rail::pos_at(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021B_833C => (u64::from(crate::rail::line_start(env, a[0]))) as u64,
+        0x021B_834C => (u64::from(crate::rail::line_end(env, a[0]))) as u64,
+        0x021B_835C => (u64::from(crate::rail::line_record(env, a[0]))) as u64,
+        0x021B_836C => (u64::from(crate::rail::point_cam(env, a[0], a[1]))) as u64,
+        0x021B_8378 => (u64::from(crate::rail::round16(a[0]))) as u64,
+        0x021B_83B0 => (u64::from(crate::rail::near(env, a[0], a[1], a[2]))) as u64,
+        0x021B_83FC => {
+            ({
+                crate::rail::loc_numbers(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x021B_8484 => {
+            ({
+                crate::rail::set_loc_xz(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x021B_8514 => {
+            (u64::from(crate::rail::point_line(env, a[0], a[1], a[2], a[3], a[4]))) as u64
+        }
+        0x021B_854C => {
+            (u64::from(crate::rail::try_line(
+                env,
+                a[0],
+                a[1],
+                a[2],
+                a[3] as i32,
+                a[4] as i32,
+                a[5] as i32,
+                a[6] as i32,
+            ))) as u64
+        }
+        0x021B_8658 => {
+            ({
+                crate::rail::set_line(env, a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
+                0
+            }) as u64
+        }
+        0x021B_8674 => (u64::from(crate::rail::starts_at(env, a[0], a[1], a[2]))) as u64,
+        0x021B_868C => (u64::from(crate::rail::ends_at(env, a[0], a[1], a[2]))) as u64,
+        0x021B_86A4 => {
+            ({
+                crate::rail::line_bounds(env, a[0], a[1], a[2], a[3], a[4], a[5]);
+                0
+            }) as u64
+        }
+        0x021B_87BC => {
+            ({
+                crate::rail::clear_rd(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_87C8 => {
+            ({
+                crate::rail::copy_data(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_87D8 => (u64::from(crate::rail::point_rec(env, a[0], a[1]))) as u64,
+        0x021B_87FC => (u64::from(crate::rail::line_rec(env, a[0], a[1]))) as u64,
+        0x021B_8820 => (u64::from(crate::rail::cam_rec(env, a[0], a[1]))) as u64,
+        0x021B_8848 => (u64::from(crate::rail::line_rec_rec(env, a[0], a[1]))) as u64,
+        0x021B_8870 => (u64::from(crate::rail::cam_proc(env, a[0], a[1]))) as u64,
+        0x021B_8894 => (u64::from(crate::rail::pos_proc(env, a[0], a[1]))) as u64,
+        0x021B_88B8 => (u64::from(crate::rail::hit_proc(env, a[0], a[1]))) as u64,
+        0x021B_88DC => (u64::from(crate::rail_move::line_move(env, a[0], a[1], a[2]))) as u64,
+        0x021B_9164 => {
+            ({
+                crate::rail_move::obj_init(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021B_919C => {
+            ({
+                crate::rail_move::obj_reset(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_91A8 => (u64::from(crate::rail_move::obj_in_use(env, a[0]))) as u64,
+        0x021B_91AC => (u64::from(crate::rail_move::active(env, a[0]))) as u64,
+        0x021B_91C8 => (u64::from(crate::rail_move::cam_of(env, a[0]))) as u64,
+        0x021B_91F8 => {
+            ({
+                crate::rail_move::pos_of(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_9238 => {
+            ({
+                crate::rail_move::loc_of(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_9278 => (u64::from(crate::rail_move::line_len(env, a[0]) as u32)) as u64,
+        0x021B_9280 => {
+            (u64::from(crate::rail_move::line_width(env, a[0], a[1], a[2] as i32, a[3]) as u32))
+                as u64
+        }
+        0x021B_9338 => (u64::from(crate::rail_move::clamp_lat(env, a[0], a[1], a[2], a[3]))) as u64,
+        0x021B_9368 => {
+            (u64::from(crate::rail_move::walk(env, a[0], a[1], a[2], a[3], a[4]))) as u64
+        }
+        0x021B_93D4 => (u64::from(crate::rail_move::dir_back(a[0]))) as u64,
+        0x021B_9404 => (u64::from(crate::rail_move::dir_right(a[0]))) as u64,
+        0x021B_9434 => (u64::from(crate::rail_move::dir_left(a[0]))) as u64,
+        0x021B_9464 => {
+            ({
+                crate::rail_move::blk_clear(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_9478 => (u64::from(crate::rail_move::blk_add(env, a[0], a[1]))) as u64,
+        0x021B_949C => (u64::from(crate::rail_move::blk_remove(env, a[0], a[1]))) as u64,
+        0x021B_94C0 => (u64::from(crate::rail_move::blk_has(env, a[0], a[1]))) as u64,
+        0x021B_94D8 => (u64::from(crate::rail_move::blk_has_line(env, a[0], a[1], a[2]))) as u64,
+        0x021B_9510 => (u64::from(crate::rail_move::line_if_open(env, a[0], a[1], a[2]))) as u64,
+        0x021B_9530 => {
+            ({
+                crate::rail_move::side_step(env, a[0], a[1], a[2] as i32, a[3] as i32, a[4]);
+                0
+            }) as u64
+        }
+        0x021B_95C0 => {
+            (u64::from(crate::rail_move::can_enter(
+                env,
+                a[0],
+                a[1],
+                a[2] as i32,
+                a[3] as i32,
+                a[4],
+                a[5],
+            ))) as u64
+        }
+        0x021B_960C => (u64::from(crate::rail_move::dir_of_line(env, a[0], a[1], a[2]))) as u64,
+        0x021B_963C => (u64::from(crate::rail_move::corner_ok_line(env, a[0], a[1]))) as u64,
+        0x021B_96AC => (u64::from(crate::rail_move::corner_ok(env, a[0], a[1]))) as u64,
+        0x021B_9768 => {
+            ({
+                crate::rail_move::debug_hook();
+                0
+            }) as u64
+        }
+        0x021B_976C => {
+            ({
+                crate::rail_move::debug_point(a[1]);
+                0
+            }) as u64
+        }
+        0x021B_977C => {
+            ({
+                crate::rail_move::debug_work(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_97D0 => (u64::from(crate::rail_move::point_index(env, a[0], a[1]))) as u64,
+        0x021B_97FC => (u64::from(crate::rail_move::line_index(env, a[0], a[1]))) as u64,
+        0x021B_9828 => {
+            (u64::from(crate::rail_move::seg_hit(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021B_9A50 => {
+            ({
+                crate::rail_move::slerp(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x021B_9B24 => {
+            ({
+                crate::rail_move::interp(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x021B_9B7C => {
+            ({
+                crate::rail_cam::pos_line(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_9C28 => {
+            ({
+                crate::rail_cam::pos_curve(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_9D60 => {
+            ({
+                crate::rail_cam::pos_curve3(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_9E84 => {
+            (u64::from(crate::rail_cam::hit_line(env, a[0], a[1], a[2], a[3], a[4]))) as u64
+        }
+        0x021B_9FC8 => {
+            (u64::from(crate::rail_cam::hit_steps(
+                env, a[0], a[1], a[2], a[3], a[4],
+            ))) as u64
+        }
+        0x021B_A25C => {
+            ({
+                crate::rail_cam::cam_follow(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_A2B4 => {
+            ({
+                crate::rail_cam::cam_angles(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_A310 => {
+            ({
+                crate::rail_cam::cam_angles_pos(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_A348 => {
+            ({
+                crate::rail_cam::cam_interp(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_A494 => {
+            ({
+                crate::rail_cam::cam_interp_pos(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_A4C4 => {
+            ({
+                crate::rail_cam::cam_interp_pos2(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_A4FC => {
+            ({
+                crate::rail_cam::cam_fixed(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_A550 => {
+            ({
+                crate::rail_cam::cam_fixed_interp(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_A6E8 => {
+            ({
+                crate::rail_cam::cam_orbit_interp(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_A7B0 => {
+            ({
+                crate::rail_cam::cam_orbit(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_A7E0 => {
+            ({
+                crate::rail_cam::orbit(env, a[0], a[1], a[2], a[3]);
+                0
+            }) as u64
+        }
+        0x021B_A8E0 => {
+            ({
+                crate::rail_cam::cam_orbit_moving(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_A9B4 => {
+            ({
+                crate::rail_cam::cam_face(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_AA30 => {
+            ({
+                crate::rail_cam::cam_behind(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_AA9C => {
+            ({
+                crate::rail_cam::cam_behind_pitch(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_AB30 => {
+            ({
+                crate::rail_cam::cam_behind_pos(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_ABB4 => {
+            ({
+                crate::rail_cam::cam_start_point(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_ABDC => {
+            ({
+                crate::rail_cam::cam_end_point(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_AC04 => {
+            ({
+                crate::rail_cam::cam_angles_vec(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_AC74 => {
+            ({
+                crate::rail_cam::cam_angles_vec_pos(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_ACA8 => {
+            ({
+                crate::rail_cam::cam_interp_full(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_AE7C => {
+            (u64::from(crate::rail_cam::tri_hit(
+                env, a[0], a[1], a[2], a[3], a[4], a[5],
+            ))) as u64
+        }
+        0x021B_B014 => {
+            ({
+                crate::rail_cam::cam_at_point(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021B_B088 => (u64::from(crate::rail_attr::create(env, a[0]))) as u64,
+        0x021B_B0A4 => {
+            ({
+                crate::rail_attr::delete(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_B0B4 => {
+            ({
+                crate::rail_attr::load(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021B_B11C => {
+            ({
+                crate::rail_attr::unload(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_B13C => (u64::from(crate::rail_attr::attr_at(env, a[0], a[1]))) as u64,
+        0x021B_B188 => (u64::from(crate::rail_attr::is_a0_a1(a[0]))) as u64,
+        0x021B_B1A0 => (u64::from(crate::rail_attr::is_a3(a[0]))) as u64,
+        0x021B_B1AC => (u64::from(crate::rail_attr::is_a5(a[0]))) as u64,
+        0x021B_B1B8 => (u64::from(crate::rail_attr::is_a4(a[0]))) as u64,
+        0x021B_B1C4 => (u64::from(crate::rail_attr::is_a7(a[0]))) as u64,
+        0x021B_B1D0 => (u64::from(crate::rail_attr::is_a6(a[0]))) as u64,
+        0x021B_B1DC => (u64::from(crate::rail_attr::is_a8(a[0]))) as u64,
+        0x021B_B1E8 => (u64::from(crate::rail_attr::is_b0(a[0]))) as u64,
+        0x021B_B1F4 => {
+            (u64::from(crate::nogrid_mapper::create(env, a[0], a[1], a[2], a[3]))) as u64
+        }
+        0x021B_B240 => {
+            ({
+                crate::nogrid_mapper::delete(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_B260 => {
+            ({
+                crate::nogrid_mapper::set_rail_frame(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_B278 => {
+            ({
+                crate::nogrid_mapper::load_record(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021B_B2F8 => {
+            ({
+                crate::nogrid_mapper::load(env, a[0], a[1], a[2]);
+                0
+            }) as u64
+        }
+        0x021B_B348 => {
+            ({
+                crate::nogrid_mapper::unload(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_B36C => {
+            ({
+                crate::nogrid_mapper::frame(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_B388 => (u64::from(crate::nogrid_mapper::frame_forced(env, a[0]))) as u64,
+        0x021B_B394 => {
+            ({
+                crate::nogrid_mapper::rail_7970(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_B3A0 => {
+            ({
+                crate::nogrid_mapper::rail_79ac(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_B3AC => {
+            ({
+                crate::nogrid_mapper::rail_79c4(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_B3B8 => {
+            ({
+                crate::nogrid_mapper::rail_79cc(env, a[0]);
+                0
+            }) as u64
+        }
+        0x021B_B3C4 => (u64::from(crate::nogrid_mapper::attr_at(env, a[0], a[1]))) as u64,
+        0x021B_B3D0 => {
+            ({
+                crate::nogrid_mapper::rail_7d68(env, a[0], a[1]);
+                0
+            }) as u64
+        }
+        0x021B_B3DC => (u64::from(crate::nogrid_mapper::rail_7c04(env, a[0], a[1], a[2]))) as u64,
+        0x021B_B3E8 => {
+            ({
+                crate::nogrid_mapper::location_in_zone(
+                    env, a[0], a[1], a[2], a[3], a[4], a[5], a[6],
+                );
+                0
+            }) as u64
+        }
+        0x021B_B480 => (u64::from(crate::nogrid_mapper::rail(env, a[0]))) as u64,
         0x021B_B890 => (crate::fieldmap_func::create(env, a[0], a[1], a[2])) as u64,
         0x021B_B90C => {
             ({
