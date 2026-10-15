@@ -4,11 +4,15 @@ This directory holds a matching decompilation of Pokémon Black (`black-rom/`, C
 from-scratch Rust port of it (`black-rust/`, a Cargo workspace). Game logic is ported function by
 function and verified against the original machine code. UI, graphics and sound are rewritten in Bevy.
 
-Two long-running Claude Code roles work on it:
+> This is a fork of the original ROM decompilation project ([github.com/squiddonaut/pokeblack](https://github.com/squiddonaut/pokeblack)), all credit goes to the amazing @squiddonaut, @red031000, @Paideieitor, and @anastarawneh
+
+## Agentic Migration Loop
+
+Two long-running Claude Code agents execute the rewrite and maintain the checklist in [`docs/migration/`](docs/migration/).
 
 | Role        | Prompt / source of truth                     | Does                                                                                                                  |
 | ----------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Coordinator | [`MIGRATION-AGENT.md`](MIGRATION-AGENT.md) + [`docs/migration/`](docs/migration/) | Plans, dispatches port jobs, merges, pushes `main`; progress is computed by `black-rust/tools/progress.py` |
+| Coordinator | [`MIGRATION-AGENT.md`](MIGRATION-AGENT.md) | Plans, dispatches port jobs, merges, pushes `main`; progress is computed by `black-rust/tools/progress.py` |
 | Validator   | [`VALIDATION-AGENT.md`](VALIDATION-AGENT.md) | Independently re-runs the original and the port on new commits; writes findings to `validation/` (never edits source) |
 
 ![](.docs/migration-diagram.svg)
